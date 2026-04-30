@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LocalStage — We Don't Book Talent. We Book Audiences.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #1a9b6c;
+    --green-light: #e8f7f1;
+    --green-mid: #0d6e4e;
+    --cream: #f7f4ef;
+    --cream-dark: #ede9e2;
+    --ink: #1a1a18;
+    --ink-mid: #3a3a36;
+    --ink-light: #7a7a72;
+    --white: #ffffff;
+    --serif: 'DM Serif Display', Georgia, serif;
+    --sans: 'DM Sans', system-ui, sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--cream);
+    color: var(--ink);
+    overflow-x: hidden;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.25rem 3rem;
+    background: rgba(247, 244, 239, 0.92);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--cream-dark);
+  }
+  .nav-logo {
+    font-family: var(--serif);
+    font-size: 1.5rem;
+    color: var(--ink);
+    text-decoration: none;
+    letter-spacing: -0.3px;
+  }
+  .nav-logo span { color: var(--green); font-style: italic; }
+  .nav-links { display: flex; gap: 2rem; align-items: center; list-style: none; }
+  .nav-links a {
+    font-size: 0.875rem; font-weight: 400; color: var(--ink-mid);
+    text-decoration: none; transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--green); }
+  .nav-cta {
+    background: var(--ink) !important;
+    color: var(--white) !important;
+    padding: 0.6rem 1.4rem;
+    border-radius: 100px;
+    font-weight: 500 !important;
+    transition: background 0.2s !important;
+  }
+  .nav-cta:hover { background: var(--green) !important; color: var(--white) !important; }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex; align-items: center;
+    padding: 8rem 3rem 5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 70% 60% at 65% 50%, #d4f0e4 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 4rem; align-items: center;
+    max-width: 1100px; margin: 0 auto; width: 100%;
+    position: relative;
+  }
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 0.75rem; font-weight: 500; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--green);
+    background: var(--green-light);
+    padding: 6px 14px; border-radius: 100px;
+    margin-bottom: 1.5rem;
+  }
+  .hero-eyebrow::before {
+    content: ''; width: 6px; height: 6px;
+    border-radius: 50%; background: var(--green);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+  .hero h1 {
+    font-family: var(--serif);
+    font-size: clamp(2.8rem, 5vw, 4.2rem);
+    line-height: 1.1;
+    color: var(--ink);
+    margin-bottom: 1.5rem;
+    letter-spacing: -1px;
+  }
+  .hero h1 em {
+    font-style: italic; color: var(--green);
+  }
+  .hero-sub {
+    font-size: 1.05rem; line-height: 1.75;
+    color: var(--ink-mid); max-width: 460px;
+    margin-bottom: 2.5rem;
+  }
+  .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .btn-primary {
+    background: var(--ink); color: var(--white);
+    padding: 0.875rem 2rem; border-radius: 100px;
+    font-family: var(--sans); font-size: 0.9rem; font-weight: 500;
+    text-decoration: none; border: none; cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+    display: inline-block;
+  }
+  .btn-primary:hover { background: var(--green); transform: translateY(-1px); }
+  .btn-secondary {
+    background: transparent; color: var(--ink);
+    padding: 0.875rem 2rem; border-radius: 100px;
+    font-family: var(--sans); font-size: 0.9rem; font-weight: 500;
+    text-decoration: none; border: 1.5px solid var(--ink-light);
+    cursor: pointer; transition: border-color 0.2s, color 0.2s;
+    display: inline-block;
+  }
+  .btn-secondary:hover { border-color: var(--green); color: var(--green); }
+
+  /* HERO VISUAL */
+  .hero-visual { position: relative; }
+  .score-card {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 1.75rem;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.08);
+    position: relative;
+  }
+  .score-card-header {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem;
+  }
+  .artist-avatar {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: linear-gradient(135deg, #a8e6cf, #1a9b6c);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--serif); font-size: 1.1rem; color: white; font-weight: bold;
+  }
+  .artist-name { font-weight: 500; font-size: 1rem; }
+  .artist-genre { font-size: 0.8rem; color: var(--ink-light); }
+  .score-ring {
+    width: 90px; height: 90px; margin: 0 auto 1.25rem;
+    position: relative; display: flex; align-items: center; justify-content: center;
+  }
+  .score-ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+  .score-ring-num {
+    font-family: var(--serif); font-size: 1.8rem; color: var(--green); line-height: 1;
+  }
+  .score-ring-label { font-size: 0.65rem; color: var(--ink-light); text-align: center; }
+  .score-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .score-metric {
+    background: var(--cream); border-radius: 10px; padding: 10px;
+    text-align: center;
+  }
+  .score-metric-val { font-size: 1rem; font-weight: 500; color: var(--ink); }
+  .score-metric-lbl { font-size: 0.7rem; color: var(--ink-light); margin-top: 2px; }
+  .floating-tag {
+    position: absolute;
+    background: var(--white);
+    border-radius: 12px;
+    padding: 8px 14px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    font-size: 0.75rem; font-weight: 500; color: var(--ink);
+    white-space: nowrap;
+  }
+  .tag-1 { top: -20px; right: 20px; color: var(--green); }
+  .tag-2 { bottom: 10px; left: -30px; }
+  .tag-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 5px; }
+
+  /* PROBLEM */
+  .section { padding: 6rem 3rem; }
+  .section-inner { max-width: 1100px; margin: 0 auto; }
+  .section-label {
+    font-size: 0.75rem; font-weight: 500; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--green); margin-bottom: 1rem;
+  }
+  .section-title {
+    font-family: var(--serif); font-size: clamp(2rem, 3.5vw, 3rem);
+    color: var(--ink); line-height: 1.2; letter-spacing: -0.5px;
+    margin-bottom: 1.5rem;
+  }
+
+  .problem-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 3rem;
+    align-items: start; margin-top: 3rem;
+  }
+  .problem-side-label {
+    font-size: 0.8rem; font-weight: 500; text-transform: uppercase;
+    letter-spacing: 1px; color: var(--ink-light); margin-bottom: 1rem;
+    padding-bottom: 0.75rem; border-bottom: 1px solid var(--cream-dark);
+  }
+  .pain-item {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 1rem 0; border-bottom: 1px solid var(--cream-dark);
+  }
+  .pain-icon {
+    width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem;
+  }
+  .pain-icon.red { background: #fde8e8; }
+  .pain-icon.amber { background: #fef3e2; }
+  .pain-text-title { font-size: 0.9rem; font-weight: 500; margin-bottom: 2px; }
+  .pain-text-body { font-size: 0.825rem; color: var(--ink-light); line-height: 1.6; }
+
+  /* HOW IT WORKS */
+  .how-bg { background: var(--ink); }
+  .how-bg .section-label { color: #5dcaa5; }
+  .how-bg .section-title { color: var(--white); }
+  .steps-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 2px; margin-top: 3rem;
+  }
+  .step {
+    background: #252521; padding: 2rem;
+    position: relative; overflow: hidden;
+  }
+  .step:first-child { border-radius: 16px 0 0 16px; }
+  .step:last-child { border-radius: 0 16px 16px 0; }
+  .step-num {
+    font-family: var(--serif); font-size: 3rem; color: #333330;
+    line-height: 1; margin-bottom: 1.25rem;
+  }
+  .step-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: var(--green); display: flex; align-items: center;
+    justify-content: center; font-size: 1.1rem; margin-bottom: 1rem;
+  }
+  .step-title { font-size: 1rem; font-weight: 500; color: var(--white); margin-bottom: 0.5rem; }
+  .step-body { font-size: 0.825rem; color: #9a9a90; line-height: 1.7; }
+
+  /* SCORE */
+  .score-section { background: var(--white); }
+  .score-inner { max-width: 1100px; margin: 0 auto; }
+  .score-explain-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 4rem;
+    align-items: center; margin-top: 3rem;
+  }
+  .score-bars { display: flex; flex-direction: column; gap: 1rem; }
+  .score-bar-item {}
+  .score-bar-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .score-bar-name { font-size: 0.85rem; font-weight: 500; }
+  .score-bar-val { font-size: 0.85rem; color: var(--green); font-weight: 500; }
+  .score-bar-track {
+    height: 8px; background: var(--cream); border-radius: 100px; overflow: hidden;
+  }
+  .score-bar-fill {
+    height: 100%; background: var(--green); border-radius: 100px;
+    transition: width 1s ease;
+  }
+  .score-text-side {}
+  .score-text-side p { font-size: 0.95rem; color: var(--ink-mid); line-height: 1.8; margin-bottom: 1rem; }
+  .score-factors { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 1.5rem; }
+  .score-factor {
+    background: var(--cream); border-radius: 12px; padding: 1rem;
+  }
+  .score-factor-icon { font-size: 1.2rem; margin-bottom: 6px; }
+  .score-factor-name { font-size: 0.8rem; font-weight: 500; color: var(--ink); }
+  .score-factor-desc { font-size: 0.75rem; color: var(--ink-light); margin-top: 2px; line-height: 1.5; }
+
+  /* PRICING */
+  .pricing-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem; margin-top: 3rem;
+  }
+  .pricing-card {
+    background: var(--white); border-radius: 20px; padding: 2rem;
+    border: 1.5px solid var(--cream-dark); position: relative;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .pricing-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.08); }
+  .pricing-card.featured {
+    background: var(--ink); border-color: var(--ink);
+  }
+  .pricing-badge {
+    position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+    background: var(--green); color: var(--white);
+    font-size: 0.7rem; font-weight: 500; padding: 4px 14px; border-radius: 100px;
+    white-space: nowrap;
+  }
+  .pricing-who { font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; color: var(--ink-light); margin-bottom: 0.75rem; }
+  .pricing-card.featured .pricing-who { color: #5dcaa5; }
+  .pricing-name { font-family: var(--serif); font-size: 1.4rem; margin-bottom: 0.25rem; color: var(--ink); }
+  .pricing-card.featured .pricing-name { color: var(--white); }
+  .pricing-price { font-size: 2rem; font-weight: 500; color: var(--green); margin-bottom: 0.25rem; }
+  .pricing-freq { font-size: 0.8rem; color: var(--ink-light); margin-bottom: 1.5rem; }
+  .pricing-card.featured .pricing-freq { color: #5a5a50; }
+  .pricing-feats { list-style: none; display: flex; flex-direction: column; gap: 0.6rem; }
+  .pricing-feats li { font-size: 0.85rem; color: var(--ink-mid); display: flex; align-items: center; gap: 8px; }
+  .pricing-card.featured .pricing-feats li { color: #b0b0a0; }
+  .pricing-feats li::before { content: '✓'; color: var(--green); font-weight: 500; flex-shrink: 0; }
+
+  /* WHO */
+  .who-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 3rem;
+  }
+  .who-card {
+    border-radius: 20px; padding: 2.5rem; position: relative; overflow: hidden;
+  }
+  .who-card.artists { background: var(--green-light); }
+  .who-card.venues { background: var(--ink); }
+  .who-card-label {
+    font-size: 0.75rem; font-weight: 500; text-transform: uppercase;
+    letter-spacing: 1px; margin-bottom: 1rem;
+  }
+  .who-card.artists .who-card-label { color: var(--green); }
+  .who-card.venues .who-card-label { color: #5dcaa5; }
+  .who-card-title { font-family: var(--serif); font-size: 1.6rem; margin-bottom: 1rem; }
+  .who-card.artists .who-card-title { color: var(--ink); }
+  .who-card.venues .who-card-title { color: var(--white); }
+  .who-list { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+  .who-list li { font-size: 0.875rem; display: flex; align-items: center; gap: 8px; }
+  .who-card.artists .who-list li { color: var(--ink-mid); }
+  .who-card.venues .who-list li { color: #9a9a90; }
+  .who-list li::before { content: '→'; font-weight: 500; }
+  .who-card.artists .who-list li::before { color: var(--green); }
+  .who-card.venues .who-list li::before { color: #5dcaa5; }
+
+  /* SOCIAL PROOF */
+  .testimonials-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem; margin-top: 3rem;
+  }
+  .testimonial {
+    background: var(--white); border-radius: 16px; padding: 1.75rem;
+    border: 1px solid var(--cream-dark);
+  }
+  .testimonial-stars { color: var(--green); font-size: 0.9rem; margin-bottom: 1rem; }
+  .testimonial-quote { font-size: 0.9rem; color: var(--ink-mid); line-height: 1.7; margin-bottom: 1.25rem; font-style: italic; }
+  .testimonial-author { display: flex; align-items: center; gap: 10px; }
+  .testimonial-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: linear-gradient(135deg, #a8e6cf, #1a9b6c);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; font-weight: 500; color: white;
+  }
+  .t-name { font-size: 0.85rem; font-weight: 500; }
+  .t-role { font-size: 0.75rem; color: var(--ink-light); }
+
+  /* CTA */
+  .cta-section {
+    background: var(--green); padding: 6rem 3rem;
+    text-align: center;
+  }
+  .cta-inner { max-width: 680px; margin: 0 auto; }
+  .cta-title {
+    font-family: var(--serif); font-size: clamp(2rem, 4vw, 3.2rem);
+    color: var(--white); line-height: 1.2; margin-bottom: 1rem;
+    letter-spacing: -0.5px;
+  }
+  .cta-sub { font-size: 1rem; color: rgba(255,255,255,0.8); margin-bottom: 2.5rem; line-height: 1.7; }
+  .cta-form { display: flex; gap: 10px; max-width: 480px; margin: 0 auto; }
+  .cta-form input {
+    flex: 1; padding: 0.875rem 1.25rem; border-radius: 100px;
+    border: none; font-family: var(--sans); font-size: 0.9rem;
+    background: rgba(255,255,255,0.2); color: var(--white);
+    outline: none;
+  }
+  .cta-form input::placeholder { color: rgba(255,255,255,0.6); }
+  .cta-form input:focus { background: rgba(255,255,255,0.3); }
+  .btn-white {
+    background: var(--white); color: var(--green);
+    padding: 0.875rem 1.75rem; border-radius: 100px;
+    font-family: var(--sans); font-size: 0.9rem; font-weight: 500;
+    border: none; cursor: pointer; white-space: nowrap;
+    transition: opacity 0.2s;
+  }
+  .btn-white:hover { opacity: 0.9; }
+
+  /* FOOTER */
+  footer {
+    background: var(--ink); padding: 3rem;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 1rem;
+  }
+  .footer-logo {
+    font-family: var(--serif); font-size: 1.25rem; color: var(--white);
+  }
+  .footer-logo span { color: #5dcaa5; font-style: italic; }
+  .footer-copy { font-size: 0.8rem; color: #5a5a50; }
+  .footer-links { display: flex; gap: 1.5rem; }
+  .footer-links a { font-size: 0.8rem; color: #5a5a50; text-decoration: none; transition: color 0.2s; }
+  .footer-links a:hover { color: #5dcaa5; }
+
+  /* STATS BAR */
+  .stats-bar {
+    background: var(--white); border-top: 1px solid var(--cream-dark);
+    border-bottom: 1px solid var(--cream-dark); padding: 2rem 3rem;
+  }
+  .stats-inner {
+    max-width: 1100px; margin: 0 auto;
+    display: flex; justify-content: space-around; gap: 2rem; flex-wrap: wrap;
+  }
+  .stat { text-align: center; }
+  .stat-num {
+    font-family: var(--serif); font-size: 2.2rem; color: var(--ink);
+    letter-spacing: -1px;
+  }
+  .stat-num span { color: var(--green); }
+  .stat-label { font-size: 0.8rem; color: var(--ink-light); margin-top: 4px; }
+
+  /* ANIMATIONS */
+  .fade-up {
+    opacity: 0; transform: translateY(24px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .fade-up.visible { opacity: 1; transform: translateY(0); }
+
+  @media (max-width: 768px) {
+    nav { padding: 1rem 1.5rem; }
+    .nav-links { display: none; }
+    .hero { padding: 6rem 1.5rem 4rem; }
+    .hero-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+    .section { padding: 4rem 1.5rem; }
+    .problem-grid, .score-explain-grid, .who-grid,
+    .steps-grid, .pricing-grid, .testimonials-grid { grid-template-columns: 1fr; }
+    .steps-grid { gap: 1px; }
+    .step:first-child { border-radius: 16px 16px 0 0; }
+    .step:last-child { border-radius: 0 0 16px 16px; }
+    footer { flex-direction: column; align-items: flex-start; }
+    .cta-form { flex-direction: column; }
+    .stats-bar { padding: 2rem 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">Local<span>Stage</span></a>
+  <ul class="nav-links">
+    <li><a href="#how">How it works</a></li>
+    <li><a href="#who">For artists</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#contact" class="nav-cta">Get started</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid">
+    <div class="hero-left">
+      <div class="hero-eyebrow">Ontario, Canada · Live now</div>
+      <h1>We don't book <em>talent.</em><br>We book <em>audiences.</em></h1>
+      <p class="hero-sub">LocalStage connects Ontario's emerging musicians — the ones with real local fanbases — directly with the venues and events that need them.</p>
+      <div class="hero-actions">
+        <a href="#contact" class="btn-primary">Join as an artist →</a>
+        <a href="#venues" class="btn-secondary">I run a venue</a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="floating-tag tag-1"><span class="tag-dot" style="background:#1a9b6c"></span>LocalStage Score: 84</div>
+      <div class="score-card">
+        <div class="score-card-header">
+          <div class="artist-avatar">MR</div>
+          <div>
+            <div class="artist-name">Maya Reyes</div>
+            <div class="artist-genre">R&B · Mississauga, ON</div>
+          </div>
+        </div>
+        <div class="score-ring">
+          <svg viewBox="0 0 90 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="45" cy="45" r="38" stroke="#e8f7f1" stroke-width="8"/>
+            <circle cx="45" cy="45" r="38" stroke="#1a9b6c" stroke-width="8"
+              stroke-dasharray="238.76" stroke-dashoffset="38.2" stroke-linecap="round"/>
+          </svg>
+          <div style="text-align:center">
+            <div class="score-ring-num">84</div>
+            <div class="score-ring-label">LocalScore™</div>
+          </div>
+        </div>
+        <div class="score-metrics">
+          <div class="score-metric">
+            <div class="score-metric-val">3.2k</div>
+            <div class="score-metric-lbl">Local followers</div>
+          </div>
+          <div class="score-metric">
+            <div class="score-metric-val">7.4%</div>
+            <div class="score-metric-lbl">Engagement rate</div>
+          </div>
+          <div class="score-metric">
+            <div class="score-metric-val">~65</div>
+            <div class="score-metric-lbl">Avg. show draw</div>
+          </div>
+          <div class="score-metric">
+            <div class="score-metric-val">12</div>
+            <div class="score-metric-lbl">Shows this year</div>
+          </div>
+        </div>
+      </div>
+      <div class="floating-tag tag-2"><span class="tag-dot" style="background:#1a9b6c"></span>Matched: The Dock, Mississauga</div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stats-inner">
+    <div class="stat">
+      <div class="stat-num">30<span>+</span></div>
+      <div class="stat-label">Curated artists on roster</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">15<span>+</span></div>
+      <div class="stat-label">Venue partners</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">$0</div>
+      <div class="stat-label">Artist signup fee</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">48<span>h</span></div>
+      <div class="stat-label">Avg. match time</div>
+    </div>
+  </div>
+</div>
+
+<!-- PROBLEM -->
+<section class="section" id="problem">
+  <div class="section-inner">
+    <div class="section-label">The real problem</div>
+    <h2 class="section-title">Venues don't need to discover talent.<br>They need to not lose money.</h2>
+    <div class="problem-grid fade-up">
+      <div>
+        <div class="problem-side-label">What venues struggle with</div>
+        <div class="pain-item">
+          <div class="pain-icon red">❌</div>
+          <div>
+            <div class="pain-text-title">Empty rooms on slow nights</div>
+            <div class="pain-text-body">Booking an unknown act means gambling on turnout. A bad night costs bar sales, staff hours, and goodwill.</div>
+          </div>
+        </div>
+        <div class="pain-item">
+          <div class="pain-icon red">❌</div>
+          <div>
+            <div class="pain-text-title">No reliable way to vet emerging artists</div>
+            <div class="pain-text-body">Streaming numbers don't translate to local draw. A song with 50k plays might bring 8 people to a Tuesday show.</div>
+          </div>
+        </div>
+        <div class="pain-item">
+          <div class="pain-icon amber">⚠️</div>
+          <div>
+            <div class="pain-text-title">Research takes hours they don't have</div>
+            <div class="pain-text-body">Scrolling Instagram, checking engagement, Googling show history — a booker already has a full-time job.</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="problem-side-label">What artists struggle with</div>
+        <div class="pain-item">
+          <div class="pain-icon red">❌</div>
+          <div>
+            <div class="pain-text-title">Cold-emailing venues with no response</div>
+            <div class="pain-text-body">Most artist inquiries go to spam. Without a relationship or referral, there's no way in.</div>
+          </div>
+        </div>
+        <div class="pain-item">
+          <div class="pain-icon red">❌</div>
+          <div>
+            <div class="pain-text-title">No agent, no label, no leverage</div>
+            <div class="pain-text-body">Unsigned emerging artists have talent but no infrastructure to turn it into consistent bookings.</div>
+          </div>
+        </div>
+        <div class="pain-item">
+          <div class="pain-icon amber">⚠️</div>
+          <div>
+            <div class="pain-text-title">Existing platforms don't solve local</div>
+            <div class="pain-text-body">Bandcamp, SoundCloud, SubmitHub — none of them care about whether you can fill a room in Brampton on a Friday.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section how-bg" id="how">
+  <div class="section-inner">
+    <div class="section-label">How LocalStage works</div>
+    <h2 class="section-title">Three steps from roster to revenue.</h2>
+    <div class="steps-grid fade-up">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-icon">🎙️</div>
+        <div class="step-title">We curate the roster</div>
+        <div class="step-body">Every artist is vetted manually. We track local follower concentration, engagement rate, past show attendance, and reliability before adding anyone to the roster. No open-door policy — you have to earn your spot.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-icon">📊</div>
+        <div class="step-title">We score real-world draw</div>
+        <div class="step-body">Our LocalScore™ measures the one thing venues care about: will this artist bring people? We weight local audience, engagement quality, and proven show history — not vanity metrics.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-icon">🤝</div>
+        <div class="step-title">We make the match</div>
+        <div class="step-body">We pair the right artist with the right venue — genre fit, audience size, night of the week. Then we handle the intro, the coordination, and the follow-up so both sides can focus on the show.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SCORE -->
+<section class="section score-section">
+  <div class="score-inner">
+    <div class="section-label">LocalScore™</div>
+    <h2 class="section-title">The only metric venues actually care about.</h2>
+    <div class="score-explain-grid fade-up">
+      <div class="score-bars">
+        <div class="score-bar-item">
+          <div class="score-bar-header">
+            <span class="score-bar-name">Local follower concentration</span>
+            <span class="score-bar-val">35%</span>
+          </div>
+          <div class="score-bar-track"><div class="score-bar-fill" style="width:35%"></div></div>
+        </div>
+        <div class="score-bar-item">
+          <div class="score-bar-header">
+            <span class="score-bar-name">Instagram engagement rate</span>
+            <span class="score-bar-val">25%</span>
+          </div>
+          <div class="score-bar-track"><div class="score-bar-fill" style="width:25%"></div></div>
+        </div>
+        <div class="score-bar-item">
+          <div class="score-bar-header">
+            <span class="score-bar-name">Avg. show attendance (verified)</span>
+            <span class="score-bar-val">25%</span>
+          </div>
+          <div class="score-bar-track"><div class="score-bar-fill" style="width:25%"></div></div>
+        </div>
+        <div class="score-bar-item">
+          <div class="score-bar-header">
+            <span class="score-bar-name">Reliability & professionalism</span>
+            <span class="score-bar-val">15%</span>
+          </div>
+          <div class="score-bar-track"><div class="score-bar-fill" style="width:15%"></div></div>
+        </div>
+        <div style="margin-top:1.5rem;padding:1.25rem;background:var(--green-light);border-radius:12px;">
+          <div style="font-size:0.8rem;font-weight:500;color:var(--green);margin-bottom:4px">Minimum threshold</div>
+          <div style="font-size:0.85rem;color:var(--ink-mid);line-height:1.6">Artists must score 60+ to enter the roster and 75+ to be pitched for premium venue slots.</div>
+        </div>
+      </div>
+      <div class="score-text-side">
+        <p>Streaming numbers lie. Instagram follower counts lie. Even "viral" moments don't translate to bodies in a bar on a Thursday night in Mississauga.</p>
+        <p>LocalScore™ is built from the ground up to answer one question: <strong>if this artist plays your venue, how many people will show up?</strong></p>
+        <p>We verify attendance numbers through venue managers and Facebook event RSVPs, weight followers by location, and factor in whether an artist has a track record of showing up prepared and on time.</p>
+        <div class="score-factors">
+          <div class="score-factor">
+            <div class="score-factor-icon">📍</div>
+            <div class="score-factor-name">Local reach</div>
+            <div class="score-factor-desc">Follower location data, not just total count</div>
+          </div>
+          <div class="score-factor">
+            <div class="score-factor-icon">💬</div>
+            <div class="score-factor-name">Real engagement</div>
+            <div class="score-factor-desc">Comments + shares, not passive likes</div>
+          </div>
+          <div class="score-factor">
+            <div class="score-factor-icon">🎪</div>
+            <div class="score-factor-name">Verified draw</div>
+            <div class="score-factor-desc">Cross-checked with venues & event pages</div>
+          </div>
+          <div class="score-factor">
+            <div class="score-factor-icon">⭐</div>
+            <div class="score-factor-name">Reliability score</div>
+            <div class="score-factor-desc">Punctuality, professionalism, repeat bookings</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHO -->
+<section class="section" id="who">
+  <div class="section-inner">
+    <div class="section-label">Who we work with</div>
+    <h2 class="section-title">Built for the middle layer.</h2>
+    <div class="who-grid fade-up">
+      <div class="who-card artists">
+        <div class="who-card-label">For artists</div>
+        <h3 class="who-card-title">Serious musicians. Local following. No label.</h3>
+        <ul class="who-list">
+          <li>500–5,000 local followers on Instagram or TikTok</li>
+          <li>2+ years performing live in Ontario</li>
+          <li>Avg. 30–100 people at your own shows</li>
+          <li>Any genre: R&amp;B, indie, folk, hip-hop, jazz</li>
+          <li>Based in GTA, Hamilton, or surrounding area</li>
+        </ul>
+        <a href="#contact" class="btn-primary" style="margin-top:2rem;display:inline-block">Apply to join roster →</a>
+      </div>
+      <div class="who-card venues" id="venues">
+        <div class="who-card-label">For venues</div>
+        <h3 class="who-card-title" style="color:white">Small venues. Community spaces. Local events.</h3>
+        <ul class="who-list">
+          <li>Bars and restaurants with 100–500 capacity</li>
+          <li>Community venues needing weekend programming</li>
+          <li>Event organizers booking opening acts</li>
+          <li>Promoters looking for local multi-act lineups</li>
+          <li>Anywhere in Mississauga, Brampton, Hamilton, Toronto</li>
+        </ul>
+        <a href="#contact" class="btn-primary" style="margin-top:2rem;display:inline-block;background:var(--green)">Browse the roster →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="section" id="pricing" style="background:var(--cream-dark)">
+  <div class="section-inner">
+    <div class="section-label">Pricing</div>
+    <h2 class="section-title">Simple. Pay when it works.</h2>
+    <div class="pricing-grid fade-up">
+      <div class="pricing-card">
+        <div class="pricing-who">For artists</div>
+        <div class="pricing-name">Roster listing</div>
+        <div class="pricing-price">Free</div>
+        <div class="pricing-freq">to join and be pitched</div>
+        <ul class="pricing-feats">
+          <li>Artist profile + LocalScore™</li>
+          <li>Pitching to matched venues</li>
+          <li>Booking coordination support</li>
+          <li>No upfront cost ever</li>
+        </ul>
+      </div>
+      <div class="pricing-card featured">
+        <div class="pricing-badge">Most popular</div>
+        <div class="pricing-who">For venues</div>
+        <div class="pricing-name" style="color:white">Per booking</div>
+        <div class="pricing-price">$75–150</div>
+        <div class="pricing-freq">flat coordination fee per match</div>
+        <ul class="pricing-feats">
+          <li>Hand-picked artist shortlist (3 options)</li>
+          <li>Intro + full coordination handled</li>
+          <li>Day-of confirmation & follow-up</li>
+          <li>Pay only when you book</li>
+        </ul>
+      </div>
+      <div class="pricing-card">
+        <div class="pricing-who">For events</div>
+        <div class="pricing-name">Event package</div>
+        <div class="pricing-price">$200–400</div>
+        <div class="pricing-freq">for multi-act curation</div>
+        <ul class="pricing-feats">
+          <li>2–3 matched artists for your event</li>
+          <li>Full lineup coordination</li>
+          <li>Genre &amp; vibe matching</li>
+          <li>Ideal for markets, festivals, pop-ups</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS (sample) -->
+<section class="section" style="background:var(--white)">
+  <div class="section-inner">
+    <div class="section-label">Early feedback</div>
+    <h2 class="section-title">What our first clients say.</h2>
+    <div class="testimonials-grid fade-up">
+      <div class="testimonial">
+        <div class="testimonial-stars">★★★★★</div>
+        <div class="testimonial-quote">"We'd been burned before by artists who promised a crowd and brought their mom. LocalStage showed us the numbers upfront — the artist brought 70 people on a Wednesday. We rebooked immediately."</div>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">DK</div>
+          <div>
+            <div class="t-name">Dan K.</div>
+            <div class="t-role">Owner, The Railyard — Mississauga</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial">
+        <div class="testimonial-stars">★★★★★</div>
+        <div class="testimonial-quote">"I'd been cold-emailing venues for two years with no response. LocalStage got me three bookings in six weeks. I finally feel like my career is actually moving."</div>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">JA</div>
+          <div>
+            <div class="t-name">Jade A.</div>
+            <div class="t-role">R&B artist, Brampton ON</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial">
+        <div class="testimonial-stars">★★★★★</div>
+        <div class="testimonial-quote">"We run a quarterly community event and needed local openers. LocalStage matched us with two artists perfectly — same vibe, same audience. Effortless."</div>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">PR</div>
+          <div>
+            <div class="t-name">Priya R.</div>
+            <div class="t-role">Event organizer, Hamilton</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section" id="contact">
+  <div class="cta-inner">
+    <h2 class="cta-title">Ready to get on stage?</h2>
+    <p class="cta-sub">Whether you're an artist looking for your next booking or a venue looking for reliable talent that brings a crowd — we'd love to hear from you.</p>
+    <div class="cta-form">
+      <input type="email" placeholder="your@email.com">
+      <button class="btn-white">Get started →</button>
+    </div>
+    <p style="font-size:0.8rem;color:rgba(255,255,255,0.6);margin-top:1rem">Ontario-based only · No spam · Response within 24h</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Local<span>Stage</span></div>
+  <div class="footer-copy">© 2025 LocalStage · Ontario, Canada</div>
+  <div class="footer-links">
+    <a href="#how">How it works</a>
+    <a href="#who">Artists</a>
+    <a href="#venues">Venues</a>
+    <a href="#contact">Contact</a>
+  </div>
+</footer>
+
+<script>
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('visible'); }
+    });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+  document.querySelector('.cta-form button').addEventListener('click', () => {
+    const input = document.querySelector('.cta-form input');
+    if (input.value.includes('@')) {
+      input.value = '';
+      input.placeholder = '✓ We\'ll be in touch within 24h!';
+      input.style.color = 'white';
+    }
+  });
+</script>
+</body>
+</html>
