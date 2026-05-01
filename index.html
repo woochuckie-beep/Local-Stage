@@ -22,56 +22,45 @@
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   html { scroll-behavior: smooth; }
+  body { font-family: var(--sans); background: var(--cream); color: var(--ink); overflow-x: hidden; }
 
-  body {
-    font-family: var(--sans);
-    background: var(--cream);
-    color: var(--ink);
-    overflow-x: hidden;
-  }
-
-  /* NAV */
+  /* ─── NAV ─── */
   nav {
-    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    position: fixed; top: 0; left: 0; right: 0; z-index: 200;
     display: flex; align-items: center; justify-content: space-between;
     padding: 1.25rem 3rem;
     background: rgba(247, 244, 239, 0.92);
     backdrop-filter: blur(8px);
     border-bottom: 1px solid var(--cream-dark);
   }
-  .nav-logo {
-    font-family: var(--serif);
-    font-size: 1.5rem;
-    color: var(--ink);
-    text-decoration: none;
-    letter-spacing: -0.3px;
-  }
+  .nav-logo { font-family: var(--serif); font-size: 1.5rem; color: var(--ink); text-decoration: none; letter-spacing: -0.3px; cursor: pointer; }
   .nav-logo span { color: var(--green); font-style: italic; }
   .nav-links { display: flex; gap: 2rem; align-items: center; list-style: none; }
-  .nav-links a {
-    font-size: 0.875rem; font-weight: 400; color: var(--ink-mid);
-    text-decoration: none; transition: color 0.2s;
-  }
+  .nav-links a { font-size: 0.875rem; font-weight: 400; color: var(--ink-mid); text-decoration: none; transition: color 0.2s; cursor: pointer; }
   .nav-links a:hover { color: var(--green); }
-  .nav-cta {
-    background: var(--ink) !important;
-    color: var(--white) !important;
-    padding: 0.6rem 1.4rem;
-    border-radius: 100px;
-    font-weight: 500 !important;
-    transition: background 0.2s !important;
-  }
+  .nav-cta { background: var(--ink) !important; color: var(--white) !important; padding: 0.6rem 1.4rem; border-radius: 100px; font-weight: 500 !important; transition: background 0.2s !important; }
   .nav-cta:hover { background: var(--green) !important; color: var(--white) !important; }
+  .nav-auth-btn {
+    background: transparent; color: var(--ink); padding: 0.6rem 1.2rem;
+    border-radius: 100px; font-family: var(--sans); font-size: 0.875rem; font-weight: 500;
+    border: 1.5px solid var(--ink-light); cursor: pointer; transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .nav-auth-btn:hover { border-color: var(--green); color: var(--green); }
+  .nav-auth-btn.signout { background: var(--ink); color: white; border-color: var(--ink); }
+  .nav-auth-btn.signout:hover { background: #c0392b; border-color: #c0392b; }
+  .nav-user-info { font-size: 0.8rem; color: var(--ink-mid); display: flex; align-items: center; gap: 8px; }
+  .nav-user-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); display: inline-block; }
 
-  /* HERO */
+  /* ─── PAGE SYSTEM ─── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ─── HERO ─── */
   .hero {
-    min-height: 100vh;
-    display: flex; align-items: center;
-    padding: 8rem 3rem 5rem;
-    position: relative;
-    overflow: hidden;
+    min-height: 100vh; display: flex; align-items: center;
+    padding: 8rem 3rem 5rem; position: relative; overflow: hidden;
   }
   .hero-bg {
     position: absolute; inset: 0;
@@ -81,142 +70,59 @@
   .hero-grid {
     display: grid; grid-template-columns: 1fr 1fr;
     gap: 4rem; align-items: center;
-    max-width: 1100px; margin: 0 auto; width: 100%;
-    position: relative;
+    max-width: 1100px; margin: 0 auto; width: 100%; position: relative;
   }
   .hero-eyebrow {
     display: inline-flex; align-items: center; gap: 8px;
     font-size: 0.75rem; font-weight: 500; letter-spacing: 1.5px;
-    text-transform: uppercase; color: var(--green);
-    background: var(--green-light);
-    padding: 6px 14px; border-radius: 100px;
-    margin-bottom: 1.5rem;
+    text-transform: uppercase; color: var(--green); background: var(--green-light);
+    padding: 6px 14px; border-radius: 100px; margin-bottom: 1.5rem;
   }
   .hero-eyebrow::before {
-    content: ''; width: 6px; height: 6px;
-    border-radius: 50%; background: var(--green);
+    content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--green);
     animation: pulse 2s infinite;
   }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.5; transform: scale(0.8); }
-  }
-  .hero h1 {
-    font-family: var(--serif);
-    font-size: clamp(2.8rem, 5vw, 4.2rem);
-    line-height: 1.1;
-    color: var(--ink);
-    margin-bottom: 1.5rem;
-    letter-spacing: -1px;
-  }
-  .hero h1 em {
-    font-style: italic; color: var(--green);
-  }
-  .hero-sub {
-    font-size: 1.05rem; line-height: 1.75;
-    color: var(--ink-mid); max-width: 460px;
-    margin-bottom: 2.5rem;
-  }
+  @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.8); } }
+  .hero h1 { font-family: var(--serif); font-size: clamp(2.8rem, 5vw, 4.2rem); line-height: 1.1; color: var(--ink); margin-bottom: 1.5rem; letter-spacing: -1px; }
+  .hero h1 em { font-style: italic; color: var(--green); }
+  .hero-sub { font-size: 1.05rem; line-height: 1.75; color: var(--ink-mid); max-width: 460px; margin-bottom: 2.5rem; }
   .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
-  .btn-primary {
-    background: var(--ink); color: var(--white);
-    padding: 0.875rem 2rem; border-radius: 100px;
-    font-family: var(--sans); font-size: 0.9rem; font-weight: 500;
-    text-decoration: none; border: none; cursor: pointer;
-    transition: background 0.2s, transform 0.15s;
-    display: inline-block;
-  }
+  .btn-primary { background: var(--ink); color: var(--white); padding: 0.875rem 2rem; border-radius: 100px; font-family: var(--sans); font-size: 0.9rem; font-weight: 500; text-decoration: none; border: none; cursor: pointer; transition: background 0.2s, transform 0.15s; display: inline-block; }
   .btn-primary:hover { background: var(--green); transform: translateY(-1px); }
-  .btn-secondary {
-    background: transparent; color: var(--ink);
-    padding: 0.875rem 2rem; border-radius: 100px;
-    font-family: var(--sans); font-size: 0.9rem; font-weight: 500;
-    text-decoration: none; border: 1.5px solid var(--ink-light);
-    cursor: pointer; transition: border-color 0.2s, color 0.2s;
-    display: inline-block;
-  }
+  .btn-secondary { background: transparent; color: var(--ink); padding: 0.875rem 2rem; border-radius: 100px; font-family: var(--sans); font-size: 0.9rem; font-weight: 500; text-decoration: none; border: 1.5px solid var(--ink-light); cursor: pointer; transition: border-color 0.2s, color 0.2s; display: inline-block; }
   .btn-secondary:hover { border-color: var(--green); color: var(--green); }
 
   /* HERO VISUAL */
   .hero-visual { position: relative; }
-  .score-card {
-    background: var(--white);
-    border-radius: 20px;
-    padding: 1.75rem;
-    box-shadow: 0 8px 40px rgba(0,0,0,0.08);
-    position: relative;
-  }
-  .score-card-header {
-    display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem;
-  }
-  .artist-avatar {
-    width: 48px; height: 48px; border-radius: 50%;
-    background: linear-gradient(135deg, #a8e6cf, #1a9b6c);
-    display: flex; align-items: center; justify-content: center;
-    font-family: var(--serif); font-size: 1.1rem; color: white; font-weight: bold;
-  }
+  .score-card { background: var(--white); border-radius: 20px; padding: 1.75rem; box-shadow: 0 8px 40px rgba(0,0,0,0.08); position: relative; }
+  .score-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem; }
+  .artist-avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #a8e6cf, #1a9b6c); display: flex; align-items: center; justify-content: center; font-family: var(--serif); font-size: 1.1rem; color: white; font-weight: bold; }
   .artist-name { font-weight: 500; font-size: 1rem; }
   .artist-genre { font-size: 0.8rem; color: var(--ink-light); }
-  .score-ring {
-    width: 90px; height: 90px; margin: 0 auto 1.25rem;
-    position: relative; display: flex; align-items: center; justify-content: center;
-  }
+  .score-ring { width: 90px; height: 90px; margin: 0 auto 1.25rem; position: relative; display: flex; align-items: center; justify-content: center; }
   .score-ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
-  .score-ring-num {
-    font-family: var(--serif); font-size: 1.8rem; color: var(--green); line-height: 1;
-  }
+  .score-ring-num { font-family: var(--serif); font-size: 1.8rem; color: var(--green); line-height: 1; }
   .score-ring-label { font-size: 0.65rem; color: var(--ink-light); text-align: center; }
   .score-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .score-metric {
-    background: var(--cream); border-radius: 10px; padding: 10px;
-    text-align: center;
-  }
+  .score-metric { background: var(--cream); border-radius: 10px; padding: 10px; text-align: center; }
   .score-metric-val { font-size: 1rem; font-weight: 500; color: var(--ink); }
   .score-metric-lbl { font-size: 0.7rem; color: var(--ink-light); margin-top: 2px; }
-  .floating-tag {
-    position: absolute;
-    background: var(--white);
-    border-radius: 12px;
-    padding: 8px 14px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-    font-size: 0.75rem; font-weight: 500; color: var(--ink);
-    white-space: nowrap;
-  }
+  .floating-tag { position: absolute; background: var(--white); border-radius: 12px; padding: 8px 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); font-size: 0.75rem; font-weight: 500; color: var(--ink); white-space: nowrap; }
   .tag-1 { top: -20px; right: 20px; color: var(--green); }
   .tag-2 { bottom: 10px; left: -30px; }
   .tag-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 5px; }
 
-  /* PROBLEM */
+  /* ─── COMMON SECTION STYLES ─── */
   .section { padding: 6rem 3rem; }
   .section-inner { max-width: 1100px; margin: 0 auto; }
-  .section-label {
-    font-size: 0.75rem; font-weight: 500; letter-spacing: 1.5px;
-    text-transform: uppercase; color: var(--green); margin-bottom: 1rem;
-  }
-  .section-title {
-    font-family: var(--serif); font-size: clamp(2rem, 3.5vw, 3rem);
-    color: var(--ink); line-height: 1.2; letter-spacing: -0.5px;
-    margin-bottom: 1.5rem;
-  }
+  .section-label { font-size: 0.75rem; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; color: var(--green); margin-bottom: 1rem; }
+  .section-title { font-family: var(--serif); font-size: clamp(2rem, 3.5vw, 3rem); color: var(--ink); line-height: 1.2; letter-spacing: -0.5px; margin-bottom: 1.5rem; }
 
-  .problem-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 3rem;
-    align-items: start; margin-top: 3rem;
-  }
-  .problem-side-label {
-    font-size: 0.8rem; font-weight: 500; text-transform: uppercase;
-    letter-spacing: 1px; color: var(--ink-light); margin-bottom: 1rem;
-    padding-bottom: 0.75rem; border-bottom: 1px solid var(--cream-dark);
-  }
-  .pain-item {
-    display: flex; gap: 12px; align-items: flex-start;
-    padding: 1rem 0; border-bottom: 1px solid var(--cream-dark);
-  }
-  .pain-icon {
-    width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 0.85rem;
-  }
+  /* PROBLEM */
+  .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: start; margin-top: 3rem; }
+  .problem-side-label { font-size: 0.8rem; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; color: var(--ink-light); margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--cream-dark); }
+  .pain-item { display: flex; gap: 12px; align-items: flex-start; padding: 1rem 0; border-bottom: 1px solid var(--cream-dark); }
+  .pain-icon { width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; }
   .pain-icon.red { background: #fde8e8; }
   .pain-icon.amber { background: #fef3e2; }
   .pain-text-title { font-size: 0.9rem; font-weight: 500; margin-bottom: 2px; }
@@ -226,77 +132,38 @@
   .how-bg { background: var(--ink); }
   .how-bg .section-label { color: #5dcaa5; }
   .how-bg .section-title { color: var(--white); }
-  .steps-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr);
-    gap: 2px; margin-top: 3rem;
-  }
-  .step {
-    background: #252521; padding: 2rem;
-    position: relative; overflow: hidden;
-  }
+  .steps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin-top: 3rem; }
+  .step { background: #252521; padding: 2rem; position: relative; overflow: hidden; }
   .step:first-child { border-radius: 16px 0 0 16px; }
   .step:last-child { border-radius: 0 16px 16px 0; }
-  .step-num {
-    font-family: var(--serif); font-size: 3rem; color: #333330;
-    line-height: 1; margin-bottom: 1.25rem;
-  }
-  .step-icon {
-    width: 44px; height: 44px; border-radius: 12px;
-    background: var(--green); display: flex; align-items: center;
-    justify-content: center; font-size: 1.1rem; margin-bottom: 1rem;
-  }
+  .step-num { font-family: var(--serif); font-size: 3rem; color: #333330; line-height: 1; margin-bottom: 1.25rem; }
+  .step-icon { width: 44px; height: 44px; border-radius: 12px; background: var(--green); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; margin-bottom: 1rem; }
   .step-title { font-size: 1rem; font-weight: 500; color: var(--white); margin-bottom: 0.5rem; }
   .step-body { font-size: 0.825rem; color: #9a9a90; line-height: 1.7; }
 
   /* SCORE */
   .score-section { background: var(--white); }
   .score-inner { max-width: 1100px; margin: 0 auto; }
-  .score-explain-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 4rem;
-    align-items: center; margin-top: 3rem;
-  }
+  .score-explain-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; margin-top: 3rem; }
   .score-bars { display: flex; flex-direction: column; gap: 1rem; }
-  .score-bar-item {}
   .score-bar-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
   .score-bar-name { font-size: 0.85rem; font-weight: 500; }
   .score-bar-val { font-size: 0.85rem; color: var(--green); font-weight: 500; }
-  .score-bar-track {
-    height: 8px; background: var(--cream); border-radius: 100px; overflow: hidden;
-  }
-  .score-bar-fill {
-    height: 100%; background: var(--green); border-radius: 100px;
-    transition: width 1s ease;
-  }
-  .score-text-side {}
+  .score-bar-track { height: 8px; background: var(--cream); border-radius: 100px; overflow: hidden; }
+  .score-bar-fill { height: 100%; background: var(--green); border-radius: 100px; transition: width 1s ease; }
   .score-text-side p { font-size: 0.95rem; color: var(--ink-mid); line-height: 1.8; margin-bottom: 1rem; }
   .score-factors { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 1.5rem; }
-  .score-factor {
-    background: var(--cream); border-radius: 12px; padding: 1rem;
-  }
+  .score-factor { background: var(--cream); border-radius: 12px; padding: 1rem; }
   .score-factor-icon { font-size: 1.2rem; margin-bottom: 6px; }
   .score-factor-name { font-size: 0.8rem; font-weight: 500; color: var(--ink); }
   .score-factor-desc { font-size: 0.75rem; color: var(--ink-light); margin-top: 2px; line-height: 1.5; }
 
   /* PRICING */
-  .pricing-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem; margin-top: 3rem;
-  }
-  .pricing-card {
-    background: var(--white); border-radius: 20px; padding: 2rem;
-    border: 1.5px solid var(--cream-dark); position: relative;
-    transition: transform 0.2s, box-shadow 0.2s;
-  }
+  .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 3rem; }
+  .pricing-card { background: var(--white); border-radius: 20px; padding: 2rem; border: 1.5px solid var(--cream-dark); position: relative; transition: transform 0.2s, box-shadow 0.2s; }
   .pricing-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.08); }
-  .pricing-card.featured {
-    background: var(--ink); border-color: var(--ink);
-  }
-  .pricing-badge {
-    position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-    background: var(--green); color: var(--white);
-    font-size: 0.7rem; font-weight: 500; padding: 4px 14px; border-radius: 100px;
-    white-space: nowrap;
-  }
+  .pricing-card.featured { background: var(--ink); border-color: var(--ink); }
+  .pricing-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--green); color: var(--white); font-size: 0.7rem; font-weight: 500; padding: 4px 14px; border-radius: 100px; white-space: nowrap; }
   .pricing-who { font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; color: var(--ink-light); margin-bottom: 0.75rem; }
   .pricing-card.featured .pricing-who { color: #5dcaa5; }
   .pricing-name { font-family: var(--serif); font-size: 1.4rem; margin-bottom: 0.25rem; color: var(--ink); }
@@ -310,18 +177,11 @@
   .pricing-feats li::before { content: '✓'; color: var(--green); font-weight: 500; flex-shrink: 0; }
 
   /* WHO */
-  .who-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 3rem;
-  }
-  .who-card {
-    border-radius: 20px; padding: 2.5rem; position: relative; overflow: hidden;
-  }
+  .who-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 3rem; }
+  .who-card { border-radius: 20px; padding: 2.5rem; position: relative; overflow: hidden; }
   .who-card.artists { background: var(--green-light); }
   .who-card.venues { background: var(--ink); }
-  .who-card-label {
-    font-size: 0.75rem; font-weight: 500; text-transform: uppercase;
-    letter-spacing: 1px; margin-bottom: 1rem;
-  }
+  .who-card-label { font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem; }
   .who-card.artists .who-card-label { color: var(--green); }
   .who-card.venues .who-card-label { color: #5dcaa5; }
   .who-card-title { font-family: var(--serif); font-size: 1.6rem; margin-bottom: 1rem; }
@@ -335,125 +195,318 @@
   .who-card.artists .who-list li::before { color: var(--green); }
   .who-card.venues .who-list li::before { color: #5dcaa5; }
 
-  /* SOCIAL PROOF */
-  .testimonials-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem; margin-top: 3rem;
-  }
-  .testimonial {
-    background: var(--white); border-radius: 16px; padding: 1.75rem;
-    border: 1px solid var(--cream-dark);
-  }
+  /* TESTIMONIALS */
+  .testimonials-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 3rem; }
+  .testimonial { background: var(--white); border-radius: 16px; padding: 1.75rem; border: 1px solid var(--cream-dark); }
   .testimonial-stars { color: var(--green); font-size: 0.9rem; margin-bottom: 1rem; }
   .testimonial-quote { font-size: 0.9rem; color: var(--ink-mid); line-height: 1.7; margin-bottom: 1.25rem; font-style: italic; }
   .testimonial-author { display: flex; align-items: center; gap: 10px; }
-  .testimonial-avatar {
-    width: 36px; height: 36px; border-radius: 50%;
-    background: linear-gradient(135deg, #a8e6cf, #1a9b6c);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 0.75rem; font-weight: 500; color: white;
-  }
+  .testimonial-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #a8e6cf, #1a9b6c); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 500; color: white; }
   .t-name { font-size: 0.85rem; font-weight: 500; }
   .t-role { font-size: 0.75rem; color: var(--ink-light); }
 
   /* CTA */
-  .cta-section {
-    background: var(--green); padding: 6rem 3rem;
-    text-align: center;
-  }
+  .cta-section { background: var(--green); padding: 6rem 3rem; text-align: center; }
   .cta-inner { max-width: 680px; margin: 0 auto; }
-  .cta-title {
-    font-family: var(--serif); font-size: clamp(2rem, 4vw, 3.2rem);
-    color: var(--white); line-height: 1.2; margin-bottom: 1rem;
-    letter-spacing: -0.5px;
-  }
+  .cta-title { font-family: var(--serif); font-size: clamp(2rem, 4vw, 3.2rem); color: var(--white); line-height: 1.2; margin-bottom: 1rem; letter-spacing: -0.5px; }
   .cta-sub { font-size: 1rem; color: rgba(255,255,255,0.8); margin-bottom: 2.5rem; line-height: 1.7; }
   .cta-form { display: flex; gap: 10px; max-width: 480px; margin: 0 auto; }
-  .cta-form input {
-    flex: 1; padding: 0.875rem 1.25rem; border-radius: 100px;
-    border: none; font-family: var(--sans); font-size: 0.9rem;
-    background: rgba(255,255,255,0.2); color: var(--white);
-    outline: none;
-  }
+  .cta-form input { flex: 1; padding: 0.875rem 1.25rem; border-radius: 100px; border: none; font-family: var(--sans); font-size: 0.9rem; background: rgba(255,255,255,0.2); color: var(--white); outline: none; }
   .cta-form input::placeholder { color: rgba(255,255,255,0.6); }
   .cta-form input:focus { background: rgba(255,255,255,0.3); }
-  .btn-white {
-    background: var(--white); color: var(--green);
-    padding: 0.875rem 1.75rem; border-radius: 100px;
-    font-family: var(--sans); font-size: 0.9rem; font-weight: 500;
-    border: none; cursor: pointer; white-space: nowrap;
-    transition: opacity 0.2s;
-  }
+  .btn-white { background: var(--white); color: var(--green); padding: 0.875rem 1.75rem; border-radius: 100px; font-family: var(--sans); font-size: 0.9rem; font-weight: 500; border: none; cursor: pointer; white-space: nowrap; transition: opacity 0.2s; }
   .btn-white:hover { opacity: 0.9; }
 
   /* FOOTER */
-  footer {
-    background: var(--ink); padding: 3rem;
-    display: flex; justify-content: space-between; align-items: center;
-    flex-wrap: wrap; gap: 1rem;
-  }
-  .footer-logo {
-    font-family: var(--serif); font-size: 1.25rem; color: var(--white);
-  }
+  footer { background: var(--ink); padding: 3rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+  .footer-logo { font-family: var(--serif); font-size: 1.25rem; color: var(--white); }
   .footer-logo span { color: #5dcaa5; font-style: italic; }
   .footer-copy { font-size: 0.8rem; color: #5a5a50; }
   .footer-links { display: flex; gap: 1.5rem; }
-  .footer-links a { font-size: 0.8rem; color: #5a5a50; text-decoration: none; transition: color 0.2s; }
+  .footer-links a { font-size: 0.8rem; color: #5a5a50; text-decoration: none; transition: color 0.2s; cursor: pointer; }
   .footer-links a:hover { color: #5dcaa5; }
 
   /* STATS BAR */
-  .stats-bar {
-    background: var(--white); border-top: 1px solid var(--cream-dark);
-    border-bottom: 1px solid var(--cream-dark); padding: 2rem 3rem;
-  }
-  .stats-inner {
-    max-width: 1100px; margin: 0 auto;
-    display: flex; justify-content: space-around; gap: 2rem; flex-wrap: wrap;
-  }
+  .stats-bar { background: var(--white); border-top: 1px solid var(--cream-dark); border-bottom: 1px solid var(--cream-dark); padding: 2rem 3rem; }
+  .stats-inner { max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-around; gap: 2rem; flex-wrap: wrap; }
   .stat { text-align: center; }
-  .stat-num {
-    font-family: var(--serif); font-size: 2.2rem; color: var(--ink);
-    letter-spacing: -1px;
-  }
+  .stat-num { font-family: var(--serif); font-size: 2.2rem; color: var(--ink); letter-spacing: -1px; }
   .stat-num span { color: var(--green); }
   .stat-label { font-size: 0.8rem; color: var(--ink-light); margin-top: 4px; }
 
   /* ANIMATIONS */
-  .fade-up {
-    opacity: 0; transform: translateY(24px);
-    transition: opacity 0.6s ease, transform 0.6s ease;
-  }
+  .fade-up { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s ease; }
   .fade-up.visible { opacity: 1; transform: translateY(0); }
 
+  /* ═══════════════════════════════
+     ─── MODAL / OVERLAY SYSTEM ───
+  ═══════════════════════════════ */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 500;
+    background: rgba(26,26,24,0.6); backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+    padding: 2rem; opacity: 0; pointer-events: none;
+    transition: opacity 0.25s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal-box {
+    background: var(--white); border-radius: 24px;
+    padding: 2.5rem; width: 100%; max-width: 520px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.18);
+    transform: translateY(20px); transition: transform 0.25s;
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal-overlay.open .modal-box { transform: translateY(0); }
+  .modal-close {
+    position: absolute; top: 1.25rem; right: 1.25rem;
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--cream); border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; color: var(--ink-mid); transition: background 0.2s;
+  }
+  .modal-close:hover { background: var(--cream-dark); }
+  .modal-box { position: relative; }
+  .modal-title { font-family: var(--serif); font-size: 1.75rem; color: var(--ink); margin-bottom: 0.4rem; letter-spacing: -0.3px; }
+  .modal-sub { font-size: 0.875rem; color: var(--ink-light); margin-bottom: 2rem; line-height: 1.6; }
+
+  /* Form fields */
+  .form-field { margin-bottom: 1.25rem; }
+  .form-label { display: block; font-size: 0.8rem; font-weight: 500; color: var(--ink-mid); margin-bottom: 6px; letter-spacing: 0.2px; }
+  .form-input {
+    width: 100%; padding: 0.75rem 1rem; border-radius: 12px;
+    border: 1.5px solid var(--cream-dark); font-family: var(--sans); font-size: 0.9rem;
+    color: var(--ink); background: var(--cream); outline: none; transition: border-color 0.2s;
+  }
+  .form-input:focus { border-color: var(--green); background: var(--white); }
+  .form-input::placeholder { color: var(--ink-light); }
+  .form-select { appearance: none; cursor: pointer; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .form-hint { font-size: 0.75rem; color: var(--ink-light); margin-top: 4px; line-height: 1.5; }
+  .form-section-title { font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 1.2px; color: var(--green); margin: 1.5rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--green-light); }
+  .form-submit { width: 100%; padding: 0.9rem; border-radius: 100px; background: var(--ink); color: var(--white); font-family: var(--sans); font-size: 0.95rem; font-weight: 500; border: none; cursor: pointer; transition: background 0.2s, transform 0.15s; margin-top: 1.5rem; }
+  .form-submit:hover { background: var(--green); transform: translateY(-1px); }
+  .form-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* Type selector (artist/business) */
+  .type-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem; }
+  .type-option { border: 2px solid var(--cream-dark); border-radius: 16px; padding: 1.25rem; cursor: pointer; transition: all 0.2s; text-align: center; }
+  .type-option:hover { border-color: var(--green); }
+  .type-option.selected { border-color: var(--green); background: var(--green-light); }
+  .type-option-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+  .type-option-label { font-size: 0.95rem; font-weight: 500; color: var(--ink); }
+  .type-option-desc { font-size: 0.75rem; color: var(--ink-light); margin-top: 3px; }
+
+  /* Social platforms checkboxes */
+  .platform-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .platform-chip {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 10px; border-radius: 8px; cursor: pointer;
+    border: 1.5px solid var(--cream-dark); font-size: 0.78rem; font-weight: 500;
+    transition: all 0.2s; user-select: none;
+  }
+  .platform-chip.checked { border-color: var(--green); background: var(--green-light); color: var(--green); }
+  .platform-chip input { display: none; }
+
+  /* Success state */
+  .success-state { text-align: center; padding: 1.5rem 0; }
+  .success-icon { font-size: 3rem; margin-bottom: 1rem; }
+  .success-title { font-family: var(--serif); font-size: 1.5rem; color: var(--ink); margin-bottom: 0.5rem; }
+  .success-msg { font-size: 0.9rem; color: var(--ink-light); line-height: 1.7; }
+
+  /* ─── LOGIN MODAL STEPS ─── */
+  .login-step { display: none; }
+  .login-step.active { display: block; }
+  .code-input-group { display: flex; gap: 8px; justify-content: center; margin: 1.5rem 0; }
+  .code-digit {
+    width: 48px; height: 56px; border-radius: 12px;
+    border: 2px solid var(--cream-dark); text-align: center;
+    font-size: 1.5rem; font-weight: 500; font-family: var(--serif);
+    color: var(--ink); outline: none; background: var(--cream);
+    transition: border-color 0.2s;
+  }
+  .code-digit:focus { border-color: var(--green); background: var(--white); }
+  .resend-link { font-size: 0.8rem; color: var(--green); cursor: pointer; text-decoration: underline; }
+
+  /* ═══════════════════════════════
+     ─── ARTISTS PAGE ───
+  ═══════════════════════════════ */
+  #page-artists { background: var(--cream); padding-top: 80px; min-height: 100vh; }
+  .artists-hero { background: var(--ink); padding: 4rem 3rem 3rem; }
+  .artists-hero-inner { max-width: 1100px; margin: 0 auto; }
+  .artists-hero h1 { font-family: var(--serif); font-size: clamp(2.2rem, 4vw, 3.2rem); color: var(--white); margin-bottom: 0.75rem; letter-spacing: -0.5px; }
+  .artists-hero p { font-size: 1rem; color: #9a9a90; max-width: 500px; line-height: 1.7; }
+  .artists-filter-bar { display: flex; gap: 10px; margin-top: 2rem; flex-wrap: wrap; }
+  .filter-chip {
+    padding: 7px 18px; border-radius: 100px; font-size: 0.8rem; font-weight: 500;
+    cursor: pointer; border: 1.5px solid #3a3a36; color: #9a9a90; background: transparent;
+    transition: all 0.2s;
+  }
+  .filter-chip:hover, .filter-chip.active { background: var(--green); border-color: var(--green); color: white; }
+  .artists-grid-section { padding: 3rem; max-width: 1100px; margin: 0 auto; }
+  .artists-section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+  .artists-section-head h2 { font-family: var(--serif); font-size: 1.6rem; color: var(--ink); letter-spacing: -0.3px; }
+  .view-all-link { font-size: 0.85rem; color: var(--green); cursor: pointer; text-decoration: none; }
+
+  /* Artist cards – Spotify-style */
+  .artist-cards-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; margin-bottom: 3rem; }
+  .artist-card {
+    background: var(--white); border-radius: 16px; overflow: hidden;
+    border: 1px solid var(--cream-dark); transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+  }
+  .artist-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,0.1); }
+  .artist-card-img {
+    width: 100%; aspect-ratio: 1/1; object-fit: cover;
+    background: linear-gradient(135deg, #a8e6cf 0%, #1a9b6c 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--serif); font-size: 2.5rem; color: white; font-weight: bold;
+    position: relative; overflow: hidden;
+  }
+  .artist-card-img .play-overlay {
+    position: absolute; inset: 0; background: rgba(0,0,0,0.4);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .artist-card:hover .play-overlay { opacity: 1; }
+  .play-btn { width: 48px; height: 48px; border-radius: 50%; background: var(--green); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: white; }
+  .artist-card-body { padding: 1rem; }
+  .artist-card-name { font-weight: 500; font-size: 0.95rem; color: var(--ink); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .artist-card-genre { font-size: 0.78rem; color: var(--ink-light); margin-bottom: 8px; }
+  .artist-card-score { display: flex; align-items: center; gap: 6px; }
+  .score-badge { background: var(--green-light); color: var(--green); font-size: 0.72rem; font-weight: 500; padding: 3px 8px; border-radius: 100px; }
+  .artist-card-stars { font-size: 0.7rem; color: #f4b400; }
+  .artist-card-location { font-size: 0.72rem; color: var(--ink-light); margin-top: 5px; }
+
+  /* Featured artist banner */
+  .featured-artist-banner {
+    background: var(--ink); border-radius: 20px; padding: 2rem;
+    display: flex; gap: 2rem; align-items: center; margin-bottom: 3rem;
+  }
+  .featured-badge { background: var(--green); color: white; font-size: 0.7rem; font-weight: 500; padding: 4px 12px; border-radius: 100px; margin-bottom: 0.75rem; display: inline-block; }
+  .featured-artist-img { width: 120px; height: 120px; border-radius: 16px; flex-shrink: 0; background: linear-gradient(135deg, #5dcaa5 0%, #1a9b6c 100%); display: flex; align-items: center; justify-content: center; font-family: var(--serif); font-size: 2.8rem; color: white; }
+  .featured-artist-name { font-family: var(--serif); font-size: 1.8rem; color: white; margin-bottom: 4px; }
+  .featured-artist-meta { font-size: 0.85rem; color: #9a9a90; margin-bottom: 1rem; }
+  .featured-artist-stats { display: flex; gap: 1.5rem; }
+  .featured-stat { text-align: center; }
+  .featured-stat-val { font-size: 1.1rem; font-weight: 500; color: var(--green); }
+  .featured-stat-lbl { font-size: 0.7rem; color: #5a5a50; margin-top: 2px; }
+  .featured-book-btn { background: var(--green); color: white; padding: 0.7rem 1.5rem; border-radius: 100px; border: none; font-family: var(--sans); font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: opacity 0.2s; white-space: nowrap; }
+  .featured-book-btn:hover { opacity: 0.85; }
+
+  /* ═══════════════════════════════
+     ─── BOOKING PAGE ───
+  ═══════════════════════════════ */
+  #page-booking { background: var(--cream); padding-top: 80px; min-height: 100vh; }
+  .booking-hero { background: linear-gradient(135deg, #0d6e4e 0%, #1a9b6c 100%); padding: 4rem 3rem 3rem; }
+  .booking-hero-inner { max-width: 1100px; margin: 0 auto; }
+  .booking-hero h1 { font-family: var(--serif); font-size: clamp(2rem, 3.5vw, 3rem); color: white; margin-bottom: 0.75rem; letter-spacing: -0.5px; }
+  .booking-hero p { font-size: 1rem; color: rgba(255,255,255,0.8); max-width: 500px; line-height: 1.7; }
+  .booking-content { padding: 3rem; max-width: 1100px; margin: 0 auto; }
+  .booking-grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 2.5rem; margin-top: 2rem; }
+  .booking-sidebar { }
+  .booking-artist-pick { background: var(--white); border-radius: 16px; padding: 1.5rem; border: 1px solid var(--cream-dark); margin-bottom: 1.5rem; }
+  .booking-artist-pick h3 { font-size: 0.8rem; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; color: var(--ink-light); margin-bottom: 1rem; }
+  .pick-artist-row { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 12px; cursor: pointer; transition: background 0.15s; border: 1.5px solid transparent; }
+  .pick-artist-row:hover { background: var(--cream); }
+  .pick-artist-row.selected { background: var(--green-light); border-color: var(--green); }
+  .pick-avatar { width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, #a8e6cf, #1a9b6c); display: flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: 600; color: white; flex-shrink: 0; }
+  .pick-name { font-size: 0.875rem; font-weight: 500; color: var(--ink); }
+  .pick-genre { font-size: 0.75rem; color: var(--ink-light); }
+  .pick-score { margin-left: auto; font-size: 0.75rem; font-weight: 500; color: var(--green); background: var(--green-light); padding: 3px 8px; border-radius: 100px; white-space: nowrap; }
+  .booking-form-card { background: var(--white); border-radius: 20px; padding: 2rem; border: 1px solid var(--cream-dark); }
+  .booking-form-card h2 { font-family: var(--serif); font-size: 1.5rem; color: var(--ink); margin-bottom: 0.4rem; }
+  .booking-form-card > p { font-size: 0.85rem; color: var(--ink-light); margin-bottom: 2rem; }
+  .date-time-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .booking-submit { width: 100%; padding: 1rem; border-radius: 100px; background: var(--green); color: white; font-family: var(--sans); font-size: 1rem; font-weight: 500; border: none; cursor: pointer; transition: opacity 0.2s, transform 0.15s; margin-top: 1.5rem; }
+  .booking-submit:hover { opacity: 0.9; transform: translateY(-1px); }
+  .auth-gate { text-align: center; padding: 5rem 2rem; }
+  .auth-gate-icon { font-size: 3rem; margin-bottom: 1.25rem; }
+  .auth-gate h2 { font-family: var(--serif); font-size: 2rem; color: var(--ink); margin-bottom: 0.75rem; }
+  .auth-gate p { font-size: 0.95rem; color: var(--ink-light); margin-bottom: 2rem; line-height: 1.7; }
+
+  /* ═══════════════════════════════
+     ─── APPLY PAGE ───
+  ═══════════════════════════════ */
+  #page-apply { background: var(--cream); padding-top: 80px; min-height: 100vh; }
+  .apply-layout { max-width: 680px; margin: 0 auto; padding: 4rem 2rem; }
+  .apply-back { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--ink-mid); cursor: pointer; margin-bottom: 2rem; transition: color 0.2s; }
+  .apply-back:hover { color: var(--green); }
+  .apply-header { margin-bottom: 2.5rem; }
+  .apply-header h1 { font-family: var(--serif); font-size: clamp(1.8rem, 3vw, 2.5rem); color: var(--ink); letter-spacing: -0.5px; margin-bottom: 0.5rem; }
+  .apply-header p { font-size: 0.95rem; color: var(--ink-light); line-height: 1.7; }
+  .apply-card { background: var(--white); border-radius: 20px; padding: 2.5rem; border: 1px solid var(--cream-dark); }
+
+  /* Progress */
+  .apply-progress { display: flex; align-items: center; gap: 0; margin-bottom: 2rem; }
+  .progress-step { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 500; color: var(--ink-light); }
+  .progress-step.active { color: var(--green); }
+  .progress-step.done { color: var(--green); }
+  .progress-dot { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--cream-dark); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
+  .progress-step.active .progress-dot { border-color: var(--green); background: var(--green-light); color: var(--green); }
+  .progress-step.done .progress-dot { border-color: var(--green); background: var(--green); color: white; }
+  .progress-line { flex: 1; height: 1px; background: var(--cream-dark); margin: 0 8px; }
+  .progress-line.done { background: var(--green); }
+
+  .apply-step { display: none; }
+  .apply-step.active { display: block; }
+  .apply-step-title { font-family: var(--serif); font-size: 1.3rem; color: var(--ink); margin-bottom: 0.4rem; }
+  .apply-step-desc { font-size: 0.85rem; color: var(--ink-light); margin-bottom: 1.75rem; line-height: 1.6; }
+  .apply-nav { display: flex; justify-content: space-between; margin-top: 2rem; }
+  .btn-back { background: transparent; color: var(--ink-mid); padding: 0.75rem 1.5rem; border-radius: 100px; font-family: var(--sans); font-size: 0.9rem; font-weight: 500; border: 1.5px solid var(--cream-dark); cursor: pointer; transition: all 0.2s; }
+  .btn-back:hover { border-color: var(--ink-mid); }
+  .btn-next { background: var(--ink); color: white; padding: 0.75rem 2rem; border-radius: 100px; font-family: var(--sans); font-size: 0.9rem; font-weight: 500; border: none; cursor: pointer; transition: background 0.2s; }
+  .btn-next:hover { background: var(--green); }
+
+  /* ─── MEDIA QUERIES ─── */
   @media (max-width: 768px) {
     nav { padding: 1rem 1.5rem; }
     .nav-links { display: none; }
     .hero { padding: 6rem 1.5rem 4rem; }
     .hero-grid { grid-template-columns: 1fr; gap: 2.5rem; }
     .section { padding: 4rem 1.5rem; }
-    .problem-grid, .score-explain-grid, .who-grid,
-    .steps-grid, .pricing-grid, .testimonials-grid { grid-template-columns: 1fr; }
+    .problem-grid, .score-explain-grid, .who-grid, .steps-grid, .pricing-grid, .testimonials-grid { grid-template-columns: 1fr; }
     .steps-grid { gap: 1px; }
     .step:first-child { border-radius: 16px 16px 0 0; }
     .step:last-child { border-radius: 0 0 16px 16px; }
     footer { flex-direction: column; align-items: flex-start; }
     .cta-form { flex-direction: column; }
     .stats-bar { padding: 2rem 1.5rem; }
+    .artist-cards-row { grid-template-columns: repeat(2, 1fr); }
+    .featured-artist-banner { flex-direction: column; text-align: center; }
+    .featured-artist-stats { justify-content: center; }
+    .booking-grid { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    .artists-grid-section { padding: 2rem 1.5rem; }
+    .booking-content { padding: 2rem 1.5rem; }
+    .apply-layout { padding: 2rem 1.5rem; }
   }
 </style>
 </head>
 <body>
 
-<!-- NAV -->
+<!-- ─────────────── NAV ─────────────── -->
 <nav>
-  <a href="#" class="nav-logo">Local<span>Stage</span></a>
+  <a class="nav-logo" onclick="showPage('home')">Local<span>Stage</span></a>
   <ul class="nav-links">
-    <li><a href="#how">How it works</a></li>
-    <li><a href="#who">For artists</a></li>
-    <li><a href="#pricing">Pricing</a></li>
-    <li><a href="#contact" class="nav-cta">Get started</a></li>
+    <li><a onclick="showPage('home'); scrollTo('#how')">How it works</a></li>
+    <li><a onclick="showPage('artists')">Browse Artists</a></li>
+    <li><a onclick="showPage('home'); scrollTo('#pricing')">Pricing</a></li>
+    <li><a onclick="openApply()">Apply / Join</a></li>
+    <li><a onclick="showPage('booking')">Book Now</a></li>
   </ul>
+  <div style="display:flex;align-items:center;gap:10px">
+    <span id="nav-user-info" class="nav-user-info" style="display:none">
+      <span class="nav-user-dot"></span>
+      <span id="nav-user-email"></span>
+    </span>
+    <button id="nav-auth-btn" class="nav-auth-btn" onclick="openLogin()">Sign In</button>
+  </div>
 </nav>
+
+<!-- ══════════════════════════════════════
+     PAGE: HOME
+══════════════════════════════════════ -->
+<div id="page-home" class="page active">
 
 <!-- HERO -->
 <section class="hero">
@@ -464,8 +517,8 @@
       <h1>We don't book <em>talent.</em><br>We book <em>audiences.</em></h1>
       <p class="hero-sub">LocalStage connects Ontario's emerging musicians — the ones with real local fanbases — directly with the venues and events that need them.</p>
       <div class="hero-actions">
-        <a href="#contact" class="btn-primary">Join as an artist →</a>
-        <a href="#venues" class="btn-secondary">I run a venue</a>
+        <button class="btn-primary" onclick="openApply()">Join as an artist →</button>
+        <button class="btn-secondary" onclick="showPage('artists')">Browse the roster</button>
       </div>
     </div>
     <div class="hero-visual">
@@ -490,22 +543,10 @@
           </div>
         </div>
         <div class="score-metrics">
-          <div class="score-metric">
-            <div class="score-metric-val">3.2k</div>
-            <div class="score-metric-lbl">Local followers</div>
-          </div>
-          <div class="score-metric">
-            <div class="score-metric-val">7.4%</div>
-            <div class="score-metric-lbl">Engagement rate</div>
-          </div>
-          <div class="score-metric">
-            <div class="score-metric-val">~65</div>
-            <div class="score-metric-lbl">Avg. show draw</div>
-          </div>
-          <div class="score-metric">
-            <div class="score-metric-val">12</div>
-            <div class="score-metric-lbl">Shows this year</div>
-          </div>
+          <div class="score-metric"><div class="score-metric-val">3.2k</div><div class="score-metric-lbl">Local followers</div></div>
+          <div class="score-metric"><div class="score-metric-val">7.4%</div><div class="score-metric-lbl">Engagement rate</div></div>
+          <div class="score-metric"><div class="score-metric-val">~65</div><div class="score-metric-lbl">Avg. show draw</div></div>
+          <div class="score-metric"><div class="score-metric-val">12</div><div class="score-metric-lbl">Shows this year</div></div>
         </div>
       </div>
       <div class="floating-tag tag-2"><span class="tag-dot" style="background:#1a9b6c"></span>Matched: The Dock, Mississauga</div>
@@ -516,22 +557,10 @@
 <!-- STATS BAR -->
 <div class="stats-bar">
   <div class="stats-inner">
-    <div class="stat">
-      <div class="stat-num">30<span>+</span></div>
-      <div class="stat-label">Curated artists on roster</div>
-    </div>
-    <div class="stat">
-      <div class="stat-num">15<span>+</span></div>
-      <div class="stat-label">Venue partners</div>
-    </div>
-    <div class="stat">
-      <div class="stat-num">$0</div>
-      <div class="stat-label">Artist signup fee</div>
-    </div>
-    <div class="stat">
-      <div class="stat-num">48<span>h</span></div>
-      <div class="stat-label">Avg. match time</div>
-    </div>
+    <div class="stat"><div class="stat-num">30<span>+</span></div><div class="stat-label">Curated artists on roster</div></div>
+    <div class="stat"><div class="stat-num">15<span>+</span></div><div class="stat-label">Venue partners</div></div>
+    <div class="stat"><div class="stat-num">$0</div><div class="stat-label">Artist signup fee</div></div>
+    <div class="stat"><div class="stat-num">48<span>h</span></div><div class="stat-label">Avg. match time</div></div>
   </div>
 </div>
 
@@ -543,51 +572,15 @@
     <div class="problem-grid fade-up">
       <div>
         <div class="problem-side-label">What venues struggle with</div>
-        <div class="pain-item">
-          <div class="pain-icon red">❌</div>
-          <div>
-            <div class="pain-text-title">Empty rooms on slow nights</div>
-            <div class="pain-text-body">Booking an unknown act means gambling on turnout. A bad night costs bar sales, staff hours, and goodwill.</div>
-          </div>
-        </div>
-        <div class="pain-item">
-          <div class="pain-icon red">❌</div>
-          <div>
-            <div class="pain-text-title">No reliable way to vet emerging artists</div>
-            <div class="pain-text-body">Streaming numbers don't translate to local draw. A song with 50k plays might bring 8 people to a Tuesday show.</div>
-          </div>
-        </div>
-        <div class="pain-item">
-          <div class="pain-icon amber">⚠️</div>
-          <div>
-            <div class="pain-text-title">Research takes hours they don't have</div>
-            <div class="pain-text-body">Scrolling Instagram, checking engagement, Googling show history — a booker already has a full-time job.</div>
-          </div>
-        </div>
+        <div class="pain-item"><div class="pain-icon red">❌</div><div><div class="pain-text-title">Empty rooms on slow nights</div><div class="pain-text-body">Booking an unknown act means gambling on turnout. A bad night costs bar sales, staff hours, and goodwill.</div></div></div>
+        <div class="pain-item"><div class="pain-icon red">❌</div><div><div class="pain-text-title">No reliable way to vet emerging artists</div><div class="pain-text-body">Streaming numbers don't translate to local draw. A song with 50k plays might bring 8 people to a Tuesday show.</div></div></div>
+        <div class="pain-item"><div class="pain-icon amber">⚠️</div><div><div class="pain-text-title">Research takes hours they don't have</div><div class="pain-text-body">Scrolling Instagram, checking engagement, Googling show history — a booker already has a full-time job.</div></div></div>
       </div>
       <div>
         <div class="problem-side-label">What artists struggle with</div>
-        <div class="pain-item">
-          <div class="pain-icon red">❌</div>
-          <div>
-            <div class="pain-text-title">Cold-emailing venues with no response</div>
-            <div class="pain-text-body">Most artist inquiries go to spam. Without a relationship or referral, there's no way in.</div>
-          </div>
-        </div>
-        <div class="pain-item">
-          <div class="pain-icon red">❌</div>
-          <div>
-            <div class="pain-text-title">No agent, no label, no leverage</div>
-            <div class="pain-text-body">Unsigned emerging artists have talent but no infrastructure to turn it into consistent bookings.</div>
-          </div>
-        </div>
-        <div class="pain-item">
-          <div class="pain-icon amber">⚠️</div>
-          <div>
-            <div class="pain-text-title">Existing platforms don't solve local</div>
-            <div class="pain-text-body">Bandcamp, SoundCloud, SubmitHub — none of them care about whether you can fill a room in Brampton on a Friday.</div>
-          </div>
-        </div>
+        <div class="pain-item"><div class="pain-icon red">❌</div><div><div class="pain-text-title">Cold-emailing venues with no response</div><div class="pain-text-body">Most artist inquiries go to spam. Without a relationship or referral, there's no way in.</div></div></div>
+        <div class="pain-item"><div class="pain-icon red">❌</div><div><div class="pain-text-title">No agent, no label, no leverage</div><div class="pain-text-body">Unsigned emerging artists have talent but no infrastructure to turn it into consistent bookings.</div></div></div>
+        <div class="pain-item"><div class="pain-icon amber">⚠️</div><div><div class="pain-text-title">Existing platforms don't solve local</div><div class="pain-text-body">Bandcamp, SoundCloud, SubmitHub — none of them care about whether you can fill a room in Brampton on a Friday.</div></div></div>
       </div>
     </div>
   </div>
@@ -599,24 +592,9 @@
     <div class="section-label">How LocalStage works</div>
     <h2 class="section-title">Three steps from roster to revenue.</h2>
     <div class="steps-grid fade-up">
-      <div class="step">
-        <div class="step-num">01</div>
-        <div class="step-icon">🎙️</div>
-        <div class="step-title">We curate the roster</div>
-        <div class="step-body">Every artist is vetted manually. We track local follower concentration, engagement rate, past show attendance, and reliability before adding anyone to the roster. No open-door policy — you have to earn your spot.</div>
-      </div>
-      <div class="step">
-        <div class="step-num">02</div>
-        <div class="step-icon">📊</div>
-        <div class="step-title">We score real-world draw</div>
-        <div class="step-body">Our LocalScore™ measures the one thing venues care about: will this artist bring people? We weight local audience, engagement quality, and proven show history — not vanity metrics.</div>
-      </div>
-      <div class="step">
-        <div class="step-num">03</div>
-        <div class="step-icon">🤝</div>
-        <div class="step-title">We make the match</div>
-        <div class="step-body">We pair the right artist with the right venue — genre fit, audience size, night of the week. Then we handle the intro, the coordination, and the follow-up so both sides can focus on the show.</div>
-      </div>
+      <div class="step"><div class="step-num">01</div><div class="step-icon">🎙️</div><div class="step-title">We curate the roster</div><div class="step-body">Every artist is vetted manually. We track local follower concentration, engagement rate, past show attendance, and reliability before adding anyone to the roster. No open-door policy — you have to earn your spot.</div></div>
+      <div class="step"><div class="step-num">02</div><div class="step-icon">📊</div><div class="step-title">We score real-world draw</div><div class="step-body">Our LocalScore™ measures the one thing venues care about: will this artist bring people? We weight local audience, engagement quality, and proven show history — not vanity metrics.</div></div>
+      <div class="step"><div class="step-num">03</div><div class="step-icon">🤝</div><div class="step-title">We make the match</div><div class="step-body">We pair the right artist with the right venue — genre fit, audience size, night of the week. Then we handle the intro, the coordination, and the follow-up so both sides can focus on the show.</div></div>
     </div>
   </div>
 </section>
@@ -628,34 +606,10 @@
     <h2 class="section-title">The only metric venues actually care about.</h2>
     <div class="score-explain-grid fade-up">
       <div class="score-bars">
-        <div class="score-bar-item">
-          <div class="score-bar-header">
-            <span class="score-bar-name">Local follower concentration</span>
-            <span class="score-bar-val">35%</span>
-          </div>
-          <div class="score-bar-track"><div class="score-bar-fill" style="width:35%"></div></div>
-        </div>
-        <div class="score-bar-item">
-          <div class="score-bar-header">
-            <span class="score-bar-name">Instagram engagement rate</span>
-            <span class="score-bar-val">25%</span>
-          </div>
-          <div class="score-bar-track"><div class="score-bar-fill" style="width:25%"></div></div>
-        </div>
-        <div class="score-bar-item">
-          <div class="score-bar-header">
-            <span class="score-bar-name">Avg. show attendance (verified)</span>
-            <span class="score-bar-val">25%</span>
-          </div>
-          <div class="score-bar-track"><div class="score-bar-fill" style="width:25%"></div></div>
-        </div>
-        <div class="score-bar-item">
-          <div class="score-bar-header">
-            <span class="score-bar-name">Reliability & professionalism</span>
-            <span class="score-bar-val">15%</span>
-          </div>
-          <div class="score-bar-track"><div class="score-bar-fill" style="width:15%"></div></div>
-        </div>
+        <div class="score-bar-item"><div class="score-bar-header"><span class="score-bar-name">Local follower concentration</span><span class="score-bar-val">35%</span></div><div class="score-bar-track"><div class="score-bar-fill" style="width:35%"></div></div></div>
+        <div class="score-bar-item"><div class="score-bar-header"><span class="score-bar-name">Instagram engagement rate</span><span class="score-bar-val">25%</span></div><div class="score-bar-track"><div class="score-bar-fill" style="width:25%"></div></div></div>
+        <div class="score-bar-item"><div class="score-bar-header"><span class="score-bar-name">Avg. show attendance (verified)</span><span class="score-bar-val">25%</span></div><div class="score-bar-track"><div class="score-bar-fill" style="width:25%"></div></div></div>
+        <div class="score-bar-item"><div class="score-bar-header"><span class="score-bar-name">Reliability & professionalism</span><span class="score-bar-val">15%</span></div><div class="score-bar-track"><div class="score-bar-fill" style="width:15%"></div></div></div>
         <div style="margin-top:1.5rem;padding:1.25rem;background:var(--green-light);border-radius:12px;">
           <div style="font-size:0.8rem;font-weight:500;color:var(--green);margin-bottom:4px">Minimum threshold</div>
           <div style="font-size:0.85rem;color:var(--ink-mid);line-height:1.6">Artists must score 60+ to enter the roster and 75+ to be pitched for premium venue slots.</div>
@@ -666,26 +620,10 @@
         <p>LocalScore™ is built from the ground up to answer one question: <strong>if this artist plays your venue, how many people will show up?</strong></p>
         <p>We verify attendance numbers through venue managers and Facebook event RSVPs, weight followers by location, and factor in whether an artist has a track record of showing up prepared and on time.</p>
         <div class="score-factors">
-          <div class="score-factor">
-            <div class="score-factor-icon">📍</div>
-            <div class="score-factor-name">Local reach</div>
-            <div class="score-factor-desc">Follower location data, not just total count</div>
-          </div>
-          <div class="score-factor">
-            <div class="score-factor-icon">💬</div>
-            <div class="score-factor-name">Real engagement</div>
-            <div class="score-factor-desc">Comments + shares, not passive likes</div>
-          </div>
-          <div class="score-factor">
-            <div class="score-factor-icon">🎪</div>
-            <div class="score-factor-name">Verified draw</div>
-            <div class="score-factor-desc">Cross-checked with venues & event pages</div>
-          </div>
-          <div class="score-factor">
-            <div class="score-factor-icon">⭐</div>
-            <div class="score-factor-name">Reliability score</div>
-            <div class="score-factor-desc">Punctuality, professionalism, repeat bookings</div>
-          </div>
+          <div class="score-factor"><div class="score-factor-icon">📍</div><div class="score-factor-name">Local reach</div><div class="score-factor-desc">Follower location data, not just total count</div></div>
+          <div class="score-factor"><div class="score-factor-icon">💬</div><div class="score-factor-name">Real engagement</div><div class="score-factor-desc">Comments + shares, not passive likes</div></div>
+          <div class="score-factor"><div class="score-factor-icon">🎪</div><div class="score-factor-name">Verified draw</div><div class="score-factor-desc">Cross-checked with venues & event pages</div></div>
+          <div class="score-factor"><div class="score-factor-icon">⭐</div><div class="score-factor-name">Reliability score</div><div class="score-factor-desc">Punctuality, professionalism, repeat bookings</div></div>
         </div>
       </div>
     </div>
@@ -708,7 +646,7 @@
           <li>Any genre: R&amp;B, indie, folk, hip-hop, jazz</li>
           <li>Based in GTA, Hamilton, or surrounding area</li>
         </ul>
-        <a href="#contact" class="btn-primary" style="margin-top:2rem;display:inline-block">Apply to join roster →</a>
+        <button class="btn-primary" style="margin-top:2rem" onclick="openApply()">Apply to join roster →</button>
       </div>
       <div class="who-card venues" id="venues">
         <div class="who-card-label">For venues</div>
@@ -720,7 +658,7 @@
           <li>Promoters looking for local multi-act lineups</li>
           <li>Anywhere in Mississauga, Brampton, Hamilton, Toronto</li>
         </ul>
-        <a href="#contact" class="btn-primary" style="margin-top:2rem;display:inline-block;background:var(--green)">Browse the roster →</a>
+        <button class="btn-primary" style="margin-top:2rem;background:var(--green)" onclick="showPage('artists')">Browse the roster →</button>
       </div>
     </div>
   </div>
@@ -773,7 +711,7 @@
   </div>
 </section>
 
-<!-- TESTIMONIALS (sample) -->
+<!-- TESTIMONIALS -->
 <section class="section" style="background:var(--white)">
   <div class="section-inner">
     <div class="section-label">Early feedback</div>
@@ -782,35 +720,17 @@
       <div class="testimonial">
         <div class="testimonial-stars">★★★★★</div>
         <div class="testimonial-quote">"We'd been burned before by artists who promised a crowd and brought their mom. LocalStage showed us the numbers upfront — the artist brought 70 people on a Wednesday. We rebooked immediately."</div>
-        <div class="testimonial-author">
-          <div class="testimonial-avatar">DK</div>
-          <div>
-            <div class="t-name">Dan K.</div>
-            <div class="t-role">Owner, The Railyard — Mississauga</div>
-          </div>
-        </div>
+        <div class="testimonial-author"><div class="testimonial-avatar">DK</div><div><div class="t-name">Dan K.</div><div class="t-role">Owner, The Railyard — Mississauga</div></div></div>
       </div>
       <div class="testimonial">
         <div class="testimonial-stars">★★★★★</div>
         <div class="testimonial-quote">"I'd been cold-emailing venues for two years with no response. LocalStage got me three bookings in six weeks. I finally feel like my career is actually moving."</div>
-        <div class="testimonial-author">
-          <div class="testimonial-avatar">JA</div>
-          <div>
-            <div class="t-name">Jade A.</div>
-            <div class="t-role">R&B artist, Brampton ON</div>
-          </div>
-        </div>
+        <div class="testimonial-author"><div class="testimonial-avatar">JA</div><div><div class="t-name">Jade A.</div><div class="t-role">R&B artist, Brampton ON</div></div></div>
       </div>
       <div class="testimonial">
         <div class="testimonial-stars">★★★★★</div>
         <div class="testimonial-quote">"We run a quarterly community event and needed local openers. LocalStage matched us with two artists perfectly — same vibe, same audience. Effortless."</div>
-        <div class="testimonial-author">
-          <div class="testimonial-avatar">PR</div>
-          <div>
-            <div class="t-name">Priya R.</div>
-            <div class="t-role">Event organizer, Hamilton</div>
-          </div>
-        </div>
+        <div class="testimonial-author"><div class="testimonial-avatar">PR</div><div><div class="t-name">Priya R.</div><div class="t-role">Event organizer, Hamilton</div></div></div>
       </div>
     </div>
   </div>
@@ -821,11 +741,11 @@
   <div class="cta-inner">
     <h2 class="cta-title">Ready to get on stage?</h2>
     <p class="cta-sub">Whether you're an artist looking for your next booking or a venue looking for reliable talent that brings a crowd — we'd love to hear from you.</p>
-    <div class="cta-form">
-      <input type="email" placeholder="your@email.com">
-      <button class="btn-white">Get started →</button>
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
+      <button class="btn-white" onclick="openApply()">Apply as Artist or Business →</button>
+      <button style="background:transparent;color:white;border:1.5px solid rgba(255,255,255,0.4);padding:0.875rem 2rem;border-radius:100px;font-family:var(--sans);font-size:0.9rem;font-weight:500;cursor:pointer;transition:border-color 0.2s" onmouseover="this.style.borderColor='white'" onmouseout="this.style.borderColor='rgba(255,255,255,0.4)'" onclick="openLogin()">Sign in to your account</button>
     </div>
-    <p style="font-size:0.8rem;color:rgba(255,255,255,0.6);margin-top:1rem">Ontario-based only · No spam · Response within 24h</p>
+    <p style="font-size:0.8rem;color:rgba(255,255,255,0.6);margin-top:1.5rem">Ontario-based only · No spam · Response within 24h</p>
   </div>
 </section>
 
@@ -834,29 +754,804 @@
   <div class="footer-logo">Local<span>Stage</span></div>
   <div class="footer-copy">© 2025 LocalStage · Ontario, Canada</div>
   <div class="footer-links">
-    <a href="#how">How it works</a>
-    <a href="#who">Artists</a>
-    <a href="#venues">Venues</a>
-    <a href="#contact">Contact</a>
+    <a onclick="showPage('home')">Home</a>
+    <a onclick="showPage('artists')">Artists</a>
+    <a onclick="showPage('booking')">Book Now</a>
+    <a onclick="openApply()">Apply</a>
   </div>
 </footer>
 
-<script>
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if (e.isIntersecting) { e.target.classList.add('visible'); }
-    });
-  }, { threshold: 0.15 });
-  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+</div><!-- /page-home -->
 
-  document.querySelector('.cta-form button').addEventListener('click', () => {
-    const input = document.querySelector('.cta-form input');
-    if (input.value.includes('@')) {
-      input.value = '';
-      input.placeholder = '✓ We\'ll be in touch within 24h!';
-      input.style.color = 'white';
+
+<!-- ══════════════════════════════════════
+     PAGE: ARTISTS (Spotify-style browse)
+══════════════════════════════════════ -->
+<div id="page-artists" class="page">
+  <section class="artists-hero">
+    <div class="artists-hero-inner">
+      <div style="font-size:0.75rem;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:#5dcaa5;margin-bottom:0.75rem">The Roster</div>
+      <h1>Discover local artists<br>who <em style="font-style:italic;color:#5dcaa5">actually</em> fill rooms.</h1>
+      <p>Every artist below has been vetted, scored, and verified. What you see is real — local followers, real draw, real reliability.</p>
+      <div class="artists-filter-bar">
+        <button class="filter-chip active" onclick="filterArtists('all',this)">All genres</button>
+        <button class="filter-chip" onclick="filterArtists('rnb',this)">R&amp;B / Soul</button>
+        <button class="filter-chip" onclick="filterArtists('hiphop',this)">Hip-Hop</button>
+        <button class="filter-chip" onclick="filterArtists('indie',this)">Indie / Alt</button>
+        <button class="filter-chip" onclick="filterArtists('jazz',this)">Jazz</button>
+        <button class="filter-chip" onclick="filterArtists('folk',this)">Folk / Country</button>
+        <button class="filter-chip" onclick="filterArtists('pop',this)">Pop</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="artists-grid-section">
+    <!-- Featured -->
+    <div class="artists-section-head"><h2>🌟 Featured This Month</h2></div>
+    <div class="featured-artist-banner">
+      <div class="featured-artist-img">MR</div>
+      <div style="flex:1">
+        <span class="featured-badge">Artist of the Month</span>
+        <div class="featured-artist-name">Maya Reyes</div>
+        <div class="featured-artist-meta">R&B · Soul &nbsp;·&nbsp; Mississauga, ON &nbsp;·&nbsp; ★★★★★ (4.9)</div>
+        <div class="featured-artist-stats">
+          <div class="featured-stat"><div class="featured-stat-val">84</div><div class="featured-stat-lbl">LocalScore™</div></div>
+          <div class="featured-stat"><div class="featured-stat-val">3.2k</div><div class="featured-stat-lbl">Local followers</div></div>
+          <div class="featured-stat"><div class="featured-stat-val">~65</div><div class="featured-stat-lbl">Avg. draw</div></div>
+          <div class="featured-stat"><div class="featured-stat-val">12</div><div class="featured-stat-lbl">Shows/yr</div></div>
+        </div>
+      </div>
+      <button class="featured-book-btn" onclick="showPage('booking')">Book Maya →</button>
+    </div>
+
+    <!-- Top Rated -->
+    <div class="artists-section-head">
+      <h2>Top Rated</h2>
+      <a class="view-all-link">View all →</a>
+    </div>
+    <div class="artist-cards-row" id="artist-grid">
+      <!-- Cards generated by JS -->
+    </div>
+
+    <!-- New to Roster -->
+    <div class="artists-section-head">
+      <h2>New to the Roster</h2>
+      <a class="view-all-link">View all →</a>
+    </div>
+    <div class="artist-cards-row" id="artist-grid-new"></div>
+  </div>
+
+  <footer>
+    <div class="footer-logo">Local<span>Stage</span></div>
+    <div class="footer-copy">© 2025 LocalStage · Ontario, Canada</div>
+    <div class="footer-links">
+      <a onclick="showPage('home')">Home</a>
+      <a onclick="showPage('booking')">Book Now</a>
+      <a onclick="openApply()">Apply</a>
+    </div>
+  </footer>
+</div><!-- /page-artists -->
+
+
+<!-- ══════════════════════════════════════
+     PAGE: BOOKING
+══════════════════════════════════════ -->
+<div id="page-booking" class="page">
+  <div class="booking-hero">
+    <div class="booking-hero-inner">
+      <div style="font-size:0.75rem;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:0.75rem">Book a show</div>
+      <h1>Request an artist<br>for your venue or event.</h1>
+      <p>Fill out the form below and we'll confirm availability and coordinate everything within 48 hours.</p>
+    </div>
+  </div>
+
+  <!-- Auth gate (shown when logged out) -->
+  <div id="booking-auth-gate" class="booking-content auth-gate">
+    <div class="auth-gate-icon">🔒</div>
+    <h2>Sign in to book artists</h2>
+    <p>Create a free account or sign in to access our booking platform. It only takes 30 seconds — no credit card required until you confirm a booking.</p>
+    <button class="btn-primary" onclick="openLogin()">Sign in or create account →</button>
+    <p style="margin-top:1rem;font-size:0.8rem;color:var(--ink-light)">Already applied as an artist or business? Use the same email.</p>
+  </div>
+
+  <!-- Booking form (shown when logged in) -->
+  <div id="booking-form-area" class="booking-content" style="display:none">
+    <div style="display:flex;align-items:center;gap:10px;background:var(--green-light);border-radius:12px;padding:12px 16px;margin-bottom:2rem;font-size:0.875rem;color:var(--green-mid)">
+      <span>✓</span>
+      <span>Signed in as <strong id="booking-user-email"></strong> · <span style="cursor:pointer;text-decoration:underline" onclick="signOut()">Sign out</span></span>
+    </div>
+    <div class="booking-grid">
+      <div class="booking-sidebar">
+        <div class="booking-artist-pick">
+          <h3>Select an artist</h3>
+          <div id="booking-artist-list"></div>
+        </div>
+        <div style="background:var(--green-light);border-radius:16px;padding:1.25rem;font-size:0.825rem;color:var(--green-mid);line-height:1.7">
+          <strong style="display:block;margin-bottom:4px">How booking works</strong>
+          Submit your request → We confirm availability within 24h → You pay the coordination fee → We handle the rest.
+        </div>
+      </div>
+      <div class="booking-form-card">
+        <h2>Booking request</h2>
+        <p>Tell us about your event and we'll handle the coordination.</p>
+        <div class="form-field"><label class="form-label">Venue / Event name *</label><input class="form-input" type="text" placeholder="e.g. The Railyard, Mississauga"></div>
+        <div class="form-field"><label class="form-label">Event type *</label>
+          <select class="form-input form-select">
+            <option value="">Select event type</option>
+            <option>Live music night (recurring)</option>
+            <option>One-off ticketed show</option>
+            <option>Private event / corporate</option>
+            <option>Festival / market</option>
+            <option>Pop-up / activation</option>
+          </select>
+        </div>
+        <div class="date-time-row">
+          <div class="form-field"><label class="form-label">Preferred date *</label><input class="form-input" type="date"></div>
+          <div class="form-field"><label class="form-label">Start time *</label><input class="form-input" type="time"></div>
+        </div>
+        <div class="form-field"><label class="form-label">Venue capacity</label>
+          <select class="form-input form-select">
+            <option value="">Select capacity</option>
+            <option>Under 100</option>
+            <option>100–200</option>
+            <option>200–500</option>
+            <option>500+</option>
+          </select>
+        </div>
+        <div class="form-field"><label class="form-label">Expected attendance</label><input class="form-input" type="number" placeholder="e.g. 150"></div>
+        <div class="form-field"><label class="form-label">Budget range (for artist fee)</label>
+          <select class="form-input form-select">
+            <option value="">Select budget</option>
+            <option>Under $200</option>
+            <option>$200–500</option>
+            <option>$500–1,000</option>
+            <option>$1,000+</option>
+            <option>Negotiable / open</option>
+          </select>
+        </div>
+        <div class="form-field"><label class="form-label">Additional notes</label><textarea class="form-input" rows="3" placeholder="Genre preferences, vibe, anything else we should know…" style="resize:vertical;min-height:80px"></textarea></div>
+        <button class="booking-submit" onclick="submitBooking()">Submit booking request →</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-logo">Local<span>Stage</span></div>
+    <div class="footer-copy">© 2025 LocalStage · Ontario, Canada</div>
+    <div class="footer-links">
+      <a onclick="showPage('home')">Home</a>
+      <a onclick="showPage('artists')">Artists</a>
+    </div>
+  </footer>
+</div><!-- /page-booking -->
+
+
+<!-- ══════════════════════════════════════
+     PAGE: APPLY
+══════════════════════════════════════ -->
+<div id="page-apply" class="page">
+  <div class="apply-layout">
+    <div class="apply-back" onclick="showPage('home')">← Back to home</div>
+    <div class="apply-header">
+      <h1>Join LocalStage</h1>
+      <p>Whether you're an artist looking to fill your calendar or a business looking to book local talent — start here. Takes about 5 minutes.</p>
+    </div>
+
+    <div class="apply-card">
+      <!-- Progress -->
+      <div class="apply-progress" id="apply-progress">
+        <div class="progress-step active" id="prog-0"><div class="progress-dot">1</div><span style="margin-left:4px">Who are you?</span></div>
+        <div class="progress-line" id="prog-line-0"></div>
+        <div class="progress-step" id="prog-1"><div class="progress-dot">2</div><span style="margin-left:4px">Your details</span></div>
+        <div class="progress-line" id="prog-line-1"></div>
+        <div class="progress-step" id="prog-2"><div class="progress-dot">3</div><span style="margin-left:4px">Verify &amp; submit</span></div>
+      </div>
+
+      <!-- Step 1: Choose type -->
+      <div class="apply-step active" id="apply-step-0">
+        <div class="apply-step-title">What best describes you?</div>
+        <div class="apply-step-desc">This determines what information we need from you. You can only apply in one capacity per account.</div>
+        <div class="type-selector">
+          <div class="type-option" id="type-artist" onclick="selectType('artist')">
+            <div class="type-option-icon">🎤</div>
+            <div class="type-option-label">I'm an Artist</div>
+            <div class="type-option-desc">Musician, performer, band, or DJ looking for bookings</div>
+          </div>
+          <div class="type-option" id="type-business" onclick="selectType('business')">
+            <div class="type-option-icon">🏢</div>
+            <div class="type-option-label">I'm a Business</div>
+            <div class="type-option-desc">Venue, event organizer, or promoter looking to book</div>
+          </div>
+        </div>
+        <div class="apply-nav">
+          <span></span>
+          <button class="btn-next" onclick="applyNext(0)" id="step0-next" disabled>Continue →</button>
+        </div>
+      </div>
+
+      <!-- Step 2a: Artist details -->
+      <div class="apply-step" id="apply-step-1-artist">
+        <div class="apply-step-title">Artist application</div>
+        <div class="apply-step-desc">Fill this out accurately — our team manually reviews every application. Incomplete or inaccurate information will result in rejection.</div>
+
+        <div class="form-section-title">Personal info</div>
+        <div class="form-row">
+          <div class="form-field"><label class="form-label">First name *</label><input class="form-input" type="text" id="a-first" placeholder="Maya"></div>
+          <div class="form-field"><label class="form-label">Last name *</label><input class="form-input" type="text" id="a-last" placeholder="Reyes"></div>
+        </div>
+        <div class="form-field"><label class="form-label">Stage name (if different)</label><input class="form-input" type="text" id="a-stage" placeholder="Leave blank if same"></div>
+        <div class="form-field"><label class="form-label">Email address *</label><input class="form-input" type="email" id="a-email" placeholder="maya@email.com"></div>
+        <div class="form-field"><label class="form-label">Phone number</label><input class="form-input" type="tel" id="a-phone" placeholder="+1 (416) 000-0000"></div>
+        <div class="form-row">
+          <div class="form-field"><label class="form-label">City / Town *</label><input class="form-input" type="text" id="a-city" placeholder="Mississauga"></div>
+          <div class="form-field"><label class="form-label">Province *</label><select class="form-input form-select" id="a-province"><option value="">Select</option><option>Ontario</option><option>Quebec</option><option>British Columbia</option><option>Alberta</option></select></div>
+        </div>
+
+        <div class="form-section-title">Your music</div>
+        <div class="form-row">
+          <div class="form-field"><label class="form-label">Primary genre *</label>
+            <select class="form-input form-select" id="a-genre">
+              <option value="">Select genre</option>
+              <option>R&B / Soul</option><option>Hip-Hop / Rap</option><option>Pop</option>
+              <option>Indie / Alternative</option><option>Folk / Country</option>
+              <option>Jazz</option><option>Electronic / DJ</option><option>Other</option>
+            </select>
+          </div>
+          <div class="form-field"><label class="form-label">Years performing live *</label><input class="form-input" type="number" id="a-years" placeholder="e.g. 4" min="0" max="50"></div>
+        </div>
+        <div class="form-field"><label class="form-label">Average show attendance (honest estimate) *</label><input class="form-input" type="number" id="a-draw" placeholder="e.g. 45"><div class="form-hint">How many people typically come to your own shows? Be honest — we verify this.</div></div>
+        <div class="form-field"><label class="form-label">Spotify artist link</label><input class="form-input" type="url" id="a-spotify" placeholder="https://open.spotify.com/artist/..."></div>
+        <div class="form-field"><label class="form-label">SoundCloud / YouTube / other music link</label><input class="form-input" type="url" id="a-music" placeholder="https://..."></div>
+
+        <div class="form-section-title">Social media presence</div>
+        <div class="form-hint" style="margin-bottom:12px">Select all platforms you actively use as a performer (min. 1 required)</div>
+        <div class="platform-grid" id="platform-grid-artist">
+          <label class="platform-chip"><input type="checkbox" value="instagram"><span>📸 Instagram</span></label>
+          <label class="platform-chip"><input type="checkbox" value="tiktok"><span>🎵 TikTok</span></label>
+          <label class="platform-chip"><input type="checkbox" value="youtube"><span>▶️ YouTube</span></label>
+          <label class="platform-chip"><input type="checkbox" value="facebook"><span>👥 Facebook</span></label>
+          <label class="platform-chip"><input type="checkbox" value="twitter"><span>🐦 X / Twitter</span></label>
+          <label class="platform-chip"><input type="checkbox" value="twitch"><span>🎮 Twitch</span></label>
+        </div>
+        <div id="social-fields-artist" style="margin-top:1rem"></div>
+
+        <div class="form-section-title">Proof of performance</div>
+        <div class="form-field"><label class="form-label">Link to a recent live performance video *</label><input class="form-input" type="url" id="a-video" placeholder="https://youtube.com/... or Instagram reel"><div class="form-hint">Must be from the past 12 months. At least 5 minutes long preferred.</div></div>
+        <div class="form-field"><label class="form-label">Venue references (name 1–2 venues you've played)</label><input class="form-input" type="text" id="a-venues" placeholder="e.g. The Dock Mississauga, Sneaky Dee's Toronto"><div class="form-hint">We may reach out to these venues to verify attendance.</div></div>
+        <div class="form-field"><label class="form-label">Anything else you want us to know?</label><textarea class="form-input" id="a-notes" rows="3" placeholder="Upcoming releases, show highlights, why LocalStage is right for you…" style="resize:vertical;min-height:80px"></textarea></div>
+
+        <div class="apply-nav">
+          <button class="btn-back" onclick="applyBack(1)">← Back</button>
+          <button class="btn-next" onclick="applyNext(1)">Review & Submit →</button>
+        </div>
+      </div>
+
+      <!-- Step 2b: Business details -->
+      <div class="apply-step" id="apply-step-1-business">
+        <div class="apply-step-title">Business application</div>
+        <div class="apply-step-desc">Tell us about your venue or business so we can match you with the right artists. All information is kept confidential.</div>
+
+        <div class="form-section-title">Contact info</div>
+        <div class="form-row">
+          <div class="form-field"><label class="form-label">First name *</label><input class="form-input" type="text" id="b-first" placeholder="Daniel"></div>
+          <div class="form-field"><label class="form-label">Last name *</label><input class="form-input" type="text" id="b-last" placeholder="Kim"></div>
+        </div>
+        <div class="form-field"><label class="form-label">Email address *</label><input class="form-input" type="email" id="b-email" placeholder="dan@yourvenue.com"></div>
+        <div class="form-field"><label class="form-label">Phone number *</label><input class="form-input" type="tel" id="b-phone" placeholder="+1 (905) 000-0000"></div>
+        <div class="form-field"><label class="form-label">Job title / role *</label><input class="form-input" type="text" id="b-role" placeholder="e.g. Owner, Events Manager, Promoter"></div>
+
+        <div class="form-section-title">Business details</div>
+        <div class="form-field"><label class="form-label">Business / venue name *</label><input class="form-input" type="text" id="b-bizname" placeholder="e.g. The Railyard"></div>
+        <div class="form-field"><label class="form-label">Business type *</label>
+          <select class="form-input form-select" id="b-type">
+            <option value="">Select type</option>
+            <option>Bar / Restaurant with live music</option>
+            <option>Dedicated music venue</option>
+            <option>Community or arts space</option>
+            <option>Event organizer / promoter</option>
+            <option>Festival or market</option>
+            <option>Corporate events company</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-field"><label class="form-label">Full address *</label><input class="form-input" type="text" id="b-address" placeholder="123 Main St, Mississauga, ON L5A 1B2"></div>
+        <div class="form-field"><label class="form-label">Venue capacity (if applicable)</label><input class="form-input" type="number" id="b-capacity" placeholder="e.g. 200"></div>
+
+        <div class="form-section-title">Proof of business</div>
+        <div class="form-field"><label class="form-label">Business website or social media page *</label><input class="form-input" type="url" id="b-website" placeholder="https://yourvenue.com or @yourvenuename"><div class="form-hint">This must be publicly visible so we can verify your business exists.</div></div>
+        <div class="form-field"><label class="form-label">Google Maps listing or Yelp link</label><input class="form-input" type="url" id="b-maps" placeholder="https://maps.google.com/..."><div class="form-hint">Strongly recommended — helps us verify your location and reputation.</div></div>
+        <div class="form-field"><label class="form-label">Ontario business registration number (optional)</label><input class="form-input" type="text" id="b-reg" placeholder="e.g. 1234567 Ontario Inc."><div class="form-hint">Not required but speeds up verification for new businesses.</div></div>
+
+        <div class="form-section-title">Your needs</div>
+        <div class="form-field"><label class="form-label">How often do you book live music? *</label>
+          <select class="form-input form-select" id="b-freq">
+            <option value="">Select</option>
+            <option>Weekly</option><option>Bi-weekly</option><option>Monthly</option>
+            <option>A few times a year</option><option>One-off event</option>
+          </select>
+        </div>
+        <div class="form-field"><label class="form-label">Preferred genres</label><input class="form-input" type="text" id="b-genres" placeholder="e.g. R&B, Indie, Jazz — or 'anything that draws a crowd'"></div>
+        <div class="form-field"><label class="form-label">Typical budget per artist</label>
+          <select class="form-input form-select" id="b-budget">
+            <option value="">Select</option>
+            <option>Under $200</option><option>$200–500</option>
+            <option>$500–1,000</option><option>$1,000+</option><option>Negotiable</option>
+          </select>
+        </div>
+        <div class="form-field"><label class="form-label">Anything else we should know?</label><textarea class="form-input" id="b-notes" rows="3" placeholder="Your vibe, your audience, any past experiences with live music booking…" style="resize:vertical;min-height:80px"></textarea></div>
+
+        <div class="apply-nav">
+          <button class="btn-back" onclick="applyBack(1)">← Back</button>
+          <button class="btn-next" onclick="applyNext(1)">Review & Submit →</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Review & submit -->
+      <div class="apply-step" id="apply-step-2">
+        <div class="apply-step-title">Review & submit</div>
+        <div class="apply-step-desc">Double-check everything below. Once submitted, our team will review within 3–5 business days and reach out via email.</div>
+        <div id="apply-review-box" style="background:var(--cream);border-radius:12px;padding:1.25rem;margin-bottom:1.5rem;font-size:0.875rem;color:var(--ink-mid);line-height:1.8"></div>
+        <div class="form-field">
+          <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:0.875rem;color:var(--ink-mid)">
+            <input type="checkbox" id="agree-terms" style="margin-top:3px;accent-color:var(--green)">
+            I confirm all information provided is accurate and truthful. I understand that false information will result in immediate removal from the platform.
+          </label>
+        </div>
+        <div class="apply-nav">
+          <button class="btn-back" onclick="applyBack(2)">← Back</button>
+          <button class="btn-next" onclick="submitApply()">Submit application →</button>
+        </div>
+      </div>
+
+      <!-- Success state -->
+      <div class="apply-step" id="apply-step-success">
+        <div class="success-state">
+          <div class="success-icon">🎉</div>
+          <div class="success-title">Application submitted!</div>
+          <div class="success-msg">We've received your application and will review it within 3–5 business days. Keep an eye on your inbox — we'll reach out with next steps.<br><br>In the meantime, <a onclick="showPage('artists');closeModal('modal-apply')" style="color:var(--green);cursor:pointer">browse our current roster</a> to get a feel for the artists already on the platform.</div>
+          <button class="btn-next" style="margin-top:1.5rem" onclick="showPage('home')">Back to home</button>
+        </div>
+      </div>
+
+    </div><!-- /apply-card -->
+  </div><!-- /apply-layout -->
+</div><!-- /page-apply -->
+
+
+<!-- ══════════════════════════════════════
+     MODAL: LOGIN / SIGN IN
+══════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-login">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('modal-login')">✕</button>
+
+    <!-- Step 1: Email -->
+    <div class="login-step active" id="login-step-email">
+      <div class="modal-title">Welcome back.</div>
+      <div class="modal-sub">Enter your email to sign in. If you don't have an account yet, we'll create one for you automatically.</div>
+      <div class="form-field">
+        <label class="form-label">Email address</label>
+        <input class="form-input" type="email" id="login-email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')sendCode()">
+      </div>
+      <button class="form-submit" onclick="sendCode()">Continue with email →</button>
+      <p style="text-align:center;font-size:0.8rem;color:var(--ink-light);margin-top:1rem">We'll send a 6-digit code to verify it's you.</p>
+    </div>
+
+    <!-- Step 2: Code verification -->
+    <div class="login-step" id="login-step-code">
+      <div class="modal-title">Check your inbox.</div>
+      <div class="modal-sub" id="login-code-sub">We've sent a 6-digit verification code to <strong id="login-code-email-display"></strong>. Enter it below to sign in.</div>
+      <div class="code-input-group">
+        <input class="code-digit" maxlength="1" id="code-0" oninput="codeInput(0)" onkeydown="codeKeydown(event,0)">
+        <input class="code-digit" maxlength="1" id="code-1" oninput="codeInput(1)" onkeydown="codeKeydown(event,1)">
+        <input class="code-digit" maxlength="1" id="code-2" oninput="codeInput(2)" onkeydown="codeKeydown(event,2)">
+        <input class="code-digit" maxlength="1" id="code-3" oninput="codeInput(3)" onkeydown="codeKeydown(event,3)">
+        <input class="code-digit" maxlength="1" id="code-4" oninput="codeInput(4)" onkeydown="codeKeydown(event,4)">
+        <input class="code-digit" maxlength="1" id="code-5" oninput="codeInput(5)" onkeydown="codeKeydown(event,5)">
+      </div>
+      <div id="code-error" style="text-align:center;font-size:0.8rem;color:#c0392b;margin-bottom:0.75rem;display:none">Incorrect code. Please try again.</div>
+      <button class="form-submit" onclick="verifyCode()">Verify & sign in →</button>
+      <p style="text-align:center;margin-top:1rem;font-size:0.8rem;color:var(--ink-light)">Didn't get it? <span class="resend-link" onclick="resendCode()">Resend code</span> &nbsp;·&nbsp; <span class="resend-link" onclick="backToEmail()">Change email</span></p>
+    </div>
+
+    <!-- Step 3: Signed in -->
+    <div class="login-step" id="login-step-success">
+      <div class="success-state">
+        <div class="success-icon">✅</div>
+        <div class="success-title">You're signed in!</div>
+        <div class="success-msg" id="login-success-msg">Welcome to LocalStage. You now have access to the booking platform.</div>
+        <button class="btn-next" style="margin-top:1.5rem" onclick="closeModal('modal-login');showPage('booking')">Go to booking →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════
+// STATE
+// ════════════════════════════════
+let currentUser = null; // { email, isNew }
+let verificationCode = null;
+let selectedType = null; // 'artist' | 'business'
+let currentApplyStep = 0;
+
+const ARTISTS = [
+  { id:1, init:'MR', name:'Maya Reyes', genre:'R&B · Soul', city:'Mississauga, ON', score:84, stars:'★★★★★', rating:4.9, draw:65, tag:'rnb', gradient:'135deg, #a8e6cf, #1a9b6c' },
+  { id:2, init:'JT', name:'Jordan Taye', genre:'Hip-Hop', city:'Brampton, ON', score:79, stars:'★★★★☆', rating:4.7, draw:55, tag:'hiphop', gradient:'135deg, #667eea, #764ba2' },
+  { id:3, init:'AS', name:'Alicia Simms', genre:'Indie / Alt', city:'Toronto, ON', score:72, stars:'★★★★☆', rating:4.5, draw:40, tag:'indie', gradient:'135deg, #f093fb, #f5576c' },
+  { id:4, init:'KO', name:'Kwame Osei', genre:'Jazz', city:'Hamilton, ON', score:88, stars:'★★★★★', rating:5.0, draw:80, tag:'jazz', gradient:'135deg, #4facfe, #00f2fe' },
+  { id:5, init:'LD', name:'Lily Dang', genre:'Folk · Country', city:'Oakville, ON', score:68, stars:'★★★★☆', rating:4.3, draw:35, tag:'folk', gradient:'135deg, #f6d365, #fda085' },
+  { id:6, init:'RM', name:'Remy Mais', genre:'Pop', city:'Scarborough, ON', score:75, stars:'★★★★☆', rating:4.6, draw:50, tag:'pop', gradient:'135deg, #43e97b, #38f9d7' },
+  { id:7, init:'SO', name:'Sasha Okafor', genre:'R&B · Soul', city:'Etobicoke, ON', score:81, stars:'★★★★★', rating:4.8, draw:60, tag:'rnb', gradient:'135deg, #ff9a9e, #fad0c4' },
+  { id:8, init:'BL', name:'Ben Lau', genre:'Hip-Hop', city:'Markham, ON', score:66, stars:'★★★★☆', rating:4.2, draw:30, tag:'hiphop', gradient:'135deg, #a18cd1, #fbc2eb' },
+];
+const NEW_ARTISTS = [
+  { id:9, init:'TP', name:'Tara Patel', genre:'Indie / Alt', city:'Burlington, ON', score:63, stars:'★★★★☆', rating:4.1, draw:25, tag:'indie', gradient:'135deg, #fccb90, #d57eeb' },
+  { id:10, init:'CW', name:'Chase Williams', genre:'Pop', city:'Oshawa, ON', score:61, stars:'★★★☆☆', rating:3.9, draw:20, tag:'pop', gradient:'135deg, #84fab0, #8fd3f4' },
+  { id:11, init:'NB', name:'Nina Bakr', genre:'Jazz', city:'Ajax, ON', score:70, stars:'★★★★☆', rating:4.4, draw:38, tag:'jazz', gradient:'135deg, #30cfd0, #667eea' },
+  { id:12, init:'MF', name:'Marcus Ferreira', genre:'Folk · Country', city:'Guelph, ON', score:65, stars:'★★★★☆', rating:4.2, draw:28, tag:'folk', gradient:'135deg, #f7971e, #ffd200' },
+];
+
+// ════════════════════════════════
+// PAGE NAVIGATION
+// ════════════════════════════════
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  window.scrollTo(0,0);
+  if (name === 'artists') renderArtistGrid();
+  if (name === 'booking') renderBookingPage();
+  if (name === 'apply') resetApply();
+}
+
+function openApply() { showPage('apply'); }
+
+function scrollTo(hash) {
+  setTimeout(() => {
+    const el = document.querySelector(hash);
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  }, 100);
+}
+
+// ════════════════════════════════
+// AUTH STATE
+// ════════════════════════════════
+function updateNavAuth() {
+  const btn = document.getElementById('nav-auth-btn');
+  const info = document.getElementById('nav-user-info');
+  const emailSpan = document.getElementById('nav-user-email');
+  if (currentUser) {
+    btn.textContent = 'Sign out';
+    btn.classList.add('signout');
+    btn.onclick = signOut;
+    info.style.display = 'flex';
+    emailSpan.textContent = currentUser.email;
+  } else {
+    btn.textContent = 'Sign in';
+    btn.classList.remove('signout');
+    btn.onclick = openLogin;
+    info.style.display = 'none';
+  }
+}
+
+function signOut() {
+  currentUser = null;
+  updateNavAuth();
+  renderBookingPage();
+}
+
+// ════════════════════════════════
+// LOGIN MODAL
+// ════════════════════════════════
+function openLogin() {
+  resetLoginModal();
+  document.getElementById('modal-login').classList.add('open');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function resetLoginModal() {
+  document.querySelectorAll('.login-step').forEach(s => s.classList.remove('active'));
+  document.getElementById('login-step-email').classList.add('active');
+  document.getElementById('login-email').value = '';
+  for (let i=0;i<6;i++) document.getElementById('code-'+i).value='';
+  document.getElementById('code-error').style.display='none';
+}
+
+function backToEmail() {
+  document.querySelectorAll('.login-step').forEach(s => s.classList.remove('active'));
+  document.getElementById('login-step-email').classList.add('active');
+}
+
+function sendCode() {
+  const email = document.getElementById('login-email').value.trim();
+  if (!email.includes('@') || !email.includes('.')) {
+    document.getElementById('login-email').style.borderColor = '#c0392b';
+    return;
+  }
+  document.getElementById('login-email').style.borderColor = '';
+  // Generate random 6-digit code (simulate sending)
+  verificationCode = String(Math.floor(100000 + Math.random() * 900000));
+  console.log('DEV — verification code:', verificationCode); // In real app, this goes via email API
+  document.getElementById('login-code-email-display').textContent = email;
+  // Show a note simulating the email was sent
+  const sub = document.getElementById('login-code-sub');
+  sub.innerHTML = `We've sent a 6-digit code to <strong>${email}</strong>. Enter it below to sign in.<br><small style="color:var(--green);font-size:0.8rem">✓ Code sent! (Demo: check browser console for the code)</small>`;
+  document.querySelectorAll('.login-step').forEach(s => s.classList.remove('active'));
+  document.getElementById('login-step-code').classList.add('active');
+  setTimeout(() => document.getElementById('code-0').focus(), 100);
+}
+
+function resendCode() {
+  verificationCode = String(Math.floor(100000 + Math.random() * 900000));
+  console.log('DEV — new code:', verificationCode);
+  document.getElementById('code-error').style.display='none';
+  for (let i=0;i<6;i++) document.getElementById('code-'+i).value='';
+  document.getElementById('code-0').focus();
+}
+
+function codeInput(idx) {
+  const val = document.getElementById('code-'+idx).value;
+  if (val && idx < 5) document.getElementById('code-'+(idx+1)).focus();
+  if (val && idx === 5) verifyCode();
+}
+
+function codeKeydown(e, idx) {
+  if (e.key === 'Backspace' && !document.getElementById('code-'+idx).value && idx > 0) {
+    document.getElementById('code-'+(idx-1)).focus();
+  }
+}
+
+function verifyCode() {
+  const entered = Array.from({length:6}, (_,i) => document.getElementById('code-'+i).value).join('');
+  if (entered === verificationCode) {
+    const email = document.getElementById('login-email').value.trim();
+    const isNew = !localStorage.getItem('ls-user-' + email);
+    localStorage.setItem('ls-user-' + email, '1');
+    currentUser = { email, isNew };
+    updateNavAuth();
+    document.getElementById('login-success-msg').textContent = isNew
+      ? `Welcome to LocalStage! Your account has been created for ${email}. You now have access to the booking platform.`
+      : `Welcome back! You're signed in as ${email}.`;
+    document.querySelectorAll('.login-step').forEach(s => s.classList.remove('active'));
+    document.getElementById('login-step-success').classList.add('active');
+    renderBookingPage();
+  } else {
+    document.getElementById('code-error').style.display='block';
+    for (let i=0;i<6;i++) { document.getElementById('code-'+i).value=''; }
+    document.getElementById('code-0').focus();
+  }
+}
+
+// ════════════════════════════════
+// ARTIST GRID
+// ════════════════════════════════
+function renderArtistGrid(filter='all') {
+  renderGrid('artist-grid', ARTISTS, filter);
+  renderGrid('artist-grid-new', NEW_ARTISTS, filter);
+}
+
+function renderGrid(containerId, artists, filter) {
+  const c = document.getElementById(containerId);
+  if (!c) return;
+  const filtered = filter === 'all' ? artists : artists.filter(a => a.tag === filter);
+  if (filtered.length === 0) { c.innerHTML='<p style="color:var(--ink-light);font-size:0.9rem;padding:1rem 0">No artists in this genre yet.</p>'; return; }
+  c.innerHTML = filtered.map(a => `
+    <div class="artist-card" onclick="showPage('booking')">
+      <div class="artist-card-img" style="background:linear-gradient(${a.gradient})">
+        ${a.init}
+        <div class="play-overlay"><div class="play-btn">▶</div></div>
+      </div>
+      <div class="artist-card-body">
+        <div class="artist-card-name">${a.name}</div>
+        <div class="artist-card-genre">${a.genre}</div>
+        <div class="artist-card-score">
+          <span class="score-badge">Score ${a.score}</span>
+          <span class="artist-card-stars">${a.stars}</span>
+        </div>
+        <div class="artist-card-location">📍 ${a.city} · ~${a.draw} avg. draw</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterArtists(tag, el) {
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderArtistGrid(tag);
+}
+
+// ════════════════════════════════
+// BOOKING PAGE
+// ════════════════════════════════
+function renderBookingPage() {
+  const gate = document.getElementById('booking-auth-gate');
+  const form = document.getElementById('booking-form-area');
+  if (!gate || !form) return;
+  if (currentUser) {
+    gate.style.display = 'none';
+    form.style.display = 'block';
+    document.getElementById('booking-user-email').textContent = currentUser.email;
+    renderBookingArtists();
+  } else {
+    gate.style.display = 'block';
+    form.style.display = 'none';
+  }
+}
+
+function renderBookingArtists() {
+  const c = document.getElementById('booking-artist-list');
+  if (!c) return;
+  const all = [...ARTISTS, ...NEW_ARTISTS];
+  c.innerHTML = all.slice(0,6).map((a,i) => `
+    <div class="pick-artist-row ${i===0?'selected':''}" onclick="selectBookingArtist(this)">
+      <div class="pick-avatar" style="background:linear-gradient(${a.gradient})">${a.init}</div>
+      <div>
+        <div class="pick-name">${a.name}</div>
+        <div class="pick-genre">${a.genre} · ${a.city}</div>
+      </div>
+      <span class="pick-score">${a.score}</span>
+    </div>
+  `).join('');
+}
+
+function selectBookingArtist(el) {
+  document.querySelectorAll('.pick-artist-row').forEach(r => r.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function submitBooking() {
+  alert('✓ Booking request submitted! Our team will confirm availability within 24 hours and reach out to ' + currentUser.email);
+}
+
+// ════════════════════════════════
+// APPLY FLOW
+// ════════════════════════════════
+function resetApply() {
+  selectedType = null;
+  currentApplyStep = 0;
+  document.querySelectorAll('.apply-step').forEach(s => s.classList.remove('active'));
+  document.getElementById('apply-step-0').classList.add('active');
+  document.getElementById('type-artist').classList.remove('selected');
+  document.getElementById('type-business').classList.remove('selected');
+  document.getElementById('step0-next').disabled = true;
+  updateProgressUI(0);
+}
+
+function selectType(type) {
+  selectedType = type;
+  document.getElementById('type-artist').classList.toggle('selected', type==='artist');
+  document.getElementById('type-business').classList.toggle('selected', type==='business');
+  document.getElementById('step0-next').disabled = false;
+}
+
+function applyNext(step) {
+  if (step === 0) {
+    if (!selectedType) return;
+    currentApplyStep = 1;
+    document.querySelectorAll('.apply-step').forEach(s => s.classList.remove('active'));
+    document.getElementById('apply-step-1-' + selectedType).classList.add('active');
+    updateProgressUI(1);
+    // Set up platform checkboxes
+    setupPlatformCheckboxes();
+    window.scrollTo(0,0);
+  } else if (step === 1) {
+    currentApplyStep = 2;
+    buildReviewBox();
+    document.querySelectorAll('.apply-step').forEach(s => s.classList.remove('active'));
+    document.getElementById('apply-step-2').classList.add('active');
+    updateProgressUI(2);
+    window.scrollTo(0,0);
+  }
+}
+
+function applyBack(step) {
+  if (step === 1) {
+    currentApplyStep = 0;
+    document.querySelectorAll('.apply-step').forEach(s => s.classList.remove('active'));
+    document.getElementById('apply-step-0').classList.add('active');
+    updateProgressUI(0);
+  } else if (step === 2) {
+    currentApplyStep = 1;
+    document.querySelectorAll('.apply-step').forEach(s => s.classList.remove('active'));
+    document.getElementById('apply-step-1-' + selectedType).classList.add('active');
+    updateProgressUI(1);
+  }
+  window.scrollTo(0,0);
+}
+
+function updateProgressUI(step) {
+  for (let i=0;i<3;i++) {
+    const el = document.getElementById('prog-'+i);
+    el.classList.remove('active','done');
+    if (i < step) el.classList.add('done');
+    else if (i === step) el.classList.add('active');
+    if (i < 2) {
+      const line = document.getElementById('prog-line-'+i);
+      line.classList.toggle('done', i < step);
     }
+    // Update dot content
+    const dot = el.querySelector('.progress-dot');
+    dot.textContent = i < step ? '✓' : (i+1);
+  }
+}
+
+function setupPlatformCheckboxes() {
+  document.querySelectorAll('.platform-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const cb = chip.querySelector('input');
+      cb.checked = !cb.checked;
+      chip.classList.toggle('checked', cb.checked);
+      updateSocialFields();
+    });
   });
+}
+
+function updateSocialFields() {
+  const container = document.getElementById('social-fields-artist');
+  const checked = Array.from(document.querySelectorAll('#platform-grid-artist .platform-chip.checked input')).map(i => i.value);
+  container.innerHTML = checked.map(p => `
+    <div class="form-field">
+      <label class="form-label">${p.charAt(0).toUpperCase()+p.slice(1)} profile URL</label>
+      <input class="form-input" type="url" placeholder="https://${p}.com/yourprofile" data-platform="${p}">
+    </div>
+  `).join('');
+}
+
+function buildReviewBox() {
+  const box = document.getElementById('apply-review-box');
+  if (selectedType === 'artist') {
+    const first = document.getElementById('a-first').value || '—';
+    const last = document.getElementById('a-last').value || '—';
+    const email = document.getElementById('a-email').value || '—';
+    const city = document.getElementById('a-city').value || '—';
+    const genre = document.getElementById('a-genre').value || '—';
+    const draw = document.getElementById('a-draw').value || '—';
+    const platforms = Array.from(document.querySelectorAll('#platform-grid-artist .platform-chip.checked input')).map(i=>i.value).join(', ') || '—';
+    box.innerHTML = `<strong>Artist Application</strong><br>
+      Name: ${first} ${last}<br>Email: ${email}<br>City: ${city}<br>
+      Genre: ${genre}<br>Avg. draw: ${draw}<br>Platforms: ${platforms}`;
+  } else {
+    const first = document.getElementById('b-first').value || '—';
+    const last = document.getElementById('b-last').value || '—';
+    const email = document.getElementById('b-email').value || '—';
+    const biz = document.getElementById('b-bizname').value || '—';
+    const type = document.getElementById('b-type').value || '—';
+    const address = document.getElementById('b-address').value || '—';
+    box.innerHTML = `<strong>Business Application</strong><br>
+      Contact: ${first} ${last}<br>Email: ${email}<br>Business: ${biz}<br>
+      Type: ${type}<br>Address: ${address}`;
+  }
+}
+
+function submitApply() {
+  if (!document.getElementById('agree-terms').checked) {
+    alert('Please agree to the terms before submitting.');
+    return;
+  }
+  document.querySelectorAll('.apply-step').forEach(s => s.classList.remove('active'));
+  document.getElementById('apply-step-success').classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ════════════════════════════════
+// SCROLL ANIMATIONS
+// ════════════════════════════════
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.15 });
+document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+});
+
+// Init
+updateNavAuth();
+renderArtistGrid();
 </script>
 </body>
 </html>
