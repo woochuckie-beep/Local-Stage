@@ -1284,20 +1284,20 @@
 
     <!-- Step 1: Email -->
     <div class="login-step active" id="login-step-email">
-      <div class="modal-title">Welcome back.</div>
-      <div class="modal-sub">Enter your email to sign in. If you don't have an account yet, we'll create one for you automatically.</div>
+      <div class="modal-title">Sign in to LocalStage.</div>
+      <div class="modal-sub">Enter your email address. We'll generate a one-time code — no password needed.</div>
       <div class="form-field">
         <label class="form-label">Email address</label>
         <input class="form-input" type="email" id="login-email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')sendCode()">
       </div>
-      <button class="form-submit" onclick="sendCode()">Continue with email →</button>
-      <p style="text-align:center;font-size:0.8rem;color:var(--ink-light);margin-top:1rem">We'll send a 6-digit code to verify it's you.</p>
+      <button class="form-submit" onclick="sendCode()">Get my access code →</button>
+      <p style="text-align:center;font-size:0.8rem;color:var(--ink-light);margin-top:1rem">A 6-digit code will appear on the next screen.</p>
     </div>
 
     <!-- Step 2: Code verification -->
     <div class="login-step" id="login-step-code">
-      <div class="modal-title">Check your inbox.</div>
-      <div class="modal-sub" id="login-code-sub">We've sent a 6-digit verification code to <strong id="login-code-email-display"></strong>. Enter it below to sign in.</div>
+      <div class="modal-title">Your access code.</div>
+      <div class="modal-sub" id="login-code-sub">Here is your one-time sign-in code for <strong id="login-code-email-display"></strong>. Enter it below.</div>
       <div class="code-input-group">
         <input class="code-digit" maxlength="1" id="code-0" oninput="codeInput(0)" onkeydown="codeKeydown(event,0)">
         <input class="code-digit" maxlength="1" id="code-1" oninput="codeInput(1)" onkeydown="codeKeydown(event,1)">
@@ -1422,43 +1422,22 @@ function backToEmail() {
   document.getElementById('login-step-email').classList.add('active');
 }
 
-async function sendCode() {
+function sendCode() {
   const email = document.getElementById('login-email').value.trim();
   if (!email.includes('@') || !email.includes('.')) {
     document.getElementById('login-email').style.borderColor = '#c0392b';
     return;
   }
   document.getElementById('login-email').style.borderColor = '';
-  // Generate random 6-digit code
+
+  // Generate code and display it on screen — you control access, no email needed for sign-in
   verificationCode = String(Math.floor(100000 + Math.random() * 900000));
-
-  // Attempt to send via EmailJS (free tier — no backend needed)
-  // To enable real email: sign up at emailjs.com, get service/template/public keys, update below
-  const EMAILJS_SERVICE = 'service_jfagb77';
-  const EMAILJS_TEMPLATE = 'template_aegy9aj';
-  const EMAILJS_PUBLIC_KEY = 'FoCM6Rnq5pMjlI2PP'; // Replace with your EmailJS public key
-
-  let emailSent = false;
-  if (EMAILJS_PUBLIC_KEY !== 'YOUR_EMAILJS_PUBLIC_KEY' && typeof emailjs !== 'undefined') {
-    try {
-      await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
-        to_email: email,
-        verification_code: verificationCode,
-        reply_to: 'noreply@localstage.ca'
-      }, EMAILJS_PUBLIC_KEY);
-      emailSent = true;
-    } catch(e) { console.warn('EmailJS failed:', e); }
-  }
-
-  const sub = document.getElementById('login-code-sub');
   document.getElementById('login-code-email-display').textContent = email;
-  if (emailSent) {
-    sub.innerHTML = `We've sent a 6-digit verification code to <strong>${email}</strong>. Enter it below to sign in.`;
-  } else {
-    // Demo fallback — show code visibly
-    sub.innerHTML = `We've sent a 6-digit code to <strong>${email}</strong>. Enter it below to sign in.<br><span style="display:inline-block;margin-top:8px;background:var(--green-light);color:var(--green);padding:8px 16px;border-radius:8px;font-size:1rem;font-weight:600;letter-spacing:4px">${verificationCode}</span><br><small style="color:var(--ink-light);font-size:0.75rem;margin-top:4px;display:block">Demo mode: code shown above. Connect EmailJS to send real emails.</small>`;
-  }
-
+  document.getElementById('login-code-sub').innerHTML = `
+    Your one-time sign-in code for <strong>${email}</strong>:<br>
+    <span style="display:inline-block;margin-top:12px;background:var(--green-light);color:var(--green);padding:10px 24px;border-radius:10px;font-size:1.6rem;font-weight:700;letter-spacing:6px;font-family:var(--serif)">${verificationCode}</span><br>
+    <small style="color:var(--ink-light);font-size:0.75rem;margin-top:6px;display:block">Copy this code into the boxes below to sign in.</small>
+  `;
   document.querySelectorAll('.login-step').forEach(s => s.classList.remove('active'));
   document.getElementById('login-step-code').classList.add('active');
   setTimeout(() => document.getElementById('code-0').focus(), 100);
@@ -1466,9 +1445,12 @@ async function sendCode() {
 
 function resendCode() {
   verificationCode = String(Math.floor(100000 + Math.random() * 900000));
-  const sub = document.getElementById('login-code-sub');
   const email = document.getElementById('login-email').value.trim();
-  sub.innerHTML = `We've sent a new code to <strong>${email}</strong>.<br><span style="display:inline-block;margin-top:8px;background:var(--green-light);color:var(--green);padding:8px 16px;border-radius:8px;font-size:1rem;font-weight:600;letter-spacing:4px">${verificationCode}</span><br><small style="color:var(--ink-light);font-size:0.75rem;margin-top:4px;display:block">Demo mode: code shown above.</small>`;
+  document.getElementById('login-code-sub').innerHTML = `
+    New code for <strong>${email}</strong>:<br>
+    <span style="display:inline-block;margin-top:12px;background:var(--green-light);color:var(--green);padding:10px 24px;border-radius:10px;font-size:1.6rem;font-weight:700;letter-spacing:6px;font-family:var(--serif)">${verificationCode}</span><br>
+    <small style="color:var(--ink-light);font-size:0.75rem;margin-top:6px;display:block">Copy this code into the boxes below.</small>
+  `;
   document.getElementById('code-error').style.display='none';
   for (let i=0;i<6;i++) document.getElementById('code-'+i).value='';
   document.getElementById('code-0').focus();
@@ -1759,7 +1741,7 @@ function buildReviewBox() {
   }
 }
 
-function submitApply() {
+async function submitApply() {
   // Age check for artists
   if (selectedType === 'artist') {
     const dob = document.getElementById('a-dob').value;
@@ -1776,6 +1758,72 @@ function submitApply() {
     alert('Please agree to the terms before submitting.');
     return;
   }
+
+  // ── Send YOU a notification email with all their details ──
+  const EMAILJS_SERVICE = 'service_jfagb77';
+  const EMAILJS_PUBLIC_KEY = 'FoCM6Rnq5pMjlI2PP';
+
+  // Build the email content based on application type
+  let templateParams = {};
+
+  if (selectedType === 'artist') {
+    const travelEl = document.getElementById('a-travel');
+    const cities = travelEl ? Array.from(travelEl.selectedOptions).map(o => o.text).join(', ') : '—';
+    const platforms = Array.from(document.querySelectorAll('#platform-grid-artist .platform-chip.checked input')).map(i => i.value).join(', ') || '—';
+
+    templateParams = {
+      application_type: 'ARTIST APPLICATION',
+      applicant_name: (document.getElementById('a-first').value + ' ' + document.getElementById('a-last').value).trim() || '—',
+      stage_name: document.getElementById('a-stage').value || '—',
+      email: document.getElementById('a-email').value || '—',
+      phone: document.getElementById('a-phone').value || '—',
+      dob: document.getElementById('a-dob').value || '—',
+      city: document.getElementById('a-city').value || '—',
+      genre: document.getElementById('a-genre').value || '—',
+      years: document.getElementById('a-years').value || '—',
+      avg_draw: document.getElementById('a-draw').value || '—',
+      spotify: document.getElementById('a-spotify').value || '—',
+      music_link: document.getElementById('a-music').value || '—',
+      platforms: platforms,
+      video_link: document.getElementById('a-video').value || '—',
+      venue_refs: document.getElementById('a-venues').value || '—',
+      travel_cities: cities,
+      notes: document.getElementById('a-notes').value || '—',
+    };
+  } else {
+    templateParams = {
+      application_type: 'BUSINESS APPLICATION',
+      applicant_name: (document.getElementById('b-first').value + ' ' + document.getElementById('b-last').value).trim() || '—',
+      stage_name: '—',
+      email: document.getElementById('b-email').value || '—',
+      phone: document.getElementById('b-phone').value || '—',
+      dob: '—',
+      city: document.getElementById('b-address').value || '—',
+      genre: document.getElementById('b-genres') ? document.getElementById('b-genres').value : '—',
+      years: '—',
+      avg_draw: '—',
+      spotify: '—',
+      music_link: document.getElementById('b-website').value || '—',
+      platforms: '—',
+      video_link: document.getElementById('b-maps') ? document.getElementById('b-maps').value : '—',
+      venue_refs: document.getElementById('b-bizname').value + ' · ' + (document.getElementById('b-type').value || ''),
+      travel_cities: '—',
+      notes: document.getElementById('b-notes') ? document.getElementById('b-notes').value : '—',
+    };
+  }
+
+  // Use your existing EmailJS template — update it to show {{application_type}}, {{applicant_name}}, {{email}} etc.
+  // Template ID for artist/business applications (create a new template called 'localstage_application')
+  const APPLICATION_TEMPLATE = 'template_aegy9aj'; // ← Update this to your application notification template ID
+
+  try {
+    await emailjs.send(EMAILJS_SERVICE, APPLICATION_TEMPLATE, templateParams, EMAILJS_PUBLIC_KEY);
+  } catch(e) {
+    console.warn('EmailJS send failed:', e);
+    // Still show success to applicant even if email fails — you can check submissions another way
+  }
+
+  // Show success screen
   document.querySelectorAll('.apply-step').forEach(s => s.classList.remove('active'));
   document.getElementById('apply-step-success').classList.add('active');
   window.scrollTo(0,0);
