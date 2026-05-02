@@ -6,6 +6,7 @@
 <title>LocalStage — We Don't Book Talent. We Book Audiences.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
   :root {
     --green: #1a9b6c;
@@ -488,9 +489,9 @@
 <nav>
   <a class="nav-logo" onclick="showPage('home')">Local<span>Stage</span></a>
   <ul class="nav-links">
-    <li><a onclick="showPage('home'); scrollTo('#how')">How it works</a></li>
+    <li><a onclick="showPage('home'); scrollTo('#how')">How It Works</a></li>
     <li><a onclick="showPage('artists')">Browse Artists</a></li>
-    <li><a onclick="showPage('home'); scrollTo('#pricing')">Pricing</a></li>
+    <li><a onclick="showPage('pricing-page')">Pricing</a></li>
     <li><a onclick="openApply()">Apply / Join</a></li>
     <li><a onclick="showPage('booking')">Book Now</a></li>
   </ul>
@@ -513,12 +514,17 @@
   <div class="hero-bg"></div>
   <div class="hero-grid">
     <div class="hero-left">
-      <div class="hero-eyebrow">Ontario, Canada · Live now</div>
-      <h1>We don't book <em>talent.</em><br>We book <em>audiences.</em></h1>
-      <p class="hero-sub">LocalStage connects Ontario's emerging musicians — the ones with real local fanbases — directly with the venues and events that need them.</p>
+      <div class="hero-eyebrow">For Ontario artists & venues · No agents. No DMs. No guesswork.</div>
+      <h1>Stop DMing venues.<br><em>Start getting booked.</em></h1>
+      <p class="hero-sub">LocalStage is the only platform that matches Ontario musicians to bars, events, and venues using <strong>verified local draw data</strong> — not follower counts. Artists get consistent bookings. Venues get crowds. No middleman markup.</p>
+      <div class="hero-proof" style="display:flex;gap:1.5rem;margin-bottom:2rem;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:6px;font-size:0.8rem;color:var(--ink-mid)"><span style="color:var(--green);font-weight:600">✓</span> Free for artists to join</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:0.8rem;color:var(--ink-mid)"><span style="color:var(--green);font-weight:600">✓</span> Venues pay only when it works</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:0.8rem;color:var(--ink-mid)"><span style="color:var(--green);font-weight:600">✓</span> Response within 24h</div>
+      </div>
       <div class="hero-actions">
-        <button class="btn-primary" onclick="openApply()">Join as an artist →</button>
-        <button class="btn-secondary" onclick="showPage('artists')">Browse the roster</button>
+        <button class="btn-primary" onclick="openApply()">I'm an artist — get booked →</button>
+        <button class="btn-secondary" onclick="showPage('artists')">I need talent — browse roster</button>
       </div>
     </div>
     <div class="hero-visual">
@@ -758,10 +764,88 @@
     <a onclick="showPage('artists')">Artists</a>
     <a onclick="showPage('booking')">Book Now</a>
     <a onclick="openApply()">Apply</a>
+    <a onclick="showPage('pricing-page')">Pricing</a>
   </div>
 </footer>
 
 </div><!-- /page-home -->
+
+
+<!-- ══════════════════════════════════════
+     PAGE: PRICING
+══════════════════════════════════════ -->
+<div id="page-pricing-page" class="page">
+  <div style="background:var(--ink);padding:5rem 3rem 3rem">
+    <div style="max-width:1100px;margin:0 auto">
+      <div style="font-size:0.75rem;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:#5dcaa5;margin-bottom:0.75rem">Pricing</div>
+      <h1 style="font-family:var(--serif);font-size:clamp(2.2rem,4vw,3.2rem);color:var(--white);margin-bottom:0.75rem;letter-spacing:-0.5px">Simple. Pay when it works.</h1>
+      <p style="font-size:1rem;color:#9a9a90;max-width:500px;line-height:1.7">No subscriptions. No upfront fees for artists. Venues only pay a flat coordination fee when a booking is confirmed.</p>
+    </div>
+  </div>
+  <section class="section">
+    <div class="section-inner">
+      <div class="pricing-grid fade-up">
+        <div class="pricing-card">
+          <div class="pricing-who">For artists</div>
+          <div class="pricing-name">Roster listing</div>
+          <div class="pricing-price">Free</div>
+          <div class="pricing-freq">to join and be pitched</div>
+          <ul class="pricing-feats">
+            <li>Artist profile + LocalScore™</li>
+            <li>Pitching to matched venues</li>
+            <li>Booking coordination support</li>
+            <li>No upfront cost ever</li>
+            <li>Public profile on the roster</li>
+          </ul>
+          <button class="btn-primary" style="margin-top:1.5rem;width:100%" onclick="openApply()">Apply as artist →</button>
+        </div>
+        <div class="pricing-card featured">
+          <div class="pricing-badge">Most popular</div>
+          <div class="pricing-who">For venues</div>
+          <div class="pricing-name" style="color:white">Per booking</div>
+          <div class="pricing-price">$75–150</div>
+          <div class="pricing-freq">flat coordination fee per match</div>
+          <ul class="pricing-feats">
+            <li>Hand-picked artist shortlist (3 options)</li>
+            <li>Intro + full coordination handled</li>
+            <li>Day-of confirmation & follow-up</li>
+            <li>Pay only when you book</li>
+            <li>Filter by city when browsing</li>
+          </ul>
+          <button class="btn-primary" style="margin-top:1.5rem;width:100%;background:var(--green)" onclick="showPage('booking')">Book an artist →</button>
+        </div>
+        <div class="pricing-card">
+          <div class="pricing-who">For events</div>
+          <div class="pricing-name">Event package</div>
+          <div class="pricing-price">$200–400</div>
+          <div class="pricing-freq">for multi-act curation</div>
+          <ul class="pricing-feats">
+            <li>2–3 matched artists for your event</li>
+            <li>Full lineup coordination</li>
+            <li>Genre &amp; vibe matching</li>
+            <li>Ideal for markets, festivals, pop-ups</li>
+            <li>One flat fee, no surprises</li>
+          </ul>
+          <button class="btn-primary" style="margin-top:1.5rem;width:100%" onclick="openApply()">Apply as business →</button>
+        </div>
+      </div>
+      <div style="background:var(--cream-dark);border-radius:16px;padding:2rem;margin-top:3rem;text-align:center">
+        <div style="font-family:var(--serif);font-size:1.3rem;color:var(--ink);margin-bottom:0.5rem">Questions about pricing?</div>
+        <p style="font-size:0.9rem;color:var(--ink-light);margin-bottom:1.5rem">We're a lean team. Reach out and we'll respond within a business day.</p>
+        <a href="mailto:hello@localstage.ca" style="display:inline-block;background:var(--ink);color:white;padding:0.75rem 2rem;border-radius:100px;font-size:0.9rem;font-weight:500;text-decoration:none">Email us →</a>
+      </div>
+    </div>
+  </section>
+  <footer>
+    <div class="footer-logo">Local<span>Stage</span></div>
+    <div class="footer-copy">© 2025 LocalStage · Ontario, Canada</div>
+    <div class="footer-links">
+      <a onclick="showPage('home')">Home</a>
+      <a onclick="showPage('artists')">Artists</a>
+      <a onclick="showPage('booking')">Book Now</a>
+    </div>
+  </footer>
+</div><!-- /page-pricing-page -->
 
 
 <!-- ══════════════════════════════════════
@@ -772,15 +856,24 @@
     <div class="artists-hero-inner">
       <div style="font-size:0.75rem;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:#5dcaa5;margin-bottom:0.75rem">The Roster</div>
       <h1>Discover local artists<br>who <em style="font-style:italic;color:#5dcaa5">actually</em> fill rooms.</h1>
-      <p>Every artist below has been vetted, scored, and verified. What you see is real — local followers, real draw, real reliability.</p>
+      <p>Every artist below has been vetted, scored, and verified. What you see is real — local followers, real draw, real reliability. No sign-up required to browse.</p>
       <div class="artists-filter-bar">
-        <button class="filter-chip active" onclick="filterArtists('all',this)">All genres</button>
-        <button class="filter-chip" onclick="filterArtists('rnb',this)">R&amp;B / Soul</button>
-        <button class="filter-chip" onclick="filterArtists('hiphop',this)">Hip-Hop</button>
-        <button class="filter-chip" onclick="filterArtists('indie',this)">Indie / Alt</button>
-        <button class="filter-chip" onclick="filterArtists('jazz',this)">Jazz</button>
-        <button class="filter-chip" onclick="filterArtists('folk',this)">Folk / Country</button>
-        <button class="filter-chip" onclick="filterArtists('pop',this)">Pop</button>
+        <button class="filter-chip active" onclick="filterArtists('all','all',this)">All genres</button>
+        <button class="filter-chip" onclick="filterArtists('rnb','all',this)">R&amp;B / Soul</button>
+        <button class="filter-chip" onclick="filterArtists('hiphop','all',this)">Hip-Hop</button>
+        <button class="filter-chip" onclick="filterArtists('indie','all',this)">Indie / Alt</button>
+        <button class="filter-chip" onclick="filterArtists('jazz','all',this)">Jazz</button>
+        <button class="filter-chip" onclick="filterArtists('folk','all',this)">Folk / Country</button>
+        <button class="filter-chip" onclick="filterArtists('pop','all',this)">Pop</button>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;align-items:center">
+        <span style="font-size:0.75rem;color:#9a9a90;font-weight:500;text-transform:uppercase;letter-spacing:1px">Filter by city:</span>
+        <button class="filter-chip active city-chip" style="background:transparent;border-color:#3a3a36;color:#9a9a90" onclick="filterByCity('all',this)">All cities</button>
+        <button class="filter-chip city-chip" style="background:transparent;border-color:#3a3a36;color:#9a9a90" onclick="filterByCity('mississauga',this)">Mississauga</button>
+        <button class="filter-chip city-chip" style="background:transparent;border-color:#3a3a36;color:#9a9a90" onclick="filterByCity('toronto',this)">Toronto</button>
+        <button class="filter-chip city-chip" style="background:transparent;border-color:#3a3a36;color:#9a9a90" onclick="filterByCity('brampton',this)">Brampton</button>
+        <button class="filter-chip city-chip" style="background:transparent;border-color:#3a3a36;color:#9a9a90" onclick="filterByCity('hamilton',this)">Hamilton</button>
+        <button class="filter-chip city-chip" style="background:transparent;border-color:#3a3a36;color:#9a9a90" onclick="filterByCity('other',this)">Other GTA</button>
       </div>
     </div>
   </section>
@@ -794,14 +887,51 @@
         <span class="featured-badge">Artist of the Month</span>
         <div class="featured-artist-name">Maya Reyes</div>
         <div class="featured-artist-meta">R&B · Soul &nbsp;·&nbsp; Mississauga, ON &nbsp;·&nbsp; ★★★★★ (4.9)</div>
+        <div style="font-size:0.85rem;color:#5dcaa5;margin-bottom:0.75rem">📸 <a href="https://instagram.com/mayareyesmusic" target="_blank" style="color:#5dcaa5;text-decoration:none">@mayareyesmusic</a> &nbsp;·&nbsp; 3.2k local followers</div>
         <div class="featured-artist-stats">
           <div class="featured-stat"><div class="featured-stat-val">84</div><div class="featured-stat-lbl">LocalScore™</div></div>
           <div class="featured-stat"><div class="featured-stat-val">3.2k</div><div class="featured-stat-lbl">Local followers</div></div>
           <div class="featured-stat"><div class="featured-stat-val">~65</div><div class="featured-stat-lbl">Avg. draw</div></div>
           <div class="featured-stat"><div class="featured-stat-val">12</div><div class="featured-stat-lbl">Shows/yr</div></div>
         </div>
+        <div style="margin-top:1rem;display:flex;gap:10px;flex-wrap:wrap">
+          <a href="https://youtube.com" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#252521;color:#9a9a90;padding:6px 14px;border-radius:100px;font-size:0.78rem;text-decoration:none;border:1px solid #3a3a36">▶ Latest live set</a>
+          <a href="https://youtube.com" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#252521;color:#9a9a90;padding:6px 14px;border-radius:100px;font-size:0.78rem;text-decoration:none;border:1px solid #3a3a36">▶ Studio session</a>
+        </div>
       </div>
       <button class="featured-book-btn" onclick="showPage('booking')">Book Maya →</button>
+    </div>
+
+    <!-- Upcoming Events -->
+    <div class="artists-section-head" style="margin-top:1rem"><h2>📅 Upcoming Shows</h2></div>
+    <div id="events-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:3rem">
+      <div style="background:var(--white);border-radius:16px;padding:1.25rem;border:1px solid var(--cream-dark)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.75rem">
+          <div style="background:var(--green);color:white;border-radius:8px;padding:6px 12px;text-align:center;font-size:0.7rem;font-weight:600;line-height:1.3">MAY<br><span style="font-size:1.2rem">16</span></div>
+          <span style="font-size:0.7rem;background:var(--green-light);color:var(--green);padding:4px 10px;border-radius:100px;font-weight:500">Fri Night</span>
+        </div>
+        <div style="font-weight:500;font-size:0.95rem;color:var(--ink);margin-bottom:3px">Maya Reyes Live</div>
+        <div style="font-size:0.8rem;color:var(--ink-light);margin-bottom:6px">The Dock, Mississauga</div>
+        <div style="font-size:0.78rem;color:var(--green)">📸 @mayareyesmusic · 9PM–11PM</div>
+      </div>
+      <div style="background:var(--white);border-radius:16px;padding:1.25rem;border:1px solid var(--cream-dark)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.75rem">
+          <div style="background:var(--ink);color:white;border-radius:8px;padding:6px 12px;text-align:center;font-size:0.7rem;font-weight:600;line-height:1.3">MAY<br><span style="font-size:1.2rem">22</span></div>
+          <span style="font-size:0.7rem;background:var(--cream-dark);color:var(--ink-mid);padding:4px 10px;border-radius:100px;font-weight:500">Thu Night</span>
+        </div>
+        <div style="font-weight:500;font-size:0.95rem;color:var(--ink);margin-bottom:3px">Kwame Osei Quartet</div>
+        <div style="font-size:0.8rem;color:var(--ink-light);margin-bottom:6px">The Jazz Room, Hamilton</div>
+        <div style="font-size:0.78rem;color:var(--green)">📸 @kwameosei · 8PM–10PM</div>
+      </div>
+      <div style="background:var(--white);border-radius:16px;padding:1.25rem;border:1px solid var(--cream-dark)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.75rem">
+          <div style="background:var(--ink);color:white;border-radius:8px;padding:6px 12px;text-align:center;font-size:0.7rem;font-weight:600;line-height:1.3">JUN<br><span style="font-size:1.2rem">01</span></div>
+          <span style="font-size:0.7rem;background:var(--cream-dark);color:var(--ink-mid);padding:4px 10px;border-radius:100px;font-weight:500">Sat Night</span>
+        </div>
+        <div style="font-weight:500;font-size:0.95rem;color:var(--ink);margin-bottom:3px">Sasha Okafor + Support</div>
+        <div style="font-size:0.8rem;color:var(--ink-light);margin-bottom:6px">Bar Volo, Toronto</div>
+        <div style="font-size:0.78rem;color:var(--green)">📸 @sashaokafor · 9PM–12AM</div>
+      </div>
     </div>
 
     <!-- Top Rated -->
@@ -864,6 +994,16 @@
       <div class="booking-sidebar">
         <div class="booking-artist-pick">
           <h3>Select an artist</h3>
+          <div style="margin-bottom:10px">
+            <select class="form-input form-select" id="booking-city-filter" onchange="renderBookingArtists()" style="font-size:0.8rem;padding:6px 10px;height:auto">
+              <option value="all">All cities</option>
+              <option value="mississauga">Mississauga</option>
+              <option value="toronto">Toronto / Etobicoke / Scarborough</option>
+              <option value="brampton">Brampton</option>
+              <option value="hamilton">Hamilton</option>
+              <option value="other">Other GTA</option>
+            </select>
+          </div>
           <div id="booking-artist-list"></div>
         </div>
         <div style="background:var(--green-light);border-radius:16px;padding:1.25rem;font-size:0.825rem;color:var(--green-mid);line-height:1.7">
@@ -980,11 +1120,28 @@
           <div class="form-field"><label class="form-label">Last name *</label><input class="form-input" type="text" id="a-last" placeholder="Reyes"></div>
         </div>
         <div class="form-field"><label class="form-label">Stage name (if different)</label><input class="form-input" type="text" id="a-stage" placeholder="Leave blank if same"></div>
+        <div class="form-field"><label class="form-label">Date of birth * <span style="font-weight:400;color:var(--ink-light)">(must be 19+)</span></label><input class="form-input" type="date" id="a-dob" onchange="checkAge()"><div class="form-hint" id="a-dob-hint">You must be 19 or older to perform at licensed venues in Ontario.</div></div>
         <div class="form-field"><label class="form-label">Email address *</label><input class="form-input" type="email" id="a-email" placeholder="maya@email.com"></div>
         <div class="form-field"><label class="form-label">Phone number</label><input class="form-input" type="tel" id="a-phone" placeholder="+1 (416) 000-0000"></div>
         <div class="form-row">
           <div class="form-field"><label class="form-label">City / Town *</label><input class="form-input" type="text" id="a-city" placeholder="Mississauga"></div>
           <div class="form-field"><label class="form-label">Province *</label><select class="form-input form-select" id="a-province"><option value="">Select</option><option>Ontario</option><option>Quebec</option><option>British Columbia</option><option>Alberta</option></select></div>
+        </div>
+        <div class="form-field"><label class="form-label">Cities willing to perform in * <span style="font-weight:400;color:var(--ink-light)">(select all that apply)</span></label>
+          <select class="form-input form-select" id="a-travel" multiple size="6" style="height:auto;border-radius:12px">
+            <option value="mississauga">Mississauga</option>
+            <option value="toronto">Toronto</option>
+            <option value="brampton">Brampton</option>
+            <option value="hamilton">Hamilton</option>
+            <option value="oakville">Oakville / Burlington</option>
+            <option value="scarborough">Scarborough</option>
+            <option value="etobicoke">Etobicoke</option>
+            <option value="markham">Markham / Richmond Hill</option>
+            <option value="oshawa">Oshawa / Durham Region</option>
+            <option value="guelph">Guelph / Kitchener</option>
+            <option value="anywhere">Anywhere in Ontario</option>
+          </select>
+          <div class="form-hint">Hold Ctrl (Windows) or Cmd (Mac) to select multiple cities.</div>
         </div>
 
         <div class="form-section-title">Your music</div>
@@ -1176,20 +1333,20 @@ let selectedType = null; // 'artist' | 'business'
 let currentApplyStep = 0;
 
 const ARTISTS = [
-  { id:1, init:'MR', name:'Maya Reyes', genre:'R&B · Soul', city:'Mississauga, ON', score:84, stars:'★★★★★', rating:4.9, draw:65, tag:'rnb', gradient:'135deg, #a8e6cf, #1a9b6c' },
-  { id:2, init:'JT', name:'Jordan Taye', genre:'Hip-Hop', city:'Brampton, ON', score:79, stars:'★★★★☆', rating:4.7, draw:55, tag:'hiphop', gradient:'135deg, #667eea, #764ba2' },
-  { id:3, init:'AS', name:'Alicia Simms', genre:'Indie / Alt', city:'Toronto, ON', score:72, stars:'★★★★☆', rating:4.5, draw:40, tag:'indie', gradient:'135deg, #f093fb, #f5576c' },
-  { id:4, init:'KO', name:'Kwame Osei', genre:'Jazz', city:'Hamilton, ON', score:88, stars:'★★★★★', rating:5.0, draw:80, tag:'jazz', gradient:'135deg, #4facfe, #00f2fe' },
-  { id:5, init:'LD', name:'Lily Dang', genre:'Folk · Country', city:'Oakville, ON', score:68, stars:'★★★★☆', rating:4.3, draw:35, tag:'folk', gradient:'135deg, #f6d365, #fda085' },
-  { id:6, init:'RM', name:'Remy Mais', genre:'Pop', city:'Scarborough, ON', score:75, stars:'★★★★☆', rating:4.6, draw:50, tag:'pop', gradient:'135deg, #43e97b, #38f9d7' },
-  { id:7, init:'SO', name:'Sasha Okafor', genre:'R&B · Soul', city:'Etobicoke, ON', score:81, stars:'★★★★★', rating:4.8, draw:60, tag:'rnb', gradient:'135deg, #ff9a9e, #fad0c4' },
-  { id:8, init:'BL', name:'Ben Lau', genre:'Hip-Hop', city:'Markham, ON', score:66, stars:'★★★★☆', rating:4.2, draw:30, tag:'hiphop', gradient:'135deg, #a18cd1, #fbc2eb' },
+  { id:1, init:'MR', name:'Maya Reyes', genre:'R&B · Soul', city:'Mississauga, ON', cityKey:'mississauga', score:84, stars:'★★★★★', rating:4.9, draw:65, tag:'rnb', gradient:'135deg, #a8e6cf, #1a9b6c', instagram:'@mayareyesmusic', videoUrl:'https://youtube.com', videoLabel:'Live at The Dock' },
+  { id:2, init:'JT', name:'Jordan Taye', genre:'Hip-Hop', city:'Brampton, ON', cityKey:'brampton', score:79, stars:'★★★★☆', rating:4.7, draw:55, tag:'hiphop', gradient:'135deg, #667eea, #764ba2', instagram:'@jordantaye', videoUrl:'https://youtube.com', videoLabel:'Freestyle Session' },
+  { id:3, init:'AS', name:'Alicia Simms', genre:'Indie / Alt', city:'Toronto, ON', cityKey:'toronto', score:72, stars:'★★★★☆', rating:4.5, draw:40, tag:'indie', gradient:'135deg, #f093fb, #f5576c', instagram:'@aliciasimmsmusic', videoUrl:'https://youtube.com', videoLabel:'Acoustic Set' },
+  { id:4, init:'KO', name:'Kwame Osei', genre:'Jazz', city:'Hamilton, ON', cityKey:'hamilton', score:88, stars:'★★★★★', rating:5.0, draw:80, tag:'jazz', gradient:'135deg, #4facfe, #00f2fe', instagram:'@kwameosei', videoUrl:'https://youtube.com', videoLabel:'Quartet at Jazz Room' },
+  { id:5, init:'LD', name:'Lily Dang', genre:'Folk · Country', city:'Oakville, ON', cityKey:'other', score:68, stars:'★★★★☆', rating:4.3, draw:35, tag:'folk', gradient:'135deg, #f6d365, #fda085', instagram:'@lilydangfolk', videoUrl:'https://youtube.com', videoLabel:'Front Porch Session' },
+  { id:6, init:'RM', name:'Remy Mais', genre:'Pop', city:'Scarborough, ON', cityKey:'other', score:75, stars:'★★★★☆', rating:4.6, draw:50, tag:'pop', gradient:'135deg, #43e97b, #38f9d7', instagram:'@remymais', videoUrl:'https://youtube.com', videoLabel:'EP Release Show' },
+  { id:7, init:'SO', name:'Sasha Okafor', genre:'R&B · Soul', city:'Etobicoke, ON', cityKey:'toronto', score:81, stars:'★★★★★', rating:4.8, draw:60, tag:'rnb', gradient:'135deg, #ff9a9e, #fad0c4', instagram:'@sashaokafor', videoUrl:'https://youtube.com', videoLabel:'Live at Bar Volo' },
+  { id:8, init:'BL', name:'Ben Lau', genre:'Hip-Hop', city:'Markham, ON', cityKey:'other', score:66, stars:'★★★★☆', rating:4.2, draw:30, tag:'hiphop', gradient:'135deg, #a18cd1, #fbc2eb', instagram:'@benlaubeats', videoUrl:'https://youtube.com', videoLabel:'Cypher Session' },
 ];
 const NEW_ARTISTS = [
-  { id:9, init:'TP', name:'Tara Patel', genre:'Indie / Alt', city:'Burlington, ON', score:63, stars:'★★★★☆', rating:4.1, draw:25, tag:'indie', gradient:'135deg, #fccb90, #d57eeb' },
-  { id:10, init:'CW', name:'Chase Williams', genre:'Pop', city:'Oshawa, ON', score:61, stars:'★★★☆☆', rating:3.9, draw:20, tag:'pop', gradient:'135deg, #84fab0, #8fd3f4' },
-  { id:11, init:'NB', name:'Nina Bakr', genre:'Jazz', city:'Ajax, ON', score:70, stars:'★★★★☆', rating:4.4, draw:38, tag:'jazz', gradient:'135deg, #30cfd0, #667eea' },
-  { id:12, init:'MF', name:'Marcus Ferreira', genre:'Folk · Country', city:'Guelph, ON', score:65, stars:'★★★★☆', rating:4.2, draw:28, tag:'folk', gradient:'135deg, #f7971e, #ffd200' },
+  { id:9, init:'TP', name:'Tara Patel', genre:'Indie / Alt', city:'Burlington, ON', cityKey:'other', score:63, stars:'★★★★☆', rating:4.1, draw:25, tag:'indie', gradient:'135deg, #fccb90, #d57eeb', instagram:'@tarapatelmusic', videoUrl:'https://youtube.com', videoLabel:'First Show Highlights' },
+  { id:10, init:'CW', name:'Chase Williams', genre:'Pop', city:'Oshawa, ON', cityKey:'other', score:61, stars:'★★★☆☆', rating:3.9, draw:20, tag:'pop', gradient:'135deg, #84fab0, #8fd3f4', instagram:'@chasewilliamspop', videoUrl:'https://youtube.com', videoLabel:'Studio Vlog' },
+  { id:11, init:'NB', name:'Nina Bakr', genre:'Jazz', city:'Ajax, ON', cityKey:'other', score:70, stars:'★★★★☆', rating:4.4, draw:38, tag:'jazz', gradient:'135deg, #30cfd0, #667eea', instagram:'@ninabakrjazz', videoUrl:'https://youtube.com', videoLabel:'Evening Jazz Session' },
+  { id:12, init:'MF', name:'Marcus Ferreira', genre:'Folk · Country', city:'Guelph, ON', cityKey:'other', score:65, stars:'★★★★☆', rating:4.2, draw:28, tag:'folk', gradient:'135deg, #f7971e, #ffd200', instagram:'@marcusferreirafolk', videoUrl:'https://youtube.com', videoLabel:'Campfire Sessions' },
 ];
 
 // ════════════════════════════════
@@ -1199,7 +1356,7 @@ function showPage(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   window.scrollTo(0,0);
-  if (name === 'artists') renderArtistGrid();
+  if (name === 'artists') renderArtistGrid('all','all');
   if (name === 'booking') renderBookingPage();
   if (name === 'apply') resetApply();
 }
@@ -1265,20 +1422,43 @@ function backToEmail() {
   document.getElementById('login-step-email').classList.add('active');
 }
 
-function sendCode() {
+async function sendCode() {
   const email = document.getElementById('login-email').value.trim();
   if (!email.includes('@') || !email.includes('.')) {
     document.getElementById('login-email').style.borderColor = '#c0392b';
     return;
   }
   document.getElementById('login-email').style.borderColor = '';
-  // Generate random 6-digit code (simulate sending)
+  // Generate random 6-digit code
   verificationCode = String(Math.floor(100000 + Math.random() * 900000));
-  console.log('DEV — verification code:', verificationCode); // In real app, this goes via email API
-  document.getElementById('login-code-email-display').textContent = email;
-  // Show a note simulating the email was sent
+
+  // Attempt to send via EmailJS (free tier — no backend needed)
+  // To enable real email: sign up at emailjs.com, get service/template/public keys, update below
+  const EMAILJS_SERVICE = 'localstage_service';
+  const EMAILJS_TEMPLATE = 'localstage_verify';
+  const EMAILJS_PUBLIC_KEY = 'YOUR_EMAILJS_PUBLIC_KEY'; // Replace with your EmailJS public key
+
+  let emailSent = false;
+  if (EMAILJS_PUBLIC_KEY !== 'YOUR_EMAILJS_PUBLIC_KEY' && typeof emailjs !== 'undefined') {
+    try {
+      await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
+        to_email: email,
+        verification_code: verificationCode,
+        reply_to: 'noreply@localstage.ca'
+      }, EMAILJS_PUBLIC_KEY);
+      emailSent = true;
+    } catch(e) { console.warn('EmailJS failed:', e); }
+  }
+
   const sub = document.getElementById('login-code-sub');
-  sub.innerHTML = `We've sent a 6-digit code to <strong>${email}</strong>. Enter it below to sign in.<br><small style="color:var(--green);font-size:0.8rem">✓ Code sent! (Demo: check browser console for the code)</small>`;
+  document.getElementById('login-code-email-display').textContent = email;
+  if (emailSent) {
+    sub.innerHTML = `We've sent a 6-digit verification code to <strong>${email}</strong>. Enter it below to sign in.`;
+  } else {
+    // Demo fallback — show code visibly
+    sub.innerHTML = `We've sent a 6-digit code to <strong>${email}</strong>. Enter it below to sign in.<br><span style="display:inline-block;margin-top:8px;background:var(--green-light);color:var(--green);padding:8px 16px;border-radius:8px;font-size:1rem;font-weight:600;letter-spacing:4px">${verificationCode}</span><br><small style="color:var(--ink-light);font-size:0.75rem;margin-top:4px;display:block">Demo mode: code shown above. Connect EmailJS to send real emails.</small>`;
+  }
+
   document.querySelectorAll('.login-step').forEach(s => s.classList.remove('active'));
   document.getElementById('login-step-code').classList.add('active');
   setTimeout(() => document.getElementById('code-0').focus(), 100);
@@ -1286,7 +1466,9 @@ function sendCode() {
 
 function resendCode() {
   verificationCode = String(Math.floor(100000 + Math.random() * 900000));
-  console.log('DEV — new code:', verificationCode);
+  const sub = document.getElementById('login-code-sub');
+  const email = document.getElementById('login-email').value.trim();
+  sub.innerHTML = `We've sent a new code to <strong>${email}</strong>.<br><span style="display:inline-block;margin-top:8px;background:var(--green-light);color:var(--green);padding:8px 16px;border-radius:8px;font-size:1rem;font-weight:600;letter-spacing:4px">${verificationCode}</span><br><small style="color:var(--ink-light);font-size:0.75rem;margin-top:4px;display:block">Demo mode: code shown above.</small>`;
   document.getElementById('code-error').style.display='none';
   for (let i=0;i<6;i++) document.getElementById('code-'+i).value='';
   document.getElementById('code-0').focus();
@@ -1328,39 +1510,59 @@ function verifyCode() {
 // ════════════════════════════════
 // ARTIST GRID
 // ════════════════════════════════
-function renderArtistGrid(filter='all') {
-  renderGrid('artist-grid', ARTISTS, filter);
-  renderGrid('artist-grid-new', NEW_ARTISTS, filter);
+let currentGenreFilter = 'all';
+let currentCityFilter = 'all';
+
+function renderArtistGrid(genreFilter, cityFilter) {
+  currentGenreFilter = genreFilter || currentGenreFilter;
+  currentCityFilter = cityFilter !== undefined ? cityFilter : currentCityFilter;
+  renderGrid('artist-grid', ARTISTS, currentGenreFilter, currentCityFilter);
+  renderGrid('artist-grid-new', NEW_ARTISTS, currentGenreFilter, currentCityFilter);
 }
 
-function renderGrid(containerId, artists, filter) {
+function renderGrid(containerId, artists, genreFilter, cityFilter) {
   const c = document.getElementById(containerId);
   if (!c) return;
-  const filtered = filter === 'all' ? artists : artists.filter(a => a.tag === filter);
-  if (filtered.length === 0) { c.innerHTML='<p style="color:var(--ink-light);font-size:0.9rem;padding:1rem 0">No artists in this genre yet.</p>'; return; }
+  let filtered = artists;
+  if (genreFilter && genreFilter !== 'all') filtered = filtered.filter(a => a.tag === genreFilter);
+  if (cityFilter && cityFilter !== 'all') filtered = filtered.filter(a => a.cityKey === cityFilter);
+  if (filtered.length === 0) { c.innerHTML='<p style="color:var(--ink-light);font-size:0.9rem;padding:1rem 0">No artists match this filter.</p>'; return; }
   c.innerHTML = filtered.map(a => `
-    <div class="artist-card" onclick="showPage('booking')">
+    <div class="artist-card">
       <div class="artist-card-img" style="background:linear-gradient(${a.gradient})">
         ${a.init}
-        <div class="play-overlay"><div class="play-btn">▶</div></div>
+        <div class="play-overlay"><a href="${a.videoUrl}" target="_blank" style="text-decoration:none"><div class="play-btn">▶</div></a></div>
       </div>
       <div class="artist-card-body">
         <div class="artist-card-name">${a.name}</div>
         <div class="artist-card-genre">${a.genre}</div>
+        <div style="font-size:0.72rem;color:var(--green);margin-bottom:6px">📸 <a href="https://instagram.com/${a.instagram.replace('@','')}" target="_blank" style="color:var(--green);text-decoration:none">${a.instagram}</a></div>
         <div class="artist-card-score">
           <span class="score-badge">Score ${a.score}</span>
           <span class="artist-card-stars">${a.stars}</span>
         </div>
         <div class="artist-card-location">📍 ${a.city} · ~${a.draw} avg. draw</div>
+        <div style="margin-top:8px;display:flex;gap:6px">
+          <a href="${a.videoUrl}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;background:var(--cream);color:var(--ink-mid);padding:4px 10px;border-radius:100px;font-size:0.7rem;text-decoration:none;border:1px solid var(--cream-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">▶ ${a.videoLabel}</a>
+        </div>
+        <button style="margin-top:8px;width:100%;padding:7px;background:var(--ink);color:white;border:none;border-radius:100px;font-family:var(--sans);font-size:0.78rem;font-weight:500;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='var(--green)'" onmouseout="this.style.background='var(--ink)'" onclick="showPage('booking')">Book ${a.name.split(' ')[0]} →</button>
       </div>
     </div>
   `).join('');
 }
 
-function filterArtists(tag, el) {
-  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-  el.classList.add('active');
-  renderArtistGrid(tag);
+function filterArtists(tag, city, el) {
+  if (el && el.closest('.artists-filter-bar')) {
+    document.querySelectorAll('.artists-filter-bar .filter-chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+  }
+  renderArtistGrid(tag, city !== undefined ? city : currentCityFilter);
+}
+
+function filterByCity(city, el) {
+  document.querySelectorAll('.city-chip').forEach(c => { c.classList.remove('active'); c.style.background='transparent'; c.style.color='#9a9a90'; });
+  el.classList.add('active'); el.style.background='var(--green)'; el.style.color='white'; el.style.borderColor='var(--green)';
+  renderArtistGrid(currentGenreFilter, city);
 }
 
 // ════════════════════════════════
@@ -1384,13 +1586,21 @@ function renderBookingPage() {
 function renderBookingArtists() {
   const c = document.getElementById('booking-artist-list');
   if (!c) return;
+  const cityFilter = document.getElementById('booking-city-filter');
+  const city = cityFilter ? cityFilter.value : 'all';
   const all = [...ARTISTS, ...NEW_ARTISTS];
-  c.innerHTML = all.slice(0,6).map((a,i) => `
+  let filtered = city === 'all' ? all : all.filter(a => {
+    if (city === 'toronto') return ['toronto','other'].includes(a.cityKey) && ['Scarborough, ON','Etobicoke, ON','Toronto, ON'].includes(a.city);
+    return a.cityKey === city;
+  });
+  if (filtered.length === 0) filtered = all.slice(0,6);
+  c.innerHTML = filtered.slice(0,8).map((a,i) => `
     <div class="pick-artist-row ${i===0?'selected':''}" onclick="selectBookingArtist(this)">
       <div class="pick-avatar" style="background:linear-gradient(${a.gradient})">${a.init}</div>
       <div>
         <div class="pick-name">${a.name}</div>
         <div class="pick-genre">${a.genre} · ${a.city}</div>
+        <div style="font-size:0.7rem;color:var(--green)">${a.instagram}</div>
       </div>
       <span class="pick-score">${a.score}</span>
     </div>
@@ -1500,19 +1710,42 @@ function updateSocialFields() {
   `).join('');
 }
 
+function checkAge() {
+  const dob = document.getElementById('a-dob').value;
+  const hint = document.getElementById('a-dob-hint');
+  if (!dob) return;
+  const birth = new Date(dob);
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+  if (age < 19) {
+    hint.textContent = '⚠️ You must be 19 or older to join LocalStage.';
+    hint.style.color = '#c0392b';
+    document.getElementById('a-dob').style.borderColor = '#c0392b';
+  } else {
+    hint.textContent = `✓ Age verified (${age} years old)`;
+    hint.style.color = 'var(--green)';
+    document.getElementById('a-dob').style.borderColor = 'var(--green)';
+  }
+}
+
 function buildReviewBox() {
   const box = document.getElementById('apply-review-box');
   if (selectedType === 'artist') {
     const first = document.getElementById('a-first').value || '—';
     const last = document.getElementById('a-last').value || '—';
     const email = document.getElementById('a-email').value || '—';
+    const dob = document.getElementById('a-dob').value || '—';
     const city = document.getElementById('a-city').value || '—';
     const genre = document.getElementById('a-genre').value || '—';
     const draw = document.getElementById('a-draw').value || '—';
     const platforms = Array.from(document.querySelectorAll('#platform-grid-artist .platform-chip.checked input')).map(i=>i.value).join(', ') || '—';
+    const travelEl = document.getElementById('a-travel');
+    const travel = travelEl ? Array.from(travelEl.selectedOptions).map(o=>o.text).join(', ') || '—' : '—';
     box.innerHTML = `<strong>Artist Application</strong><br>
-      Name: ${first} ${last}<br>Email: ${email}<br>City: ${city}<br>
-      Genre: ${genre}<br>Avg. draw: ${draw}<br>Platforms: ${platforms}`;
+      Name: ${first} ${last}<br>Email: ${email}<br>Date of birth: ${dob}<br>City: ${city}<br>
+      Genre: ${genre}<br>Avg. draw: ${draw}<br>Platforms: ${platforms}<br>Willing to perform in: ${travel}`;
   } else {
     const first = document.getElementById('b-first').value || '—';
     const last = document.getElementById('b-last').value || '—';
@@ -1527,6 +1760,18 @@ function buildReviewBox() {
 }
 
 function submitApply() {
+  // Age check for artists
+  if (selectedType === 'artist') {
+    const dob = document.getElementById('a-dob').value;
+    if (dob) {
+      const birth = new Date(dob);
+      const today = new Date();
+      let age = today.getFullYear() - birth.getFullYear();
+      const m = today.getMonth() - birth.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+      if (age < 19) { alert('You must be 19 or older to join LocalStage.'); return; }
+    }
+  }
   if (!document.getElementById('agree-terms').checked) {
     alert('Please agree to the terms before submitting.');
     return;
@@ -1551,7 +1796,7 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
 
 // Init
 updateNavAuth();
-renderArtistGrid();
+renderArtistGrid('all','all');
 </script>
 </body>
 </html>
