@@ -1799,7 +1799,44 @@ function selectBookingArtist(el) {
 }
 
 function submitBooking() {
-  alert('✓ Booking request submitted! Our team will confirm availability within 24 hours and reach out to ' + currentUser.email);
+  const artistRow = document.querySelector('.pick-artist-row.selected');
+  const artistName = artistRow ? artistRow.querySelector('.pick-name').textContent : 'Selected artist';
+  const venueName = document.querySelector('.booking-form-card .form-input[placeholder="e.g. The Railyard, Mississauga"]')?.value || 'your venue';
+
+  // Send notification email to Jonathan
+  const EMAILJS_SERVICE = 'service_jfagb77';
+  const EMAILJS_PUBLIC_KEY = 'FoCM6Rnq5pMjlI2PP';
+  emailjs.send(EMAILJS_SERVICE, 'template_aegy9aj', {
+    application_type: 'BOOKING REQUEST',
+    applicant_name: currentUser.email,
+    email: currentUser.email,
+    venue_refs: venueName,
+    city: document.querySelector('#page-booking .form-input[type="date"]')?.value || '—',
+    notes: `Artist: ${artistName} | Time: ${document.querySelector('#page-booking .form-input[type="time"]')?.value || '—'} | Venue: ${venueName}`,
+    stage_name:'—', phone:'—', dob:'—', genre:'—', years:'—',
+    avg_draw:'—', spotify:'—', music_link:'—', platforms:'—', video_link:'—', travel_cities:'—'
+  }, EMAILJS_PUBLIC_KEY).catch(e => console.warn('Booking email failed:', e));
+
+  // Show success state with Calendly
+  document.getElementById('booking-form-area').innerHTML = `
+    <div style="text-align:center;padding:5rem 2rem;max-width:560px;margin:0 auto">
+      <div style="font-size:3.5rem;margin-bottom:1.25rem">🎉</div>
+      <h2 style="font-family:var(--serif);font-size:2rem;color:var(--ink);margin-bottom:0.75rem;letter-spacing:-0.5px">Request received!</h2>
+      <p style="font-size:0.95rem;color:var(--ink-light);line-height:1.75;margin-bottom:0.5rem">
+        We've got your booking request for <strong>${artistName}</strong> at <strong>${venueName}</strong>.
+      </p>
+      <p style="font-size:0.9rem;color:var(--ink-light);line-height:1.75;margin-bottom:2.5rem">
+        Book a quick 30-minute call below to confirm availability and lock in the details.
+      </p>
+      <a href="https://calendly.com/jonathanwoo-q_oo/30min" target="_blank"
+        style="display:inline-block;background:var(--green);color:white;padding:1rem 2.5rem;border-radius:100px;font-family:var(--sans);font-size:1rem;font-weight:500;text-decoration:none;transition:opacity 0.2s;margin-bottom:1.5rem"
+        onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+        📅 Schedule a confirmation call →
+      </a>
+      <p style="font-size:0.8rem;color:var(--ink-light)">Takes 2 minutes · Picks a time that works for both of you</p>
+      <button onclick="showPage('home')" style="display:block;margin:1.5rem auto 0;background:transparent;border:none;font-family:var(--sans);font-size:0.85rem;color:var(--ink-light);cursor:pointer;text-decoration:underline">Back to home</button>
+    </div>
+  `;
 }
 
 // ════════════════════════════════
