@@ -1616,19 +1616,12 @@ async function sendCode() {
   // Send OTP via EmailJS
   const EMAILJS_SERVICE = 'service_jfagb77';
   const EMAILJS_PUBLIC_KEY = 'FoCM6Rnq5pMjlI2PP';
-  const OTP_TEMPLATE = 'template_aegy9aj'; // use existing template — map {{code}} and {{email}}
+  const OTP_TEMPLATE = 'template_zl0pt17'; // dedicated sign-in OTP template → sends to user's email
 
   try {
     await emailjs.send(EMAILJS_SERVICE, OTP_TEMPLATE, {
       to_email: email,
-      email: email,
-      code: verificationCode,
-      application_type: 'SIGN IN CODE',
-      applicant_name: email,
-      // Fill unused fields
-      stage_name:'—', phone:'—', dob:'—', city:'—', genre:'—', years:'—',
-      avg_draw:'—', spotify:'—', music_link:'—', platforms:'—', video_link:'—',
-      venue_refs:'—', travel_cities:'—', notes: `Your LocalStage sign-in code is: ${verificationCode}`
+      code: verificationCode
     }, EMAILJS_PUBLIC_KEY);
   } catch(e) {
     console.warn('EmailJS OTP send failed:', e);
@@ -1653,12 +1646,9 @@ async function resendCode() {
   const EMAILJS_SERVICE = 'service_jfagb77';
   const EMAILJS_PUBLIC_KEY = 'FoCM6Rnq5pMjlI2PP';
   try {
-    await emailjs.send(EMAILJS_SERVICE, 'template_aegy9aj', {
-      to_email: email, email, code: verificationCode,
-      application_type:'SIGN IN CODE', applicant_name:email,
-      stage_name:'—', phone:'—', dob:'—', city:'—', genre:'—', years:'—',
-      avg_draw:'—', spotify:'—', music_link:'—', platforms:'—', video_link:'—',
-      venue_refs:'—', travel_cities:'—', notes:`Your new LocalStage sign-in code: ${verificationCode}`
+    await emailjs.send(EMAILJS_SERVICE, 'template_zl0pt17', {
+      to_email: email,
+      code: verificationCode
     }, EMAILJS_PUBLIC_KEY);
   } catch(e) { console.warn('Resend failed:', e); }
   document.getElementById('login-code-sub').innerHTML = `
