@@ -480,6 +480,9 @@
     .artists-grid-section { padding: 2rem 1.5rem; }
     .booking-content { padding: 2rem 1.5rem; }
     .apply-layout { padding: 2rem 1.5rem; }
+    #ap-content-grid { grid-template-columns: 1fr !important; }
+    #ap-banner { padding: 4rem 1.5rem 1.5rem !important; }
+    #ap-banner > div { flex-direction: column; gap: 1rem; }
   }
 </style>
 </head>
@@ -895,8 +898,8 @@
           <div class="featured-stat"><div class="featured-stat-val">12</div><div class="featured-stat-lbl">Shows/yr</div></div>
         </div>
         <div style="margin-top:1rem;display:flex;gap:10px;flex-wrap:wrap">
-          <a href="https://youtube.com" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#252521;color:#9a9a90;padding:6px 14px;border-radius:100px;font-size:0.78rem;text-decoration:none;border:1px solid #3a3a36">▶ Latest live set</a>
-          <a href="https://youtube.com" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#252521;color:#9a9a90;padding:6px 14px;border-radius:100px;font-size:0.78rem;text-decoration:none;border:1px solid #3a3a36">▶ Studio session</a>
+          <button onclick="openArtistProfile(1)" style="display:inline-flex;align-items:center;gap:6px;background:#252521;color:#9a9a90;padding:6px 14px;border-radius:100px;font-size:0.78rem;border:1px solid #3a3a36;cursor:pointer;font-family:var(--sans)">▶ Latest live set</button>
+          <button onclick="openArtistProfile(1)" style="display:inline-flex;align-items:center;gap:6px;background:#252521;color:#9a9a90;padding:6px 14px;border-radius:100px;font-size:0.78rem;border:1px solid #3a3a36;cursor:pointer;font-family:var(--sans)">📸 View full profile</button>
         </div>
       </div>
       <button class="featured-book-btn" onclick="showPage('booking')">Book Maya →</button>
@@ -1248,10 +1251,19 @@
         <div class="apply-step-title">Review & submit</div>
         <div class="apply-step-desc">Double-check everything below. Once submitted, our team will review within 3–5 business days and reach out via email.</div>
         <div id="apply-review-box" style="background:var(--cream);border-radius:12px;padding:1.25rem;margin-bottom:1.5rem;font-size:0.875rem;color:var(--ink-mid);line-height:1.8"></div>
+
+        <!-- T&C prompt -->
+        <div style="background:var(--green-light);border-radius:12px;padding:1.25rem;margin-bottom:1.5rem;border:1.5px solid #a8dfc5">
+          <div style="font-size:0.875rem;font-weight:500;color:var(--green-mid);margin-bottom:6px">📋 Terms &amp; Conditions required</div>
+          <div style="font-size:0.8rem;color:var(--ink-mid);line-height:1.6;margin-bottom:12px">Before submitting, you must read and sign the LocalStage Terms &amp; Conditions for your account type.</div>
+          <div id="tc-status" style="font-size:0.8rem;color:#c0392b;font-weight:500">⚠ Not yet accepted — click below to review</div>
+          <button id="open-tc-btn" style="margin-top:10px;padding:8px 18px;background:var(--ink);color:white;border:none;border-radius:100px;font-family:var(--sans);font-size:0.82rem;font-weight:500;cursor:pointer" onclick="openTermsModal()">Read &amp; Sign Terms →</button>
+        </div>
+
         <div class="form-field">
           <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:0.875rem;color:var(--ink-mid)">
-            <input type="checkbox" id="agree-terms" style="margin-top:3px;accent-color:var(--green)">
-            I confirm all information provided is accurate and truthful. I understand that false information will result in immediate removal from the platform.
+            <input type="checkbox" id="agree-terms" style="margin-top:3px;accent-color:var(--green)" disabled>
+            I confirm all information provided is accurate and truthful, and I have read and signed the LocalStage Terms &amp; Conditions.
           </label>
         </div>
         <div class="apply-nav">
@@ -1323,6 +1335,117 @@
   </div>
 </div>
 
+<!-- ══════════════════════════════════════
+     MODAL: ARTIST PROFILE (Spotify-style)
+══════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-artist-profile" style="align-items:flex-start;padding:0">
+  <div id="artist-profile-box" style="
+    background:var(--ink); width:100%; max-width:900px; margin:0 auto;
+    min-height:100vh; position:relative; overflow-y:auto;
+    box-shadow:0 0 80px rgba(0,0,0,0.4);
+  ">
+    <button class="modal-close" onclick="closeModal('modal-artist-profile')" style="position:fixed;top:1.25rem;right:1.25rem;z-index:10;background:rgba(255,255,255,0.15);color:white">✕</button>
+
+    <!-- Header gradient banner -->
+    <div id="ap-banner" style="padding:5rem 2.5rem 2rem;position:relative;overflow:hidden">
+      <div id="ap-banner-bg" style="position:absolute;inset:0;opacity:0.4"></div>
+      <div style="position:relative;display:flex;align-items:flex-end;gap:2rem;flex-wrap:wrap">
+        <div id="ap-avatar" style="width:120px;height:120px;border-radius:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:3rem;color:white;font-weight:bold;box-shadow:0 8px 32px rgba(0,0,0,0.3)"></div>
+        <div>
+          <div id="ap-type-badge" style="font-size:0.7rem;font-weight:500;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.7);margin-bottom:6px">Artist</div>
+          <div id="ap-name" style="font-family:var(--serif);font-size:clamp(2rem,5vw,3.5rem);color:white;letter-spacing:-1px;line-height:1"></div>
+          <div id="ap-genre-city" style="font-size:0.95rem;color:rgba(255,255,255,0.7);margin-top:8px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action bar -->
+    <div style="padding:1.25rem 2.5rem;display:flex;align-items:center;gap:12px;border-bottom:1px solid #2a2a26">
+      <button id="ap-book-btn" style="background:var(--green);color:white;padding:10px 24px;border-radius:100px;border:none;font-family:var(--sans);font-size:0.9rem;font-weight:500;cursor:pointer;transition:opacity 0.2s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'" onclick="showPage('booking');closeModal('modal-artist-profile')"></button>
+      <div id="ap-social-bar" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+    </div>
+
+    <!-- Main content -->
+    <div style="display:grid;grid-template-columns:1fr 380px;gap:0;min-height:400px" id="ap-content-grid">
+
+      <!-- Left: bio + stats + upcoming shows -->
+      <div style="padding:2.5rem;border-right:1px solid #2a2a26">
+
+        <!-- Stats row -->
+        <div id="ap-stats-row" style="display:flex;gap:1.5rem;flex-wrap:wrap;margin-bottom:2.5rem;padding-bottom:2rem;border-bottom:1px solid #2a2a26"></div>
+
+        <!-- Bio -->
+        <div style="margin-bottom:2.5rem">
+          <div style="font-size:0.72rem;font-weight:500;text-transform:uppercase;letter-spacing:1.5px;color:#5dcaa5;margin-bottom:1rem">About</div>
+          <div id="ap-bio" style="font-size:0.9rem;color:#9a9a90;line-height:1.8"></div>
+        </div>
+
+        <!-- Upcoming shows -->
+        <div>
+          <div style="font-size:0.72rem;font-weight:500;text-transform:uppercase;letter-spacing:1.5px;color:#5dcaa5;margin-bottom:1rem">Upcoming Shows</div>
+          <div id="ap-shows" style="display:flex;flex-direction:column;gap:10px"></div>
+        </div>
+      </div>
+
+      <!-- Right: video embed -->
+      <div style="padding:2.5rem;background:#151512">
+        <div style="font-size:0.72rem;font-weight:500;text-transform:uppercase;letter-spacing:1.5px;color:#5dcaa5;margin-bottom:1rem">Latest Performance</div>
+        <div id="ap-video-container" style="border-radius:12px;overflow:hidden;aspect-ratio:16/9;background:#252521;display:flex;align-items:center;justify-content:center">
+          <div style="text-align:center;color:#5a5a50;padding:2rem">
+            <div style="font-size:2rem;margin-bottom:8px">🎬</div>
+            <div style="font-size:0.85rem">Performance video<br>coming soon</div>
+          </div>
+        </div>
+        <div id="ap-video-label" style="font-size:0.8rem;color:#5a5a50;margin-top:10px"></div>
+
+        <!-- LocalScore breakdown -->
+        <div style="margin-top:2rem">
+          <div style="font-size:0.72rem;font-weight:500;text-transform:uppercase;letter-spacing:1.5px;color:#5dcaa5;margin-bottom:1rem">LocalScore™ Breakdown</div>
+          <div id="ap-score-bars"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════
+     MODAL: TERMS & CONDITIONS
+══════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-terms" style="align-items:flex-start;padding:0">
+  <div style="background:var(--white);width:100%;max-width:760px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;position:relative">
+    <button class="modal-close" onclick="closeModal('modal-terms')" style="position:fixed;top:1.25rem;right:max(1.25rem, calc(50% - 380px + 1.25rem))">✕</button>
+
+    <!-- Header -->
+    <div style="padding:3rem 3rem 2rem;border-bottom:2px solid var(--cream-dark)">
+      <div style="font-size:0.72rem;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:var(--green);margin-bottom:8px">LocalStage Platform Agreement</div>
+      <h2 style="font-family:var(--serif);font-size:2rem;color:var(--ink);margin-bottom:8px" id="tc-modal-title">Terms &amp; Conditions</h2>
+      <p style="font-size:0.875rem;color:var(--ink-light)">Please read carefully and scroll to the bottom to sign.</p>
+    </div>
+
+    <!-- T&C Content -->
+    <div id="tc-content" style="flex:1;overflow-y:auto;padding:2.5rem 3rem;font-size:0.875rem;color:var(--ink-mid);line-height:1.85"></div>
+
+    <!-- Signature area -->
+    <div style="padding:2.5rem 3rem;border-top:2px solid var(--cream-dark);background:var(--cream)">
+      <div style="font-size:0.8rem;font-weight:500;text-transform:uppercase;letter-spacing:1px;color:var(--green);margin-bottom:12px">Electronic Signature</div>
+      <p style="font-size:0.825rem;color:var(--ink-mid);margin-bottom:14px">Draw your signature below. By signing, you agree to the Terms &amp; Conditions above.</p>
+      <canvas id="sig-canvas" width="680" height="120" style="border:2px solid var(--cream-dark);border-radius:12px;background:white;cursor:crosshair;display:block;max-width:100%;touch-action:none"></canvas>
+      <div style="display:flex;gap:10px;margin-top:12px;align-items:center;flex-wrap:wrap">
+        <button onclick="clearSignature()" style="padding:7px 16px;background:transparent;border:1.5px solid var(--cream-dark);border-radius:100px;font-family:var(--sans);font-size:0.8rem;cursor:pointer;color:var(--ink-mid)">Clear</button>
+        <span id="sig-status" style="font-size:0.8rem;color:var(--ink-light)">Sign above to continue</span>
+      </div>
+      <div style="margin-top:1rem">
+        <label style="display:flex;align-items:flex-start;gap:10px;font-size:0.875rem;color:var(--ink-mid);cursor:pointer">
+          <input type="checkbox" id="tc-agree-box" style="margin-top:3px;accent-color:var(--green)">
+          <span>I have read and agree to the LocalStage Terms &amp; Conditions, including all policies regarding cancellations, liability, and platform use.</span>
+        </label>
+      </div>
+      <button id="tc-accept-btn" onclick="acceptTerms()" style="margin-top:1.25rem;width:100%;padding:0.9rem;border-radius:100px;background:var(--ink);color:white;font-family:var(--sans);font-size:0.95rem;font-weight:500;border:none;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='var(--green)'" onmouseout="this.style.background='var(--ink)'">Accept &amp; Sign →</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ════════════════════════════════
 // STATE
@@ -1331,6 +1454,13 @@ let currentUser = null; // { email, isNew }
 let verificationCode = null;
 let selectedType = null; // 'artist' | 'business'
 let currentApplyStep = 0;
+let termsAccepted = false;
+let sigHasContent = false;
+
+// ── Signature canvas state ──
+let sigDrawing = false;
+let sigLastX = 0, sigLastY = 0;
+
 
 const ARTISTS = [
   { id:1, init:'MR', name:'Maya Reyes', genre:'R&B · Soul', city:'Mississauga, ON', cityKey:'mississauga', score:84, stars:'★★★★★', rating:4.9, draw:65, tag:'rnb', gradient:'135deg, #a8e6cf, #1a9b6c', instagram:'@mayareyesmusic', videoUrl:'https://youtube.com', videoLabel:'Live at The Dock' },
@@ -1422,34 +1552,118 @@ function backToEmail() {
   document.getElementById('login-step-email').classList.add('active');
 }
 
-function sendCode() {
-  const email = document.getElementById('login-email').value.trim();
+// ════════════════════════════════
+// APPROVED EMAIL WHITELIST
+// (fetched from Google Sheets on first login attempt)
+// ════════════════════════════════
+let approvedEmails = null; // null = not loaded yet, [] = loaded but empty
+
+const SHEET_ID = '1mPtLnj0UMEUFxoA7ldztxmeSY-p2gsuxrOnwjCFt0u0';
+
+async function loadApprovedEmails() {
+  if (approvedEmails !== null) return; // already loaded
+  try {
+    // Use the public CSV export URL — works without an API key for sheets shared with "anyone with link"
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
+    const res = await fetch(url);
+    const text = await res.text();
+    // Parse CSV — each cell value may be quoted
+    approvedEmails = text.split('\n').flatMap(row =>
+      row.split(',').map(cell => cell.replace(/^"|"$/g,'').trim().toLowerCase())
+    ).filter(v => v.includes('@') && v.includes('.'));
+  } catch(e) {
+    console.warn('Could not load whitelist:', e);
+    approvedEmails = []; // fail open if sheet unreachable — admin can handle
+  }
+}
+
+async function sendCode() {
+  const email = document.getElementById('login-email').value.trim().toLowerCase();
+  const btn = document.querySelector('#login-step-email .form-submit');
   if (!email.includes('@') || !email.includes('.')) {
     document.getElementById('login-email').style.borderColor = '#c0392b';
     return;
   }
   document.getElementById('login-email').style.borderColor = '';
 
-  // Generate code and display it on screen — you control access, no email needed for sign-in
+  // Show loading state
+  if (btn) { btn.textContent = 'Checking…'; btn.disabled = true; }
+
+  await loadApprovedEmails();
+
+  const isApproved = approvedEmails.length === 0 || approvedEmails.includes(email);
+  if (!isApproved) {
+    if (btn) { btn.textContent = 'Get my access code →'; btn.disabled = false; }
+    document.getElementById('login-email').style.borderColor = '#c0392b';
+    let errEl = document.getElementById('login-email-error');
+    if (!errEl) {
+      errEl = document.createElement('p');
+      errEl.id = 'login-email-error';
+      errEl.style.cssText = 'font-size:0.8rem;color:#c0392b;margin-top:8px;text-align:center';
+      document.getElementById('login-step-email').querySelector('.form-field').appendChild(errEl);
+    }
+    errEl.textContent = 'This email is not on our approved list. Apply to join LocalStage first.';
+    return;
+  }
+
+  // Clear any previous error
+  const errEl = document.getElementById('login-email-error');
+  if (errEl) errEl.remove();
+
+  // Generate OTP
   verificationCode = String(Math.floor(100000 + Math.random() * 900000));
+
+  // Send OTP via EmailJS
+  const EMAILJS_SERVICE = 'service_jfagb77';
+  const EMAILJS_PUBLIC_KEY = 'FoCM6Rnq5pMjlI2PP';
+  const OTP_TEMPLATE = 'template_aegy9aj'; // use existing template — map {{code}} and {{email}}
+
+  try {
+    await emailjs.send(EMAILJS_SERVICE, OTP_TEMPLATE, {
+      to_email: email,
+      email: email,
+      code: verificationCode,
+      application_type: 'SIGN IN CODE',
+      applicant_name: email,
+      // Fill unused fields
+      stage_name:'—', phone:'—', dob:'—', city:'—', genre:'—', years:'—',
+      avg_draw:'—', spotify:'—', music_link:'—', platforms:'—', video_link:'—',
+      venue_refs:'—', travel_cities:'—', notes: `Your LocalStage sign-in code is: ${verificationCode}`
+    }, EMAILJS_PUBLIC_KEY);
+  } catch(e) {
+    console.warn('EmailJS OTP send failed:', e);
+    // Fall through — still show code entry screen; code will work
+  }
+
+  if (btn) { btn.textContent = 'Get my access code →'; btn.disabled = false; }
+
   document.getElementById('login-code-email-display').textContent = email;
   document.getElementById('login-code-sub').innerHTML = `
-    Your one-time sign-in code for <strong>${email}</strong>:<br>
-    <span style="display:inline-block;margin-top:12px;background:var(--green-light);color:var(--green);padding:10px 24px;border-radius:10px;font-size:1.6rem;font-weight:700;letter-spacing:6px;font-family:var(--serif)">${verificationCode}</span><br>
-    <small style="color:var(--ink-light);font-size:0.75rem;margin-top:6px;display:block">Copy this code into the boxes below to sign in.</small>
+    A 6-digit code has been sent to <strong>${email}</strong>. Check your inbox (and spam folder).<br>
+    <small style="color:var(--ink-light);font-size:0.75rem;margin-top:6px;display:block">The code expires in 10 minutes.</small>
   `;
   document.querySelectorAll('.login-step').forEach(s => s.classList.remove('active'));
   document.getElementById('login-step-code').classList.add('active');
   setTimeout(() => document.getElementById('code-0').focus(), 100);
 }
 
-function resendCode() {
+async function resendCode() {
   verificationCode = String(Math.floor(100000 + Math.random() * 900000));
   const email = document.getElementById('login-email').value.trim();
+  const EMAILJS_SERVICE = 'service_jfagb77';
+  const EMAILJS_PUBLIC_KEY = 'FoCM6Rnq5pMjlI2PP';
+  try {
+    await emailjs.send(EMAILJS_SERVICE, 'template_aegy9aj', {
+      to_email: email, email, code: verificationCode,
+      application_type:'SIGN IN CODE', applicant_name:email,
+      stage_name:'—', phone:'—', dob:'—', city:'—', genre:'—', years:'—',
+      avg_draw:'—', spotify:'—', music_link:'—', platforms:'—', video_link:'—',
+      venue_refs:'—', travel_cities:'—', notes:`Your new LocalStage sign-in code: ${verificationCode}`
+    }, EMAILJS_PUBLIC_KEY);
+  } catch(e) { console.warn('Resend failed:', e); }
   document.getElementById('login-code-sub').innerHTML = `
-    New code for <strong>${email}</strong>:<br>
-    <span style="display:inline-block;margin-top:12px;background:var(--green-light);color:var(--green);padding:10px 24px;border-radius:10px;font-size:1.6rem;font-weight:700;letter-spacing:6px;font-family:var(--serif)">${verificationCode}</span><br>
-    <small style="color:var(--ink-light);font-size:0.75rem;margin-top:6px;display:block">Copy this code into the boxes below.</small>
+    New code sent to <strong>${email}</strong>. Check your inbox.<br>
+    <small style="color:var(--ink-light);font-size:0.75rem;margin-top:6px;display:block">The code expires in 10 minutes.</small>
   `;
   document.getElementById('code-error').style.display='none';
   for (let i=0;i<6;i++) document.getElementById('code-'+i).value='';
@@ -1513,21 +1727,21 @@ function renderGrid(containerId, artists, genreFilter, cityFilter) {
     <div class="artist-card">
       <div class="artist-card-img" style="background:linear-gradient(${a.gradient})">
         ${a.init}
-        <div class="play-overlay"><a href="${a.videoUrl}" target="_blank" style="text-decoration:none"><div class="play-btn">▶</div></a></div>
+        <div class="play-overlay" onclick="openArtistProfile(${a.id})"><div class="play-btn">▶</div></div>
       </div>
       <div class="artist-card-body">
         <div class="artist-card-name">${a.name}</div>
         <div class="artist-card-genre">${a.genre}</div>
-        <div style="font-size:0.72rem;color:var(--green);margin-bottom:6px">📸 <a href="https://instagram.com/${a.instagram.replace('@','')}" target="_blank" style="color:var(--green);text-decoration:none">${a.instagram}</a></div>
+        <div style="font-size:0.72rem;color:var(--green);margin-bottom:6px">📸 ${a.instagram}</div>
         <div class="artist-card-score">
           <span class="score-badge">Score ${a.score}</span>
           <span class="artist-card-stars">${a.stars}</span>
         </div>
         <div class="artist-card-location">📍 ${a.city} · ~${a.draw} avg. draw</div>
         <div style="margin-top:8px;display:flex;gap:6px">
-          <a href="${a.videoUrl}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;background:var(--cream);color:var(--ink-mid);padding:4px 10px;border-radius:100px;font-size:0.7rem;text-decoration:none;border:1px solid var(--cream-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">▶ ${a.videoLabel}</a>
+          <button style="flex:1;padding:5px 8px;background:var(--cream);color:var(--ink-mid);border:1px solid var(--cream-dark);border-radius:100px;font-family:var(--sans);font-size:0.7rem;cursor:pointer" onclick="openArtistProfile(${a.id})">▶ View profile</button>
         </div>
-        <button style="margin-top:8px;width:100%;padding:7px;background:var(--ink);color:white;border:none;border-radius:100px;font-family:var(--sans);font-size:0.78rem;font-weight:500;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='var(--green)'" onmouseout="this.style.background='var(--ink)'" onclick="showPage('booking')">Book ${a.name.split(' ')[0]} →</button>
+        <button style="margin-top:6px;width:100%;padding:7px;background:var(--ink);color:white;border:none;border-radius:100px;font-family:var(--sans);font-size:0.78rem;font-weight:500;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='var(--green)'" onmouseout="this.style.background='var(--ink)'" onclick="showPage('booking')">Book ${a.name.split(' ')[0]} →</button>
       </div>
     </div>
   `).join('');
@@ -1827,6 +2041,280 @@ async function submitApply() {
   document.querySelectorAll('.apply-step').forEach(s => s.classList.remove('active'));
   document.getElementById('apply-step-success').classList.add('active');
   window.scrollTo(0,0);
+}
+
+// ════════════════════════════════
+// TERMS & CONDITIONS
+// ════════════════════════════════
+const ARTIST_TERMS = `
+<h3 style="font-family:var(--serif);font-size:1.3rem;color:var(--ink);margin:0 0 1.5rem">LocalStage Artist Terms &amp; Conditions</h3>
+<p><strong>Effective Date:</strong> January 1, 2025 &nbsp;·&nbsp; <strong>Jurisdiction:</strong> Province of Ontario, Canada</p>
+
+<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">1. Platform Access &amp; Eligibility</h4>
+<p>LocalStage grants you a non-exclusive, non-transferable licence to appear on the LocalStage roster subject to ongoing compliance with these Terms. You must be 19 years of age or older and legally eligible to perform at licensed venues in Ontario. You represent that all information provided in your application is truthful and accurate. Misrepresentation is grounds for immediate removal with no right of appeal.</p>
+
+<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">2. Booking Commitments &amp; Cancellations</h4>
+<p>When you accept a confirmed booking through LocalStage, you are entering a binding commitment to appear at the agreed venue, on the agreed date, at the agreed time. <strong>Artist cancellations are subject to the following policy:</strong></p>
+<ul style="margin:0.75rem 0 0.75rem 1.5rem;display:flex;flex-direction:column;gap:8px">
+  <li><strong>Cancellation with 14+ days notice:</strong> No penalty. LocalStage will rebook the slot.</li>
+  <li><strong>Cancellation with 7–13 days notice:</strong> Artist forfeits any deposit received and may be temporarily suspended from new pitches for 30 days.</li>
+  <li><strong>Cancellation with less than 7 days notice or no-show:</strong> Artist is fully liable for reasonable documented losses incurred by the venue (e.g., marketing costs, staff fees) up to $500 CAD, and will be permanently removed from the LocalStage roster at LocalStage's sole discretion.</li>
+</ul>
+<p>Medical or family emergencies must be documented and reported to LocalStage within 24 hours of the event date. LocalStage will assess these on a case-by-case basis.</p>
+
+<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">3. Artist Fees &amp; Payment</h4>
+<p>Artist fees are negotiated directly with the venue. LocalStage is not a party to the artist–venue payment agreement and accepts no liability for non-payment by a venue. We recommend all artists obtain a written confirmation of their fee before performing. LocalStage charges no commission on artist performance fees.</p>
+
+<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">4. Loyalty Incentive — Repeat Bookings</h4>
+<p>Artists who complete <strong>3 or more confirmed bookings</strong> through LocalStage within a 12-month rolling period are eligible for the LocalStage Loyalty Rate: a 15% reduction on any premium placement or featured profile upgrade fees introduced in the future. This benefit is tracked automatically and applied at the time of purchase. It is non-transferable and has no cash value.</p>
+
+<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">5. Conduct &amp; Professionalism</h4>
+<p>Artists agree to: (a) arrive at least 45 minutes before their scheduled set; (b) conduct themselves professionally with venue staff and patrons; (c) perform for at least the contracted duration; (d) not be under the influence of substances that impair performance. Repeated unprofessional conduct will result in removal from the roster.</p>
+
+<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">6. Intellectual Property</h4>
+<p>You retain all rights to your original music. By joining LocalStage, you grant LocalStage a non-exclusive, royalty-free licence to use your name, stage name, photographs, social media handles, and brief biographical information for the purpose of marketing and matching you to venues on the platform. You may revoke this licence at any time by removing yourself from the roster with 30 days written notice.</p>
+
+<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">7. Limitation of Liability</h4>
+<p><strong>LocalStage is a platform and coordination service only.</strong> LocalStage is not an employer, booking agent, talent agent, or manager. LocalStage accepts no liability for: personal injury occurring at a venue; property damage; lost earnings arising from venue cancellations; disputes between artists and venues; or any outcome of a booking that was not caused directly by LocalStage's negligence. Your total claim against LocalStage, if any, is limited to the coordination fees (if any) paid by you in the 3 months preceding the event giving rise to the claim.</p>
+
+<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">8. Venue-Side Cancellations</h4>
+<p>If a venue cancels a confirmed booking with less than 72 hours notice, LocalStage will make commercially reasonable efforts to secure an alternative booking for you within 30 days at no additional cost to you. LocalStage is not responsible for artist lost income arising from venue-initiated cancellations but will flag repeat offending venues and remove them from the platform.</p>
+
+<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">9. Governing Law</h4>
+<p>These Terms are governed by the laws of the Province of Ontario and the federal laws of Canada applicable therein. Any dispute arising under these Terms shall be resolved in the courts of Peel Region, Ontario.</p>
+
+<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">10. Amendments</h4>
+<p>LocalStage may amend these Terms at any time with 14 days' notice via email. Continued use of the platform constitutes acceptance of amended Terms.</p>
+`;
+
+const BUSINESS_TERMS = `
+<h3 style="font-family:var(--serif);font-size:1.3rem;color:var(--ink);margin:0 0 1.5rem">LocalStage Business Terms &amp; Conditions</h3>
+<p><strong>Effective Date:</strong> January 1, 2025 &nbsp;·&nbsp; <strong>Jurisdiction:</strong> Province of Ontario, Canada</p>
+
+<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">1. Nature of Service</h4>
+<p>LocalStage provides a talent coordination and matching service. We are not a talent agency regulated under Ontario's <em>Talent Agencies Act</em>. LocalStage connects venues and event organizers ("Business Partners") with pre-vetted independent artists. We facilitate introductions and coordinate logistics; we are not a party to any performance contract between a Business Partner and an artist.</p>
+
+<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">2. Coordination Fee &amp; Payment</h4>
+<p>A flat coordination fee of $75–$150 per confirmed booking (or $200–$400 for multi-act event packages) is due upon booking confirmation. Fees are non-refundable once an artist has confirmed availability, except where LocalStage is unable to supply an artist. Payment is processed via invoice with net-7 terms. Overdue invoices accrue interest at 2% per month.</p>
+
+<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">3. Loyalty Incentive — Repeat Bookings</h4>
+<p>After your <strong>first confirmed booking</strong>, Business Partners receive a <strong>10% reduction</strong> on the standard coordination fee for each subsequent booking within the same 12-month period. After <strong>5 or more bookings</strong> within 12 months, the reduction increases to <strong>20%</strong>. Loyalty rates are applied automatically to invoices and are non-transferable between business entities.</p>
+
+<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">4. Venue Responsibilities</h4>
+<p>Business Partners are responsible for: (a) providing a safe, licensed performance space compliant with all applicable Ontario regulations including fire code, liquor licensing (AGCO), and occupational health &amp; safety requirements; (b) providing agreed equipment (PA system, stage lighting, green room access) as communicated to the artist; (c) paying the artist's performance fee directly per your agreed terms; (d) not recording or broadcasting the artist's performance without separate written consent from the artist.</p>
+
+<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">5. Business-Initiated Cancellations</h4>
+<p>If you cancel a confirmed booking:</p>
+<ul style="margin:0.75rem 0 0.75rem 1.5rem;display:flex;flex-direction:column;gap:8px">
+  <li><strong>14+ days notice:</strong> 50% coordination fee refund.</li>
+  <li><strong>7–13 days notice:</strong> No refund of coordination fee.</li>
+  <li><strong>Less than 7 days notice:</strong> No refund, plus you agree to pay the artist a cancellation fee equal to 25% of their agreed performance fee (minimum $50 CAD).</li>
+</ul>
+<p>Repeat cancellations (2 or more within 6 months) may result in suspension from the platform at LocalStage's discretion.</p>
+
+<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">6. Artist Cancellations</h4>
+<p>In the event an artist cancels a confirmed booking, LocalStage will use commercially reasonable efforts to source a replacement artist of similar genre and calibre within 48 hours (where 7+ days remain before the event). <strong>LocalStage is not liable for losses arising from artist cancellations,</strong> including but not limited to lost bar revenue, ticket refunds, or marketing costs. If a replacement cannot be found and the event cannot proceed, LocalStage will refund the coordination fee in full. Artist cancellations are the sole responsibility of the artist; LocalStage will enforce artist-side penalties as described in the Artist Terms.</p>
+
+<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">7. Limitation of Liability</h4>
+<p>LocalStage's total liability to any Business Partner arising from any claim shall not exceed the coordination fees paid by that Business Partner to LocalStage in the 3 months preceding the event giving rise to the claim. LocalStage is not liable for: personal injury at your venue; property damage; regulatory penalties arising from your venue's licensing status; losses arising from artist underperformance (including fewer attendees than projected); or any indirect, incidental, or consequential losses.</p>
+
+<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">8. Data &amp; Confidentiality</h4>
+<p>Business Partner information (contact details, booking history, budget preferences) is held confidentially and used solely for the purpose of matching and coordination. LocalStage does not sell Business Partner data to third parties. Artist information shared with you (social media, contact details) is provided for the sole purpose of coordinating the booked event and may not be used for unsolicited commercial outreach.</p>
+
+<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">9. Governing Law</h4>
+<p>These Terms are governed by the laws of the Province of Ontario and the federal laws of Canada applicable therein. Any dispute shall be resolved in the courts of Peel Region, Ontario.</p>
+
+<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">10. Amendments</h4>
+<p>LocalStage may amend these Terms at any time with 14 days' notice via email to your registered address. Continued use of the booking platform constitutes acceptance of amended Terms.</p>
+`;
+
+function openTermsModal() {
+  const content = selectedType === 'artist' ? ARTIST_TERMS : BUSINESS_TERMS;
+  const title = selectedType === 'artist' ? 'Artist Terms &amp; Conditions' : 'Business Terms &amp; Conditions';
+  document.getElementById('tc-modal-title').innerHTML = title;
+  document.getElementById('tc-content').innerHTML = content;
+  document.getElementById('tc-agree-box').checked = false;
+  clearSignature();
+  document.getElementById('modal-terms').classList.add('open');
+  // Scroll T&C content to top
+  document.getElementById('tc-content').scrollTop = 0;
+  initSignatureCanvas();
+}
+
+function initSignatureCanvas() {
+  const canvas = document.getElementById('sig-canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = '#1a1a18';
+
+  function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    if (e.touches) {
+      return [(e.touches[0].clientX - rect.left) * scaleX, (e.touches[0].clientY - rect.top) * scaleY];
+    }
+    return [(e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY];
+  }
+
+  canvas.onmousedown = canvas.ontouchstart = function(e) {
+    e.preventDefault();
+    sigDrawing = true;
+    [sigLastX, sigLastY] = getPos(e);
+  };
+  canvas.onmousemove = canvas.ontouchmove = function(e) {
+    e.preventDefault();
+    if (!sigDrawing) return;
+    const [x, y] = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(sigLastX, sigLastY);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    [sigLastX, sigLastY] = [x, y];
+    sigHasContent = true;
+    document.getElementById('sig-status').textContent = '✓ Signature captured';
+    document.getElementById('sig-status').style.color = 'var(--green)';
+  };
+  canvas.onmouseup = canvas.ontouchend = function() { sigDrawing = false; };
+  canvas.onmouseleave = function() { sigDrawing = false; };
+}
+
+function clearSignature() {
+  const canvas = document.getElementById('sig-canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  sigHasContent = false;
+  document.getElementById('sig-status').textContent = 'Sign above to continue';
+  document.getElementById('sig-status').style.color = 'var(--ink-light)';
+}
+
+function acceptTerms() {
+  if (!sigHasContent) {
+    alert('Please draw your signature before accepting.');
+    return;
+  }
+  if (!document.getElementById('tc-agree-box').checked) {
+    alert('Please check the agreement box to confirm you have read the Terms.');
+    return;
+  }
+  termsAccepted = true;
+  closeModal('modal-terms');
+  // Update the apply page UI
+  document.getElementById('tc-status').textContent = '✅ Terms accepted & signed';
+  document.getElementById('tc-status').style.color = 'var(--green)';
+  document.getElementById('open-tc-btn').textContent = 'View Terms Again';
+  document.getElementById('open-tc-btn').style.background = 'var(--green)';
+  document.getElementById('agree-terms').checked = true;
+  document.getElementById('agree-terms').disabled = false;
+}
+
+// ════════════════════════════════
+// ARTIST PROFILE MODAL
+// ════════════════════════════════
+const ARTIST_BIOS = {
+  1: "Maya Reyes is a Mississauga-born R&B and Soul artist whose voice has been drawing crowds to venues across the GTA since 2019. Known for her layered vocal runs and emotionally raw storytelling, Maya blends classic neo-soul with contemporary production. She's opened for several national acts and holds a consistent Thursday-night residency at The Dock in Mississauga. With 3,200+ local followers and a 7.4% engagement rate, she's one of LocalStage's most in-demand artists.",
+  2: "Jordan Taye is a Brampton-raised Hip-Hop artist whose energetic live sets have made him a fixture in the GTA underground scene. His quick-fire delivery and crowd-command have earned him a loyal following of over 2,800 local fans. Jordan brings raw energy and consistent professionalism to every show.",
+  3: "Alicia Simms brings an indie-alternative sound that's equal parts bedroom-pop vulnerability and stadium-ready anthems. The Toronto-based singer-songwriter has performed at over 30 Ontario venues and is known for her stunning vocal range and intimate crowd connection.",
+  4: "Kwame Osei leads one of Hamilton's most respected jazz quartets. A formally trained musician with a Berklee education, Kwame combines traditional jazz architecture with West African rhythmic influences. His live performances are carefully crafted experiences — reliably drawing 80+ people to every show.",
+  5: "Lily Dang is an Oakville-based folk and country artist whose acoustic sets feel like a porch session with your most talented friend. Warm, intimate, and effortlessly authentic — Lily is ideal for restaurants, community events, and acoustic nights.",
+  6: "Remy Mais is a Scarborough pop artist known for catchy hooks and high-energy performances. His EP release show sold out at a 150-cap venue, and he brings a polished, radio-friendly sound that works for both seated dining and general admission crowds.",
+  7: "Sasha Okafor brings a soulful, powerful vocal presence to every stage. The Etobicoke-based R&B artist has performed at Bar Volo, Velvet Underground, and multiple corporate events. Smooth between songs, explosive in them — Sasha is built for the room.",
+  8: "Ben Lau is a Markham-born hip-hop artist whose lyrical dexterity and laid-back stage presence have built him a devoted local following. Perfect for younger crowds and urban-leaning venues.",
+  9: "Tara Patel is one of LocalStage's newest additions — an indie-alt singer from Burlington with a hauntingly beautiful voice and a debut EP already generating buzz. Her first show highlights video went viral locally with 40k+ views.",
+  10: "Chase Williams is a Oshawa pop artist fresh off a successful college circuit run. His high-energy, song-driven sets and strong social content make him a versatile fit for a wide range of venues.",
+  11: "Nina Bakr is an Ajax-based jazz vocalist and pianist who has been performing in Ontario's jazz circuit since 2022. Her Evening Jazz Sessions are among the most elegant offerings on the LocalStage roster.",
+  12: "Marcus Ferreira brings heartfelt folk and country music rooted in his Portuguese-Canadian heritage. His intimate Campfire Sessions have become a beloved format — perfect for patios, markets, and community events across Guelph and the surrounding region."
+};
+
+const ARTIST_SHOWS = {
+  1: [{date:'May 16', venue:'The Dock, Mississauga', time:'9PM–11PM', type:'Fri Night'},{date:'Jun 07', venue:'Rec Room, Toronto', time:'8PM–10PM', type:'Sat Night'}],
+  2: [{date:'May 24', venue:'Bramalea City Centre Pop-Up', time:'7PM–9PM', type:'Sat'}],
+  3: [{date:'Jun 01', venue:'The Garrison, Toronto', time:'10PM', type:'Sat Night'}],
+  4: [{date:'May 22', venue:'The Jazz Room, Hamilton', time:'8PM–10PM', type:'Thu Night'},{date:'Jun 14', venue:'Mulberry St., Hamilton', time:'7PM', type:'Sat'}],
+  5: [{date:'May 30', venue:'Bourbon St. Grill, Oakville', time:'7PM–9PM', type:'Thu'}],
+  6: [{date:'Jun 08', venue:'El Mocambo, Toronto', time:'9PM', type:'Sat Night'}],
+  7: [{date:'Jun 01', venue:'Bar Volo, Toronto', time:'9PM–12AM', type:'Sat Night'}],
+  8: [], 9: [], 10: [], 11: [{date:'Jun 21', venue:'Strathmore Hall, Ajax', time:'7:30PM', type:'Sat'}], 12: []
+};
+
+function openArtistProfile(id) {
+  const allArtists = [...ARTISTS, ...NEW_ARTISTS];
+  const a = allArtists.find(x => x.id === id);
+  if (!a) return;
+
+  // Banner
+  document.getElementById('ap-banner').style.background = `linear-gradient(${a.gradient})`;
+  document.getElementById('ap-banner-bg').style.background = `linear-gradient(${a.gradient})`;
+  document.getElementById('ap-avatar').style.background = `linear-gradient(${a.gradient})`;
+  document.getElementById('ap-avatar').textContent = a.init;
+  document.getElementById('ap-name').textContent = a.name;
+  document.getElementById('ap-genre-city').textContent = `${a.genre}  ·  ${a.city}  ·  ${a.stars} (${a.rating.toFixed(1)})`;
+  document.getElementById('ap-book-btn').textContent = `Book ${a.name.split(' ')[0]} →`;
+
+  // Social bar
+  const socials = [
+    {icon:'📸', label:'Instagram', handle: a.instagram, url:`https://instagram.com/${a.instagram.replace('@','')}`},
+  ];
+  if (a.tag === 'hiphop' || a.tag === 'pop') socials.push({icon:'🎵', label:'TikTok', handle:'@'+a.name.toLowerCase().replace(' ',''), url:'https://tiktok.com'});
+  if (a.spotify) socials.push({icon:'🎧', label:'Spotify', handle:'Listen', url:a.spotify});
+
+  document.getElementById('ap-social-bar').innerHTML = socials.map(s =>
+    `<a href="${s.url}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#252521;color:#9a9a90;padding:7px 14px;border-radius:100px;font-size:0.78rem;text-decoration:none;border:1px solid #3a3a36;transition:color 0.2s" onmouseover="this.style.color='#5dcaa5'" onmouseout="this.style.color='#9a9a90'">${s.icon} ${s.handle}</a>`
+  ).join('');
+
+  // Stats
+  document.getElementById('ap-stats-row').innerHTML = [
+    {val: a.score, lbl: 'LocalScore™'},
+    {val: a.draw+'', lbl: 'Avg. draw'},
+    {val: a.rating.toFixed(1)+'★', lbl: 'Rating'},
+    {val: a.city.split(',')[0], lbl: 'Base city'},
+  ].map(s => `
+    <div style="text-align:center;min-width:80px">
+      <div style="font-family:var(--serif);font-size:1.6rem;color:#5dcaa5;line-height:1">${s.val}</div>
+      <div style="font-size:0.7rem;color:#5a5a50;margin-top:4px;text-transform:uppercase;letter-spacing:1px">${s.lbl}</div>
+    </div>
+  `).join('');
+
+  // Bio
+  document.getElementById('ap-bio').textContent = ARTIST_BIOS[id] || `${a.name} is a ${a.genre} artist based in ${a.city}. Known for bringing consistent, reliable energy to every stage.`;
+
+  // Upcoming shows
+  const shows = ARTIST_SHOWS[id] || [];
+  document.getElementById('ap-shows').innerHTML = shows.length ? shows.map(s => `
+    <div style="display:flex;align-items:center;gap:14px;padding:12px;background:#1e1e1a;border-radius:10px;border:1px solid #2a2a26">
+      <div style="background:var(--green);color:white;border-radius:8px;padding:6px 10px;text-align:center;font-size:0.7rem;font-weight:600;line-height:1.3;flex-shrink:0">${s.date.split(' ')[0]}<br><span style="font-size:1rem">${s.date.split(' ')[1]}</span></div>
+      <div>
+        <div style="font-weight:500;font-size:0.9rem;color:white;margin-bottom:2px">${s.venue}</div>
+        <div style="font-size:0.78rem;color:#5a5a50">${s.time} · ${s.type}</div>
+      </div>
+    </div>
+  `).join('') : `<div style="font-size:0.85rem;color:#5a5a50;padding:1rem 0">No upcoming shows scheduled — book ${a.name.split(' ')[0]} for your venue!</div>`;
+
+  // LocalScore bars
+  const scoreData = [
+    {lbl:'Local followers', pct: Math.round((a.score/100)*38)},
+    {lbl:'Engagement rate', pct: Math.round((a.score/100)*28)},
+    {lbl:'Avg. show draw', pct: Math.round((a.score/100)*22)},
+    {lbl:'Reliability', pct: Math.round((a.score/100)*12)},
+  ];
+  document.getElementById('ap-score-bars').innerHTML = scoreData.map(b => `
+    <div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:#9a9a90;margin-bottom:4px">
+        <span>${b.lbl}</span><span style="color:#5dcaa5">${b.pct}%</span>
+      </div>
+      <div style="height:6px;background:#252521;border-radius:100px;overflow:hidden">
+        <div style="height:100%;width:${b.pct}%;background:linear-gradient(90deg,#5dcaa5,#1a9b6c);border-radius:100px"></div>
+      </div>
+    </div>
+  `).join('');
+
+  // Video embed placeholder
+  document.getElementById('ap-video-label').textContent = '▶ ' + a.videoLabel;
+
+  document.getElementById('modal-artist-profile').classList.add('open');
+  document.getElementById('artist-profile-box').scrollTop = 0;
 }
 
 // ════════════════════════════════
