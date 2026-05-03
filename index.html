@@ -609,13 +609,13 @@
   </div>
 </section>
 
-<!-- STATS BAR -->
+<!-- POSITIONING BAR -->
 <div class="stats-bar">
-  <div class="stats-inner">
-    <div class="stat"><div class="stat-num">30<span>+</span></div><div class="stat-label">Curated artists on roster</div></div>
-    <div class="stat"><div class="stat-num">15<span>+</span></div><div class="stat-label">Venue partners</div></div>
-    <div class="stat"><div class="stat-num">$0</div><div class="stat-label">Artist signup fee</div></div>
-    <div class="stat"><div class="stat-num">48<span>h</span></div><div class="stat-label">Avg. match time</div></div>
+  <div class="stats-inner" style="justify-content:center">
+    <div style="text-align:center;max-width:720px;padding:0 1.5rem">
+      <div style="font-size:0.7rem;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:var(--green);margin-bottom:0.6rem;display:flex;align-items:center;justify-content:center;gap:8px"><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse 2s infinite"></span>Built for Ontario &middot; Not a booking agency</div>
+      <div style="font-family:var(--serif);font-size:1.45rem;color:var(--ink);letter-spacing:-0.3px;line-height:1.35">The GTA&rsquo;s first data-driven artist booking platform &mdash; matching venues to musicians using <em style="color:var(--green)">verified local draw data.</em></div>
+    </div>
   </div>
 </div>
 
@@ -806,13 +806,34 @@
 </section>
 
 <!-- FOOTER -->
+<!-- CONTACT STRIP -->
+<div style="background:var(--white);border-top:1px solid var(--cream-dark);padding:2.5rem 3rem">
+  <div style="max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:2rem">
+    <div>
+      <div style="font-size:0.7rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--ink-light);margin-bottom:6px">Have a question before booking?</div>
+      <div style="font-family:var(--serif);font-size:1.3rem;color:var(--ink);letter-spacing:-0.2px">We&rsquo;re a real team. Reach us directly.</div>
+    </div>
+    <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap">
+      <a href="mailto:localstagerisingstars@gmail.com" style="display:inline-flex;align-items:center;gap:8px;color:var(--ink);text-decoration:none;font-size:0.875rem;font-weight:500;padding:0.7rem 1.4rem;border:1.5px solid var(--cream-dark);border-radius:100px;transition:border-color 0.2s,color 0.2s" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'" onmouseout="this.style.borderColor='var(--cream-dark)';this.style.color='var(--ink)'">📧 localstagerisingstars@gmail.com</a>
+      <a href="https://instagram.com/localstage" target="_blank" style="display:inline-flex;align-items:center;gap:8px;color:var(--ink);text-decoration:none;font-size:0.875rem;font-weight:500;padding:0.7rem 1.4rem;border:1.5px solid var(--cream-dark);border-radius:100px;transition:border-color 0.2s,color 0.2s" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'" onmouseout="this.style.borderColor='var(--cream-dark)';this.style.color='var(--ink)'">📸 @localstage</a>
+      <div style="font-size:0.8rem;color:var(--ink-light);display:flex;align-items:center;gap:5px"><span style="color:var(--green);font-weight:600">&#10003;</span> Reply within 24h</div>
+    </div>
+  </div>
+</div>
+
 <footer>
   <div class="footer-logo">Local<span>Stage</span></div>
-  <div class="footer-copy">© 2025 LocalStage · Ontario, Canada</div>
+  <div style="text-align:center">
+    <div class="footer-copy">&copy; 2025 LocalStage &middot; Ontario, Canada</div>
+    <div style="display:flex;gap:1rem;justify-content:center;margin-top:6px;flex-wrap:wrap">
+      <a href="mailto:localstagerisingstars@gmail.com" style="font-size:0.78rem;color:#5dcaa5;text-decoration:none" onmouseover="this.style.color='white'" onmouseout="this.style.color='#5dcaa5'">📧 localstagerisingstars@gmail.com</a>
+      <a href="https://instagram.com/localstage" target="_blank" style="font-size:0.78rem;color:#5a5a50;text-decoration:none" onmouseover="this.style.color='#5dcaa5'" onmouseout="this.style.color='#5a5a50'">📸 @localstage</a>
+      <span style="font-size:0.78rem;color:#5a5a50">📍 GTA &middot; Hamilton &middot; Ontario</span>
+    </div>
+  </div>
   <div class="footer-links">
     <a onclick="showPage('home')">Home</a>
     <a onclick="showPage('artists')">Artists</a>
-    <a onclick="showPage('booking')">Book Now</a>
     <a onclick="openApply()">Apply</a>
     <a onclick="showPage('pricing-page')">Pricing</a>
   </div>
@@ -1372,10 +1393,11 @@
       <!-- Right: video embed -->
       <div style="padding:2.5rem;background:#151512">
         <div style="font-size:0.72rem;font-weight:500;text-transform:uppercase;letter-spacing:1.5px;color:#5dcaa5;margin-bottom:1rem">Latest Performance</div>
-        <div id="ap-video-container" style="border-radius:12px;overflow:hidden;aspect-ratio:16/9;background:#252521;display:flex;align-items:center;justify-content:center">
-          <div style="text-align:center;color:#5a5a50;padding:2rem">
-            <div style="font-size:2rem;margin-bottom:8px">🎬</div>
-            <div style="font-size:0.85rem">Performance video<br>coming soon</div>
+        <div id="ap-video-container" style="border-radius:12px;overflow:hidden;aspect-ratio:16/9;background:#1a1a18;display:flex;align-items:center;justify-content:center;border:1px dashed #2e2e2a">
+          <div style="text-align:center;padding:2.5rem">
+            <div style="font-size:1.75rem;margin-bottom:10px">🎥</div>
+            <div style="font-size:0.85rem;color:#9a9a90;margin-bottom:16px;line-height:1.6">Showcase video shared<br>after booking confirmation</div>
+            <button onclick="closeModal('modal-artist-profile'); showPage('booking')" style="background:var(--green);color:white;border:none;padding:9px 20px;border-radius:100px;font-family:var(--sans);font-size:0.8rem;font-weight:500;cursor:pointer;transition:opacity 0.2s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">Request a showcase &#8594;</button>
           </div>
         </div>
         <div id="ap-video-label" style="font-size:0.8rem;color:#5a5a50;margin-top:10px"></div>
@@ -1472,6 +1494,24 @@ function showPage(name) {
 }
 
 function openApply() { showPage('apply'); }
+
+function openApplyAsArtist() {
+  showPage('apply');
+  // Pre-select artist and skip straight to step 2
+  setTimeout(() => {
+    selectType('artist');
+    applyNext(0);
+  }, 20);
+}
+
+function openApplyAsVenue() {
+  showPage('apply');
+  // Pre-select business and skip straight to step 2
+  setTimeout(() => {
+    selectType('business');
+    applyNext(0);
+  }, 20);
+}
 
 function goToEventBooking() {
   showPage('booking');
@@ -2593,85 +2633,57 @@ async function submitApply() {
 // TERMS & CONDITIONS
 // ════════════════════════════════
 const ARTIST_TERMS = `
-<h3 style="font-family:var(--serif);font-size:1.3rem;color:var(--ink);margin:0 0 1.5rem">LocalStage Artist Terms &amp; Conditions</h3>
-<p><strong>Effective Date:</strong> January 1, 2025 &nbsp;·&nbsp; <strong>Jurisdiction:</strong> Province of Ontario, Canada</p>
-
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">1. Platform Access &amp; Eligibility</h4>
-<p>LocalStage grants you a non-exclusive, non-transferable licence to appear on the LocalStage roster subject to ongoing compliance with these Terms. You must be 19 years of age or older and legally eligible to perform at licensed venues in Ontario. You represent that all information provided in your application is truthful and accurate. Misrepresentation is grounds for immediate removal with no right of appeal.</p>
-
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">2. Booking Commitments &amp; Cancellations</h4>
-<p>When you accept a confirmed booking through LocalStage, you are entering a binding commitment to appear at the agreed venue, on the agreed date, at the agreed time. <strong>Artist cancellations are subject to the following policy:</strong></p>
-<ul style="margin:0.75rem 0 0.75rem 1.5rem;display:flex;flex-direction:column;gap:8px">
-  <li><strong>Cancellation with 14+ days notice:</strong> No penalty. LocalStage will rebook the slot.</li>
-  <li><strong>Cancellation with 7–13 days notice:</strong> Artist forfeits any deposit received and may be temporarily suspended from new pitches for 30 days.</li>
-  <li><strong>Cancellation with less than 7 days notice or no-show:</strong> Artist is fully liable for reasonable documented losses incurred by the venue (e.g., marketing costs, staff fees) up to $500 CAD, and will be permanently removed from the LocalStage roster at LocalStage's sole discretion.</li>
-</ul>
-<p>Medical or family emergencies must be documented and reported to LocalStage within 24 hours of the event date. LocalStage will assess these on a case-by-case basis.</p>
-
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">3. Artist Fees &amp; Payment</h4>
-<p>Artist fees are negotiated directly with the venue. LocalStage is not a party to the artist–venue payment agreement and accepts no liability for non-payment by a venue. We recommend all artists obtain a written confirmation of their fee before performing. LocalStage charges no commission on artist performance fees.</p>
-
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">4. Loyalty Incentive — Repeat Bookings</h4>
-<p>Artists who complete <strong>3 or more confirmed bookings</strong> through LocalStage within a 12-month rolling period are eligible for the LocalStage Loyalty Rate: a 15% reduction on any premium placement or featured profile upgrade fees introduced in the future. This benefit is tracked automatically and applied at the time of purchase. It is non-transferable and has no cash value.</p>
-
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">5. Conduct &amp; Professionalism</h4>
-<p>Artists agree to: (a) arrive at least 45 minutes before their scheduled set; (b) conduct themselves professionally with venue staff and patrons; (c) perform for at least the contracted duration; (d) not be under the influence of substances that impair performance. Repeated unprofessional conduct will result in removal from the roster.</p>
-
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">6. Intellectual Property</h4>
-<p>You retain all rights to your original music. By joining LocalStage, you grant LocalStage a non-exclusive, royalty-free licence to use your name, stage name, photographs, social media handles, and brief biographical information for the purpose of marketing and matching you to venues on the platform. You may revoke this licence at any time by removing yourself from the roster with 30 days written notice.</p>
-
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">7. Limitation of Liability</h4>
-<p><strong>LocalStage is a platform and coordination service only.</strong> LocalStage is not an employer, booking agent, talent agent, or manager. LocalStage accepts no liability for: personal injury occurring at a venue; property damage; lost earnings arising from venue cancellations; disputes between artists and venues; or any outcome of a booking that was not caused directly by LocalStage's negligence. Your total claim against LocalStage, if any, is limited to the coordination fees (if any) paid by you in the 3 months preceding the event giving rise to the claim.</p>
-
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">8. Venue-Side Cancellations</h4>
-<p>If a venue cancels a confirmed booking with less than 72 hours notice, LocalStage will make commercially reasonable efforts to secure an alternative booking for you within 30 days at no additional cost to you. LocalStage is not responsible for artist lost income arising from venue-initiated cancellations but will flag repeat offending venues and remove them from the platform.</p>
-
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">9. Governing Law</h4>
-<p>These Terms are governed by the laws of the Province of Ontario and the federal laws of Canada applicable therein. Any dispute arising under these Terms shall be resolved in the courts of Peel Region, Ontario.</p>
-
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">10. Amendments</h4>
-<p>LocalStage may amend these Terms at any time with 14 days' notice via email. Continued use of the platform constitutes acceptance of amended Terms.</p>
+<h3 style="font-family:var(--serif);font-size:1.3rem;color:var(--ink);margin:0 0 0.5rem">LocalStage Artist Agreement</h3>
+<p style="font-size:0.8rem;color:var(--ink-light);margin-bottom:1.75rem">Effective January 1, 2025 &middot; Province of Ontario</p>
+<p style="margin-bottom:1.75rem;color:var(--ink-mid);line-height:1.75">Here&rsquo;s what you&rsquo;re agreeing to &mdash; in plain language. We kept this short so you&rsquo;ll actually read it.</p>
+<div style="display:flex;gap:1rem;margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--cream-dark)">
+  <div style="flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--green);color:white;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:0.9rem;font-weight:bold">1</div>
+  <div><div style="font-weight:600;font-size:0.9rem;color:var(--ink);margin-bottom:5px">You show up when you commit.</div><div style="font-size:0.85rem;color:var(--ink-mid);line-height:1.7">Accepting a booking is a binding commitment. Cancellations with less than 7 days notice may result in liability for documented venue costs (up to $500 CAD) and removal from the roster. Medical emergencies are handled case-by-case &mdash; just let us know within 24 hours.</div></div>
+</div>
+<div style="display:flex;gap:1rem;margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--cream-dark)">
+  <div style="flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--green);color:white;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:0.9rem;font-weight:bold">2</div>
+  <div><div style="font-weight:600;font-size:0.9rem;color:var(--ink);margin-bottom:5px">We match, you perform, the venue pays you directly.</div><div style="font-size:0.85rem;color:var(--ink-mid);line-height:1.7">LocalStage charges no commission on your performance fee. We earn a coordination fee from the venue only. You negotiate your rate directly with the venue and get paid by them. We recommend confirming your rate in writing before each show.</div></div>
+</div>
+<div style="display:flex;gap:1rem;margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--cream-dark)">
+  <div style="flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--green);color:white;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:0.9rem;font-weight:bold">3</div>
+  <div><div style="font-weight:600;font-size:0.9rem;color:var(--ink);margin-bottom:5px">Be professional every time.</div><div style="font-size:0.85rem;color:var(--ink-mid);line-height:1.7">Arrive at least 45 minutes early. Perform for the contracted time. Treat venue staff and patrons with respect. Repeated unprofessional conduct gets you removed from the roster &mdash; no exceptions.</div></div>
+</div>
+<div style="display:flex;gap:1rem;margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--cream-dark)">
+  <div style="flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--green);color:white;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:0.9rem;font-weight:bold">4</div>
+  <div><div style="font-weight:600;font-size:0.9rem;color:var(--ink);margin-bottom:5px">Your music stays yours.</div><div style="font-size:0.85rem;color:var(--ink-mid);line-height:1.7">You keep all rights to your music. By joining, you give us permission to use your name, photos, and bio to pitch you to venues. You can leave the roster at any time with 30 days notice.</div></div>
+</div>
+<div style="display:flex;gap:1rem;margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--cream-dark)">
+  <div style="flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--green);color:white;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:0.9rem;font-weight:bold">5</div>
+  <div><div style="font-weight:600;font-size:0.9rem;color:var(--ink);margin-bottom:5px">Book through us, not around us.</div><div style="font-size:0.85rem;color:var(--ink-mid);line-height:1.7">Any venue you meet through LocalStage must be re-booked through LocalStage for 12 months. We invest real effort in every introduction &mdash; this is how we keep the lights on.</div></div>
+</div>
+<p style="font-size:0.78rem;color:var(--ink-light);line-height:1.6;margin-top:0.5rem">Governed by the laws of Ontario. Disputes resolved in the courts of Peel Region. Terms may be updated with 14 days email notice. Questions? <a href="mailto:localstagerisingstars@gmail.com" style="color:var(--green)">localstagerisingstars@gmail.com</a></p>
 `;
 
 const BUSINESS_TERMS = `
-<h3 style="font-family:var(--serif);font-size:1.3rem;color:var(--ink);margin:0 0 1.5rem">LocalStage Business Terms &amp; Conditions</h3>
-<p><strong>Effective Date:</strong> January 1, 2025 &nbsp;·&nbsp; <strong>Jurisdiction:</strong> Province of Ontario, Canada</p>
-
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">1. Nature of Service</h4>
-<p>LocalStage provides a talent coordination and matching service. We are not a talent agency regulated under Ontario's <em>Talent Agencies Act</em>. LocalStage connects venues and event organizers ("Business Partners") with pre-vetted independent artists. We facilitate introductions and coordinate logistics; we are not a party to any performance contract between a Business Partner and an artist.</p>
-
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">2. Coordination Fee &amp; Payment</h4>
-<p>A flat coordination fee of $75–$150 per confirmed booking (or $200–$400 for multi-act event packages) is due upon booking confirmation. Fees are non-refundable once an artist has confirmed availability, except where LocalStage is unable to supply an artist. Payment is processed via invoice with net-7 terms. Overdue invoices accrue interest at 2% per month.</p>
-
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">3. Loyalty Incentive — Repeat Bookings</h4>
-<p>After your <strong>first confirmed booking</strong>, Business Partners receive a <strong>10% reduction</strong> on the standard coordination fee for each subsequent booking within the same 12-month period. After <strong>5 or more bookings</strong> within 12 months, the reduction increases to <strong>20%</strong>. Loyalty rates are applied automatically to invoices and are non-transferable between business entities.</p>
-
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">4. Venue Responsibilities</h4>
-<p>Business Partners are responsible for: (a) providing a safe, licensed performance space compliant with all applicable Ontario regulations including fire code, liquor licensing (AGCO), and occupational health &amp; safety requirements; (b) providing agreed equipment (PA system, stage lighting, green room access) as communicated to the artist; (c) paying the artist's performance fee directly per your agreed terms; (d) not recording or broadcasting the artist's performance without separate written consent from the artist.</p>
-
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">5. Business-Initiated Cancellations</h4>
-<p>If you cancel a confirmed booking:</p>
-<ul style="margin:0.75rem 0 0.75rem 1.5rem;display:flex;flex-direction:column;gap:8px">
-  <li><strong>14+ days notice:</strong> 50% coordination fee refund.</li>
-  <li><strong>7–13 days notice:</strong> No refund of coordination fee.</li>
-  <li><strong>Less than 7 days notice:</strong> No refund, plus you agree to pay the artist a cancellation fee equal to 25% of their agreed performance fee (minimum $50 CAD).</li>
-</ul>
-<p>Repeat cancellations (2 or more within 6 months) may result in suspension from the platform at LocalStage's discretion.</p>
-
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">6. Artist Cancellations</h4>
-<p>In the event an artist cancels a confirmed booking, LocalStage will use commercially reasonable efforts to source a replacement artist of similar genre and calibre within 48 hours (where 7+ days remain before the event). <strong>LocalStage is not liable for losses arising from artist cancellations,</strong> including but not limited to lost bar revenue, ticket refunds, or marketing costs. If a replacement cannot be found and the event cannot proceed, LocalStage will refund the coordination fee in full. Artist cancellations are the sole responsibility of the artist; LocalStage will enforce artist-side penalties as described in the Artist Terms.</p>
-
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">7. Limitation of Liability</h4>
-<p>LocalStage's total liability to any Business Partner arising from any claim shall not exceed the coordination fees paid by that Business Partner to LocalStage in the 3 months preceding the event giving rise to the claim. LocalStage is not liable for: personal injury at your venue; property damage; regulatory penalties arising from your venue's licensing status; losses arising from artist underperformance (including fewer attendees than projected); or any indirect, incidental, or consequential losses.</p>
-
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">8. Data &amp; Confidentiality</h4>
-<p>Business Partner information (contact details, booking history, budget preferences) is held confidentially and used solely for the purpose of matching and coordination. LocalStage does not sell Business Partner data to third parties. Artist information shared with you (social media, contact details) is provided for the sole purpose of coordinating the booked event and may not be used for unsolicited commercial outreach.</p>
-
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">9. Governing Law</h4>
-<p>These Terms are governed by the laws of the Province of Ontario and the federal laws of Canada applicable therein. Any dispute shall be resolved in the courts of Peel Region, Ontario.</p>
-
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">10. Amendments</h4>
-<p>LocalStage may amend these Terms at any time with 14 days' notice via email to your registered address. Continued use of the booking platform constitutes acceptance of amended Terms.</p>
+<h3 style="font-family:var(--serif);font-size:1.3rem;color:var(--ink);margin:0 0 0.5rem">LocalStage Venue &amp; Business Agreement</h3>
+<p style="font-size:0.8rem;color:var(--ink-light);margin-bottom:1.75rem">Effective January 1, 2025 &middot; Province of Ontario</p>
+<p style="margin-bottom:1.75rem;color:var(--ink-mid);line-height:1.75">Five things to know before you book. Short, clear, no surprises.</p>
+<div style="display:flex;gap:1rem;margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--cream-dark)">
+  <div style="flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--green);color:white;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:0.9rem;font-weight:bold">1</div>
+  <div><div style="font-weight:600;font-size:0.9rem;color:var(--ink);margin-bottom:5px">You pay only when it&rsquo;s confirmed.</div><div style="font-size:0.85rem;color:var(--ink-mid);line-height:1.7">The coordination fee ($75&ndash;$150 per booking, $200&ndash;$400 for event packages) is due only once an artist confirms availability. Payment via invoice, net-7 terms. Repeat bookers get 10% off; 5+ bookings a year gets 20% off.</div></div>
+</div>
+<div style="display:flex;gap:1rem;margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--cream-dark)">
+  <div style="flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--green);color:white;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:0.9rem;font-weight:bold">2</div>
+  <div><div style="font-weight:600;font-size:0.9rem;color:var(--ink);margin-bottom:5px">Cancellations have real consequences.</div><div style="font-size:0.85rem;color:var(--ink-mid);line-height:1.7">14+ days notice: 50% refund. 7&ndash;13 days: no refund. Under 7 days: no refund plus 25% cancellation fee to the artist (min. $50 CAD). Two cancellations in 6 months may result in platform suspension.</div></div>
+</div>
+<div style="display:flex;gap:1rem;margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--cream-dark)">
+  <div style="flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--green);color:white;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:0.9rem;font-weight:bold">3</div>
+  <div><div style="font-weight:600;font-size:0.9rem;color:var(--ink);margin-bottom:5px">You&rsquo;re responsible for your venue&rsquo;s licensing.</div><div style="font-size:0.85rem;color:var(--ink-mid);line-height:1.7">You must hold valid SOCAN and Re:Sound licences for live music on the booking date. LocalStage is not a party to your licensing obligations. This is your venue, your responsibility.</div></div>
+</div>
+<div style="display:flex;gap:1rem;margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--cream-dark)">
+  <div style="flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--green);color:white;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:0.9rem;font-weight:bold">4</div>
+  <div><div style="font-weight:600;font-size:0.9rem;color:var(--ink);margin-bottom:5px">If an artist cancels, we find a replacement.</div><div style="font-size:0.85rem;color:var(--ink-mid);line-height:1.7">Artist cancellations are rare &mdash; we hold our roster to strict standards. If one happens, we&rsquo;ll source a replacement within 48 hours (where 7+ days remain). If we can&rsquo;t find one, you get a full refund of the coordination fee.</div></div>
+</div>
+<div style="display:flex;gap:1rem;margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--cream-dark)">
+  <div style="flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--green);color:white;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:0.9rem;font-weight:bold">5</div>
+  <div><div style="font-weight:600;font-size:0.9rem;color:var(--ink);margin-bottom:5px">Keep all re-bookings through LocalStage.</div><div style="font-size:0.85rem;color:var(--ink-mid);line-height:1.7">Any artist you book through LocalStage must be re-booked through LocalStage for 12 months from first booking date. Direct outreach to artists introduced through the platform is a breach of this agreement.</div></div>
+</div>
+<p style="font-size:0.78rem;color:var(--ink-light);line-height:1.6;margin-top:0.5rem">Governed by the laws of Ontario. Disputes resolved in the courts of Peel Region. Terms may be updated with 14 days email notice. Questions? <a href="mailto:localstagerisingstars@gmail.com" style="color:var(--green)">localstagerisingstars@gmail.com</a></p>
 `;
 
 function openTermsModal() {
@@ -2809,11 +2821,8 @@ function openArtistProfile(id) {
   bookBtn.textContent = `Book ${a.name.split(' ')[0]} →`;
   bookBtn.onclick = () => { closeModal('modal-artist-profile'); bookArtist(id); };
 
-  // Social bar
-  // Social handles intentionally withheld from public profile — shown after booking only
-  const socials = [];
-
-  document.getElementById('ap-social-bar').innerHTML = '';
+  // Social handles shared after booking confirmation — keeps all coordination through LocalStage
+  document.getElementById('ap-social-bar').innerHTML = '<div style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:100px;padding:5px 14px;font-size:0.72rem;color:#8a8a80">&#128274; Social handles shared after booking is confirmed</div>';
 
   // Stats
   document.getElementById('ap-stats-row').innerHTML = [
