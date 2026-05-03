@@ -975,7 +975,7 @@
     <div class="booking-hero-inner">
       <div style="font-size:0.75rem;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:0.75rem">Book a show</div>
       <h1>Request an artist<br>for your venue or event.</h1>
-      <p>Fill out the form below and we'll confirm availability and coordinate everything within 48 hours.</p>
+      <p>Fill out the form below. We'll check availability with the artist within 24 hours — you only pay once the booking is confirmed.</p>
     </div>
   </div>
 
@@ -1018,7 +1018,13 @@
       <div class="booking-form-card">
         <h2>Booking request</h2>
         <p>Tell us about your event and we'll handle the coordination.</p>
-        <div class="form-field"><label class="form-label">Venue / Event name *</label><input class="form-input" type="text" placeholder="e.g. The Railyard, Mississauga"></div>
+        <div class="form-field"><label class="form-label">Venue / Event name *</label><input class="form-input" type="text" id="booking-venue-name" placeholder="e.g. The Railyard, Mississauga"></div>
+        <div class="form-field">
+          <label class="form-label">Google Maps link of your venue *</label>
+          <input class="form-input" type="url" id="booking-maps-url" placeholder="https://maps.google.com/..." oninput="validateMapsUrl(this)">
+          <div class="form-hint">Open Google Maps, search your venue, click Share → Copy link. Paste it here. This helps us verify your location.</div>
+          <div id="maps-url-error" style="font-size:0.75rem;color:#c0392b;margin-top:4px;display:none">Please enter a valid Google Maps link.</div>
+        </div>
         <div class="form-field"><label class="form-label">Event type *</label>
           <select class="form-input form-select">
             <option value="">Select event type</option>
@@ -1674,30 +1680,17 @@ async function sendCode() {
   const errEl = document.getElementById('login-email-error');
   if (errEl) errEl.remove();
 
-  // Generate OTP
+  // Generate OTP — displayed on screen during testing (no email sent)
   verificationCode = String(Math.floor(100000 + Math.random() * 900000));
-
-  // Send OTP via EmailJS
-  const EMAILJS_SERVICE = 'service_jfagb77';
-  const EMAILJS_PUBLIC_KEY = 'FoCM6Rnq5pMjlI2PP';
-  const OTP_TEMPLATE = 'template_zl0pt17'; // dedicated sign-in OTP template → sends to user's email
-
-  try {
-    await emailjs.send(EMAILJS_SERVICE, OTP_TEMPLATE, {
-      to_email: email,
-      code: verificationCode
-    }, EMAILJS_PUBLIC_KEY);
-  } catch(e) {
-    console.warn('EmailJS OTP send failed:', e);
-    // Fall through — still show code entry screen; code will work
-  }
 
   if (btn) { btn.textContent = 'Get my access code →'; btn.disabled = false; }
 
   document.getElementById('login-code-email-display').textContent = email;
   document.getElementById('login-code-sub').innerHTML = `
-    A 6-digit code has been sent to <strong>${email}</strong>. Check your inbox (and spam folder).<br>
-    <small style="color:var(--ink-light);font-size:0.75rem;margin-top:6px;display:block">The code expires in 10 minutes.</small>
+    <span style="display:inline-block;background:#fff8e1;border:1.5px dashed #f4b400;border-radius:10px;padding:10px 18px;font-size:0.85rem;color:#7a6000;margin-bottom:10px">
+      🧪 <strong>Testing mode:</strong> Your code is <strong style="font-size:1.1rem;letter-spacing:2px">${verificationCode}</strong>
+    </span><br>
+    <small style="color:var(--ink-light);font-size:0.75rem;margin-top:6px;display:block">Email delivery is disabled during testing. Enter the code above.</small>
   `;
   document.querySelectorAll('.login-step').forEach(s => s.classList.remove('active'));
   document.getElementById('login-step-code').classList.add('active');
@@ -1707,17 +1700,12 @@ async function sendCode() {
 async function resendCode() {
   verificationCode = String(Math.floor(100000 + Math.random() * 900000));
   const email = document.getElementById('login-email').value.trim();
-  const EMAILJS_SERVICE = 'service_jfagb77';
-  const EMAILJS_PUBLIC_KEY = 'FoCM6Rnq5pMjlI2PP';
-  try {
-    await emailjs.send(EMAILJS_SERVICE, 'template_zl0pt17', {
-      to_email: email,
-      code: verificationCode
-    }, EMAILJS_PUBLIC_KEY);
-  } catch(e) { console.warn('Resend failed:', e); }
+  // Testing mode — no email sent, code shown on screen
   document.getElementById('login-code-sub').innerHTML = `
-    New code sent to <strong>${email}</strong>. Check your inbox.<br>
-    <small style="color:var(--ink-light);font-size:0.75rem;margin-top:6px;display:block">The code expires in 10 minutes.</small>
+    <span style="display:inline-block;background:#fff8e1;border:1.5px dashed #f4b400;border-radius:10px;padding:10px 18px;font-size:0.85rem;color:#7a6000;margin-bottom:10px">
+      🧪 <strong>Testing mode:</strong> Your new code is <strong style="font-size:1.1rem;letter-spacing:2px">${verificationCode}</strong>
+    </span><br>
+    <small style="color:var(--ink-light);font-size:0.75rem;margin-top:6px;display:block">Email delivery is disabled during testing. Enter the code above.</small>
   `;
   document.getElementById('code-error').style.display='none';
   for (let i=0;i<6;i++) document.getElementById('code-'+i).value='';
@@ -1885,6 +1873,13 @@ function selectBookingArtist(el) {
   el.classList.add('selected');
 }
 
+function validateMapsUrl(input) {
+  const val = input.value.trim();
+  const errEl = document.getElementById('maps-url-error');
+  const valid = val === '' || val.includes('google') || val.includes('maps') || val.startsWith('http');
+  if (errEl) errEl.style.display = (!valid && val.length > 5) ? 'block' : 'none';
+}
+
 function submitAnotherBooking() {
   // Clear the previous booking record so the form shows again
   if (currentUser) localStorage.removeItem('ls-booked-' + currentUser.email);
@@ -1892,6 +1887,21 @@ function submitAnotherBooking() {
 }
 
 function submitBooking() {
+  // Validate Google Maps URL
+  const mapsInput = document.getElementById('booking-maps-url');
+  if (mapsInput) {
+    const mapsVal = mapsInput.value.trim();
+    const mapsErr = document.getElementById('maps-url-error');
+    if (!mapsVal || (!mapsVal.includes('google') && !mapsVal.includes('maps') && !mapsVal.startsWith('http'))) {
+      if (mapsErr) { mapsErr.textContent = 'Please enter your Google Maps venue link before submitting.'; mapsErr.style.display = 'block'; }
+      mapsInput.style.borderColor = '#c0392b';
+      mapsInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    if (mapsErr) mapsErr.style.display = 'none';
+    mapsInput.style.borderColor = '';
+  }
+
   // Validate licensing checkboxes
   const socan = document.getElementById('licence-socan');
   const resound = document.getElementById('licence-resound');
@@ -1907,7 +1917,7 @@ function submitBooking() {
   }
   const artistRow = document.querySelector('.pick-artist-row.selected');
   const artistName = artistRow ? artistRow.querySelector('.pick-name').textContent : 'Selected artist';
-  const venueName = document.querySelector('.booking-form-card .form-input[placeholder="e.g. The Railyard, Mississauga"]')?.value || 'your venue';
+  const venueName = document.getElementById('booking-venue-name')?.value || 'your venue';
   const bookingDate = document.querySelector('#page-booking .form-input[type="date"]')?.value || '—';
   const bookingTime = document.querySelector('#page-booking .form-input[type="time"]')?.value || '—';
 
@@ -1936,24 +1946,26 @@ function submitBooking() {
     avg_draw:'—', spotify:'—', music_link:'—', platforms:'—', video_link:'—', travel_cities:'—'
   }, EMAILJS_PUBLIC_KEY).catch(e => console.warn('Booking email failed:', e));
 
-  // Show success state with Calendly
+  // Show success state
   document.getElementById('booking-form-area').innerHTML = `
     <div style="text-align:center;padding:5rem 2rem;max-width:560px;margin:0 auto">
-      <div style="font-size:3.5rem;margin-bottom:1.25rem">🎉</div>
+      <div style="font-size:3.5rem;margin-bottom:1.25rem">📬</div>
       <h2 style="font-family:var(--serif);font-size:2rem;color:var(--ink);margin-bottom:0.75rem;letter-spacing:-0.5px">Request received!</h2>
-      <p style="font-size:0.95rem;color:var(--ink-light);line-height:1.75;margin-bottom:0.5rem">
-        We've got your booking request for <strong>${artistName}</strong> at <strong>${venueName}</strong>.
+      <p style="font-size:0.95rem;color:var(--ink-light);line-height:1.75;margin-bottom:1.25rem">
+        We've got your booking request for <strong>${artistName}</strong> at <strong>${venueName}</strong>. Here's what happens next:
       </p>
-      <p style="font-size:0.9rem;color:var(--ink-light);line-height:1.75;margin-bottom:2.5rem">
-        Book a quick 30-minute call below to confirm availability and lock in the details.
-      </p>
-      <a href="https://calendly.com/jonathanwoo-q_oo/30min" target="_blank"
-        style="display:inline-block;background:var(--green);color:white;padding:1rem 2.5rem;border-radius:100px;font-family:var(--sans);font-size:1rem;font-weight:500;text-decoration:none;transition:opacity 0.2s;margin-bottom:1.5rem"
-        onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
-        📅 Schedule a confirmation call →
-      </a>
-      <p style="font-size:0.8rem;color:var(--ink-light)">Takes 2 minutes · Picks a time that works for both of you</p>
-      <button onclick="showPage('home')" style="display:block;margin:1.5rem auto 0;background:transparent;border:none;font-family:var(--sans);font-size:0.85rem;color:var(--ink-light);cursor:pointer;text-decoration:underline">Back to home</button>
+      <div style="background:var(--cream);border-radius:12px;padding:1.25rem 1.5rem;text-align:left;margin-bottom:1.75rem;border-left:3px solid var(--green)">
+        <div style="font-size:0.72rem;font-weight:500;text-transform:uppercase;letter-spacing:1px;color:var(--green);margin-bottom:0.75rem">What happens next</div>
+        <div style="font-size:0.85rem;color:var(--ink-mid);line-height:2">
+          <div>✉️ &nbsp;We contact <strong>${artistName}</strong> to confirm availability for your date &amp; location</div>
+          <div>✅ &nbsp;Artist confirms → we send you an invoice for the coordination fee</div>
+          <div>🔄 &nbsp;Artist unavailable → we'll suggest the next best fit from our roster</div>
+          <div>💰 &nbsp;You only pay once a booking is fully confirmed</div>
+        </div>
+      </div>
+      <a href="mailto:localstagerisingstars@gmail.com" style="display:inline-block;background:var(--ink);color:white;padding:0.875rem 2rem;border-radius:100px;font-family:var(--sans);font-size:0.9rem;font-weight:500;text-decoration:none;margin-bottom:1rem">📧 Questions? Email us</a>
+      <br>
+      <button onclick="showPage('home')" style="display:block;margin:1rem auto 0;background:transparent;border:none;font-family:var(--sans);font-size:0.85rem;color:var(--ink-light);cursor:pointer;text-decoration:underline">Back to home</button>
     </div>
   `;
 }
