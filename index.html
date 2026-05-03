@@ -54,6 +54,34 @@
   .nav-user-info { font-size: 0.8rem; color: var(--ink-mid); display: flex; align-items: center; gap: 8px; }
   .nav-user-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); display: inline-block; }
 
+  /* ─── MOBILE HAMBURGER ─── */
+  .nav-hamburger {
+    display: none; flex-direction: column; gap: 5px; cursor: pointer;
+    background: none; border: none; padding: 4px; z-index: 300;
+  }
+  .nav-hamburger span {
+    display: block; width: 22px; height: 2px; background: var(--ink);
+    border-radius: 2px; transition: all 0.25s;
+  }
+  .nav-hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .nav-hamburger.open span:nth-child(2) { opacity: 0; }
+  .nav-hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  .mobile-menu {
+    display: none; position: fixed; inset: 0; top: 65px; z-index: 190;
+    background: rgba(247,244,239,0.98); backdrop-filter: blur(12px);
+    flex-direction: column; padding: 2rem 2rem;
+    border-top: 1px solid var(--cream-dark);
+  }
+  .mobile-menu.open { display: flex; }
+  .mobile-menu a {
+    font-size: 1.1rem; font-weight: 500; color: var(--ink); padding: 1rem 0;
+    border-bottom: 1px solid var(--cream-dark); cursor: pointer; text-decoration: none;
+    transition: color 0.2s;
+  }
+  .mobile-menu a:hover { color: var(--green); }
+  .mobile-menu .mobile-auth-row { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem; }
+
   /* ─── PAGE SYSTEM ─── */
   .page { display: none; }
   .page.active { display: block; }
@@ -462,6 +490,9 @@
   @media (max-width: 768px) {
     nav { padding: 1rem 1.5rem; }
     .nav-links { display: none; }
+    .nav-hamburger { display: flex; }
+    .nav-auth-btn { display: none; }
+    #nav-user-info { display: none !important; }
     .hero { padding: 6rem 1.5rem 4rem; }
     .hero-grid { grid-template-columns: 1fr; gap: 2.5rem; }
     .section { padding: 4rem 1.5rem; }
@@ -492,11 +523,11 @@
 <nav>
   <a class="nav-logo" onclick="showPage('home')">Local<span>Stage</span></a>
   <ul class="nav-links">
-    <li><a onclick="showPage('home'); scrollTo('#how')">How It Works</a></li>
-    <li><a onclick="showPage('artists')">Browse Artists</a></li>
+    <li><a onclick="showPage('home'); setTimeout(()=>{ const el=document.getElementById('how'); if(el) el.scrollIntoView({behavior:'smooth'}); },50)">How It Works</a></li>
     <li><a onclick="showPage('pricing-page')">Pricing</a></li>
-    <li><a onclick="openApply()">Apply / Join</a></li>
-    <li><a onclick="showPage('booking')">Book Now</a></li>
+    <li style="width:1px;height:18px;background:var(--cream-dark);margin:0 0.25rem"></li>
+    <li><a onclick="openApply()" style="color:var(--green);font-weight:500">🎤 I'm an Artist</a></li>
+    <li><a onclick="showPage('artists')" style="color:var(--ink-mid)">🏢 I Need Talent</a></li>
   </ul>
   <div style="display:flex;align-items:center;gap:10px">
     <span id="nav-user-info" class="nav-user-info" style="display:none">
@@ -504,8 +535,22 @@
       <span id="nav-user-email"></span>
     </span>
     <button id="nav-auth-btn" class="nav-auth-btn" onclick="openLogin()">Sign In</button>
+    <button class="nav-hamburger" id="nav-hamburger" onclick="toggleMobileMenu()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
   </div>
 </nav>
+
+<!-- Mobile menu -->
+<div class="mobile-menu" id="mobile-menu">
+  <a onclick="closeMobileMenu(); showPage('home'); setTimeout(()=>{ const el=document.getElementById('how'); if(el) el.scrollIntoView({behavior:'smooth'}); },50)">How It Works</a>
+  <a onclick="closeMobileMenu(); showPage('pricing-page')">Pricing</a>
+  <a onclick="closeMobileMenu(); openApply()" style="color:var(--green);font-weight:500">🎤 Apply as Artist</a>
+  <a onclick="closeMobileMenu(); showPage('artists')">🏢 Browse Artists (Venues)</a>
+  <div class="mobile-auth-row">
+    <button id="mobile-auth-btn" class="btn-primary" style="width:100%;text-align:center" onclick="closeMobileMenu(); openLogin()">Sign In</button>
+  </div>
+</div>
 
 <!-- ══════════════════════════════════════
      PAGE: HOME
@@ -563,13 +608,13 @@
   </div>
 </section>
 
-<!-- STATS BAR -->
+<!-- POSITIONING BAR -->
 <div class="stats-bar">
-  <div class="stats-inner">
-    <div class="stat"><div class="stat-num">30<span>+</span></div><div class="stat-label">Curated artists on roster</div></div>
-    <div class="stat"><div class="stat-num">15<span>+</span></div><div class="stat-label">Venue partners</div></div>
-    <div class="stat"><div class="stat-num">$0</div><div class="stat-label">Artist signup fee</div></div>
-    <div class="stat"><div class="stat-num">48<span>h</span></div><div class="stat-label">Avg. match time</div></div>
+  <div class="stats-inner" style="justify-content:center;gap:0;flex-wrap:nowrap">
+    <div style="text-align:center;max-width:680px;padding:0 1rem">
+      <div style="font-size:0.72rem;font-weight:500;letter-spacing:2px;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem">Built for Ontario · Not a booking agency</div>
+      <div style="font-family:var(--serif);font-size:1.35rem;color:var(--ink);letter-spacing:-0.3px;line-height:1.35">The GTA's first data-driven artist booking platform — matching venues to musicians using <em style="font-style:italic;color:var(--green)">verified local draw data.</em></div>
+    </div>
   </div>
 </div>
 
@@ -749,30 +794,58 @@
 <!-- CTA -->
 <section class="cta-section" id="contact">
   <div class="cta-inner">
-    <h2 class="cta-title">Ready to get on stage?</h2>
-    <p class="cta-sub">Whether you're an artist looking for your next booking or a venue looking for reliable talent that brings a crowd — we'd love to hear from you.</p>
-    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
-      <button class="btn-white" onclick="openApply()">Apply as Artist or Business →</button>
-      <button style="background:transparent;color:white;border:1.5px solid rgba(255,255,255,0.4);padding:0.875rem 2rem;border-radius:100px;font-family:var(--sans);font-size:0.9rem;font-weight:500;cursor:pointer;transition:border-color 0.2s" onmouseover="this.style.borderColor='white'" onmouseout="this.style.borderColor='rgba(255,255,255,0.4)'" onclick="openLogin()">Sign in to your account</button>
+    <h2 class="cta-title">Ready to get started?</h2>
+    <p class="cta-sub">Two paths. Pick yours.</p>
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-bottom:1.25rem">
+      <button class="btn-white" onclick="openApply()" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:1rem 2rem;border-radius:16px">
+        <span style="font-size:1.1rem">🎤</span>
+        <span style="font-weight:600;font-size:0.9rem">I'm an Artist</span>
+        <span style="font-size:0.75rem;color:rgba(26,155,108,0.7);font-weight:400">Apply to join the roster — free</span>
+      </button>
+      <button onclick="showPage('artists')" style="background:rgba(255,255,255,0.12);color:white;border:1.5px solid rgba(255,255,255,0.3);padding:1rem 2rem;border-radius:16px;font-family:var(--sans);font-size:0.9rem;font-weight:500;cursor:pointer;transition:border-color 0.2s,background 0.2s;display:flex;flex-direction:column;align-items:center;gap:3px" onmouseover="this.style.background='rgba(255,255,255,0.2)';this.style.borderColor='white'" onmouseout="this.style.background='rgba(255,255,255,0.12)';this.style.borderColor='rgba(255,255,255,0.3)'">
+        <span style="font-size:1.1rem">🏢</span>
+        <span style="font-weight:600;font-size:0.9rem">I Need Talent</span>
+        <span style="font-size:0.75rem;color:rgba(255,255,255,0.6);font-weight:400">Browse roster and book</span>
+      </button>
     </div>
-    <p style="font-size:0.8rem;color:rgba(255,255,255,0.6);margin-top:1.5rem">Ontario-based only · No spam · Response within 24h</p>
+    <p style="font-size:0.8rem;color:rgba(255,255,255,0.6);margin-top:0.5rem">Ontario-based · No spam · Response within 24h · <a href="mailto:localstagerisingstars@gmail.com" style="color:rgba(255,255,255,0.8);text-decoration:underline">localstagerisingstars@gmail.com</a></p>
   </div>
 </section>
 
 <!-- FOOTER -->
 <footer>
   <div class="footer-logo">Local<span>Stage</span></div>
-  <div class="footer-copy">© 2025 LocalStage · Ontario, Canada</div>
+  <div style="display:flex;flex-direction:column;gap:6px;align-items:center">
+    <div class="footer-copy">© 2025 LocalStage · Ontario, Canada</div>
+    <div style="display:flex;gap:1.25rem;align-items:center;flex-wrap:wrap;justify-content:center">
+      <a href="mailto:localstagerisingstars@gmail.com" style="font-size:0.8rem;color:#5dcaa5;text-decoration:none;display:flex;align-items:center;gap:5px" onmouseover="this.style.color='white'" onmouseout="this.style.color='#5dcaa5'">📧 localstagerisingstars@gmail.com</a>
+      <a href="https://instagram.com/localstage" target="_blank" style="font-size:0.8rem;color:#5a5a50;text-decoration:none;display:flex;align-items:center;gap:5px" onmouseover="this.style.color='#5dcaa5'" onmouseout="this.style.color='#5a5a50'">📸 @localstage</a>
+      <span style="font-size:0.8rem;color:#5a5a50">📍 GTA · Hamilton · Surrounding area</span>
+    </div>
+  </div>
   <div class="footer-links">
     <a onclick="showPage('home')">Home</a>
     <a onclick="showPage('artists')">Artists</a>
-    <a onclick="showPage('booking')">Book Now</a>
     <a onclick="openApply()">Apply</a>
     <a onclick="showPage('pricing-page')">Pricing</a>
   </div>
 </footer>
 
-</div><!-- /page-home -->
+
+<!-- CONTACT STRIP -->
+<div style="background:var(--white);border-top:1px solid var(--cream-dark);padding:2rem 3rem">
+  <div style="max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1.5rem">
+    <div>
+      <div style="font-size:0.75rem;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink-light);margin-bottom:6px">Questions before booking?</div>
+      <div style="font-family:var(--serif);font-size:1.25rem;color:var(--ink)">We're a real team. Reach us directly.</div>
+    </div>
+    <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap">
+      <a href="mailto:localstagerisingstars@gmail.com" style="display:flex;align-items:center;gap:8px;color:var(--ink);text-decoration:none;font-size:0.875rem;font-weight:500;padding:0.7rem 1.35rem;border:1.5px solid var(--cream-dark);border-radius:100px;transition:border-color 0.2s,color 0.2s" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'" onmouseout="this.style.borderColor='var(--cream-dark)';this.style.color='var(--ink)'">📧 localstagerisingstars@gmail.com</a>
+      <a href="https://instagram.com/localstage" target="_blank" style="display:flex;align-items:center;gap:8px;color:var(--ink);text-decoration:none;font-size:0.875rem;font-weight:500;padding:0.7rem 1.35rem;border:1.5px solid var(--cream-dark);border-radius:100px;transition:border-color 0.2s,color 0.2s" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'" onmouseout="this.style.borderColor='var(--cream-dark)';this.style.color='var(--ink)'">📸 @localstage</a>
+      <div style="font-size:0.8rem;color:var(--ink-light);display:flex;align-items:center;gap:6px"><span style="color:var(--green)">✓</span> Response within 24h</div>
+    </div>
+  </div>
+</div>
 
 
 <!-- ══════════════════════════════════════
@@ -830,7 +903,7 @@
             <li>Ideal for markets, festivals, pop-ups</li>
             <li>One flat fee, no surprises</li>
           </ul>
-          <button class="btn-primary" style="margin-top:1.5rem;width:100%" onclick="openApply()">Apply as business →</button>
+          <button class="btn-primary" style="margin-top:1.5rem;width:100%" onclick="goToEventBooking()">Book an event package →</button>
         </div>
       </div>
       <div style="background:var(--cream-dark);border-radius:16px;padding:2rem;margin-top:3rem;text-align:center">
@@ -1264,7 +1337,8 @@
         <div class="success-icon">✅</div>
         <div class="success-title">You're signed in!</div>
         <div class="success-msg" id="login-success-msg">Welcome to LocalStage. You now have access to the booking platform.</div>
-        <button class="btn-next" style="margin-top:1.5rem" onclick="closeModal('modal-login');showPage('booking')">Go to booking →</button>
+        <button class="btn-next" style="margin-top:1.5rem;width:100%" onclick="closeModal('modal-login');showPage('booking')">Go to booking →</button>
+        <button style="margin-top:0.75rem;width:100%;background:transparent;border:1.5px solid var(--cream-dark);color:var(--ink-mid);padding:0.75rem;border-radius:100px;font-family:var(--sans);font-size:0.875rem;cursor:pointer;transition:border-color 0.2s" onmouseover="this.style.borderColor='var(--ink-mid)'" onmouseout="this.style.borderColor='var(--cream-dark)'" onclick="closeModal('modal-login')">Continue browsing</button>
       </div>
     </div>
   </div>
@@ -1296,7 +1370,7 @@
 
     <!-- Action bar -->
     <div style="padding:1.25rem 2.5rem;display:flex;align-items:center;gap:12px;border-bottom:1px solid #2a2a26">
-      <button id="ap-book-btn" style="background:var(--green);color:white;padding:10px 24px;border-radius:100px;border:none;font-family:var(--sans);font-size:0.9rem;font-weight:500;cursor:pointer;transition:opacity 0.2s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'" onclick="showPage('booking');closeModal('modal-artist-profile')"></button>
+      <button id="ap-book-btn" style="background:var(--green);color:white;padding:10px 24px;border-radius:100px;border:none;font-family:var(--sans);font-size:0.9rem;font-weight:500;cursor:pointer;transition:opacity 0.2s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'"></button>
       <div id="ap-social-bar" style="display:flex;gap:8px;flex-wrap:wrap"></div>
     </div>
 
@@ -1325,10 +1399,11 @@
       <!-- Right: video embed -->
       <div style="padding:2.5rem;background:#151512">
         <div style="font-size:0.72rem;font-weight:500;text-transform:uppercase;letter-spacing:1.5px;color:#5dcaa5;margin-bottom:1rem">Latest Performance</div>
-        <div id="ap-video-container" style="border-radius:12px;overflow:hidden;aspect-ratio:16/9;background:#252521;display:flex;align-items:center;justify-content:center">
-          <div style="text-align:center;color:#5a5a50;padding:2rem">
-            <div style="font-size:2rem;margin-bottom:8px">🎬</div>
-            <div style="font-size:0.85rem">Performance video<br>coming soon</div>
+        <div id="ap-video-container" style="border-radius:12px;overflow:hidden;aspect-ratio:16/9;background:#1e1e1a;display:flex;align-items:center;justify-content:center;border:1px dashed #333330">
+          <div style="text-align:center;padding:2rem">
+            <div style="font-size:1.5rem;margin-bottom:10px">🎥</div>
+            <div style="font-size:0.85rem;color:#9a9a90;margin-bottom:14px;line-height:1.5">Showcase video available<br>after booking request</div>
+            <button onclick="closeModal('modal-artist-profile'); showPage('booking')" style="background:var(--green);color:white;border:none;padding:8px 18px;border-radius:100px;font-family:var(--sans);font-size:0.8rem;font-weight:500;cursor:pointer;transition:opacity 0.2s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">Request a showcase →</button>
           </div>
         </div>
         <div id="ap-video-label" style="font-size:0.8rem;color:#5a5a50;margin-top:10px"></div>
@@ -1426,6 +1501,12 @@ function showPage(name) {
 
 function openApply() { showPage('apply'); }
 
+function goToEventBooking() {
+  showPage('booking');
+  // After the booking page renders, switch to event tab
+  setTimeout(() => switchBookingType('event'), 50);
+}
+
 function scrollTo(hash) {
   setTimeout(() => {
     const el = document.querySelector(hash);
@@ -1434,10 +1515,25 @@ function scrollTo(hash) {
 }
 
 // ════════════════════════════════
+// MOBILE MENU
+// ════════════════════════════════
+function toggleMobileMenu() {
+  const menu = document.getElementById('mobile-menu');
+  const btn = document.getElementById('nav-hamburger');
+  menu.classList.toggle('open');
+  btn.classList.toggle('open');
+}
+function closeMobileMenu() {
+  document.getElementById('mobile-menu').classList.remove('open');
+  document.getElementById('nav-hamburger').classList.remove('open');
+}
+
+// ════════════════════════════════
 // AUTH STATE
 // ════════════════════════════════
 function updateNavAuth() {
   const btn = document.getElementById('nav-auth-btn');
+  const mobileBtn = document.getElementById('mobile-auth-btn');
   const info = document.getElementById('nav-user-info');
   const emailSpan = document.getElementById('nav-user-email');
   if (currentUser) {
@@ -1446,11 +1542,13 @@ function updateNavAuth() {
     btn.onclick = signOut;
     info.style.display = 'flex';
     emailSpan.textContent = currentUser.email;
+    if (mobileBtn) { mobileBtn.textContent = 'Sign out (' + currentUser.email.split('@')[0] + ')'; mobileBtn.onclick = () => { closeMobileMenu(); signOut(); }; }
   } else {
     btn.textContent = 'Sign in';
     btn.classList.remove('signout');
     btn.onclick = openLogin;
     info.style.display = 'none';
+    if (mobileBtn) { mobileBtn.textContent = 'Sign In'; mobileBtn.onclick = () => { closeMobileMenu(); openLogin(); }; }
   }
 }
 
@@ -1685,7 +1783,7 @@ function renderGrid(containerId, artists, genreFilter, cityFilter) {
         <div style="margin-top:8px;display:flex;gap:6px">
           <button style="flex:1;padding:5px 8px;background:var(--cream);color:var(--ink-mid);border:1px solid var(--cream-dark);border-radius:100px;font-family:var(--sans);font-size:0.7rem;cursor:pointer" onclick="openArtistProfile(${a.id})">▶ View profile</button>
         </div>
-        <button style="margin-top:6px;width:100%;padding:7px;background:var(--ink);color:white;border:none;border-radius:100px;font-family:var(--sans);font-size:0.78rem;font-weight:500;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='var(--green)'" onmouseout="this.style.background='var(--ink)'" onclick="showPage('booking')">Book ${a.name.split(' ')[0]} →</button>
+        <button style="margin-top:6px;width:100%;padding:7px;background:var(--ink);color:white;border:none;border-radius:100px;font-family:var(--sans);font-size:0.78rem;font-weight:500;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='var(--green)'" onmouseout="this.style.background='var(--ink)'" onclick="bookArtist(${a.id})">Book ${a.name.split(' ')[0]} →</button>
       </div>
     </div>
   `).join('');
@@ -2087,17 +2185,27 @@ function renderBookingArtists() {
     return a.cityKey === city;
   });
   if (filtered.length === 0) filtered = all.slice(0,6);
-  c.innerHTML = filtered.slice(0,8).map((a,i) => `
-    <div class="pick-artist-row ${i===0?'selected':''}" onclick="selectBookingArtist(this)">
+  // If a specific artist was requested, make sure they appear in the list
+  if (pendingBookArtistId) {
+    const target = all.find(a => a.id === pendingBookArtistId);
+    if (target && !filtered.find(a => a.id === pendingBookArtistId)) {
+      filtered = [target, ...filtered.slice(0, 7)];
+    }
+  }
+  c.innerHTML = filtered.slice(0,8).map((a) => {
+    const isSelected = pendingBookArtistId ? a.id === pendingBookArtistId : filtered.indexOf(a) === 0;
+    return `
+    <div class="pick-artist-row ${isSelected ? 'selected' : ''}" onclick="selectBookingArtist(this)">
       <div class="pick-avatar" style="background:linear-gradient(${a.gradient})">${a.init}</div>
       <div>
         <div class="pick-name">${a.name}</div>
         <div class="pick-genre">${a.genre} · ${a.city}</div>
-        <div style="font-size:0.7rem;color:var(--green)">${a.instagram}</div>
       </div>
       <span class="pick-score">${a.score}</span>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
+  // Clear the pending selection after use
+  pendingBookArtistId = null;
 }
 
 function selectBookingArtist(el) {
@@ -2239,6 +2347,8 @@ function applyNext(step) {
     setupPlatformCheckboxes();
     window.scrollTo(0,0);
   } else if (step === 1) {
+    // Validate required fields before advancing
+    if (!validateApplyStep1()) return;
     currentApplyStep = 2;
     buildReviewBox();
     document.querySelectorAll('.apply-step').forEach(s => s.classList.remove('active'));
@@ -2246,6 +2356,75 @@ function applyNext(step) {
     updateProgressUI(2);
     window.scrollTo(0,0);
   }
+}
+
+function validateApplyStep1() {
+  // Clear previous errors
+  document.querySelectorAll('.apply-field-error').forEach(e => e.remove());
+  document.querySelectorAll('.form-input[data-required]').forEach(el => el.style.borderColor = '');
+
+  let firstError = null;
+
+  function flagField(id, msg) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.borderColor = '#c0392b';
+    // Remove old error if present
+    const existing = el.parentElement.querySelector('.apply-field-error');
+    if (existing) existing.remove();
+    const err = document.createElement('p');
+    err.className = 'apply-field-error';
+    err.style.cssText = 'font-size:0.75rem;color:#c0392b;margin-top:4px';
+    err.textContent = msg;
+    el.parentElement.appendChild(err);
+    if (!firstError) firstError = el;
+  }
+
+  function val(id) {
+    const el = document.getElementById(id);
+    return el ? el.value.trim() : '';
+  }
+
+  if (selectedType === 'artist') {
+    if (!val('a-first')) flagField('a-first', 'First name is required.');
+    if (!val('a-last')) flagField('a-last', 'Last name is required.');
+    if (!val('a-email') || !val('a-email').includes('@')) flagField('a-email', 'A valid email is required.');
+    if (!val('a-phone')) flagField('a-phone', 'Phone number is required.');
+    if (!val('a-dob')) flagField('a-dob', 'Date of birth is required.');
+    if (!val('a-city')) flagField('a-city', 'City is required.');
+    if (!val('a-genre')) flagField('a-genre', 'Genre is required.');
+    if (!val('a-video')) flagField('a-video', 'A live performance video link is required.');
+    // Check at least one platform selected
+    const platforms = document.querySelectorAll('#platform-grid-artist .platform-chip.checked');
+    if (platforms.length === 0) {
+      const grid = document.getElementById('platform-grid-artist');
+      if (grid) {
+        const existing = grid.parentElement.querySelector('.apply-field-error');
+        if (existing) existing.remove();
+        const err = document.createElement('p');
+        err.className = 'apply-field-error';
+        err.style.cssText = 'font-size:0.75rem;color:#c0392b;margin-top:4px';
+        err.textContent = 'Please select at least one social media platform.';
+        grid.parentElement.appendChild(err);
+        if (!firstError) firstError = grid;
+      }
+    }
+  } else {
+    if (!val('b-first')) flagField('b-first', 'First name is required.');
+    if (!val('b-last')) flagField('b-last', 'Last name is required.');
+    if (!val('b-email') || !val('b-email').includes('@')) flagField('b-email', 'A valid email is required.');
+    if (!val('b-phone')) flagField('b-phone', 'Phone number is required.');
+    if (!val('b-role')) flagField('b-role', 'Your role is required.');
+    if (!val('b-bizname')) flagField('b-bizname', 'Business name is required.');
+    if (!val('b-address')) flagField('b-address', 'Address is required.');
+    if (!val('b-website')) flagField('b-website', 'A website or social link is required.');
+  }
+
+  if (firstError) {
+    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return false;
+  }
+  return true;
 }
 
 function applyBack(step) {
@@ -2442,85 +2621,53 @@ async function submitApply() {
 // TERMS & CONDITIONS
 // ════════════════════════════════
 const ARTIST_TERMS = `
-<h3 style="font-family:var(--serif);font-size:1.3rem;color:var(--ink);margin:0 0 1.5rem">LocalStage Artist Terms &amp; Conditions</h3>
-<p><strong>Effective Date:</strong> January 1, 2025 &nbsp;·&nbsp; <strong>Jurisdiction:</strong> Province of Ontario, Canada</p>
+<h3 style="font-family:var(--serif);font-size:1.3rem;color:var(--ink);margin:0 0 0.5rem">LocalStage Artist Agreement</h3>
+<p style="font-size:0.8rem;color:var(--ink-light);margin-bottom:1.75rem">Effective January 1, 2025 · Province of Ontario</p>
 
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">1. Platform Access &amp; Eligibility</h4>
-<p>LocalStage grants you a non-exclusive, non-transferable licence to appear on the LocalStage roster subject to ongoing compliance with these Terms. You must be 19 years of age or older and legally eligible to perform at licensed venues in Ontario. You represent that all information provided in your application is truthful and accurate. Misrepresentation is grounds for immediate removal with no right of appeal.</p>
+<p style="margin-bottom:1.5rem;color:var(--ink-mid);line-height:1.75">Here's what you're agreeing to — in plain language. We've kept this short so you'll actually read it.</p>
 
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">2. Booking Commitments &amp; Cancellations</h4>
-<p>When you accept a confirmed booking through LocalStage, you are entering a binding commitment to appear at the agreed venue, on the agreed date, at the agreed time. <strong>Artist cancellations are subject to the following policy:</strong></p>
-<ul style="margin:0.75rem 0 0.75rem 1.5rem;display:flex;flex-direction:column;gap:8px">
-  <li><strong>Cancellation with 14+ days notice:</strong> No penalty. LocalStage will rebook the slot.</li>
-  <li><strong>Cancellation with 7–13 days notice:</strong> Artist forfeits any deposit received and may be temporarily suspended from new pitches for 30 days.</li>
-  <li><strong>Cancellation with less than 7 days notice or no-show:</strong> Artist is fully liable for reasonable documented losses incurred by the venue (e.g., marketing costs, staff fees) up to $500 CAD, and will be permanently removed from the LocalStage roster at LocalStage's sole discretion.</li>
-</ul>
-<p>Medical or family emergencies must be documented and reported to LocalStage within 24 hours of the event date. LocalStage will assess these on a case-by-case basis.</p>
+${[
+  { num: '1', title: 'You show up when you commit.', body: 'Accepting a booking is a binding commitment. Cancellations with less than 7 days notice may result in liability for documented venue costs (up to $500 CAD) and removal from the roster. Medical emergencies are handled case-by-case — just let us know within 24 hours.' },
+  { num: '2', title: 'We match, you perform, the venue pays you directly.', body: 'LocalStage charges no commission on your performance fee. We earn a coordination fee from the venue only. You negotiate your fee directly with the venue and get paid by them. We recommend confirming your rate in writing before each show.' },
+  { num: '3', title: 'Be professional every time.', body: 'Arrive at least 45 minutes early. Perform for the contracted time. Treat venue staff and patrons with respect. Repeated unprofessional conduct gets you removed from the roster — no exceptions.' },
+  { num: '4', title: 'Your music stays yours.', body: 'You keep all rights to your music. By joining, you give us permission to use your name, photos, and bio to pitch you to venues. You can leave the roster at any time with 30 days notice.' },
+  { num: '5', title: 'Book through us, not around us.', body: 'Any venue you meet through LocalStage must be re-booked through LocalStage for 12 months. We invest real effort in these introductions — this is how we keep the lights on.' },
+].map(p => `
+  <div style="display:flex;gap:1rem;margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--cream-dark)">
+    <div style="flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--green);color:white;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:0.9rem;font-weight:bold">${p.num}</div>
+    <div>
+      <div style="font-weight:600;font-size:0.9rem;color:var(--ink);margin-bottom:5px">${p.title}</div>
+      <div style="font-size:0.85rem;color:var(--ink-mid);line-height:1.7">${p.body}</div>
+    </div>
+  </div>
+`).join('')}
 
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">3. Artist Fees &amp; Payment</h4>
-<p>Artist fees are negotiated directly with the venue. LocalStage is not a party to the artist–venue payment agreement and accepts no liability for non-payment by a venue. We recommend all artists obtain a written confirmation of their fee before performing. LocalStage charges no commission on artist performance fees.</p>
-
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">4. Loyalty Incentive — Repeat Bookings</h4>
-<p>Artists who complete <strong>3 or more confirmed bookings</strong> through LocalStage within a 12-month rolling period are eligible for the LocalStage Loyalty Rate: a 15% reduction on any premium placement or featured profile upgrade fees introduced in the future. This benefit is tracked automatically and applied at the time of purchase. It is non-transferable and has no cash value.</p>
-
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">5. Conduct &amp; Professionalism</h4>
-<p>Artists agree to: (a) arrive at least 45 minutes before their scheduled set; (b) conduct themselves professionally with venue staff and patrons; (c) perform for at least the contracted duration; (d) not be under the influence of substances that impair performance. Repeated unprofessional conduct will result in removal from the roster.</p>
-
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">6. Intellectual Property</h4>
-<p>You retain all rights to your original music. By joining LocalStage, you grant LocalStage a non-exclusive, royalty-free licence to use your name, stage name, photographs, social media handles, and brief biographical information for the purpose of marketing and matching you to venues on the platform. You may revoke this licence at any time by removing yourself from the roster with 30 days written notice.</p>
-
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">7. Limitation of Liability</h4>
-<p><strong>LocalStage is a platform and coordination service only.</strong> LocalStage is not an employer, booking agent, talent agent, or manager. LocalStage accepts no liability for: personal injury occurring at a venue; property damage; lost earnings arising from venue cancellations; disputes between artists and venues; or any outcome of a booking that was not caused directly by LocalStage's negligence. Your total claim against LocalStage, if any, is limited to the coordination fees (if any) paid by you in the 3 months preceding the event giving rise to the claim.</p>
-
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">8. Venue-Side Cancellations</h4>
-<p>If a venue cancels a confirmed booking with less than 72 hours notice, LocalStage will make commercially reasonable efforts to secure an alternative booking for you within 30 days at no additional cost to you. LocalStage is not responsible for artist lost income arising from venue-initiated cancellations but will flag repeat offending venues and remove them from the platform.</p>
-
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">9. Governing Law</h4>
-<p>These Terms are governed by the laws of the Province of Ontario and the federal laws of Canada applicable therein. Any dispute arising under these Terms shall be resolved in the courts of Peel Region, Ontario.</p>
-
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">10. Amendments</h4>
-<p>LocalStage may amend these Terms at any time with 14 days' notice via email. Continued use of the platform constitutes acceptance of amended Terms.</p>
+<p style="font-size:0.78rem;color:var(--ink-light);line-height:1.6;margin-top:0.5rem">These Terms are governed by the laws of Ontario. Any dispute shall be resolved in the courts of Peel Region. LocalStage may update these Terms with 14 days' email notice. Questions? Email <a href="mailto:localstagerisingstars@gmail.com" style="color:var(--green)">localstagerisingstars@gmail.com</a></p>
 `;
 
 const BUSINESS_TERMS = `
-<h3 style="font-family:var(--serif);font-size:1.3rem;color:var(--ink);margin:0 0 1.5rem">LocalStage Business Terms &amp; Conditions</h3>
-<p><strong>Effective Date:</strong> January 1, 2025 &nbsp;·&nbsp; <strong>Jurisdiction:</strong> Province of Ontario, Canada</p>
+<h3 style="font-family:var(--serif);font-size:1.3rem;color:var(--ink);margin:0 0 0.5rem">LocalStage Venue & Business Agreement</h3>
+<p style="font-size:0.8rem;color:var(--ink-light);margin-bottom:1.75rem">Effective January 1, 2025 · Province of Ontario</p>
 
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">1. Nature of Service</h4>
-<p>LocalStage provides a talent coordination and matching service. We are not a talent agency regulated under Ontario's <em>Talent Agencies Act</em>. LocalStage connects venues and event organizers ("Business Partners") with pre-vetted independent artists. We facilitate introductions and coordinate logistics; we are not a party to any performance contract between a Business Partner and an artist.</p>
+<p style="margin-bottom:1.5rem;color:var(--ink-mid);line-height:1.75">Five things you should know before you book. Short, clear, no surprises.</p>
 
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">2. Coordination Fee &amp; Payment</h4>
-<p>A flat coordination fee of $75–$150 per confirmed booking (or $200–$400 for multi-act event packages) is due upon booking confirmation. Fees are non-refundable once an artist has confirmed availability, except where LocalStage is unable to supply an artist. Payment is processed via invoice with net-7 terms. Overdue invoices accrue interest at 2% per month.</p>
+${[
+  { num: '1', title: 'You pay only when it\'s confirmed.', body: 'The coordination fee ($75–$150 per booking, or $200–$400 for event packages) is due only once an artist has confirmed availability. Payment is via invoice with net-7 terms. Repeat bookers get a 10% discount; 5+ bookings per year gets 20% off.' },
+  { num: '2', title: 'Cancellations have real consequences.', body: '14+ days notice: 50% refund. 7–13 days: no refund. Under 7 days: no refund plus 25% cancellation fee to the artist (min. $50 CAD). Two cancellations in 6 months may result in suspension from the platform.' },
+  { num: '3', title: 'You\'re responsible for your venue\'s licensing.', body: 'You must hold valid SOCAN and Re:Sound licences for live music on the booking date. LocalStage is not a party to your licensing obligations. This is your venue, your responsibility.' },
+  { num: '4', title: 'If an artist cancels, we find a replacement.', body: 'Artist cancellations are rare — we hold our roster to strict standards. If it happens, we\'ll source a replacement within 48 hours (where 7+ days remain). If we can\'t find one, you receive a full refund of the coordination fee.' },
+  { num: '5', title: 'Keep all re-bookings through LocalStage.', body: 'Any artist you book through LocalStage must be re-booked through LocalStage for 12 months from your first booking date. Direct outreach to artists introduced through the platform is a breach of this agreement.' },
+].map(p => `
+  <div style="display:flex;gap:1rem;margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--cream-dark)">
+    <div style="flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--green);color:white;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:0.9rem;font-weight:bold">${p.num}</div>
+    <div>
+      <div style="font-weight:600;font-size:0.9rem;color:var(--ink);margin-bottom:5px">${p.title}</div>
+      <div style="font-size:0.85rem;color:var(--ink-mid);line-height:1.7">${p.body}</div>
+    </div>
+  </div>
+`).join('')}
 
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">3. Loyalty Incentive — Repeat Bookings</h4>
-<p>After your <strong>first confirmed booking</strong>, Business Partners receive a <strong>10% reduction</strong> on the standard coordination fee for each subsequent booking within the same 12-month period. After <strong>5 or more bookings</strong> within 12 months, the reduction increases to <strong>20%</strong>. Loyalty rates are applied automatically to invoices and are non-transferable between business entities.</p>
-
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">4. Venue Responsibilities</h4>
-<p>Business Partners are responsible for: (a) providing a safe, licensed performance space compliant with all applicable Ontario regulations including fire code, liquor licensing (AGCO), and occupational health &amp; safety requirements; (b) providing agreed equipment (PA system, stage lighting, green room access) as communicated to the artist; (c) paying the artist's performance fee directly per your agreed terms; (d) not recording or broadcasting the artist's performance without separate written consent from the artist.</p>
-
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">5. Business-Initiated Cancellations</h4>
-<p>If you cancel a confirmed booking:</p>
-<ul style="margin:0.75rem 0 0.75rem 1.5rem;display:flex;flex-direction:column;gap:8px">
-  <li><strong>14+ days notice:</strong> 50% coordination fee refund.</li>
-  <li><strong>7–13 days notice:</strong> No refund of coordination fee.</li>
-  <li><strong>Less than 7 days notice:</strong> No refund, plus you agree to pay the artist a cancellation fee equal to 25% of their agreed performance fee (minimum $50 CAD).</li>
-</ul>
-<p>Repeat cancellations (2 or more within 6 months) may result in suspension from the platform at LocalStage's discretion.</p>
-
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">6. Artist Cancellations</h4>
-<p>In the event an artist cancels a confirmed booking, LocalStage will use commercially reasonable efforts to source a replacement artist of similar genre and calibre within 48 hours (where 7+ days remain before the event). <strong>LocalStage is not liable for losses arising from artist cancellations,</strong> including but not limited to lost bar revenue, ticket refunds, or marketing costs. If a replacement cannot be found and the event cannot proceed, LocalStage will refund the coordination fee in full. Artist cancellations are the sole responsibility of the artist; LocalStage will enforce artist-side penalties as described in the Artist Terms.</p>
-
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">7. Limitation of Liability</h4>
-<p>LocalStage's total liability to any Business Partner arising from any claim shall not exceed the coordination fees paid by that Business Partner to LocalStage in the 3 months preceding the event giving rise to the claim. LocalStage is not liable for: personal injury at your venue; property damage; regulatory penalties arising from your venue's licensing status; losses arising from artist underperformance (including fewer attendees than projected); or any indirect, incidental, or consequential losses.</p>
-
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">8. Data &amp; Confidentiality</h4>
-<p>Business Partner information (contact details, booking history, budget preferences) is held confidentially and used solely for the purpose of matching and coordination. LocalStage does not sell Business Partner data to third parties. Artist information shared with you (social media, contact details) is provided for the sole purpose of coordinating the booked event and may not be used for unsolicited commercial outreach.</p>
-
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">9. Governing Law</h4>
-<p>These Terms are governed by the laws of the Province of Ontario and the federal laws of Canada applicable therein. Any dispute shall be resolved in the courts of Peel Region, Ontario.</p>
-
-<h4 style="color:var(--ink);margin:1.75rem 0 0.5rem">10. Amendments</h4>
-<p>LocalStage may amend these Terms at any time with 14 days' notice via email to your registered address. Continued use of the booking platform constitutes acceptance of amended Terms.</p>
+<p style="font-size:0.78rem;color:var(--ink-light);line-height:1.6;margin-top:0.5rem">These Terms are governed by the laws of Ontario. Any dispute shall be resolved in the courts of Peel Region. LocalStage may update these Terms with 14 days' email notice. Questions? Email <a href="mailto:localstagerisingstars@gmail.com" style="color:var(--green)">localstagerisingstars@gmail.com</a></p>
 `;
 
 function openTermsModal() {
@@ -2634,6 +2781,14 @@ const ARTIST_SHOWS = {
   8: [], 9: [], 10: [], 11: [{date:'Jun 21', venue:'Strathmore Hall, Ajax', time:'7:30PM', type:'Sat'}], 12: []
 };
 
+// Track which artist to pre-select on booking page
+let pendingBookArtistId = null;
+
+function bookArtist(id) {
+  pendingBookArtistId = id;
+  showPage('booking');
+}
+
 function openArtistProfile(id) {
   const allArtists = [...ARTISTS, ...NEW_ARTISTS];
   const a = allArtists.find(x => x.id === id);
@@ -2646,13 +2801,16 @@ function openArtistProfile(id) {
   document.getElementById('ap-avatar').textContent = a.init;
   document.getElementById('ap-name').textContent = a.name;
   document.getElementById('ap-genre-city').textContent = `${a.genre}  ·  ${a.city}  ·  ${a.stars} (${a.rating.toFixed(1)})`;
-  document.getElementById('ap-book-btn').textContent = `Book ${a.name.split(' ')[0]} →`;
+  const bookBtn = document.getElementById('ap-book-btn');
+  bookBtn.textContent = `Book ${a.name.split(' ')[0]} →`;
+  bookBtn.onclick = () => { closeModal('modal-artist-profile'); bookArtist(id); };
 
-  // Social bar
-  // Social handles intentionally withheld from public profile — shown after booking only
-  const socials = [];
-
-  document.getElementById('ap-social-bar').innerHTML = '';
+  // Social bar — handles shared after booking confirmation to keep all coordination through LocalStage
+  document.getElementById('ap-social-bar').innerHTML = `
+    <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:100px;padding:5px 12px;font-size:0.72rem;color:#9a9a90">
+      🔒 <span>Social handles shared after booking is confirmed</span>
+    </div>
+  `;
 
   // Stats
   document.getElementById('ap-stats-row').innerHTML = [
