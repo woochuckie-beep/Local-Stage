@@ -331,8 +331,8 @@
   /* ═══════════════════════════════
      ─── ARTISTS PAGE ───
   ═══════════════════════════════ */
-  #page-artists { background: var(--cream); padding-top: 80px; min-height: 100vh; }
-  .artists-hero { background: var(--ink); padding: 4rem 3rem 3rem; }
+  #page-artists { background: var(--cream); padding-top: 0; min-height: 100vh; }
+  .artists-hero { background: var(--ink); padding: 7rem 3rem 3rem; }
   .artists-hero-inner { max-width: 1100px; margin: 0 auto; }
   .artists-hero h1 { font-family: var(--serif); font-size: clamp(2.2rem, 4vw, 3.2rem); color: var(--white); margin-bottom: 0.75rem; letter-spacing: -0.5px; }
   .artists-hero p { font-size: 1rem; color: #9a9a90; max-width: 500px; line-height: 1.7; }
@@ -779,13 +779,13 @@
      PAGE: PRICING
 ══════════════════════════════════════ -->
 <div id="page-pricing-page" class="page">
-  <div style="background:var(--ink);padding:5rem 3rem 3rem">
-    <div style="max-width:1100px;margin:0 auto">
+  <section class="artists-hero">
+    <div class="artists-hero-inner">
       <div style="font-size:0.75rem;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:#5dcaa5;margin-bottom:0.75rem">Pricing</div>
-      <h1 style="font-family:var(--serif);font-size:clamp(2.2rem,4vw,3.2rem);color:var(--white);margin-bottom:0.75rem;letter-spacing:-0.5px">Simple. Pay when it works.</h1>
-      <p style="font-size:1rem;color:#9a9a90;max-width:500px;line-height:1.7">No subscriptions. No upfront fees for artists. Browse the full roster, pick your artist, and we'll confirm availability. Venues pay a flat coordination fee only when the booking is confirmed.</p>
+      <h1>Simple. Pay<br><em style="font-style:italic;color:#5dcaa5">when it works.</em></h1>
+      <p>No subscriptions. No upfront fees for artists. Browse the full roster, pick your artist, and we'll confirm availability. Venues pay a flat coordination fee only when the booking is confirmed.</p>
     </div>
-  </div>
+  </section>
   <section class="section">
     <div class="section-inner">
       <div class="pricing-grid fade-up">
