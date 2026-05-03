@@ -990,104 +990,7 @@
 
   <!-- Booking form (shown when logged in) -->
   <div id="booking-form-area" class="booking-content" style="display:none">
-    <div style="display:flex;align-items:center;gap:10px;background:var(--green-light);border-radius:12px;padding:12px 16px;margin-bottom:2rem;font-size:0.875rem;color:var(--green-mid)">
-      <span>✓</span>
-      <span>Signed in as <strong id="booking-user-email"></strong> · <span style="cursor:pointer;text-decoration:underline" onclick="signOut()">Sign out</span></span>
-    </div>
-    <div class="booking-grid">
-      <div class="booking-sidebar">
-        <div class="booking-artist-pick">
-          <h3>Select an artist</h3>
-          <div style="margin-bottom:10px">
-            <select class="form-input form-select" id="booking-city-filter" onchange="renderBookingArtists()" style="font-size:0.8rem;padding:6px 10px;height:auto">
-              <option value="all">All cities</option>
-              <option value="mississauga">Mississauga</option>
-              <option value="toronto">Toronto / Etobicoke / Scarborough</option>
-              <option value="brampton">Brampton</option>
-              <option value="hamilton">Hamilton</option>
-              <option value="other">Other GTA</option>
-            </select>
-          </div>
-          <div id="booking-artist-list"></div>
-        </div>
-        <div style="background:var(--green-light);border-radius:16px;padding:1.25rem;font-size:0.825rem;color:var(--green-mid);line-height:1.7">
-          <strong style="display:block;margin-bottom:4px">How booking works</strong>
-          Browse the roster → Pick your artist & date → Submit your request → We confirm availability within 24h → You pay the flat fee → We handle the rest.
-        </div>
-      </div>
-      <div class="booking-form-card">
-        <h2>Booking request</h2>
-        <p>Tell us about your event and we'll handle the coordination.</p>
-        <div class="form-field"><label class="form-label">Venue / Event name *</label><input class="form-input" type="text" id="booking-venue-name" placeholder="e.g. The Railyard, Mississauga"></div>
-        <div class="form-field">
-          <label class="form-label">Google Maps link of your venue *</label>
-          <input class="form-input" type="url" id="booking-maps-url" placeholder="https://maps.google.com/..." oninput="validateMapsUrl(this)">
-          <div class="form-hint">Open Google Maps, search your venue, click Share → Copy link. Paste it here. This helps us verify your location.</div>
-          <div id="maps-url-error" style="font-size:0.75rem;color:#c0392b;margin-top:4px;display:none">Please enter a valid Google Maps link.</div>
-        </div>
-        <div class="form-field"><label class="form-label">Event type *</label>
-          <select class="form-input form-select">
-            <option value="">Select event type</option>
-            <option>Live music night (recurring)</option>
-            <option>One-off ticketed show</option>
-            <option>Private event / corporate</option>
-            <option>Festival / market</option>
-            <option>Pop-up / activation</option>
-          </select>
-        </div>
-        <div class="date-time-row">
-          <div class="form-field"><label class="form-label">Preferred date *</label><input class="form-input" type="date"></div>
-          <div class="form-field"><label class="form-label">Start time *</label><input class="form-input" type="time"></div>
-        </div>
-        <div class="form-field"><label class="form-label">Venue capacity</label>
-          <select class="form-input form-select">
-            <option value="">Select capacity</option>
-            <option>Under 100</option>
-            <option>100–200</option>
-            <option>200–500</option>
-            <option>500+</option>
-          </select>
-        </div>
-        <div class="form-field"><label class="form-label">Expected attendance</label><input class="form-input" type="number" placeholder="e.g. 150"></div>
-        <div class="form-field"><label class="form-label">Budget range (for artist fee)</label>
-          <select class="form-input form-select">
-            <option value="">Select budget</option>
-            <option>Under $200</option>
-            <option>$200–500</option>
-            <option>$500–1,000</option>
-            <option>$1,000+</option>
-            <option>Negotiable / open</option>
-          </select>
-        </div>
-        <div class="form-field"><label class="form-label">Additional notes</label><textarea class="form-input" rows="3" placeholder="Genre preferences, vibe, anything else we should know…" style="resize:vertical;min-height:80px"></textarea></div>
-        <div style="margin-top:1.5rem;padding:1.25rem;background:var(--cream);border-radius:12px;border:1.5px solid var(--cream-dark)">
-  <div style="font-size:0.75rem;font-weight:500;text-transform:uppercase;letter-spacing:1px;color:var(--green);margin-bottom:1rem">Music Licensing & Booking Policy</div>
-
-  <label style="display:flex;align-items:flex-start;gap:10px;font-size:0.825rem;color:var(--ink-mid);cursor:pointer;margin-bottom:10px">
-    <input type="checkbox" id="licence-socan" style="margin-top:3px;accent-color:var(--green);flex-shrink:0">
-    <span>Our venue holds a valid <strong>SOCAN licence</strong> that covers live music performances, and it will be active on the booking date.</span>
-  </label>
-
-  <label style="display:flex;align-items:flex-start;gap:10px;font-size:0.825rem;color:var(--ink-mid);cursor:pointer;margin-bottom:10px">
-    <input type="checkbox" id="licence-resound" style="margin-top:3px;accent-color:var(--green);flex-shrink:0">
-    <span>Our venue holds a valid <strong>Re:Sound licence</strong> (or equivalent blanket licence) covering the performance date.</span>
-  </label>
-
-  <label style="display:flex;align-items:flex-start;gap:10px;font-size:0.825rem;color:var(--ink-mid);cursor:pointer;margin-bottom:10px">
-    <input type="checkbox" id="licence-liability" style="margin-top:3px;accent-color:var(--green);flex-shrink:0">
-    <span>I understand that <strong>LocalStage is not liable</strong> for any licensing violations. It is the venue's responsibility to hold all required music licences.</span>
-  </label>
-
-  <label style="display:flex;align-items:flex-start;gap:10px;font-size:0.825rem;color:var(--ink-mid);cursor:pointer">
-    <input type="checkbox" id="booking-policy-check" style="margin-top:3px;accent-color:var(--green);flex-shrink:0">
-    <span>I agree not to contact or engage this artist directly for 12 months. All bookings must go through LocalStage.</span>
-  </label>
-
-  <div id="licence-error" style="font-size:0.78rem;color:#c0392b;margin-top:10px;display:none">Please confirm all boxes above before submitting.</div>
-</div>
-<button class="booking-submit" onclick="submitBooking()">Submit booking request →</button>
-      </div>
-    </div>
+    <!-- Populated dynamically by renderBookingPage() / getBookingFormHTML() -->
   </div>
 
   <footer>
@@ -1803,6 +1706,318 @@ function filterByCity(city, el) {
 }
 
 // ════════════════════════════════
+// BOOKING FORM HTML TEMPLATE
+// ════════════════════════════════
+function getBookingFormHTML() {
+  return `
+    <div style="display:flex;align-items:center;gap:10px;background:var(--green-light);border-radius:12px;padding:12px 16px;margin-bottom:2rem;font-size:0.875rem;color:var(--green-mid)">
+      <span>✓</span>
+      <span>Signed in as <strong id="booking-user-email"></strong> · <span style="cursor:pointer;text-decoration:underline" onclick="signOut()">Sign out</span></span>
+    </div>
+
+    <!-- Booking type toggle -->
+    <div style="margin-bottom:2rem">
+      <div style="font-size:0.75rem;font-weight:500;text-transform:uppercase;letter-spacing:1.2px;color:var(--green);margin-bottom:0.75rem">What are you booking for?</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;max-width:600px">
+        <div id="btype-artist" onclick="switchBookingType('artist')" style="border:2px solid var(--green);background:var(--green-light);border-radius:14px;padding:1.1rem 1.25rem;cursor:pointer;transition:all 0.2s">
+          <div style="font-size:1.5rem;margin-bottom:6px">🎤</div>
+          <div style="font-weight:600;font-size:0.9rem;color:var(--ink);margin-bottom:2px">Book an Artist</div>
+          <div style="font-size:0.75rem;color:var(--ink-light)">One artist · $75–150 coordination fee</div>
+        </div>
+        <div id="btype-event" onclick="switchBookingType('event')" style="border:2px solid var(--cream-dark);border-radius:14px;padding:1.1rem 1.25rem;cursor:pointer;transition:all 0.2s">
+          <div style="font-size:1.5rem;margin-bottom:6px">🎪</div>
+          <div style="font-weight:600;font-size:0.9rem;color:var(--ink);margin-bottom:2px">Book for an Event</div>
+          <div style="font-size:0.75rem;color:var(--ink-light)">2–3 acts · $200–400 event package</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Artist booking form -->
+    <div id="booking-panel-artist" class="booking-grid">
+      <div class="booking-sidebar">
+        <div class="booking-artist-pick">
+          <h3>Select an artist</h3>
+          <div style="margin-bottom:10px">
+            <select class="form-input form-select" id="booking-city-filter" onchange="renderBookingArtists()" style="font-size:0.8rem;padding:6px 10px;height:auto">
+              <option value="all">All cities</option>
+              <option value="mississauga">Mississauga</option>
+              <option value="toronto">Toronto / Etobicoke / Scarborough</option>
+              <option value="brampton">Brampton</option>
+              <option value="hamilton">Hamilton</option>
+              <option value="other">Other GTA</option>
+            </select>
+          </div>
+          <div id="booking-artist-list"></div>
+        </div>
+        <div style="background:var(--green-light);border-radius:16px;padding:1.25rem;font-size:0.825rem;color:var(--green-mid);line-height:1.7">
+          <strong style="display:block;margin-bottom:4px">How booking works</strong>
+          Browse the roster → Pick your artist & date → Submit your request → We confirm availability within 24h → You pay the flat fee → We handle the rest.
+        </div>
+      </div>
+      <div class="booking-form-card">
+        <h2>Booking request</h2>
+        <p>Tell us about your event and we'll handle the coordination.</p>
+        <div class="form-field"><label class="form-label">Venue / Event name *</label><input class="form-input" type="text" id="booking-venue-name" placeholder="e.g. The Railyard, Mississauga"></div>
+        <div class="form-field">
+          <label class="form-label">Google Maps link of your venue *</label>
+          <input class="form-input" type="url" id="booking-maps-url" placeholder="https://maps.google.com/..." oninput="validateMapsUrl(this)">
+          <div class="form-hint">Open Google Maps, search your venue, click Share → Copy link. Paste it here. This helps us verify your location.</div>
+          <div id="maps-url-error" style="font-size:0.75rem;color:#c0392b;margin-top:4px;display:none">Please enter a valid Google Maps link.</div>
+        </div>
+        <div class="form-field"><label class="form-label">Event type *</label>
+          <select class="form-input form-select">
+            <option value="">Select event type</option>
+            <option>Live music night (recurring)</option>
+            <option>One-off ticketed show</option>
+            <option>Private event / corporate</option>
+            <option>Festival / market</option>
+            <option>Pop-up / activation</option>
+          </select>
+        </div>
+        <div class="date-time-row">
+          <div class="form-field"><label class="form-label">Preferred date *</label><input class="form-input" type="date"></div>
+          <div class="form-field"><label class="form-label">Start time *</label><input class="form-input" type="time"></div>
+        </div>
+        <div class="form-field"><label class="form-label">Venue capacity</label>
+          <select class="form-input form-select">
+            <option value="">Select capacity</option>
+            <option>Under 100</option>
+            <option>100–200</option>
+            <option>200–500</option>
+            <option>500+</option>
+          </select>
+        </div>
+        <div class="form-field"><label class="form-label">Expected attendance</label><input class="form-input" type="number" placeholder="e.g. 150"></div>
+        <div class="form-field"><label class="form-label">Budget range (for artist fee)</label>
+          <select class="form-input form-select">
+            <option value="">Select budget</option>
+            <option>Under $200</option>
+            <option>$200–500</option>
+            <option>$500–1,000</option>
+            <option>$1,000+</option>
+            <option>Negotiable / open</option>
+          </select>
+        </div>
+        <div class="form-field"><label class="form-label">Additional notes</label><textarea class="form-input" rows="3" placeholder="Genre preferences, vibe, anything else we should know…" style="resize:vertical;min-height:80px"></textarea></div>
+        <div style="margin-top:1.5rem;padding:1.25rem;background:var(--cream);border-radius:12px;border:1.5px solid var(--cream-dark)">
+          <div style="font-size:0.75rem;font-weight:500;text-transform:uppercase;letter-spacing:1px;color:var(--green);margin-bottom:1rem">Music Licensing & Booking Policy</div>
+          <label style="display:flex;align-items:flex-start;gap:10px;font-size:0.825rem;color:var(--ink-mid);cursor:pointer;margin-bottom:10px">
+            <input type="checkbox" id="licence-socan" style="margin-top:3px;accent-color:var(--green);flex-shrink:0">
+            <span>Our venue holds a valid <strong>SOCAN licence</strong> that covers live music performances, and it will be active on the booking date.</span>
+          </label>
+          <label style="display:flex;align-items:flex-start;gap:10px;font-size:0.825rem;color:var(--ink-mid);cursor:pointer;margin-bottom:10px">
+            <input type="checkbox" id="licence-resound" style="margin-top:3px;accent-color:var(--green);flex-shrink:0">
+            <span>Our venue holds a valid <strong>Re:Sound licence</strong> (or equivalent blanket licence) covering the performance date.</span>
+          </label>
+          <label style="display:flex;align-items:flex-start;gap:10px;font-size:0.825rem;color:var(--ink-mid);cursor:pointer;margin-bottom:10px">
+            <input type="checkbox" id="licence-liability" style="margin-top:3px;accent-color:var(--green);flex-shrink:0">
+            <span>I understand that <strong>LocalStage is not liable</strong> for any licensing violations. It is the venue's responsibility to hold all required music licences.</span>
+          </label>
+          <label style="display:flex;align-items:flex-start;gap:10px;font-size:0.825rem;color:var(--ink-mid);cursor:pointer">
+            <input type="checkbox" id="booking-policy-check" style="margin-top:3px;accent-color:var(--green);flex-shrink:0">
+            <span>I agree not to contact or engage this artist directly for 12 months. All bookings must go through LocalStage.</span>
+          </label>
+          <div id="licence-error" style="font-size:0.78rem;color:#c0392b;margin-top:10px;display:none">Please confirm all boxes above before submitting.</div>
+        </div>
+        <button class="booking-submit" onclick="submitBooking()">Submit booking request →</button>
+      </div>
+    </div>
+
+    <!-- Event package form -->
+    <div id="booking-panel-event" style="display:none">
+      <div style="max-width:680px">
+        <div style="background:var(--ink);color:white;border-radius:16px;padding:1.25rem 1.5rem;margin-bottom:2rem;font-size:0.85rem;line-height:1.7">
+          <strong style="color:#5dcaa5;display:block;margin-bottom:4px">🎪 Event Package · $200–400</strong>
+          We curate 2–3 artists from our roster to match your event's vibe, size, and genre needs. One flat fee covers full coordination for all acts.
+        </div>
+        <div class="booking-form-card">
+          <h2>Event booking request</h2>
+          <p>Tell us about your event and we'll build the perfect lineup.</p>
+          <div class="form-field"><label class="form-label">Event / Organization name *</label><input class="form-input" type="text" id="event-org-name" placeholder="e.g. Oakville Summer Market"></div>
+          <div class="form-field">
+            <label class="form-label">Google Maps link of your venue *</label>
+            <input class="form-input" type="url" id="event-maps-url" placeholder="https://maps.google.com/...">
+            <div class="form-hint">Open Google Maps, search your venue, click Share → Copy link.</div>
+          </div>
+          <div class="form-field"><label class="form-label">Event type *</label>
+            <select class="form-input form-select" id="event-type">
+              <option value="">Select event type</option>
+              <option>Festival / outdoor market</option>
+              <option>Corporate event</option>
+              <option>Community / neighbourhood event</option>
+              <option>Private party</option>
+              <option>Pop-up / brand activation</option>
+              <option>Fundraiser / charity event</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-field"><label class="form-label">Event date *</label><input class="form-input" type="date" id="event-date"></div>
+            <div class="form-field"><label class="form-label">Event end date (if multi-day)</label><input class="form-input" type="date" id="event-end-date"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-field"><label class="form-label">Start time *</label><input class="form-input" type="time" id="event-start-time"></div>
+            <div class="form-field"><label class="form-label">End time</label><input class="form-input" type="time" id="event-end-time"></div>
+          </div>
+          <div class="form-field"><label class="form-label">Expected attendance *</label>
+            <select class="form-input form-select" id="event-attendance">
+              <option value="">Select size</option>
+              <option>Under 100</option>
+              <option>100–300</option>
+              <option>300–500</option>
+              <option>500–1,000</option>
+              <option>1,000+</option>
+            </select>
+          </div>
+          <div class="form-field"><label class="form-label">How many acts do you need? *</label>
+            <select class="form-input form-select" id="event-acts">
+              <option value="">Select</option>
+              <option>2 acts</option>
+              <option>3 acts</option>
+              <option>4+ acts (contact us)</option>
+            </select>
+          </div>
+          <div class="form-field"><label class="form-label">Genre / vibe preferences</label>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px" id="event-genre-picks">
+              ${['R&B / Soul','Hip-Hop','Indie / Alt','Jazz','Folk / Country','Pop'].map(g => `
+                <label style="display:flex;align-items:center;gap:6px;padding:7px 10px;border-radius:8px;border:1.5px solid var(--cream-dark);font-size:0.78rem;font-weight:500;cursor:pointer;transition:all 0.2s" onclick="toggleEventGenre(this)">
+                  <input type="checkbox" style="display:none"><span>${g}</span>
+                </label>
+              `).join('')}
+            </div>
+          </div>
+          <div class="form-field"><label class="form-label">Total budget for all acts</label>
+            <select class="form-input form-select" id="event-budget">
+              <option value="">Select budget</option>
+              <option>Under $500</option>
+              <option>$500–1,000</option>
+              <option>$1,000–2,000</option>
+              <option>$2,000+</option>
+              <option>Negotiable / open</option>
+            </select>
+          </div>
+          <div class="form-field"><label class="form-label">Additional details</label><textarea class="form-input" rows="3" placeholder="Stage setup, outdoor/indoor, specific artist requests, special requirements…" style="resize:vertical;min-height:80px" id="event-notes"></textarea></div>
+          <div style="margin-top:1.5rem;padding:1.25rem;background:var(--cream);border-radius:12px;border:1.5px solid var(--cream-dark)">
+            <div style="font-size:0.75rem;font-weight:500;text-transform:uppercase;letter-spacing:1px;color:var(--green);margin-bottom:1rem">Licensing & Policy</div>
+            <label style="display:flex;align-items:flex-start;gap:10px;font-size:0.825rem;color:var(--ink-mid);cursor:pointer;margin-bottom:10px">
+              <input type="checkbox" id="event-licence-socan" style="margin-top:3px;accent-color:var(--green);flex-shrink:0">
+              <span>Our event holds or will obtain all required <strong>SOCAN / Re:Sound licences</strong> for live music on the event date(s).</span>
+            </label>
+            <label style="display:flex;align-items:flex-start;gap:10px;font-size:0.825rem;color:var(--ink-mid);cursor:pointer;margin-bottom:10px">
+              <input type="checkbox" id="event-licence-liability" style="margin-top:3px;accent-color:var(--green);flex-shrink:0">
+              <span>I understand <strong>LocalStage is not liable</strong> for licensing violations. Compliance is the event organizer's responsibility.</span>
+            </label>
+            <label style="display:flex;align-items:flex-start;gap:10px;font-size:0.825rem;color:var(--ink-mid);cursor:pointer">
+              <input type="checkbox" id="event-policy-check" style="margin-top:3px;accent-color:var(--green);flex-shrink:0">
+              <span>I agree that all artists booked through this request must be re-booked through LocalStage for 12 months.</span>
+            </label>
+            <div id="event-licence-error" style="font-size:0.78rem;color:#c0392b;margin-top:10px;display:none">Please confirm all boxes above before submitting.</div>
+          </div>
+          <button class="booking-submit" onclick="submitEventBooking()">Submit event request →</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function switchBookingType(type) {
+  const artistCard = document.getElementById('btype-artist');
+  const eventCard = document.getElementById('btype-event');
+  const artistPanel = document.getElementById('booking-panel-artist');
+  const eventPanel = document.getElementById('booking-panel-event');
+  if (!artistCard || !eventCard) return;
+  if (type === 'artist') {
+    artistCard.style.border = '2px solid var(--green)';
+    artistCard.style.background = 'var(--green-light)';
+    eventCard.style.border = '2px solid var(--cream-dark)';
+    eventCard.style.background = 'transparent';
+    artistPanel.style.display = '';
+    eventPanel.style.display = 'none';
+    renderBookingArtists();
+  } else {
+    eventCard.style.border = '2px solid var(--green)';
+    eventCard.style.background = 'var(--green-light)';
+    artistCard.style.border = '2px solid var(--cream-dark)';
+    artistCard.style.background = 'transparent';
+    artistPanel.style.display = 'none';
+    eventPanel.style.display = 'block';
+  }
+}
+
+function toggleEventGenre(label) {
+  label.classList.toggle('checked');
+  if (label.classList.contains('checked')) {
+    label.style.borderColor = 'var(--green)';
+    label.style.background = 'var(--green-light)';
+    label.style.color = 'var(--green)';
+  } else {
+    label.style.borderColor = 'var(--cream-dark)';
+    label.style.background = 'transparent';
+    label.style.color = 'var(--ink)';
+  }
+}
+
+function submitEventBooking() {
+  const socan = document.getElementById('event-licence-socan');
+  const liability = document.getElementById('event-licence-liability');
+  const policy = document.getElementById('event-policy-check');
+  const errEl = document.getElementById('event-licence-error');
+  if (!socan.checked || !liability.checked || !policy.checked) {
+    errEl.style.display = 'block';
+    return;
+  }
+  errEl.style.display = 'none';
+  const orgName = document.getElementById('event-org-name')?.value || 'your event';
+  const eventDate = document.getElementById('event-date')?.value || '—';
+  const acts = document.getElementById('event-acts')?.value || '—';
+  if (currentUser) {
+    localStorage.setItem('ls-booked-' + currentUser.email, JSON.stringify({
+      artist: acts + ' (event package)',
+      venue: orgName,
+      date: eventDate,
+      time: '—',
+      submittedAt: new Date().toISOString()
+    }));
+  }
+  const EMAILJS_SERVICE = 'service_jfagb77';
+  const EMAILJS_PUBLIC_KEY = 'FoCM6Rnq5pMjlI2PP';
+  emailjs.send(EMAILJS_SERVICE, 'template_aegy9aj', {
+    application_type: 'EVENT BOOKING REQUEST',
+    applicant_name: currentUser?.email || '',
+    email: currentUser?.email || '',
+    venue_refs: orgName,
+    city: eventDate,
+    notes: `Event: ${orgName} | Acts needed: ${acts} | Date: ${eventDate}`,
+    stage_name:'—', phone:'—', dob:'—', genre:'—', years:'—',
+    avg_draw:'—', spotify:'—', music_link:'—', platforms:'—', video_link:'—', travel_cities:'—'
+  }, EMAILJS_PUBLIC_KEY).catch(e => console.warn('Event booking email failed:', e));
+
+  document.getElementById('booking-form-area').innerHTML = `
+    <div style="text-align:center;padding:5rem 2rem;max-width:560px;margin:0 auto">
+      <div style="font-size:3.5rem;margin-bottom:1.25rem">🎪</div>
+      <h2 style="font-family:var(--serif);font-size:2rem;color:var(--ink);margin-bottom:0.75rem;letter-spacing:-0.5px">Event request received!</h2>
+      <p style="font-size:0.95rem;color:var(--ink-light);line-height:1.75;margin-bottom:1.25rem">
+        We've got your event package request for <strong>${orgName}</strong>. We'll reach out within 24–48 hours with a curated lineup proposal.
+      </p>
+      <div style="background:var(--cream);border-radius:12px;padding:1.25rem 1.5rem;text-align:left;margin-bottom:1.75rem;border-left:3px solid var(--green)">
+        <div style="font-size:0.72rem;font-weight:500;text-transform:uppercase;letter-spacing:1px;color:var(--green);margin-bottom:0.75rem">What happens next</div>
+        <div style="font-size:0.85rem;color:var(--ink-mid);line-height:2">
+          <div>🎨 &nbsp;We build a curated lineup of <strong>${acts}</strong> matched to your vibe & event size</div>
+          <div>📩 &nbsp;You receive a lineup proposal within 24–48 hours</div>
+          <div>✅ &nbsp;You approve → we coordinate all artists and handle scheduling</div>
+          <div>💰 &nbsp;One flat event package fee — no surprises</div>
+        </div>
+      </div>
+      <a href="mailto:localstagerisingstars@gmail.com" style="display:inline-block;background:var(--ink);color:white;padding:0.875rem 2rem;border-radius:100px;font-family:var(--sans);font-size:0.9rem;font-weight:500;text-decoration:none;margin-bottom:1rem">📧 Questions? Email us</a>
+      <br>
+      <button onclick="submitAnotherBooking()" style="margin-top:1rem;background:transparent;border:1.5px solid var(--ink-light);font-family:var(--sans);font-size:0.875rem;color:var(--ink-mid);cursor:pointer;padding:0.7rem 1.75rem;border-radius:100px;transition:border-color 0.2s" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'" onmouseout="this.style.borderColor='var(--ink-light)';this.style.color='var(--ink-mid)'">Submit another request →</button>
+      <br>
+      <button onclick="showPage('home')" style="display:block;margin:0.75rem auto 0;background:transparent;border:none;font-family:var(--sans);font-size:0.85rem;color:var(--ink-light);cursor:pointer;text-decoration:underline">Back to home</button>
+    </div>
+  `;
+}
+
+// ════════════════════════════════
 // BOOKING PAGE
 // ════════════════════════════════
 function renderBookingPage() {
@@ -1811,22 +2026,35 @@ function renderBookingPage() {
   if (!gate || !form) return;
   if (currentUser) {
     gate.style.display = 'none';
-    // Check if this user has already submitted a booking
-    const hasBooked = localStorage.getItem('ls-booked-' + currentUser.email);
+    // Check if this user has already submitted a booking — expires after 7 days
+    const raw = localStorage.getItem('ls-booked-' + currentUser.email);
+    let hasBooked = null;
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        const submittedAt = parsed.submittedAt ? new Date(parsed.submittedAt) : null;
+        const sevenDays = 7 * 24 * 60 * 60 * 1000;
+        if (submittedAt && (Date.now() - submittedAt.getTime()) < sevenDays) {
+          hasBooked = parsed;
+        } else {
+          // Expired — clear it so they can book again
+          localStorage.removeItem('ls-booked-' + currentUser.email);
+        }
+      } catch(e) { localStorage.removeItem('ls-booked-' + currentUser.email); }
+    }
     if (hasBooked) {
       form.style.display = 'block';
-      const bookedData = JSON.parse(hasBooked);
       form.innerHTML = `
         <div style="text-align:center;padding:5rem 2rem;max-width:560px;margin:0 auto">
           <div style="font-size:3.5rem;margin-bottom:1.25rem">📋</div>
           <h2 style="font-family:var(--serif);font-size:2rem;color:var(--ink);margin-bottom:0.75rem;letter-spacing:-0.5px">Request received!</h2>
           <p style="font-size:0.95rem;color:var(--ink-light);line-height:1.75;margin-bottom:0.5rem">
-            We have your booking request for <strong>${bookedData.artist}</strong> at <strong>${bookedData.venue}</strong> on <strong>${bookedData.date || 'your selected date'}</strong>.
+            We have your booking request for <strong>${hasBooked.artist}</strong> at <strong>${hasBooked.venue}</strong> on <strong>${hasBooked.date || 'your selected date'}</strong>.
           </p>
           <p style="font-size:0.9rem;color:var(--ink-light);line-height:1.75;margin-bottom:2rem">
             We'll confirm availability and follow up within 24 hours. Need to make a change or have a question? Reach out directly.
           </p>
-          <a href="mailto:localstagerisingstars@gmail.com" style="display:inline-block;background:var(--ink);color:white;padding:0.875rem 2rem;border-radius:100px;font-family:var(--sans);font-size:0.9rem;font-weight:500;text-decoration:none;margin-bottom:1rem" onclick="window.location.href='mailto:localstagerisingstars@gmail.com'">📧 Contact us about your booking</a>
+          <a href="mailto:localstagerisingstars@gmail.com" style="display:inline-block;background:var(--ink);color:white;padding:0.875rem 2rem;border-radius:100px;font-family:var(--sans);font-size:0.9rem;font-weight:500;text-decoration:none;margin-bottom:1rem">📧 Contact us about your booking</a>
           <br>
           <button onclick="submitAnotherBooking()" style="margin-top:1rem;background:transparent;border:1.5px solid var(--ink-light);font-family:var(--sans);font-size:0.875rem;color:var(--ink-mid);cursor:pointer;padding:0.7rem 1.75rem;border-radius:100px;transition:border-color 0.2s" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'" onmouseout="this.style.borderColor='var(--ink-light)';this.style.color='var(--ink-mid)'">Submit another request →</button>
           <br>
@@ -1836,6 +2064,10 @@ function renderBookingPage() {
       return;
     }
     form.style.display = 'block';
+    // Only rebuild form HTML if it doesn't already have the booking-user-email element
+    if (!document.getElementById('booking-user-email')) {
+      form.innerHTML = getBookingFormHTML();
+    }
     document.getElementById('booking-user-email').textContent = currentUser.email;
     renderBookingArtists();
   } else {
@@ -1883,6 +2115,11 @@ function validateMapsUrl(input) {
 function submitAnotherBooking() {
   // Clear the previous booking record so the form shows again
   if (currentUser) localStorage.removeItem('ls-booked-' + currentUser.email);
+  // Restore the original booking form HTML before re-rendering
+  const formArea = document.getElementById('booking-form-area');
+  if (formArea) {
+    formArea.innerHTML = getBookingFormHTML();
+  }
   renderBookingPage();
 }
 
