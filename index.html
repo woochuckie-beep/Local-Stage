@@ -1831,16 +1831,18 @@ function renderBookingPage() {
       form.innerHTML = `
         <div style="text-align:center;padding:5rem 2rem;max-width:560px;margin:0 auto">
           <div style="font-size:3.5rem;margin-bottom:1.25rem">📋</div>
-          <h2 style="font-family:var(--serif);font-size:2rem;color:var(--ink);margin-bottom:0.75rem;letter-spacing:-0.5px">You've already submitted a request</h2>
+          <h2 style="font-family:var(--serif);font-size:2rem;color:var(--ink);margin-bottom:0.75rem;letter-spacing:-0.5px">Request received!</h2>
           <p style="font-size:0.95rem;color:var(--ink-light);line-height:1.75;margin-bottom:0.5rem">
             We have your booking request for <strong>${bookedData.artist}</strong> at <strong>${bookedData.venue}</strong> on <strong>${bookedData.date || 'your selected date'}</strong>.
           </p>
           <p style="font-size:0.9rem;color:var(--ink-light);line-height:1.75;margin-bottom:2rem">
-            Each venue account can submit one booking request. If you need to make a change or have a question, please reach out to us directly.
+            We'll confirm availability and follow up within 24 hours. Need to make a change or have a question? Reach out directly.
           </p>
           <a href="mailto:localstagerisingstars@gmail.com" style="display:inline-block;background:var(--ink);color:white;padding:0.875rem 2rem;border-radius:100px;font-family:var(--sans);font-size:0.9rem;font-weight:500;text-decoration:none;margin-bottom:1rem" onclick="window.location.href='mailto:localstagerisingstars@gmail.com'">📧 Contact us about your booking</a>
           <br>
-          <button onclick="showPage('home')" style="background:transparent;border:none;font-family:var(--sans);font-size:0.85rem;color:var(--ink-light);cursor:pointer;text-decoration:underline;margin-top:0.5rem">Back to home</button>
+          <button onclick="submitAnotherBooking()" style="margin-top:1rem;background:transparent;border:1.5px solid var(--ink-light);font-family:var(--sans);font-size:0.875rem;color:var(--ink-mid);cursor:pointer;padding:0.7rem 1.75rem;border-radius:100px;transition:border-color 0.2s" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'" onmouseout="this.style.borderColor='var(--ink-light)';this.style.color='var(--ink-mid)'">Submit another request →</button>
+          <br>
+          <button onclick="showPage('home')" style="background:transparent;border:none;font-family:var(--sans);font-size:0.85rem;color:var(--ink-light);cursor:pointer;text-decoration:underline;margin-top:0.75rem">Back to home</button>
         </div>
       `;
       return;
@@ -1881,6 +1883,12 @@ function renderBookingArtists() {
 function selectBookingArtist(el) {
   document.querySelectorAll('.pick-artist-row').forEach(r => r.classList.remove('selected'));
   el.classList.add('selected');
+}
+
+function submitAnotherBooking() {
+  // Clear the previous booking record so the form shows again
+  if (currentUser) localStorage.removeItem('ls-booked-' + currentUser.email);
+  renderBookingPage();
 }
 
 function submitBooking() {
