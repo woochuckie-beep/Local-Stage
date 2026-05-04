@@ -486,7 +486,15 @@
   .btn-next { background: var(--ink); color: white; padding: 0.75rem 2rem; border-radius: 100px; font-family: var(--sans); font-size: 0.9rem; font-weight: 500; border: none; cursor: pointer; transition: background 0.2s; }
   .btn-next:hover { background: var(--green); }
 
-  /* ─── MEDIA QUERIES ─── */
+  /* Sign-in button loading spinner */
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .btn-loading { position: relative; color: transparent !important; pointer-events: none; }
+  .btn-loading::after {
+    content: ''; position: absolute; top: 50%; left: 50%;
+    width: 16px; height: 16px; margin: -8px 0 0 -8px;
+    border: 2px solid rgba(255,255,255,0.35); border-top-color: white;
+    border-radius: 50%; animation: spin 0.7s linear infinite;
+  }
   @media (max-width: 768px) {
     nav { padding: 1rem 1.5rem; }
     .nav-links { display: none; }
@@ -526,9 +534,7 @@
     <li><a onclick="showPage('home'); setTimeout(()=>{ const el=document.getElementById('how'); if(el) el.scrollIntoView({behavior:'smooth'}); },50)">How It Works</a></li>
     <li><a onclick="showPage('artists')">Browse Artists</a></li>
     <li><a onclick="showPage('pricing-page')">Pricing</a></li>
-    <li><a onclick="showPage('home'); setTimeout(()=>{ const el=document.getElementById('faq'); if(el) el.scrollIntoView({behavior:'smooth'}); },50)">FAQ</a></li>
-    <li><a onclick="openApply()">Apply / Join</a></li>
-    <li><a onclick="showPage('booking')">Book Now</a></li>
+    <li><a class="nav-cta" onclick="openApply()">Get Started →</a></li>
   </ul>
   <div style="display:flex;align-items:center;gap:10px">
     <span id="nav-user-info" class="nav-user-info" style="display:none">
@@ -549,7 +555,7 @@
   <a onclick="closeMobileMenu(); showPage('pricing-page')">Pricing</a>
   <a onclick="closeMobileMenu(); showPage('home'); setTimeout(()=>{ const el=document.getElementById('faq'); if(el) el.scrollIntoView({behavior:'smooth'}); },50)">FAQ</a>
   <a onclick="closeMobileMenu(); openApply()">Apply / Join</a>
-  <a onclick="closeMobileMenu(); showPage('booking')">Book Now</a>
+  <a onclick="closeMobileMenu(); showPage('artists')">Browse Artists to Book</a>
   <div class="mobile-auth-row">
     <button id="mobile-auth-btn" class="btn-primary" style="width:100%;text-align:center" onclick="closeMobileMenu(); openLogin()">Sign In</button>
   </div>
@@ -567,7 +573,7 @@
     <div class="hero-left">
       <div class="hero-eyebrow">For Ontario artists &amp; venues · No agents. No DMs. No guesswork.</div>
       <h1>The smarter way to<br><em>book local music.</em></h1>
-      <p class="hero-sub">LocalStage connects Ontario musicians and venues using <strong>verified local draw data</strong> — not follower counts. Artists get consistent bookings. Venues get guaranteed crowds. Everyone wins.</p>
+      <p class="hero-sub">LocalStage connects Ontario musicians and venues using <strong>verified local draw data</strong> — not follower counts. Artists get consistent bookings. Venues get reliable crowds. Everyone wins.</p>
       <div class="hero-proof" style="display:flex;gap:1.5rem;margin-bottom:2rem;flex-wrap:wrap">
         <div style="display:flex;align-items:center;gap:6px;font-size:0.8rem;color:var(--ink-mid)"><span style="color:var(--green);font-weight:600">✓</span> Free for artists to join</div>
         <div style="display:flex;align-items:center;gap:6px;font-size:0.8rem;color:var(--ink-mid)"><span style="color:var(--green);font-weight:600">✓</span> Venues pay only when confirmed</div>
@@ -587,7 +593,8 @@
     </div>
     <div class="hero-visual">
       <div class="floating-tag tag-1"><span class="tag-dot" style="background:#1a9b6c"></span>LocalStage Score: 84</div>
-      <div class="score-card">
+      <div class="score-card" onclick="showPage('artists'); setTimeout(()=>openArtistProfile(1),100)" style="cursor:pointer;transition:box-shadow 0.2s,transform 0.2s" onmouseover="this.style.boxShadow='0 12px 50px rgba(0,0,0,0.14)';this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='0 8px 40px rgba(0,0,0,0.08)';this.style.transform='translateY(0)'">
+        <div style="position:absolute;top:12px;right:12px;font-size:0.68rem;color:var(--green);font-weight:500;background:var(--green-light);padding:3px 10px;border-radius:100px">View profile →</div>
         <div class="score-card-header">
           <div class="artist-avatar">MR</div>
           <div>
@@ -619,13 +626,13 @@
   </div>
 </section>
 
-<!-- POSITIONING BAR -->
+<!-- STATS BAR -->
 <div class="stats-bar">
-  <div class="stats-inner" style="justify-content:center">
-    <div style="text-align:center;max-width:720px;padding:0 1.5rem">
-      <div style="font-size:0.7rem;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:var(--green);margin-bottom:0.6rem;display:flex;align-items:center;justify-content:center;gap:8px"><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse 2s infinite"></span>Built for Ontario &middot; Not a booking agency</div>
-      <div style="font-family:var(--serif);font-size:1.45rem;color:var(--ink);letter-spacing:-0.3px;line-height:1.35">The GTA&rsquo;s first data-driven artist booking platform &mdash; matching venues to musicians using <em style="color:var(--green)">verified local draw data.</em></div>
-    </div>
+  <div class="stats-inner">
+    <div class="stat"><div class="stat-num">12</div><div class="stat-label">Artists on roster</div></div>
+    <div class="stat"><div class="stat-num">40<span>+</span></div><div class="stat-label">Venues served</div></div>
+    <div class="stat"><div class="stat-num">24h</div><div class="stat-label">Response time</div></div>
+    <div class="stat"><div class="stat-num">100<span>%</span></div><div class="stat-label">GTA-local artists</div></div>
   </div>
 </div>
 
@@ -951,6 +958,7 @@
     <a onclick="showPage('artists')">Artists</a>
     <a onclick="openApply()">Apply</a>
     <a onclick="showPage('pricing-page')">Pricing</a>
+    <a onclick="showPage('home'); setTimeout(()=>{ const el=document.getElementById('faq'); if(el) el.scrollIntoView({behavior:'smooth'}); },50)">FAQ</a>
   </div>
 </footer>
 
@@ -1092,39 +1100,42 @@
     <!-- Upcoming Events -->
     <div class="artists-section-head" style="margin-top:1rem"><h2>📅 Upcoming Shows</h2></div>
     <div id="events-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:3rem">
-      <div style="background:var(--white);border-radius:16px;padding:1.25rem;border:1px solid var(--cream-dark)">
+      <div style="background:var(--white);border-radius:16px;padding:1.25rem;border:1px solid var(--cream-dark);display:flex;flex-direction:column;gap:0.5rem">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.75rem">
-          <div style="background:var(--green);color:white;border-radius:8px;padding:6px 12px;text-align:center;font-size:0.7rem;font-weight:600;line-height:1.3">MAY<br><span style="font-size:1.2rem">16</span></div>
-          <span style="font-size:0.7rem;background:var(--green-light);color:var(--green);padding:4px 10px;border-radius:100px;font-weight:500">Fri Night</span>
+          <div style="background:var(--green);color:white;border-radius:8px;padding:6px 12px;text-align:center;font-size:0.7rem;font-weight:600;line-height:1.3">JUN<br><span style="font-size:1.2rem">07</span></div>
+          <span style="font-size:0.7rem;background:var(--green-light);color:var(--green);padding:4px 10px;border-radius:100px;font-weight:500">Sat Night</span>
         </div>
         <div style="font-weight:500;font-size:0.95rem;color:var(--ink);margin-bottom:3px">Maya Reyes Live</div>
-        <div style="font-size:0.8rem;color:var(--ink-light);margin-bottom:6px">The Dock, Mississauga</div>
-        <div style="font-size:0.78rem;color:var(--green)">9PM–11PM · Book via LocalStage</div>
+        <div style="font-size:0.8rem;color:var(--ink-light);margin-bottom:6px">Rec Room, Toronto</div>
+        <div style="font-size:0.78rem;color:var(--green);margin-bottom:10px">8PM–10PM · Example show</div>
+        <button onclick="openArtistProfile(1)" style="margin-top:auto;width:100%;padding:7px;border-radius:100px;border:1.5px solid var(--cream-dark);background:transparent;font-family:var(--sans);font-size:0.8rem;font-weight:500;color:var(--ink);cursor:pointer;transition:border-color 0.2s,color 0.2s" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'" onmouseout="this.style.borderColor='var(--cream-dark)';this.style.color='var(--ink)'">View Maya's profile →</button>
       </div>
-      <div style="background:var(--white);border-radius:16px;padding:1.25rem;border:1px solid var(--cream-dark)">
+      <div style="background:var(--white);border-radius:16px;padding:1.25rem;border:1px solid var(--cream-dark);display:flex;flex-direction:column;gap:0.5rem">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.75rem">
-          <div style="background:var(--ink);color:white;border-radius:8px;padding:6px 12px;text-align:center;font-size:0.7rem;font-weight:600;line-height:1.3">MAY<br><span style="font-size:1.2rem">22</span></div>
-          <span style="font-size:0.7rem;background:var(--cream-dark);color:var(--ink-mid);padding:4px 10px;border-radius:100px;font-weight:500">Thu Night</span>
+          <div style="background:var(--ink);color:white;border-radius:8px;padding:6px 12px;text-align:center;font-size:0.7rem;font-weight:600;line-height:1.3">JUN<br><span style="font-size:1.2rem">14</span></div>
+          <span style="font-size:0.7rem;background:var(--cream-dark);color:var(--ink-mid);padding:4px 10px;border-radius:100px;font-weight:500">Sat Night</span>
         </div>
         <div style="font-weight:500;font-size:0.95rem;color:var(--ink);margin-bottom:3px">Kwame Osei Quartet</div>
-        <div style="font-size:0.8rem;color:var(--ink-light);margin-bottom:6px">The Jazz Room, Hamilton</div>
-        <div style="font-size:0.78rem;color:var(--green)">8PM–10PM · Book via LocalStage</div>
+        <div style="font-size:0.8rem;color:var(--ink-light);margin-bottom:6px">Mulberry St., Hamilton</div>
+        <div style="font-size:0.78rem;color:var(--green);margin-bottom:10px">7PM · Example show</div>
+        <button onclick="openArtistProfile(4)" style="margin-top:auto;width:100%;padding:7px;border-radius:100px;border:1.5px solid var(--cream-dark);background:transparent;font-family:var(--sans);font-size:0.8rem;font-weight:500;color:var(--ink);cursor:pointer;transition:border-color 0.2s,color 0.2s" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'" onmouseout="this.style.borderColor='var(--cream-dark)';this.style.color='var(--ink)'">View Kwame's profile →</button>
       </div>
-      <div style="background:var(--white);border-radius:16px;padding:1.25rem;border:1px solid var(--cream-dark)">
+      <div style="background:var(--white);border-radius:16px;padding:1.25rem;border:1px solid var(--cream-dark);display:flex;flex-direction:column;gap:0.5rem">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.75rem">
-          <div style="background:var(--ink);color:white;border-radius:8px;padding:6px 12px;text-align:center;font-size:0.7rem;font-weight:600;line-height:1.3">JUN<br><span style="font-size:1.2rem">01</span></div>
+          <div style="background:var(--ink);color:white;border-radius:8px;padding:6px 12px;text-align:center;font-size:0.7rem;font-weight:600;line-height:1.3">JUN<br><span style="font-size:1.2rem">21</span></div>
           <span style="font-size:0.7rem;background:var(--cream-dark);color:var(--ink-mid);padding:4px 10px;border-radius:100px;font-weight:500">Sat Night</span>
         </div>
         <div style="font-weight:500;font-size:0.95rem;color:var(--ink);margin-bottom:3px">Sasha Okafor + Support</div>
         <div style="font-size:0.8rem;color:var(--ink-light);margin-bottom:6px">Bar Volo, Toronto</div>
-        <div style="font-size:0.78rem;color:var(--green)">9PM–12AM · Book via LocalStage</div>
+        <div style="font-size:0.78rem;color:var(--green);margin-bottom:10px">9PM–12AM · Example show</div>
+        <button onclick="openArtistProfile(7)" style="margin-top:auto;width:100%;padding:7px;border-radius:100px;border:1.5px solid var(--cream-dark);background:transparent;font-family:var(--sans);font-size:0.8rem;font-weight:500;color:var(--ink);cursor:pointer;transition:border-color 0.2s,color 0.2s" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'" onmouseout="this.style.borderColor='var(--cream-dark)';this.style.color='var(--ink)'">View Sasha's profile →</button>
       </div>
     </div>
 
     <!-- Top Rated -->
     <div class="artists-section-head">
       <h2>Top Rated</h2>
-      <a class="view-all-link">View all →</a>
+      <a class="view-all-link" onclick="filterArtists('all','all',document.querySelector('.filter-chip'))">View all →</a>
     </div>
     <div class="artist-cards-row" id="artist-grid">
       <!-- Cards generated by JS -->
@@ -1133,7 +1144,7 @@
     <!-- New to Roster -->
     <div class="artists-section-head">
       <h2>New to the Roster</h2>
-      <a class="view-all-link">View all →</a>
+      <a class="view-all-link" onclick="filterArtists('all','all',document.querySelector('.filter-chip'))">View all →</a>
     </div>
     <div class="artist-cards-row" id="artist-grid-new"></div>
   </div>
@@ -1246,7 +1257,7 @@
         <div class="form-field"><label class="form-label">Stage name (if different)</label><input class="form-input" type="text" id="a-stage" placeholder="Leave blank if same"></div>
         <div class="form-field"><label class="form-label">Date of birth * <span style="font-weight:400;color:var(--ink-light)">(must be 19+)</span></label><input class="form-input" type="date" id="a-dob" onchange="checkAge()"><div class="form-hint" id="a-dob-hint">You must be 19 or older to perform at licensed venues in Ontario.</div></div>
         <div class="form-field"><label class="form-label">Email address *</label><input class="form-input" type="email" id="a-email" placeholder="maya@email.com"></div>
-        <div class="form-field"><label class="form-label">Phone number</label><input class="form-input" type="tel" id="a-phone" placeholder="+1 (416) 000-0000"></div>
+        <div class="form-field"><label class="form-label">Phone number *</label><input class="form-input" type="tel" id="a-phone" placeholder="+1 (416) 000-0000"></div>
         <div class="form-row">
           <div class="form-field"><label class="form-label">City / Town *</label><input class="form-input" type="text" id="a-city" placeholder="Mississauga"></div>
           <div class="form-field"><label class="form-label">Province *</label><select class="form-input form-select" id="a-province"><option value="">Select</option><option>Ontario</option><option>Quebec</option><option>British Columbia</option><option>Alberta</option></select></div>
@@ -1398,7 +1409,7 @@
         <div class="success-state">
           <div class="success-icon">🎉</div>
           <div class="success-title">Application submitted!</div>
-          <div class="success-msg">We've received your application and will review it within 3–5 business days. Keep an eye on your inbox — we'll reach out with next steps.<br><br>In the meantime, <a onclick="showPage('artists');closeModal('modal-apply')" style="color:var(--green);cursor:pointer">browse our current roster</a> to get a feel for the artists already on the platform.</div>
+          <div class="success-msg">We've received your application and will review it within 3–5 business days. Keep an eye on your inbox — we'll reach out with next steps.<br><br>In the meantime, <a onclick="showPage('artists')" style="color:var(--green);cursor:pointer">browse our current roster</a> to get a feel for the artists already on the platform.</div>
           <button class="btn-next" style="margin-top:1.5rem" onclick="showPage('home')">Back to home</button>
         </div>
       </div>
@@ -1744,7 +1755,7 @@ function resetLoginModal() {
   for (let i=0;i<6;i++) document.getElementById('code-'+i).value='';
   document.getElementById('code-error').style.display='none';
   const btn = document.querySelector('#login-step-email .form-submit');
-  if (btn) { btn.textContent = 'Get my access code →'; btn.disabled = false; }
+  if (btn) { btn.classList.remove('btn-loading'); btn.disabled = false; }
 }
 
 function backToEmail() {
@@ -1757,7 +1768,7 @@ function backToEmail() {
   if (errEl) errEl.remove();
   // Reset button state in case it got stuck
   const btn = document.querySelector('#login-step-email .form-submit');
-  if (btn) { btn.textContent = 'Get my access code →'; btn.disabled = false; }
+  if (btn) { btn.classList.remove('btn-loading'); btn.disabled = false; }
   document.querySelectorAll('.login-step').forEach(s => s.classList.remove('active'));
   document.getElementById('login-step-email').classList.add('active');
   // Focus the email field for convenience
@@ -1805,13 +1816,13 @@ async function sendCode() {
   document.getElementById('login-email').style.borderColor = '';
 
   // Show loading state
-  if (btn) { btn.textContent = 'Checking…'; btn.disabled = true; }
+  if (btn) { btn.classList.add('btn-loading'); btn.disabled = true; }
 
   await loadApprovedEmails();
 
   // If the sheet couldn't be loaded at all, block sign-in and surface the error
   if (sheetLoadFailed) {
-    if (btn) { btn.textContent = 'Get my access code →'; btn.disabled = false; }
+    if (btn) { btn.classList.remove('btn-loading'); btn.disabled = false; }
     document.getElementById('login-email').style.borderColor = '#c0392b';
     let errEl = document.getElementById('login-email-error');
     if (!errEl) {
@@ -1827,7 +1838,7 @@ async function sendCode() {
   // Strict check — email must be in the approved list (no fail-open)
   const isApproved = approvedEmails.includes(email);
   if (!isApproved) {
-    if (btn) { btn.textContent = 'Get my access code →'; btn.disabled = false; }
+    if (btn) { btn.classList.remove('btn-loading'); btn.disabled = false; }
     document.getElementById('login-email').style.borderColor = '#c0392b';
     let errEl = document.getElementById('login-email-error');
     if (!errEl) {
@@ -1847,7 +1858,7 @@ async function sendCode() {
   // Generate OTP — displayed on screen during testing (no email sent)
   verificationCode = String(Math.floor(100000 + Math.random() * 900000));
 
-  if (btn) { btn.textContent = 'Get my access code →'; btn.disabled = false; }
+  if (btn) { btn.classList.remove('btn-loading'); btn.disabled = false; }
 
   document.getElementById('login-code-email-display').textContent = email;
   document.getElementById('login-code-sub').innerHTML = `
