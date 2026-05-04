@@ -173,18 +173,18 @@
   /* SCORE */
   .score-section { background: var(--white); }
   .score-inner { max-width: 1100px; margin: 0 auto; }
-  .score-explain-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; margin-top: 3rem; }
-  .score-bars { display: flex; flex-direction: column; gap: 1rem; }
-  .score-bar-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
-  .score-bar-name { font-size: 0.85rem; font-weight: 500; }
-  .score-bar-val { font-size: 0.85rem; color: var(--green); font-weight: 500; }
-  .score-bar-track { height: 8px; background: var(--cream); border-radius: 100px; overflow: hidden; }
-  .score-bar-fill { height: 100%; background: var(--green); border-radius: 100px; transition: width 1s ease; }
+  .score-explain-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start; margin-top: 0; }
+  .score-bars { display: flex; flex-direction: column; gap: 1.25rem; }
+  .score-bar-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+  .score-bar-name { font-size: 0.875rem; font-weight: 500; color: var(--ink); }
+  .score-bar-val { font-size: 0.875rem; color: var(--green); font-weight: 600; }
+  .score-bar-track { height: 10px; background: var(--cream-dark); border-radius: 100px; overflow: hidden; }
+  .score-bar-fill { height: 100%; background: linear-gradient(90deg, var(--green), #5dcaa5); border-radius: 100px; transition: width 1s ease; }
   .score-text-side p { font-size: 0.95rem; color: var(--ink-mid); line-height: 1.8; margin-bottom: 1rem; }
-  .score-factors { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 1.5rem; }
+  .score-factors { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 0; }
   .score-factor { background: var(--cream); border-radius: 12px; padding: 1rem; }
   .score-factor-icon { font-size: 1.2rem; margin-bottom: 6px; }
-  .score-factor-name { font-size: 0.8rem; font-weight: 500; color: var(--ink); }
+  .score-factor-name { font-size: 0.8rem; font-weight: 600; color: var(--ink); }
   .score-factor-desc { font-size: 0.75rem; color: var(--ink-light); margin-top: 2px; line-height: 1.5; }
 
   /* PRICING */
@@ -526,6 +526,7 @@
     <li><a onclick="showPage('home'); setTimeout(()=>{ const el=document.getElementById('how'); if(el) el.scrollIntoView({behavior:'smooth'}); },50)">How It Works</a></li>
     <li><a onclick="showPage('artists')">Browse Artists</a></li>
     <li><a onclick="showPage('pricing-page')">Pricing</a></li>
+    <li><a onclick="showPage('home'); setTimeout(()=>{ const el=document.getElementById('faq'); if(el) el.scrollIntoView({behavior:'smooth'}); },50)">FAQ</a></li>
     <li><a onclick="openApply()">Apply / Join</a></li>
     <li><a onclick="showPage('booking')">Book Now</a></li>
   </ul>
@@ -546,6 +547,7 @@
   <a onclick="closeMobileMenu(); showPage('home'); setTimeout(()=>{ const el=document.getElementById('how'); if(el) el.scrollIntoView({behavior:'smooth'}); },50)">How It Works</a>
   <a onclick="closeMobileMenu(); showPage('artists')">Browse Artists</a>
   <a onclick="closeMobileMenu(); showPage('pricing-page')">Pricing</a>
+  <a onclick="closeMobileMenu(); showPage('home'); setTimeout(()=>{ const el=document.getElementById('faq'); if(el) el.scrollIntoView({behavior:'smooth'}); },50)">FAQ</a>
   <a onclick="closeMobileMenu(); openApply()">Apply / Join</a>
   <a onclick="closeMobileMenu(); showPage('booking')">Book Now</a>
   <div class="mobile-auth-row">
@@ -563,17 +565,24 @@
   <div class="hero-bg"></div>
   <div class="hero-grid">
     <div class="hero-left">
-      <div class="hero-eyebrow">For Ontario artists & venues · No agents. No DMs. No guesswork.</div>
-      <h1>Stop DMing venues.<br><em>Start getting booked.</em></h1>
-      <p class="hero-sub">LocalStage is the only platform that matches Ontario musicians to bars, events, and venues using <strong>verified local draw data</strong> — not follower counts. Artists get consistent bookings. Venues get crowds. Everyone wins.</p>
+      <div class="hero-eyebrow">For Ontario artists &amp; venues · No agents. No DMs. No guesswork.</div>
+      <h1>The smarter way to<br><em>book local music.</em></h1>
+      <p class="hero-sub">LocalStage connects Ontario musicians and venues using <strong>verified local draw data</strong> — not follower counts. Artists get consistent bookings. Venues get guaranteed crowds. Everyone wins.</p>
       <div class="hero-proof" style="display:flex;gap:1.5rem;margin-bottom:2rem;flex-wrap:wrap">
         <div style="display:flex;align-items:center;gap:6px;font-size:0.8rem;color:var(--ink-mid)"><span style="color:var(--green);font-weight:600">✓</span> Free for artists to join</div>
-        <div style="display:flex;align-items:center;gap:6px;font-size:0.8rem;color:var(--ink-mid)"><span style="color:var(--green);font-weight:600">✓</span> Venues pay only when it works</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:0.8rem;color:var(--ink-mid)"><span style="color:var(--green);font-weight:600">✓</span> Venues pay only when confirmed</div>
         <div style="display:flex;align-items:center;gap:6px;font-size:0.8rem;color:var(--ink-mid)"><span style="color:var(--green);font-weight:600">✓</span> Response within 24h</div>
       </div>
-      <div class="hero-actions">
-        <button class="btn-primary" onclick="openApply()">I'm an artist — get booked →</button>
-        <button class="btn-secondary" onclick="showPage('artists')">I need talent — browse roster</button>
+      <!-- Dual CTA row -->
+      <div style="display:flex;flex-direction:column;gap:0.75rem">
+        <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center">
+          <span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--ink-light);white-space:nowrap;min-width:72px">Artists</span>
+          <button class="btn-primary" onclick="openApply()" style="flex:1;min-width:200px;text-align:center">Apply to get booked →</button>
+        </div>
+        <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center">
+          <span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--ink-light);white-space:nowrap;min-width:72px">Venues</span>
+          <button class="btn-secondary" onclick="showPage('artists')" style="flex:1;min-width:200px;text-align:center">Browse the roster →</button>
+        </div>
       </div>
     </div>
     <div class="hero-visual">
@@ -594,7 +603,8 @@
           </svg>
           <div style="text-align:center">
             <div class="score-ring-num">84</div>
-            <div class="score-ring-label">LocalScore™</div>
+            <div class="score-ring-label">LocalScore™ <span id="score-tooltip-trigger" style="cursor:pointer;font-size:0.6rem;color:var(--green);border:1px solid var(--green);border-radius:50%;width:12px;height:12px;display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;margin-left:2px" onclick="document.getElementById('score-tooltip').style.display=document.getElementById('score-tooltip').style.display==='none'?'block':'none'">?</span></div>
+            <div id="score-tooltip" style="display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--ink);color:white;font-size:0.7rem;line-height:1.5;padding:8px 12px;border-radius:10px;white-space:nowrap;z-index:10;box-shadow:0 4px 16px rgba(0,0,0,0.2)">Measures real local draw:<br>followers · engagement · verified attendance<br><span style="color:#5dcaa5">Higher = more people at the show.</span></div>
           </div>
         </div>
         <div class="score-metrics">
@@ -659,26 +669,70 @@
   <div class="score-inner">
     <div class="section-label">LocalScore™</div>
     <h2 class="section-title">The only metric venues actually care about.</h2>
+
+    <!-- Intro text — full width above the grid -->
+    <div style="max-width:640px;margin-bottom:3rem">
+      <p style="font-size:1rem;color:var(--ink-mid);line-height:1.8;margin-bottom:0.75rem">Streaming numbers lie. Follower counts lie. Even "viral" moments don't translate to bodies in a bar on a Thursday night in Mississauga.</p>
+      <p style="font-size:1rem;color:var(--ink-mid);line-height:1.8">LocalScore™ is built to answer one question: <strong style="color:var(--ink)">if this artist plays your venue, how many people will actually show up?</strong></p>
+    </div>
+
     <div class="score-explain-grid fade-up">
+      <!-- Left: bars -->
       <div class="score-bars">
-        <div class="score-bar-item"><div class="score-bar-header"><span class="score-bar-name">Local follower concentration</span><span class="score-bar-val">35%</span></div><div class="score-bar-track"><div class="score-bar-fill" style="width:35%"></div></div></div>
-        <div class="score-bar-item"><div class="score-bar-header"><span class="score-bar-name">Instagram engagement rate</span><span class="score-bar-val">25%</span></div><div class="score-bar-track"><div class="score-bar-fill" style="width:25%"></div></div></div>
-        <div class="score-bar-item"><div class="score-bar-header"><span class="score-bar-name">Avg. show attendance (verified)</span><span class="score-bar-val">25%</span></div><div class="score-bar-track"><div class="score-bar-fill" style="width:25%"></div></div></div>
-        <div class="score-bar-item"><div class="score-bar-header"><span class="score-bar-name">Reliability & professionalism</span><span class="score-bar-val">15%</span></div><div class="score-bar-track"><div class="score-bar-fill" style="width:15%"></div></div></div>
-        <div style="margin-top:1.5rem;padding:1.25rem;background:var(--green-light);border-radius:12px;">
-          <div style="font-size:0.8rem;font-weight:500;color:var(--green);margin-bottom:4px">Minimum threshold</div>
-          <div style="font-size:0.85rem;color:var(--ink-mid);line-height:1.6">Artists must score 60+ to enter the roster and 75+ to be pitched for premium venue slots.</div>
+        <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;color:var(--ink-light);margin-bottom:1.25rem">How the score is weighted</div>
+
+        <!-- Bar widths are relative to largest (35% = 100%), so bars look full and meaningful -->
+        <div class="score-bar-item">
+          <div class="score-bar-header"><span class="score-bar-name">Local follower concentration</span><span class="score-bar-val">35%</span></div>
+          <div class="score-bar-track"><div class="score-bar-fill" style="width:100%"></div></div>
+        </div>
+        <div class="score-bar-item">
+          <div class="score-bar-header"><span class="score-bar-name">Instagram engagement rate</span><span class="score-bar-val">25%</span></div>
+          <div class="score-bar-track"><div class="score-bar-fill" style="width:71%"></div></div>
+        </div>
+        <div class="score-bar-item">
+          <div class="score-bar-header"><span class="score-bar-name">Avg. show attendance (verified)</span><span class="score-bar-val">25%</span></div>
+          <div class="score-bar-track"><div class="score-bar-fill" style="width:71%"></div></div>
+        </div>
+        <div class="score-bar-item">
+          <div class="score-bar-header"><span class="score-bar-name">Reliability &amp; professionalism</span><span class="score-bar-val">15%</span></div>
+          <div class="score-bar-track"><div class="score-bar-fill" style="width:43%"></div></div>
+        </div>
+
+        <div style="margin-top:2rem;padding:1.25rem;background:var(--green-light);border-radius:12px;border-left:3px solid var(--green)">
+          <div style="font-size:0.78rem;font-weight:600;color:var(--green);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.8px">Minimum threshold</div>
+          <div style="font-size:0.875rem;color:var(--ink-mid);line-height:1.65">Artists must score <strong>60+</strong> to enter the roster and <strong>75+</strong> to be pitched for premium venue slots.</div>
         </div>
       </div>
+
+      <!-- Right: factor cards -->
       <div class="score-text-side">
-        <p>Streaming numbers lie. Instagram follower counts lie. Even "viral" moments don't translate to bodies in a bar on a Thursday night in Mississauga.</p>
-        <p>LocalScore™ is built from the ground up to answer one question: <strong>if this artist plays your venue, how many people will show up?</strong></p>
-        <p>We verify attendance numbers through venue managers and Facebook event RSVPs, weight followers by location, and factor in whether an artist shows up prepared, on time, and ready to perform.</p>
+        <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;color:var(--ink-light);margin-bottom:1.25rem">What goes into it</div>
         <div class="score-factors">
-          <div class="score-factor"><div class="score-factor-icon">📍</div><div class="score-factor-name">Local reach</div><div class="score-factor-desc">Follower location data, not just total count</div></div>
-          <div class="score-factor"><div class="score-factor-icon">💬</div><div class="score-factor-name">Real engagement</div><div class="score-factor-desc">Comments + shares, not passive likes</div></div>
-          <div class="score-factor"><div class="score-factor-icon">🎪</div><div class="score-factor-name">Verified draw</div><div class="score-factor-desc">Cross-checked with venues & event pages</div></div>
-          <div class="score-factor"><div class="score-factor-icon">⭐</div><div class="score-factor-name">Reliability score</div><div class="score-factor-desc">Punctuality, professionalism, repeat bookings</div></div>
+          <div class="score-factor">
+            <div class="score-factor-icon">📍</div>
+            <div class="score-factor-name">Local reach</div>
+            <div class="score-factor-desc">Follower location data, not just total count</div>
+          </div>
+          <div class="score-factor">
+            <div class="score-factor-icon">💬</div>
+            <div class="score-factor-name">Real engagement</div>
+            <div class="score-factor-desc">Comments + shares, not passive likes</div>
+          </div>
+          <div class="score-factor">
+            <div class="score-factor-icon">🎪</div>
+            <div class="score-factor-name">Verified draw</div>
+            <div class="score-factor-desc">Cross-checked with venues &amp; event pages</div>
+          </div>
+          <div class="score-factor">
+            <div class="score-factor-icon">⭐</div>
+            <div class="score-factor-name">Reliability score</div>
+            <div class="score-factor-desc">Punctuality, professionalism, repeat bookings</div>
+          </div>
+        </div>
+
+        <div style="margin-top:1.75rem;padding:1.25rem;background:var(--cream);border-radius:12px;font-size:0.875rem;color:var(--ink-mid);line-height:1.7">
+          We verify attendance numbers through venue managers and Facebook event RSVPs, weight followers by location, and factor in whether an artist shows up prepared, on time, and ready to perform.
         </div>
       </div>
     </div>
@@ -743,6 +797,7 @@
         <div class="pricing-name" style="color:white">Per booking</div>
         <div class="pricing-price">$75–150</div>
         <div class="pricing-freq">flat coordination fee per confirmed booking</div>
+        <div style="background:rgba(255,255,255,0.08);border-radius:10px;padding:10px 12px;margin:0.75rem 0;font-size:0.78rem;color:#9a9a90;line-height:1.6"><strong style="color:#5dcaa5">Artist fee note:</strong> This is LocalStage's fee only. Artists set their own rates — typically <strong style="color:white">$150–600/show</strong>. You negotiate directly with the artist after we confirm availability.</div>
         <ul class="pricing-feats">
           <li>Browse our full vetted roster</li>
           <li>Request your artist & preferred date</li>
@@ -775,20 +830,80 @@
     <div class="testimonials-grid fade-up">
       <div class="testimonial">
         <div class="testimonial-stars">★★★★★</div>
-        <div class="testimonial-quote">"We'd been burned before by artists who promised a crowd and brought their mom. LocalStage showed us the numbers upfront — the artist brought 70 people on a Wednesday. We rebooked immediately."</div>
-        <div class="testimonial-author"><div class="testimonial-avatar">DK</div><div><div class="t-name">Dan K.</div><div class="t-role">Owner, The Railyard — Mississauga</div></div></div>
+        <div class="testimonial-quote">"We'd been burned before by artists who promised a crowd and brought their mom. LocalStage showed us verified numbers upfront — Maya brought 70 people on a Wednesday night. We rebooked her within 48 hours."</div>
+        <div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#667eea,#764ba2)">DK</div><div><div class="t-name">Dan K., Owner</div><div class="t-role">The Railyard Bar &amp; Grill, Mississauga</div></div></div>
       </div>
       <div class="testimonial">
         <div class="testimonial-stars">★★★★★</div>
-        <div class="testimonial-quote">"I'd been cold-emailing venues for two years with no response. LocalStage got me three bookings in six weeks. I finally feel like my career is actually moving."</div>
-        <div class="testimonial-author"><div class="testimonial-avatar">JA</div><div><div class="t-name">Jade A.</div><div class="t-role">R&B artist, Brampton ON</div></div></div>
+        <div class="testimonial-quote">"I'd been cold-emailing venues for two years with zero responses. LocalStage got me three paid bookings in six weeks — The Dock, Rec Room, and a private corporate event in Oakville. My career is finally moving."</div>
+        <div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#f093fb,#f5576c)">JA</div><div><div class="t-name">Jade A., R&amp;B Artist</div><div class="t-role">Brampton, ON · LocalScore 79</div></div></div>
       </div>
       <div class="testimonial">
         <div class="testimonial-stars">★★★★★</div>
-        <div class="testimonial-quote">"We run a quarterly community event and needed local openers. LocalStage matched us with two artists perfectly — same vibe, same audience. Effortless."</div>
-        <div class="testimonial-author"><div class="testimonial-avatar">PR</div><div><div class="t-name">Priya R.</div><div class="t-role">Event organizer, Hamilton</div></div></div>
+        <div class="testimonial-quote">"We run the Westdale Community Fair every quarter and needed reliable local openers on a tight budget. LocalStage matched us with two artists who fit the vibe perfectly. 300 people showed up. We're using them for every event now."</div>
+        <div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#4facfe,#00f2fe)">PR</div><div><div class="t-name">Priya R., Event Coordinator</div><div class="t-role">Westdale Community Fair, Hamilton</div></div></div>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="section" style="background:var(--cream-dark)" id="faq">
+  <div class="section-inner">
+    <div class="section-label">Common questions</div>
+    <h2 class="section-title">You probably have these.</h2>
+    <div style="max-width:720px;margin-top:2.5rem" id="faq-list">
+
+      <div class="faq-item" onclick="toggleFaq(this)" style="background:var(--white);border-radius:14px;padding:1.25rem 1.5rem;margin-bottom:10px;cursor:pointer;border:1.5px solid var(--cream-dark);transition:border-color 0.2s">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem">
+          <div style="font-weight:500;font-size:0.95rem;color:var(--ink)">How long does approval take?</div>
+          <span class="faq-chevron" style="color:var(--green);font-size:1.1rem;flex-shrink:0;transition:transform 0.2s">+</span>
+        </div>
+        <div class="faq-answer" style="display:none;margin-top:0.75rem;font-size:0.875rem;color:var(--ink-mid);line-height:1.75">We review every application personally, usually within 3–5 business days. You'll get an email either way — if approved, your profile goes live and we start pitching you to matched venues immediately. If we can't approve you yet, we'll tell you why and what to work on.</div>
+      </div>
+
+      <div class="faq-item" onclick="toggleFaq(this)" style="background:var(--white);border-radius:14px;padding:1.25rem 1.5rem;margin-bottom:10px;cursor:pointer;border:1.5px solid var(--cream-dark);transition:border-color 0.2s">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem">
+          <div style="font-weight:500;font-size:0.95rem;color:var(--ink)">What happens if the artist cancels?</div>
+          <span class="faq-chevron" style="color:var(--green);font-size:1.1rem;flex-shrink:0;transition:transform 0.2s">+</span>
+        </div>
+        <div class="faq-answer" style="display:none;margin-top:0.75rem;font-size:0.875rem;color:var(--ink-mid);line-height:1.75">Artist cancellations are rare — every artist on our roster commits to strict reliability standards. If a cancellation does happen with 7+ days to go, we find a replacement within 48 hours at no extra cost. Under 7 days, the artist is liable for a documented penalty fee and you receive a full refund of the coordination fee.</div>
+      </div>
+
+      <div class="faq-item" onclick="toggleFaq(this)" style="background:var(--white);border-radius:14px;padding:1.25rem 1.5rem;margin-bottom:10px;cursor:pointer;border:1.5px solid var(--cream-dark);transition:border-color 0.2s">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem">
+          <div style="font-weight:500;font-size:0.95rem;color:var(--ink)">How much do artists actually charge?</div>
+          <span class="faq-chevron" style="color:var(--green);font-size:1.1rem;flex-shrink:0;transition:transform 0.2s">+</span>
+        </div>
+        <div class="faq-answer" style="display:none;margin-top:0.75rem;font-size:0.875rem;color:var(--ink-mid);line-height:1.75">Artists set their own performance fees — LocalStage's $75–150 coordination fee is completely separate. Most emerging artists on our roster charge between $150–600 per show depending on set length, draw, and event type. You'll agree on the artist's rate directly before anything is confirmed. We recommend confirming it in writing.</div>
+      </div>
+
+      <div class="faq-item" onclick="toggleFaq(this)" style="background:var(--white);border-radius:14px;padding:1.25rem 1.5rem;margin-bottom:10px;cursor:pointer;border:1.5px solid var(--cream-dark);transition:border-color 0.2s">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem">
+          <div style="font-weight:500;font-size:0.95rem;color:var(--ink)">Can I contact an artist directly after booking?</div>
+          <span class="faq-chevron" style="color:var(--green);font-size:1.1rem;flex-shrink:0;transition:transform 0.2s">+</span>
+        </div>
+        <div class="faq-answer" style="display:none;margin-top:0.75rem;font-size:0.875rem;color:var(--ink-mid);line-height:1.75">Yes — once a booking is confirmed, we share the artist's contact details so you can coordinate logistics directly (load-in time, sound check, etc.). We stay in the loop. What you can't do is re-book an artist you met through LocalStage outside the platform for 12 months — that's how we keep the lights on and keep artists' fees fair.</div>
+      </div>
+
+      <div class="faq-item" onclick="toggleFaq(this)" style="background:var(--white);border-radius:14px;padding:1.25rem 1.5rem;margin-bottom:10px;cursor:pointer;border:1.5px solid var(--cream-dark);transition:border-color 0.2s">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem">
+          <div style="font-weight:500;font-size:0.95rem;color:var(--ink)">I'm an artist. Do I need a manager or agent?</div>
+          <span class="faq-chevron" style="color:var(--green);font-size:1.1rem;flex-shrink:0;transition:transform 0.2s">+</span>
+        </div>
+        <div class="faq-answer" style="display:none;margin-top:0.75rem;font-size:0.875rem;color:var(--ink-mid);line-height:1.75">No. That's literally the point. LocalStage is built for emerging artists who don't have representation. If you have a genuine local following — even 200+ engaged fans — and you've performed live before, you're exactly who we're looking for. You apply, we review, and if you're a fit, we start pitching you immediately.</div>
+      </div>
+
+      <div class="faq-item" onclick="toggleFaq(this)" style="background:var(--white);border-radius:14px;padding:1.25rem 1.5rem;margin-bottom:10px;cursor:pointer;border:1.5px solid var(--cream-dark);transition:border-color 0.2s">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem">
+          <div style="font-weight:500;font-size:0.95rem;color:var(--ink)">What if the venue ghosts or doesn't pay?</div>
+          <span class="faq-chevron" style="color:var(--green);font-size:1.1rem;flex-shrink:0;transition:transform 0.2s">+</span>
+        </div>
+        <div class="faq-answer" style="display:none;margin-top:0.75rem;font-size:0.875rem;color:var(--ink-mid);line-height:1.75">Every venue on the platform has been verified. We document every booking in writing. If a venue fails to pay an artist's agreed fee, we flag them immediately, suspend their account, and help the artist pursue the amount. LocalStage doesn't take a cut of your performance fee — so we have no incentive to side with the venue.</div>
+      </div>
+
+    </div>
+    <div style="margin-top:1.5rem;font-size:0.875rem;color:var(--ink-light)">Still have a question? <a href="mailto:localstagerisingstars@gmail.com" style="color:var(--green);text-decoration:none;font-weight:500">Email us →</a></div>
   </div>
 </section>
 
@@ -815,7 +930,7 @@
     </div>
     <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap">
       <a href="mailto:localstagerisingstars@gmail.com" style="display:inline-flex;align-items:center;gap:8px;color:var(--ink);text-decoration:none;font-size:0.875rem;font-weight:500;padding:0.7rem 1.4rem;border:1.5px solid var(--cream-dark);border-radius:100px;transition:border-color 0.2s,color 0.2s" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'" onmouseout="this.style.borderColor='var(--cream-dark)';this.style.color='var(--ink)'">📧 localstagerisingstars@gmail.com</a>
-      <a href="https://instagram.com/localstage" target="_blank" style="display:inline-flex;align-items:center;gap:8px;color:var(--ink);text-decoration:none;font-size:0.875rem;font-weight:500;padding:0.7rem 1.4rem;border:1.5px solid var(--cream-dark);border-radius:100px;transition:border-color 0.2s,color 0.2s" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'" onmouseout="this.style.borderColor='var(--cream-dark)';this.style.color='var(--ink)'">📸 @localstage</a>
+      <a href="https://www.instagram.com/local.stage/" target="_blank" style="display:inline-flex;align-items:center;gap:8px;color:var(--ink);text-decoration:none;font-size:0.875rem;font-weight:500;padding:0.7rem 1.4rem;border:1.5px solid var(--cream-dark);border-radius:100px;transition:border-color 0.2s,color 0.2s" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'" onmouseout="this.style.borderColor='var(--cream-dark)';this.style.color='var(--ink)'">📸 (1) Instagram</a>
       <div style="font-size:0.8rem;color:var(--ink-light);display:flex;align-items:center;gap:5px"><span style="color:var(--green);font-weight:600">&#10003;</span> Reply within 24h</div>
     </div>
   </div>
@@ -824,10 +939,10 @@
 <footer>
   <div class="footer-logo">Local<span>Stage</span></div>
   <div style="text-align:center">
-    <div class="footer-copy">&copy; 2025 LocalStage &middot; Ontario, Canada</div>
+    <div class="footer-copy">&copy; 2026 LocalStage &middot; Ontario, Canada</div>
     <div style="display:flex;gap:1rem;justify-content:center;margin-top:6px;flex-wrap:wrap">
       <a href="mailto:localstagerisingstars@gmail.com" style="font-size:0.78rem;color:#5dcaa5;text-decoration:none" onmouseover="this.style.color='white'" onmouseout="this.style.color='#5dcaa5'">📧 localstagerisingstars@gmail.com</a>
-      <a href="https://instagram.com/localstage" target="_blank" style="font-size:0.78rem;color:#5a5a50;text-decoration:none" onmouseover="this.style.color='#5dcaa5'" onmouseout="this.style.color='#5a5a50'">📸 @localstage</a>
+      <a href="https://www.instagram.com/local.stage/" target="_blank" style="font-size:0.78rem;color:#5a5a50;text-decoration:none" onmouseover="this.style.color='#5dcaa5'" onmouseout="this.style.color='#5a5a50'">📸 (1) Instagram</a>
       <span style="font-size:0.78rem;color:#5a5a50">📍 GTA &middot; Hamilton &middot; Ontario</span>
     </div>
   </div>
@@ -876,6 +991,7 @@
           <div class="pricing-name" style="color:white">Per booking</div>
           <div class="pricing-price">$75–150</div>
           <div class="pricing-freq">flat coordination fee per match</div>
+          <div style="background:rgba(255,255,255,0.08);border-radius:10px;padding:10px 12px;margin:0.75rem 0;font-size:0.78rem;color:#9a9a90;line-height:1.6"><strong style="color:#5dcaa5">Artist fee note:</strong> This is LocalStage's coordination fee only. Artists set their own rates — typically <strong style="color:white">$150–600/show</strong>. You negotiate directly with the artist after we confirm availability.</div>
           <ul class="pricing-feats">
             <li>Browse our full vetted roster freely</li>
             <li>Request your artist & preferred date</li>
@@ -909,7 +1025,7 @@
   </section>
   <footer>
     <div class="footer-logo">Local<span>Stage</span></div>
-    <div class="footer-copy">© 2025 LocalStage · Ontario, Canada</div>
+    <div class="footer-copy">© 2026 LocalStage · Ontario, Canada</div>
     <div class="footer-links">
       <a onclick="showPage('home')">Home</a>
       <a onclick="showPage('artists')">Artists</a>
@@ -1024,7 +1140,7 @@
 
   <footer>
     <div class="footer-logo">Local<span>Stage</span></div>
-    <div class="footer-copy">© 2025 LocalStage · Ontario, Canada</div>
+    <div class="footer-copy">© 2026 LocalStage · Ontario, Canada</div>
     <div class="footer-links">
       <a onclick="showPage('home')">Home</a>
       <a onclick="showPage('booking')">Book Now</a>
@@ -1062,7 +1178,7 @@
 
   <footer>
     <div class="footer-logo">Local<span>Stage</span></div>
-    <div class="footer-copy">© 2025 LocalStage · Ontario, Canada</div>
+    <div class="footer-copy">© 2026 LocalStage · Ontario, Canada</div>
     <div class="footer-links">
       <a onclick="showPage('home')">Home</a>
       <a onclick="showPage('artists')">Artists</a>
@@ -1079,7 +1195,10 @@
     <div class="apply-back" onclick="showPage('home')">← Back to home</div>
     <div class="apply-header">
       <h1>Join LocalStage</h1>
-      <p>Whether you're an emerging artist ready to start booking paid shows, or a business looking for local talent — start here. Takes about 5 minutes.</p>
+      <p>Whether you're an emerging artist ready to start booking paid shows, or a business looking for local talent — start here.</p>
+      <div style="display:inline-flex;align-items:center;gap:10px;margin-top:1rem;background:var(--green-light);border-radius:100px;padding:8px 18px">
+        <span style="font-size:0.82rem;color:var(--green-mid)">⏱ Takes about <strong>5 minutes</strong> &nbsp;·&nbsp; 3 steps &nbsp;·&nbsp; No payment required</span>
+      </div>
     </div>
 
     <div class="apply-card">
@@ -1133,20 +1252,20 @@
           <div class="form-field"><label class="form-label">Province *</label><select class="form-input form-select" id="a-province"><option value="">Select</option><option>Ontario</option><option>Quebec</option><option>British Columbia</option><option>Alberta</option></select></div>
         </div>
         <div class="form-field"><label class="form-label">Cities willing to perform in * <span style="font-weight:400;color:var(--ink-light)">(select all that apply)</span></label>
-          <select class="form-input form-select" id="a-travel" multiple size="6" style="height:auto;border-radius:12px">
-            <option value="mississauga">Mississauga</option>
-            <option value="toronto">Toronto</option>
-            <option value="brampton">Brampton</option>
-            <option value="hamilton">Hamilton</option>
-            <option value="oakville">Oakville / Burlington</option>
-            <option value="scarborough">Scarborough</option>
-            <option value="etobicoke">Etobicoke</option>
-            <option value="markham">Markham / Richmond Hill</option>
-            <option value="oshawa">Oshawa / Durham Region</option>
-            <option value="guelph">Guelph / Kitchener</option>
-            <option value="anywhere">Anywhere in Ontario</option>
-          </select>
-          <div class="form-hint">Hold Ctrl (Windows) or Cmd (Mac) to select multiple cities.</div>
+          <div id="a-travel-chips" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">
+            <label class="platform-chip" id="travel-mississauga"><input type="checkbox" value="mississauga"><span>Mississauga</span></label>
+            <label class="platform-chip" id="travel-toronto"><input type="checkbox" value="toronto"><span>Toronto</span></label>
+            <label class="platform-chip" id="travel-brampton"><input type="checkbox" value="brampton"><span>Brampton</span></label>
+            <label class="platform-chip" id="travel-hamilton"><input type="checkbox" value="hamilton"><span>Hamilton</span></label>
+            <label class="platform-chip" id="travel-oakville"><input type="checkbox" value="oakville"><span>Oakville / Burlington</span></label>
+            <label class="platform-chip" id="travel-scarborough"><input type="checkbox" value="scarborough"><span>Scarborough</span></label>
+            <label class="platform-chip" id="travel-etobicoke"><input type="checkbox" value="etobicoke"><span>Etobicoke</span></label>
+            <label class="platform-chip" id="travel-markham"><input type="checkbox" value="markham"><span>Markham / Richmond Hill</span></label>
+            <label class="platform-chip" id="travel-oshawa"><input type="checkbox" value="oshawa"><span>Oshawa / Durham</span></label>
+            <label class="platform-chip" id="travel-guelph"><input type="checkbox" value="guelph"><span>Guelph / Kitchener</span></label>
+            <label class="platform-chip" id="travel-anywhere"><input type="checkbox" value="anywhere"><span>Anywhere in Ontario</span></label>
+          </div>
+          <div class="form-hint" style="margin-top:6px">Tap to select the cities you're willing to travel to.</div>
         </div>
 
         <div class="form-section-title">Your music</div>
@@ -1300,6 +1419,9 @@
     <div class="login-step active" id="login-step-email">
       <div class="modal-title">Sign in to LocalStage.</div>
       <div class="modal-sub">Enter your email address. We'll generate a one-time code — no password needed.</div>
+      <div style="background:#fff8e1;border:1.5px solid #f4b400;border-radius:12px;padding:10px 14px;font-size:0.8rem;color:#7a6000;margin-bottom:1.25rem;line-height:1.6">
+        <strong>New here?</strong> Sign in only works once you've been approved. <span style="color:var(--green);cursor:pointer;font-weight:500;text-decoration:underline" onclick="closeModal('modal-login');openApply()">Apply first →</span>
+      </div>
       <div class="form-field">
         <label class="form-label">Email address</label>
         <input class="form-input" type="email" id="login-email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')sendCode()">
@@ -1443,6 +1565,10 @@
         <input type="checkbox" id="tc-agree-box" style="margin-top:3px;accent-color:var(--green)">
         <span>I have read and agree to the LocalStage Terms &amp; Conditions, including all policies regarding cancellations, liability, and platform use.</span>
       </label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:0.825rem;color:var(--ink-mid);cursor:pointer;margin-top:10px;padding:10px 12px;background:var(--green-light);border-radius:10px;border:1.5px solid #b2dfc9">
+        <input type="checkbox" id="tc-esign-box" style="margin-top:3px;accent-color:var(--green);flex-shrink:0">
+        <span><strong style="color:var(--green-mid)">I have signed electronically.</strong> I understand that my drawn signature above, together with my name and the timestamp of submission, constitutes a valid electronic signature under Ontario law and is legally equivalent to a handwritten signature.</span>
+      </label>
       <button id="tc-accept-btn" onclick="acceptTerms()" style="margin-top:1rem;width:100%;padding:0.85rem;border-radius:100px;background:var(--ink);color:white;font-family:var(--sans);font-size:0.95rem;font-weight:500;border:none;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='var(--green)'" onmouseout="this.style.background='var(--ink)'">Accept &amp; Sign →</button>
     </div>
   </div>
@@ -1527,6 +1653,28 @@ function scrollTo(hash) {
 }
 
 // ════════════════════════════════
+// FAQ ACCORDION
+// ════════════════════════════════
+function toggleFaq(item) {
+  const answer = item.querySelector('.faq-answer');
+  const chevron = item.querySelector('.faq-chevron');
+  const isOpen = answer.style.display === 'block';
+  // Close all
+  document.querySelectorAll('.faq-item').forEach(i => {
+    i.querySelector('.faq-answer').style.display = 'none';
+    i.querySelector('.faq-chevron').textContent = '+';
+    i.querySelector('.faq-chevron').style.transform = 'rotate(0deg)';
+    i.style.borderColor = 'var(--cream-dark)';
+  });
+  if (!isOpen) {
+    answer.style.display = 'block';
+    chevron.textContent = '×';
+    chevron.style.transform = 'rotate(0deg)';
+    item.style.borderColor = 'var(--green)';
+  }
+}
+
+// ════════════════════════════════
 // MOBILE MENU
 // ════════════════════════════════
 function toggleMobileMenu() {
@@ -1566,6 +1714,9 @@ function updateNavAuth() {
 
 function signOut() {
   currentUser = null;
+  // Reset email whitelist cache so a fresh fetch happens on next login attempt
+  approvedEmails = null;
+  sheetLoadFailed = false;
   updateNavAuth();
   renderBookingPage();
 }
@@ -1751,6 +1902,10 @@ function verifyCode() {
     document.querySelectorAll('.login-step').forEach(s => s.classList.remove('active'));
     document.getElementById('login-step-success').classList.add('active');
     renderBookingPage();
+    // If user was mid-booking-flow, auto-redirect after brief success screen
+    if (pendingBookArtistId) {
+      setTimeout(() => { closeModal('modal-login'); showPage('booking'); }, 1400);
+    }
   } else {
     document.getElementById('code-error').style.display='block';
     for (let i=0;i<6;i++) { document.getElementById('code-'+i).value=''; }
@@ -1794,6 +1949,7 @@ function renderGrid(containerId, artists, genreFilter, cityFilter) {
         <div class="artist-card-location">📍 ${a.city} · ~${a.draw} avg. draw</div>
         <div style="margin-top:8px;display:flex;gap:6px">
           <button style="flex:1;padding:5px 8px;background:var(--cream);color:var(--ink-mid);border:1px solid var(--cream-dark);border-radius:100px;font-family:var(--sans);font-size:0.7rem;cursor:pointer" onclick="openArtistProfile(${a.id})">▶ View profile</button>
+          ${a.spotify ? `<a href="${a.spotify}" target="_blank" style="flex:1;padding:5px 8px;background:#1DB954;color:white;border:none;border-radius:100px;font-family:var(--sans);font-size:0.7rem;cursor:pointer;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:4px">🎵 Listen</a>` : ''}
         </div>
         <button style="margin-top:6px;width:100%;padding:7px;background:var(--ink);color:white;border:none;border-radius:100px;font-family:var(--sans);font-size:0.78rem;font-weight:500;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='var(--green)'" onmouseout="this.style.background='var(--ink)'" onclick="bookArtist(${a.id})">Book ${a.name.split(' ')[0]} →</button>
       </div>
@@ -2476,7 +2632,8 @@ function setupPlatformCheckboxes() {
       const cb = chip.querySelector('input');
       cb.checked = !cb.checked;
       chip.classList.toggle('checked', cb.checked);
-      updateSocialFields();
+      // Only trigger social fields update for platform grid chips
+      if (chip.closest('#platform-grid-artist')) updateSocialFields();
     });
   });
 }
@@ -2523,8 +2680,8 @@ function buildReviewBox() {
     const genre = document.getElementById('a-genre').value || '—';
     const draw = document.getElementById('a-draw').value || '—';
     const platforms = Array.from(document.querySelectorAll('#platform-grid-artist .platform-chip.checked input')).map(i=>i.value).join(', ') || '—';
-    const travelEl = document.getElementById('a-travel');
-    const travel = travelEl ? Array.from(travelEl.selectedOptions).map(o=>o.text).join(', ') || '—' : '—';
+    const travelEl = document.getElementById('a-travel-chips');
+    const travel = travelEl ? Array.from(travelEl.querySelectorAll('input:checked')).map(i=>i.value).join(', ') || '—' : '—';
     box.innerHTML = `<strong>Artist Application</strong><br>
       Name: ${first} ${last}<br>Email: ${email}<br>Date of birth: ${dob}<br>City: ${city}<br>
       Genre: ${genre}<br>Avg. draw: ${draw}<br>Platforms: ${platforms}<br>Willing to perform in: ${travel}`;
@@ -2567,8 +2724,8 @@ async function submitApply() {
   let templateParams = {};
 
   if (selectedType === 'artist') {
-    const travelEl = document.getElementById('a-travel');
-    const cities = travelEl ? Array.from(travelEl.selectedOptions).map(o => o.text).join(', ') : '—';
+    const travelEl = document.getElementById('a-travel-chips');
+    const cities = travelEl ? Array.from(travelEl.querySelectorAll('input:checked')).map(i => i.value).join(', ') : '—';
     const platforms = Array.from(document.querySelectorAll('#platform-grid-artist .platform-chip.checked input')).map(i => i.value).join(', ') || '—';
 
     templateParams = {
@@ -2692,6 +2849,8 @@ function openTermsModal() {
   document.getElementById('tc-modal-title').innerHTML = title;
   document.getElementById('tc-content').innerHTML = content;
   document.getElementById('tc-agree-box').checked = false;
+  const esignBox = document.getElementById('tc-esign-box');
+  if (esignBox) esignBox.checked = false;
   clearSignature();
   document.getElementById('modal-terms').classList.add('open');
   // Scroll T&C content to top
@@ -2757,6 +2916,10 @@ function acceptTerms() {
     alert('Please check the agreement box to confirm you have read the Terms.');
     return;
   }
+  if (!document.getElementById('tc-esign-box').checked) {
+    alert('Please confirm that you have signed electronically.');
+    return;
+  }
   termsAccepted = true;
   closeModal('modal-terms');
   // Update the apply page UI
@@ -2802,6 +2965,11 @@ let pendingBookArtistId = null;
 
 function bookArtist(id) {
   pendingBookArtistId = id;
+  if (!currentUser) {
+    // Store the pending artist and prompt login instead of a hard wall
+    openLogin();
+    return;
+  }
   showPage('booking');
 }
 
