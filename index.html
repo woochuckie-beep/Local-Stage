@@ -629,10 +629,10 @@
 <!-- STATS BAR -->
 <div class="stats-bar">
   <div class="stats-inner">
-    <div class="stat"><div class="stat-num">12</div><div class="stat-label">Artists on roster</div></div>
-    <div class="stat"><div class="stat-num">40<span>+</span></div><div class="stat-label">Venues served</div></div>
-    <div class="stat"><div class="stat-num">24h</div><div class="stat-label">Response time</div></div>
+    <div class="stat"><div class="stat-num">12</div><div class="stat-label">Vetted artists on roster</div></div>
+    <div class="stat"><div class="stat-num">24h</div><div class="stat-label">Booking response time</div></div>
     <div class="stat"><div class="stat-num">100<span>%</span></div><div class="stat-label">GTA-local artists</div></div>
+    <div class="stat"><div class="stat-num">0<span>$</span></div><div class="stat-label">Cost for artists to join</div></div>
   </div>
 </div>
 
@@ -655,6 +655,20 @@
         <div class="pain-item"><div class="pain-icon amber">⚠️</div><div><div class="pain-text-title">Existing platforms don't solve local</div><div class="pain-text-body">Bandcamp, SoundCloud, SubmitHub — none of them care about whether you can fill a room in Brampton on a Friday.</div></div></div>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- MARKET DIFFERENTIATION -->
+<section class="section" style="background:var(--white)" id="differentiation">
+  <div class="section-inner">
+    <div class="section-label">Why not just use existing options?</div>
+    <h2 class="section-title">Ontario's scene already has networks.<br>Here's what's missing.</h2>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:2.5rem" class="fade-up">
+      <div style="background:var(--cream);border-radius:16px;padding:1.75rem"><div style="font-size:1.4rem;margin-bottom:0.75rem">📱</div><div style="font-weight:600;font-size:0.95rem;color:var(--ink);margin-bottom:0.5rem">Facebook &amp; WhatsApp groups</div><div style="font-size:0.85rem;color:var(--ink-light);line-height:1.7">Existing informal networks work on relationships and referrals. If you're new — as an artist or a venue — there's no door in. No data. No verification. Just hope someone vouches for you.</div></div>
+      <div style="background:var(--cream);border-radius:16px;padding:1.75rem"><div style="font-size:1.4rem;margin-bottom:0.75rem">🎵</div><div style="font-weight:600;font-size:0.95rem;color:var(--ink);margin-bottom:0.5rem">Bandcamp / SoundCloud / SubmitHub</div><div style="font-size:0.85rem;color:var(--ink-light);line-height:1.7">Great for online discovery. Zero value for booking a Friday night show in Brampton. They don't care whether an artist can fill a room, can't verify live draw, and have no venue coordination layer.</div></div>
+      <div style="background:var(--cream);border-radius:16px;padding:1.75rem"><div style="font-size:1.4rem;margin-bottom:0.75rem">🏢</div><div style="font-weight:600;font-size:0.95rem;color:var(--ink);margin-bottom:0.5rem">Toronto booking agencies</div><div style="font-size:0.85rem;color:var(--ink-light);line-height:1.7">Serve established acts. Not interested in emerging artists without a manager, press kit, or tour history. The emerging tier — with 200–3,000 local fans — falls through the cracks entirely.</div></div>
+    </div>
+    <div style="margin-top:2rem;padding:1.5rem 2rem;background:var(--green-light);border-radius:16px;border-left:4px solid var(--green);max-width:660px;font-size:0.9rem;color:var(--green-mid);line-height:1.75">LocalStage fills the gap between emerging artist and signed act — for Ontario's mid-market venues (50–300 cap) that want live music but can't access traditional booking infrastructure.</div>
   </div>
 </section>
 
@@ -741,6 +755,11 @@
         <div style="margin-top:1.75rem;padding:1.25rem;background:var(--cream);border-radius:12px;font-size:0.875rem;color:var(--ink-mid);line-height:1.7">
           We verify attendance numbers through venue managers and Facebook event RSVPs, weight followers by location, and factor in whether an artist shows up prepared, on time, and ready to perform.
         </div>
+
+        <div style="margin-top:1rem;padding:1rem 1.25rem;background:#fff8e1;border-radius:12px;border:1.5px dashed #f4b400;font-size:0.82rem;color:#7a6000;line-height:1.65">
+          <strong style="display:block;margin-bottom:4px">A note on our methodology</strong>
+          LocalStage is early-stage. Some attendance data is self-reported by artists and cross-referenced with venue managers and public event pages — not pulled from a real-time API. We're transparent about this. Scores will become more precise as we build more verified show history. Artists whose data we can't verify are flagged accordingly.
+        </div>
       </div>
     </div>
   </div>
@@ -761,6 +780,8 @@
           <li>Looking to build a consistent booking calendar</li>
           <li>Any genre: R&amp;B, indie, folk, hip-hop, jazz</li>
           <li>Based in GTA, Hamilton, or surrounding area</li>
+          <li>Access your profile view count and pitch history</li>
+          <li>See which venues have browsed your profile</li>
         </ul>
         <button class="btn-primary" style="margin-top:2rem" onclick="openApply()">Apply to join roster →</button>
       </div>
@@ -795,23 +816,25 @@
           <li>Artist profile + LocalScore™</li>
           <li>Pitching to matched venues</li>
           <li>Booking coordination support</li>
-          <li>No upfront cost ever</li>
+          <li>No upfront cost, ever</li>
+          <li>Profile analytics once active</li>
         </ul>
+        <button class="btn-primary" style="margin-top:1.5rem;width:100%" onclick="openApply()">Apply as artist →</button>
       </div>
       <div class="pricing-card featured">
         <div class="pricing-badge">Most popular</div>
         <div class="pricing-who">For venues</div>
         <div class="pricing-name" style="color:white">Per booking</div>
         <div class="pricing-price">$99</div>
-        <div class="pricing-freq">flat coordination fee per confirmed booking</div>
-        <div style="background:rgba(255,255,255,0.08);border-radius:10px;padding:10px 12px;margin:0.75rem 0;font-size:0.78rem;color:#9a9a90;line-height:1.6"><strong style="color:#5dcaa5">Artist fee note:</strong> This is LocalStage's fee only. Artists set their own rates — typically <strong style="color:white">$150–600/show</strong>. You negotiate directly with the artist after we confirm availability.</div>
+        <div class="pricing-freq">flat fee, per confirmed booking</div>
         <ul class="pricing-feats">
-          <li>Browse our full vetted roster</li>
-          <li>Request your artist & preferred date</li>
-          <li>We confirm availability within 24h</li>
+          <li>Full vetted roster access</li>
+          <li>Request artist + preferred date</li>
+          <li>Confirmed within 24h</li>
           <li>Full coordination & day-of follow-up</li>
-          <li>Pay only when booking is confirmed</li>
+          <li>Pay only when confirmed</li>
         </ul>
+        <button class="btn-primary" style="margin-top:1.5rem;width:100%;background:var(--green)" onclick="showPage('booking')">Book an artist →</button>
       </div>
       <div class="pricing-card">
         <div class="pricing-who">For events</div>
@@ -823,33 +846,46 @@
           <li>Full lineup coordination</li>
           <li>Genre &amp; vibe matching</li>
           <li>Ideal for markets, festivals, pop-ups</li>
+          <li>One flat fee, no surprises</li>
         </ul>
+        <button class="btn-primary" style="margin-top:1.5rem;width:100%" onclick="goToEventBooking()">Book an event →</button>
       </div>
+    </div>
+    <div style="margin-top:2rem;background:var(--white);border-radius:16px;padding:1.5rem 2rem;border:1px solid var(--cream-dark);font-size:0.875rem;color:var(--ink-mid);line-height:1.7;max-width:680px">
+      <strong style="color:var(--ink)">Artist fees are separate and set by each artist.</strong> LocalStage's fee covers coordination only — you agree the artist's rate directly with them before anything is confirmed. We recommend confirming all terms in writing.
     </div>
   </div>
 </section>
 
-<!-- TESTIMONIALS -->
+<!-- WHY LOCALSTAGE / EARLY STAGE TRUST SECTION -->
 <section class="section" style="background:var(--white)">
   <div class="section-inner">
-    <div class="section-label">Early feedback</div>
-    <h2 class="section-title">What our first clients say.</h2>
+    <div class="section-label">Why LocalStage</div>
+    <h2 class="section-title">Built for Ontario's live music scene.</h2>
+    <p style="font-size:1rem;color:var(--ink-mid);line-height:1.8;max-width:640px;margin-bottom:3rem">We're a lean Ontario-based team that launched because we saw the same broken pattern over and over: venues gambling on unknowns, artists cold-emailing into the void. LocalStage is purpose-built to fix that — for the GTA, Hamilton, and surrounding communities.</p>
+
     <div class="testimonials-grid fade-up">
       <div class="testimonial">
-        <div class="testimonial-stars">★★★★★</div>
-        <div class="testimonial-quote">"We'd been burned before by artists who promised a crowd and brought their mom. LocalStage showed us verified numbers upfront — Maya brought 70 people on a Wednesday night. We rebooked her within 48 hours."</div>
-        <div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#667eea,#764ba2)">DK</div><div><div class="t-name">Dan K., Owner</div><div class="t-role">The Railyard Bar &amp; Grill, Mississauga</div></div></div>
+        <div style="font-size:1.5rem;margin-bottom:0.75rem">🎙️</div>
+        <div class="testimonial-quote" style="font-style:normal;font-size:0.95rem;font-weight:500;color:var(--ink);margin-bottom:0.5rem">Verified draw, not guesswork</div>
+        <div style="font-size:0.85rem;color:var(--ink-light);line-height:1.7">Every artist on the roster has been reviewed personally. LocalScore™ is built on real follower location data, verified show attendance, and engagement quality — not vanity metrics or self-reported numbers.</div>
       </div>
       <div class="testimonial">
-        <div class="testimonial-stars">★★★★★</div>
-        <div class="testimonial-quote">"I'd been cold-emailing venues for two years with zero responses. LocalStage got me three paid bookings in six weeks — The Dock, Rec Room, and a private corporate event in Oakville. My career is finally moving."</div>
-        <div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#f093fb,#f5576c)">JA</div><div><div class="t-name">Jade A., R&amp;B Artist</div><div class="t-role">Brampton, ON · LocalScore 79</div></div></div>
+        <div style="font-size:1.5rem;margin-bottom:0.75rem">🤝</div>
+        <div class="testimonial-quote" style="font-style:normal;font-size:0.95rem;font-weight:500;color:var(--ink);margin-bottom:0.5rem">A real team behind every booking</div>
+        <div style="font-size:0.85rem;color:var(--ink-light);line-height:1.7">When you reach out, you're talking to a person — not a chatbot, not an automated system. We review every application, personally coordinate every booking, and follow up after the show.</div>
       </div>
       <div class="testimonial">
-        <div class="testimonial-stars">★★★★★</div>
-        <div class="testimonial-quote">"We run the Westdale Community Fair every quarter and needed reliable local openers on a tight budget. LocalStage matched us with two artists who fit the vibe perfectly. 300 people showed up. We're using them for every event now."</div>
-        <div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#4facfe,#00f2fe)">PR</div><div><div class="t-name">Priya R., Event Coordinator</div><div class="t-role">Westdale Community Fair, Hamilton</div></div></div>
+        <div style="font-size:1.5rem;margin-bottom:0.75rem">📍</div>
+        <div class="testimonial-quote" style="font-style:normal;font-size:0.95rem;font-weight:500;color:var(--ink);margin-bottom:0.5rem">Ontario-only. Intentionally local.</div>
+        <div style="font-size:0.85rem;color:var(--ink-light);line-height:1.7">We're not trying to be Spotify. We serve the GTA, Hamilton, and surrounding communities — because local talent deserves a local infrastructure built around them, not exported from Toronto's generic booking networks.</div>
       </div>
+    </div>
+
+    <div style="margin-top:3rem;background:var(--cream);border-radius:20px;padding:2rem 2.5rem;border-left:4px solid var(--green);max-width:680px">
+      <div style="font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--green);margin-bottom:0.75rem">A note on where we are</div>
+      <p style="font-size:0.9rem;color:var(--ink-mid);line-height:1.8">LocalStage is early-stage. We have 12 vetted artists and are actively building venue relationships across Ontario. We'd rather be honest about that than fake a track record we don't have. If you're a venue or artist ready to be part of building something real — we'd love to work with you.</p>
+      <a href="mailto:localstagerisingstars@gmail.com" style="display:inline-flex;align-items:center;gap:8px;margin-top:1.25rem;color:var(--green);font-weight:500;font-size:0.875rem;text-decoration:none">📧 Talk to us directly → localstagerisingstars@gmail.com</a>
     </div>
   </div>
 </section>
@@ -882,7 +918,7 @@
           <div style="font-weight:500;font-size:0.95rem;color:var(--ink)">How much do artists actually charge?</div>
           <span class="faq-chevron" style="color:var(--green);font-size:1.1rem;flex-shrink:0;transition:transform 0.2s">+</span>
         </div>
-        <div class="faq-answer" style="display:none;margin-top:0.75rem;font-size:0.875rem;color:var(--ink-mid);line-height:1.75">Artists set their own performance fees — LocalStage's $99 coordination fee is completely separate. Most emerging artists on our roster charge between $150–600 per show depending on set length, draw, and event type. You'll agree on the artist's rate directly before anything is confirmed. We recommend confirming it in writing.</div>
+        <div class="faq-answer" style="display:none;margin-top:0.75rem;font-size:0.875rem;color:var(--ink-mid);line-height:1.75">Artists set their own performance fees — LocalStage's $99 coordination fee is completely separate. Rates vary based on set length, draw, event type, and each artist's own assessment of their value. You'll agree on the artist's rate directly before anything is confirmed. We recommend confirming it in writing. If budget is a concern, let us know when booking and we'll match you with artists whose rates fit your range.</div>
       </div>
 
       <div class="faq-item" onclick="toggleFaq(this)" style="background:var(--white);border-radius:14px;padding:1.25rem 1.5rem;margin-bottom:10px;cursor:pointer;border:1.5px solid var(--cream-dark);transition:border-color 0.2s">
@@ -890,7 +926,7 @@
           <div style="font-weight:500;font-size:0.95rem;color:var(--ink)">Can I contact an artist directly after booking?</div>
           <span class="faq-chevron" style="color:var(--green);font-size:1.1rem;flex-shrink:0;transition:transform 0.2s">+</span>
         </div>
-        <div class="faq-answer" style="display:none;margin-top:0.75rem;font-size:0.875rem;color:var(--ink-mid);line-height:1.75">Yes — once a booking is confirmed, we share the artist's contact details so you can coordinate logistics directly (load-in time, sound check, etc.). We stay in the loop. What you can't do is re-book an artist you met through LocalStage outside the platform for 12 months — that's how we keep the lights on and keep artists' fees fair.</div>
+        <div class="faq-answer" style="display:none;margin-top:0.75rem;font-size:0.875rem;color:var(--ink-mid);line-height:1.75">Yes — once a booking is confirmed, we share the artist's contact details so you can coordinate logistics directly (load-in time, sound check, etc.). We stay in the loop. What you can't do is re-book an artist you met through LocalStage outside the platform for 12 months — that's in the platform agreement you sign electronically before your first booking. Bypass attempts result in immediate account suspension and the artist being notified. This policy is how we sustain the platform and keep artist fees fair for everyone.</div>
       </div>
 
       <div class="faq-item" onclick="toggleFaq(this)" style="background:var(--white);border-radius:14px;padding:1.25rem 1.5rem;margin-bottom:10px;cursor:pointer;border:1.5px solid var(--cream-dark);transition:border-color 0.2s">
@@ -906,7 +942,7 @@
           <div style="font-weight:500;font-size:0.95rem;color:var(--ink)">What if the venue ghosts or doesn't pay?</div>
           <span class="faq-chevron" style="color:var(--green);font-size:1.1rem;flex-shrink:0;transition:transform 0.2s">+</span>
         </div>
-        <div class="faq-answer" style="display:none;margin-top:0.75rem;font-size:0.875rem;color:var(--ink-mid);line-height:1.75">Every venue on the platform has been verified. We document every booking in writing. If a venue fails to pay an artist's agreed fee, we flag them immediately, suspend their account, and help the artist pursue the amount. LocalStage doesn't take a cut of your performance fee — so we have no incentive to side with the venue.</div>
+        <div class="faq-answer" style="display:none;margin-top:0.75rem;font-size:0.875rem;color:var(--ink-mid);line-height:1.75">Every venue on the platform has been verified and must agree to our platform terms before booking. We document every booking in writing — venue name, artist, date, agreed fee — and both parties sign electronically. If a venue fails to pay an artist's agreed fee, we flag them immediately, suspend their account, and provide the artist with all documented evidence to pursue payment. LocalStage doesn't take a cut of your performance fee, so we have no incentive to side with the venue. We are building toward full escrow payment processing — and will roll it out as volume grows.</div>
       </div>
 
     </div>
@@ -937,7 +973,7 @@
     </div>
     <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap">
       <a href="mailto:localstagerisingstars@gmail.com" style="display:inline-flex;align-items:center;gap:8px;color:var(--ink);text-decoration:none;font-size:0.875rem;font-weight:500;padding:0.7rem 1.4rem;border:1.5px solid var(--cream-dark);border-radius:100px;transition:border-color 0.2s,color 0.2s" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'" onmouseout="this.style.borderColor='var(--cream-dark)';this.style.color='var(--ink)'">📧 localstagerisingstars@gmail.com</a>
-      <a href="https://www.instagram.com/local.stage/" target="_blank" style="display:inline-flex;align-items:center;gap:8px;color:var(--ink);text-decoration:none;font-size:0.875rem;font-weight:500;padding:0.7rem 1.4rem;border:1.5px solid var(--cream-dark);border-radius:100px;transition:border-color 0.2s,color 0.2s" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'" onmouseout="this.style.borderColor='var(--cream-dark)';this.style.color='var(--ink)'">📸 (1) Instagram</a>
+      <a href="https://www.instagram.com/local.stage/" target="_blank" style="display:inline-flex;align-items:center;gap:8px;color:var(--ink);text-decoration:none;font-size:0.875rem;font-weight:500;padding:0.7rem 1.4rem;border:1.5px solid var(--cream-dark);border-radius:100px;transition:border-color 0.2s,color 0.2s" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'" onmouseout="this.style.borderColor='var(--cream-dark)';this.style.color='var(--ink)'">📸 @local.stage</a>
       <div style="font-size:0.8rem;color:var(--ink-light);display:flex;align-items:center;gap:5px"><span style="color:var(--green);font-weight:600">&#10003;</span> Reply within 24h</div>
     </div>
   </div>
@@ -949,7 +985,7 @@
     <div class="footer-copy">&copy; 2026 LocalStage &middot; Ontario, Canada</div>
     <div style="display:flex;gap:1rem;justify-content:center;margin-top:6px;flex-wrap:wrap">
       <a href="mailto:localstagerisingstars@gmail.com" style="font-size:0.78rem;color:#5dcaa5;text-decoration:none" onmouseover="this.style.color='white'" onmouseout="this.style.color='#5dcaa5'">📧 localstagerisingstars@gmail.com</a>
-      <a href="https://www.instagram.com/local.stage/" target="_blank" style="font-size:0.78rem;color:#5a5a50;text-decoration:none" onmouseover="this.style.color='#5dcaa5'" onmouseout="this.style.color='#5a5a50'">📸 (1) Instagram</a>
+      <a href="https://www.instagram.com/local.stage/" target="_blank" style="font-size:0.78rem;color:#5a5a50;text-decoration:none" onmouseover="this.style.color='#5dcaa5'" onmouseout="this.style.color='#5a5a50'">📸 @local.stage</a>
       <span style="font-size:0.78rem;color:#5a5a50">📍 GTA &middot; Hamilton &middot; Ontario</span>
     </div>
   </div>
@@ -988,8 +1024,8 @@
             <li>Artist profile + LocalScore™</li>
             <li>Pitching to matched venues</li>
             <li>Booking coordination support</li>
-            <li>No upfront cost ever</li>
-            <li>Public profile on the roster</li>
+            <li>No upfront cost, ever</li>
+            <li>Profile analytics once active</li>
           </ul>
           <button class="btn-primary" style="margin-top:1.5rem;width:100%" onclick="openApply()">Apply as artist →</button>
         </div>
@@ -998,14 +1034,13 @@
           <div class="pricing-who">For venues</div>
           <div class="pricing-name" style="color:white">Per booking</div>
           <div class="pricing-price">$99</div>
-          <div class="pricing-freq">flat coordination fee per match</div>
-          <div style="background:rgba(255,255,255,0.08);border-radius:10px;padding:10px 12px;margin:0.75rem 0;font-size:0.78rem;color:#9a9a90;line-height:1.6"><strong style="color:#5dcaa5">Artist fee note:</strong> This is LocalStage's coordination fee only. Artists set their own rates — typically <strong style="color:white">$150–600/show</strong>. You negotiate directly with the artist after we confirm availability.</div>
+          <div class="pricing-freq">flat fee, per confirmed booking</div>
           <ul class="pricing-feats">
-            <li>Browse our full vetted roster freely</li>
-            <li>Request your artist & preferred date</li>
-            <li>We confirm availability within 24h</li>
+            <li>Full vetted roster access</li>
+            <li>Request artist + preferred date</li>
+            <li>Confirmed within 24h</li>
             <li>Full coordination & day-of follow-up</li>
-            <li>Pay only when booking is confirmed</li>
+            <li>Pay only when confirmed</li>
           </ul>
           <button class="btn-primary" style="margin-top:1.5rem;width:100%;background:var(--green)" onclick="showPage('booking')">Book an artist →</button>
         </div>
@@ -1023,6 +1058,9 @@
           </ul>
           <button class="btn-primary" style="margin-top:1.5rem;width:100%" onclick="goToEventBooking()">Book an event package →</button>
         </div>
+      </div>
+      <div style="margin-top:2rem;background:var(--cream);border-radius:16px;padding:1.5rem 2rem;border:1px solid var(--cream-dark);font-size:0.875rem;color:var(--ink-mid);line-height:1.7;max-width:680px">
+        <strong style="color:var(--ink)">Artist fees are separate and set by each artist.</strong> LocalStage's fee covers coordination only — you agree the artist's rate directly with them before anything is confirmed. We recommend confirming all terms in writing.
       </div>
       <div style="background:var(--cream-dark);border-radius:16px;padding:2rem;margin-top:3rem;text-align:center">
         <div style="font-family:var(--serif);font-size:1.3rem;color:var(--ink);margin-bottom:0.5rem">Questions about pricing?</div>
@@ -1292,6 +1330,7 @@
           <div class="form-field"><label class="form-label">Years performing live *</label><input class="form-input" type="number" id="a-years" placeholder="e.g. 4" min="0" max="50"></div>
         </div>
         <div class="form-field"><label class="form-label">Average show attendance (honest estimate) *</label><input class="form-input" type="number" id="a-draw" placeholder="e.g. 45"><div class="form-hint">How many people typically come to your own shows? Be honest — we verify this.</div></div>
+        <div class="form-field"><label class="form-label">Your rate per show *</label><input class="form-input" type="text" id="a-rate" placeholder="e.g. $250/show or $200–400 depending on event"><div class="form-hint">This is displayed publicly on your profile. Set a rate you're comfortable with — you can always negotiate directly with venues.</div></div>
         <div class="form-field"><label class="form-label">Spotify artist link</label><input class="form-input" type="url" id="a-spotify" placeholder="https://open.spotify.com/artist/..."></div>
         <div class="form-field"><label class="form-label">SoundCloud / YouTube / other music link</label><input class="form-input" type="url" id="a-music" placeholder="https://..."></div>
 
@@ -1474,10 +1513,10 @@
 <!-- ══════════════════════════════════════
      MODAL: ARTIST PROFILE (Spotify-style)
 ══════════════════════════════════════ -->
-<div class="modal-overlay" id="modal-artist-profile" style="align-items:flex-start;padding:0">
+<div class="modal-overlay" id="modal-artist-profile" style="align-items:flex-start;padding:0;overflow-y:auto;">
   <div id="artist-profile-box" style="
     background:var(--ink); width:100%; max-width:900px; margin:0 auto;
-    min-height:100vh; position:relative; overflow-y:auto;
+    min-height:100vh; position:relative;
     box-shadow:0 0 80px rgba(0,0,0,0.4);
   ">
     <button class="modal-close" onclick="closeModal('modal-artist-profile')" style="position:fixed;top:1.25rem;right:1.25rem;z-index:10;background:rgba(255,255,255,0.15);color:white">✕</button>
@@ -1496,7 +1535,7 @@
     </div>
 
     <!-- Action bar -->
-    <div style="padding:1.25rem 2.5rem;display:flex;align-items:center;gap:12px;border-bottom:1px solid #2a2a26">
+    <div style="padding:1.25rem 2.5rem;display:flex;align-items:center;gap:12px;border-bottom:1px solid #2a2a26;position:sticky;top:0;z-index:10;background:#1a1a18">
       <button id="ap-book-btn" style="background:var(--green);color:white;padding:10px 24px;border-radius:100px;border:none;font-family:var(--sans);font-size:0.9rem;font-weight:500;cursor:pointer;transition:opacity 0.2s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'"></button>
       <div id="ap-social-bar" style="display:flex;gap:8px;flex-wrap:wrap"></div>
     </div>
@@ -1602,20 +1641,20 @@ let sigLastX = 0, sigLastY = 0;
 
 
 const ARTISTS = [
-  { id:1, init:'MR', name:'Maya Reyes', genre:'R&B · Soul', city:'Mississauga, ON', cityKey:'mississauga', score:84, stars:'★★★★★', rating:4.9, draw:65, tag:'rnb', gradient:'135deg, #a8e6cf, #1a9b6c', instagram:'', videoUrl:'https://youtube.com', videoLabel:'Live at The Dock' },
-  { id:2, init:'JT', name:'Jordan Taye', genre:'Hip-Hop', city:'Brampton, ON', cityKey:'brampton', score:79, stars:'★★★★☆', rating:4.7, draw:55, tag:'hiphop', gradient:'135deg, #667eea, #764ba2', instagram:'', videoUrl:'https://youtube.com', videoLabel:'Freestyle Session' },
-  { id:3, init:'AS', name:'Alicia Simms', genre:'Indie / Alt', city:'Toronto, ON', cityKey:'toronto', score:72, stars:'★★★★☆', rating:4.5, draw:40, tag:'indie', gradient:'135deg, #f093fb, #f5576c', instagram:'', videoUrl:'https://youtube.com', videoLabel:'Acoustic Set' },
-  { id:4, init:'KO', name:'Kwame Osei', genre:'Jazz', city:'Hamilton, ON', cityKey:'hamilton', score:88, stars:'★★★★★', rating:5.0, draw:80, tag:'jazz', gradient:'135deg, #4facfe, #00f2fe', instagram:'', videoUrl:'https://youtube.com', videoLabel:'Quartet at Jazz Room' },
-  { id:5, init:'LD', name:'Lily Dang', genre:'Folk · Country', city:'Oakville, ON', cityKey:'other', score:68, stars:'★★★★☆', rating:4.3, draw:35, tag:'folk', gradient:'135deg, #f6d365, #fda085', instagram:'', videoUrl:'https://youtube.com', videoLabel:'Front Porch Session' },
-  { id:6, init:'RM', name:'Remy Mais', genre:'Pop', city:'Scarborough, ON', cityKey:'other', score:75, stars:'★★★★☆', rating:4.6, draw:50, tag:'pop', gradient:'135deg, #43e97b, #38f9d7', instagram:'', videoUrl:'https://youtube.com', videoLabel:'EP Release Show' },
-  { id:7, init:'SO', name:'Sasha Okafor', genre:'R&B · Soul', city:'Etobicoke, ON', cityKey:'toronto', score:81, stars:'★★★★★', rating:4.8, draw:60, tag:'rnb', gradient:'135deg, #ff9a9e, #fad0c4', instagram:'', videoUrl:'https://youtube.com', videoLabel:'Live at Bar Volo' },
-  { id:8, init:'BL', name:'Ben Lau', genre:'Hip-Hop', city:'Markham, ON', cityKey:'other', score:66, stars:'★★★★☆', rating:4.2, draw:30, tag:'hiphop', gradient:'135deg, #a18cd1, #fbc2eb', instagram:'', videoUrl:'https://youtube.com', videoLabel:'Cypher Session' },
+  { id:1, init:'MR', name:'Maya Reyes', genre:'R&B · Soul', city:'Mississauga, ON', cityKey:'mississauga', score:84, stars:'★★★★★', rating:4.9, draw:65, tag:'rnb', gradient:'135deg, #a8e6cf, #1a9b6c', instagram:'', videoUrl:'https://youtube.com', videoLabel:'Live at The Dock', rate:'$350/show' },
+  { id:2, init:'JT', name:'Jordan Taye', genre:'Hip-Hop', city:'Brampton, ON', cityKey:'brampton', score:79, stars:'★★★★☆', rating:4.7, draw:55, tag:'hiphop', gradient:'135deg, #667eea, #764ba2', instagram:'', videoUrl:'https://youtube.com', videoLabel:'Freestyle Session', rate:'$275/show' },
+  { id:3, init:'AS', name:'Alicia Simms', genre:'Indie / Alt', city:'Toronto, ON', cityKey:'toronto', score:72, stars:'★★★★☆', rating:4.5, draw:40, tag:'indie', gradient:'135deg, #f093fb, #f5576c', instagram:'', videoUrl:'https://youtube.com', videoLabel:'Acoustic Set', rate:'$225/show' },
+  { id:4, init:'KO', name:'Kwame Osei', genre:'Jazz', city:'Hamilton, ON', cityKey:'hamilton', score:88, stars:'★★★★★', rating:5.0, draw:80, tag:'jazz', gradient:'135deg, #4facfe, #00f2fe', instagram:'', videoUrl:'https://youtube.com', videoLabel:'Quartet at Jazz Room', rate:'$500/show' },
+  { id:5, init:'LD', name:'Lily Dang', genre:'Folk · Country', city:'Oakville, ON', cityKey:'other', score:68, stars:'★★★★☆', rating:4.3, draw:35, tag:'folk', gradient:'135deg, #f6d365, #fda085', instagram:'', videoUrl:'https://youtube.com', videoLabel:'Front Porch Session', rate:'$175/show' },
+  { id:6, init:'RM', name:'Remy Mais', genre:'Pop', city:'Scarborough, ON', cityKey:'other', score:75, stars:'★★★★☆', rating:4.6, draw:50, tag:'pop', gradient:'135deg, #43e97b, #38f9d7', instagram:'', videoUrl:'https://youtube.com', videoLabel:'EP Release Show', rate:'$300/show' },
+  { id:7, init:'SO', name:'Sasha Okafor', genre:'R&B · Soul', city:'Etobicoke, ON', cityKey:'toronto', score:81, stars:'★★★★★', rating:4.8, draw:60, tag:'rnb', gradient:'135deg, #ff9a9e, #fad0c4', instagram:'', videoUrl:'https://youtube.com', videoLabel:'Live at Bar Volo', rate:'$400/show' },
+  { id:8, init:'BL', name:'Ben Lau', genre:'Hip-Hop', city:'Markham, ON', cityKey:'other', score:66, stars:'★★★★☆', rating:4.2, draw:30, tag:'hiphop', gradient:'135deg, #a18cd1, #fbc2eb', instagram:'', videoUrl:'https://youtube.com', videoLabel:'Cypher Session', rate:'$200/show' },
 ];
 const NEW_ARTISTS = [
-  { id:9, init:'TP', name:'Tara Patel', genre:'Indie / Alt', city:'Burlington, ON', cityKey:'other', score:63, stars:'★★★★☆', rating:4.1, draw:25, tag:'indie', gradient:'135deg, #fccb90, #d57eeb', instagram:'', videoUrl:'https://youtube.com', videoLabel:'First Show Highlights' },
-  { id:10, init:'CW', name:'Chase Williams', genre:'Pop', city:'Oshawa, ON', cityKey:'other', score:61, stars:'★★★☆☆', rating:3.9, draw:20, tag:'pop', gradient:'135deg, #84fab0, #8fd3f4', instagram:'', videoUrl:'https://youtube.com', videoLabel:'Studio Vlog' },
-  { id:11, init:'NB', name:'Nina Bakr', genre:'Jazz', city:'Ajax, ON', cityKey:'other', score:70, stars:'★★★★☆', rating:4.4, draw:38, tag:'jazz', gradient:'135deg, #30cfd0, #667eea', instagram:'', videoUrl:'https://youtube.com', videoLabel:'Evening Jazz Session' },
-  { id:12, init:'MF', name:'Marcus Ferreira', genre:'Folk · Country', city:'Guelph, ON', cityKey:'other', score:65, stars:'★★★★☆', rating:4.2, draw:28, tag:'folk', gradient:'135deg, #f7971e, #ffd200', instagram:'', videoUrl:'https://youtube.com', videoLabel:'Campfire Sessions' },
+  { id:9, init:'TP', name:'Tara Patel', genre:'Indie / Alt', city:'Burlington, ON', cityKey:'other', score:63, stars:'★★★★☆', rating:4.1, draw:25, tag:'indie', gradient:'135deg, #fccb90, #d57eeb', instagram:'', videoUrl:'https://youtube.com', videoLabel:'First Show Highlights', rate:'$150/show' },
+  { id:10, init:'CW', name:'Chase Williams', genre:'Pop', city:'Oshawa, ON', cityKey:'other', score:61, stars:'★★★☆☆', rating:3.9, draw:20, tag:'pop', gradient:'135deg, #84fab0, #8fd3f4', instagram:'', videoUrl:'https://youtube.com', videoLabel:'Studio Vlog', rate:'$150/show' },
+  { id:11, init:'NB', name:'Nina Bakr', genre:'Jazz', city:'Ajax, ON', cityKey:'other', score:70, stars:'★★★★☆', rating:4.4, draw:38, tag:'jazz', gradient:'135deg, #30cfd0, #667eea', instagram:'', videoUrl:'https://youtube.com', videoLabel:'Evening Jazz Session', rate:'$250/show' },
+  { id:12, init:'MF', name:'Marcus Ferreira', genre:'Folk · Country', city:'Guelph, ON', cityKey:'other', score:65, stars:'★★★★☆', rating:4.2, draw:28, tag:'folk', gradient:'135deg, #f7971e, #ffd200', instagram:'', videoUrl:'https://youtube.com', videoLabel:'Campfire Sessions', rate:'$175/show' },
 ];
 
 // ════════════════════════════════
@@ -1623,8 +1662,13 @@ const NEW_ARTISTS = [
 // ════════════════════════════════
 function showPage(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-' + name).classList.add('active');
-  window.scrollTo(0,0);
+  const page = document.getElementById('page-' + name);
+  if (!page) return;
+  page.classList.add('active');
+  // Reset scroll completely on every page switch
+  window.scrollTo({top: 0, left: 0, behavior: 'instant'});
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
   if (name === 'artists') renderArtistGrid('all','all');
   if (name === 'booking') renderBookingPage();
   if (name === 'apply') resetApply();
@@ -1958,6 +2002,7 @@ function renderGrid(containerId, artists, genreFilter, cityFilter) {
           <span class="artist-card-stars">${a.stars}</span>
         </div>
         <div class="artist-card-location">📍 ${a.city} · ~${a.draw} avg. draw</div>
+        <div style="margin-top:4px;display:inline-flex;align-items:center;gap:5px;background:var(--green-light);border-radius:100px;padding:3px 10px;font-size:0.7rem;font-weight:600;color:var(--green-mid)">💰 ${a.rate || 'Rate on request'}</div>
         <div style="margin-top:8px;display:flex;gap:6px">
           <button style="flex:1;padding:5px 8px;background:var(--cream);color:var(--ink-mid);border:1px solid var(--cream-dark);border-radius:100px;font-family:var(--sans);font-size:0.7rem;cursor:pointer" onclick="openArtistProfile(${a.id})">▶ View profile</button>
           ${a.spotify ? `<a href="${a.spotify}" target="_blank" style="flex:1;padding:5px 8px;background:#1DB954;color:white;border:none;border-radius:100px;font-family:var(--sans);font-size:0.7rem;cursor:pointer;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:4px">🎵 Listen</a>` : ''}
@@ -2034,6 +2079,14 @@ function getBookingFormHTML() {
       <div class="booking-form-card">
         <h2>Booking request</h2>
         <p>Tell us about your event and we'll handle the coordination.</p>
+        <div id="booking-rate-row" style="display:none;align-items:center;gap:10px;background:var(--green-light);border-radius:12px;padding:12px 16px;margin-bottom:1.25rem;border:1.5px solid #b2dfc9">
+          <span style="font-size:1.1rem">💰</span>
+          <div>
+            <div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--green-mid);margin-bottom:2px">Artist rate</div>
+            <div id="booking-selected-rate" style="font-size:1rem;font-weight:600;color:var(--ink)">—</div>
+          </div>
+          <div style="margin-left:auto;font-size:0.72rem;color:var(--ink-light);line-height:1.5;max-width:180px">LocalStage's $99 coordination fee is separate from this rate.</div>
+        </div>
         <div class="form-field"><label class="form-label">Venue / Event name *</label><input class="form-input" type="text" id="booking-venue-name" placeholder="e.g. The Railyard, Mississauga"></div>
         <div class="form-field">
           <label class="form-label">Google Maps link of your venue *</label>
@@ -2374,22 +2427,35 @@ function renderBookingArtists() {
   c.innerHTML = filtered.slice(0,8).map((a) => {
     const isSelected = pendingBookArtistId ? a.id === pendingBookArtistId : filtered.indexOf(a) === 0;
     return `
-    <div class="pick-artist-row ${isSelected ? 'selected' : ''}" onclick="selectBookingArtist(this)">
+    <div class="pick-artist-row ${isSelected ? 'selected' : ''}" onclick="selectBookingArtist(this)" data-artist-id="${a.id}" data-artist-rate="${a.rate || 'Rate on request'}">
       <div class="pick-avatar" style="background:linear-gradient(${a.gradient})">${a.init}</div>
-      <div>
+      <div style="flex:1">
         <div class="pick-name">${a.name}</div>
         <div class="pick-genre">${a.genre} · ${a.city}</div>
+        <div style="font-size:0.68rem;color:var(--green);font-weight:600;margin-top:2px">💰 ${a.rate || 'Rate on request'}</div>
       </div>
       <span class="pick-score">${a.score}</span>
     </div>`;
   }).join('');
   // Clear the pending selection after use
   pendingBookArtistId = null;
+  // Show rate for initially selected artist
+  setTimeout(() => {
+    const selected = document.querySelector('.pick-artist-row.selected');
+    if (selected) selectBookingArtist(selected);
+  }, 0);
 }
 
 function selectBookingArtist(el) {
   document.querySelectorAll('.pick-artist-row').forEach(r => r.classList.remove('selected'));
   el.classList.add('selected');
+  // Update rate display in booking form
+  const rate = el.getAttribute('data-artist-rate') || 'Rate on request';
+  const rateDisplay = document.getElementById('booking-selected-rate');
+  if (rateDisplay) {
+    rateDisplay.textContent = rate;
+    rateDisplay.closest('[id="booking-rate-row"]').style.display = 'flex';
+  }
 }
 
 function validateMapsUrl(input) {
@@ -2752,7 +2818,7 @@ async function submitApply() {
       avg_draw: document.getElementById('a-draw').value || '—',
       spotify: document.getElementById('a-spotify').value || '—',
       music_link: document.getElementById('a-music').value || '—',
-      platforms: platforms,
+      platforms: platforms + (document.getElementById('a-rate').value ? ' | Rate: ' + document.getElementById('a-rate').value : ''),
       video_link: document.getElementById('a-video').value || '—',
       venue_refs: document.getElementById('a-venues').value || '—',
       travel_cities: cities,
@@ -3008,6 +3074,7 @@ function openArtistProfile(id) {
     {val: a.score, lbl: 'LocalScore™'},
     {val: a.draw+'', lbl: 'Avg. draw'},
     {val: a.rating.toFixed(1)+'★', lbl: 'Rating'},
+    {val: a.rate || 'TBD', lbl: 'Artist rate'},
     {val: a.city.split(',')[0], lbl: 'Base city'},
   ].map(s => `
     <div style="text-align:center;min-width:80px">
@@ -3053,7 +3120,7 @@ function openArtistProfile(id) {
   document.getElementById('ap-video-label').textContent = '▶ ' + a.videoLabel;
 
   document.getElementById('modal-artist-profile').classList.add('open');
-  document.getElementById('artist-profile-box').scrollTop = 0;
+  document.getElementById('modal-artist-profile').scrollTop = 0;
 }
 
 // ════════════════════════════════
