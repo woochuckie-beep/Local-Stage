@@ -10,11 +10,11 @@
 <!-- ═══════════════════════════════════════════════════════════
   LOCALSTAGE v11 — PRODUCTION CONFIG
   ══════════════════════════════════════════════════════════════
-  STEP 1 — FIREBASE (free Spark plan, for Auth OTP emails)
-    a) Go to console.firebase.google.com → Create project
-    b) Authentication → Sign-in method → Enable "Email/Password" AND "Email link (passwordless)"
+  STEP 1 — FIREBASE (free Spark plan, for Google sign-in)
+    a) Go to console.firebase.google.com → your project
+    b) Authentication → Sign-in method → Enable "Google"
     c) Project Settings → Your apps → Add Web app → copy config below
-    d) Authentication → Settings → Authorized domains → add your domain
+    d) Authentication → Settings → Authorized domains → add your domain (e.g. woochuckie-beep.github.io)
   
   STEP 2 — STRIPE (for real $99 CAD payments)
     a) Go to stripe.com → Developers → API keys
@@ -51,52 +51,21 @@
 
 <!-- Firebase SDK (modular CDN) -->
 <script type="module">
-  import { initializeApp }                   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-  import { getAuth, sendSignInLinkToEmail,
-           isSignInWithEmailLink, signInWithEmailLink,
-           signOut as fbSignOut }            from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+  import { initializeApp }        from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+  import { getAuth, GoogleAuthProvider,
+           signInWithPopup,
+           signOut as fbSignOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
-  // Expose to global scope so non-module scripts can call them
-  const app  = initializeApp(FIREBASE_CONFIG);
-  const auth = getAuth(app);
+  const app      = initializeApp(FIREBASE_CONFIG);
+  const auth     = getAuth(app);
+  const provider = new GoogleAuthProvider();
 
-  window._fbAuth = auth;
-  window._fbSendLink = async (email) => {
-    const actionCodeSettings = {
-      url: window.location.href,      // redirect back to same page
-      handleCodeInApp: true
-    };
-    await sendSignInLinkToEmail(auth, email, actionCodeSettings);
-    window.localStorage.setItem('ls-email-for-signin', email);
-  };
-  window._fbIsEmailLink = () => isSignInWithEmailLink(auth, window.location.href);
-  window._fbSignInWithLink = async (email) => {
-    const result = await signInWithEmailLink(auth, email, window.location.href);
-    return result.user;
-  };
   window._fbSignOut = () => fbSignOut(auth);
 
-  // Handle magic-link redirect on page load
-  window.addEventListener('DOMContentLoaded', () => {
-    if (window._fbIsEmailLink()) {
-      let email = localStorage.getItem('ls-email-for-signin');
-      if (!email) {
-        email = window.prompt('Please confirm your email address to finish signing in:');
-      }
-      if (email) {
-        window._fbSignInWithLink(email).then(user => {
-          localStorage.removeItem('ls-email-for-signin');
-          // Remove the link tokens from the URL cleanly
-          const cleanUrl = window.location.pathname;
-          window.history.replaceState({}, document.title, cleanUrl);
-          handleFirebaseSignIn(user.email);
-        }).catch(err => {
-          console.error('Magic link sign-in failed:', err);
-          alert('Sign-in link expired or already used. Please request a new one.');
-        });
-      }
-    }
-  });
+  window._fbGoogleSignIn = async () => {
+    const result = await signInWithPopup(auth, provider);
+    return result.user; // has .email, .displayName
+  };
 </script>
 
 <!-- Stripe.js -->
@@ -1652,36 +1621,23 @@
   <div class="modal-box">
     <button class="modal-close" onclick="closeModal('modal-login')">✕</button>
 
-    <!-- Step 1: Email — Firebase magic link -->
+    <!-- Step 1: Google sign-in -->
     <div class="login-step active" id="login-step-email">
       <div class="modal-title">Sign in to LocalStage.</div>
-      <div class="modal-sub">Enter your approved email. We'll send a magic sign-in link — no password needed.</div>
-      <div style="background:#fff8e1;border:1.5px solid #f4b400;border-radius:12px;padding:10px 14px;font-size:0.8rem;color:#7a6000;margin-bottom:1.25rem;line-height:1.6">
+      <div class="modal-sub">Use your Google account. Access is approved — if you haven't applied yet, do that first.</div>
+      <div style="background:#fff8e1;border:1.5px solid #f4b400;border-radius:12px;padding:10px 14px;font-size:0.8rem;color:#7a6000;margin-bottom:1.5rem;line-height:1.6">
         <strong>New here?</strong> Sign in only works once you've been approved. <span style="color:var(--green);cursor:pointer;font-weight:500;text-decoration:underline" onclick="closeModal('modal-login');openApply()">Apply first →</span>
       </div>
-      <div class="form-field">
-        <label class="form-label">Email address</label>
-        <input class="form-input" type="email" id="login-email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')sendCode()">
-      </div>
-      <button class="form-submit" onclick="sendCode()">Send me a sign-in link →</button>
-      <p style="text-align:center;font-size:0.8rem;color:var(--ink-light);margin-top:1rem">A magic link will be emailed to you. Click it to sign in instantly.</p>
+      <!-- Google Sign-In Button -->
+      <button onclick="signInWithGoogle()" id="google-signin-btn" style="width:100%;display:flex;align-items:center;justify-content:center;gap:12px;background:white;border:1.5px solid #dadce0;border-radius:100px;padding:0.85rem 1.5rem;font-family:var(--sans);font-size:0.95rem;font-weight:500;color:#3c4043;cursor:pointer;transition:box-shadow 0.2s,border-color 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.08)" onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.15)';this.style.borderColor='#c0c0c0'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,0.08)';this.style.borderColor='#dadce0'">
+        <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
+        Continue with Google
+      </button>
+      <div id="google-signin-error" style="display:none;margin-top:1rem;background:#fde8e8;border-radius:10px;padding:10px 14px;font-size:0.8rem;color:#c0392b;text-align:center;line-height:1.5"></div>
+      <p style="text-align:center;font-size:0.78rem;color:var(--ink-light);margin-top:1.25rem;line-height:1.5">Your Google account email must be on the approved list.</p>
     </div>
 
-    <!-- Step 2: Link sent confirmation -->
-    <div class="login-step" id="login-step-code">
-      <div class="modal-title">Check your email.</div>
-      <div class="modal-sub" id="login-code-sub">We've sent a magic sign-in link to <strong id="login-code-email-display"></strong>. Click the link in your email to sign in instantly.</div>
-      <div style="text-align:center;padding:1.5rem 0">
-        <div style="font-size:3rem;margin-bottom:1rem">📬</div>
-        <p style="font-size:0.85rem;color:var(--ink-light);line-height:1.7">Check your inbox (and spam folder). The link expires in 10 minutes.</p>
-      </div>
-      <div id="code-error" style="text-align:center;font-size:0.8rem;color:#c0392b;margin-bottom:0.75rem;display:none">Something went wrong. Please try again.</div>
-      <p style="text-align:center;margin-top:0.5rem;font-size:0.8rem;color:var(--ink-light)">
-        <span class="resend-link" onclick="resendCode()">Resend link</span> &nbsp;·&nbsp; <span class="resend-link" onclick="backToEmail()">Change email</span>
-      </p>
-    </div>
-
-    <!-- Step 3: Signed in -->
+    <!-- Step 2: Signed in -->
     <div class="login-step" id="login-step-success">
       <div class="success-state">
         <div class="success-icon">✅</div>
@@ -1999,30 +1955,43 @@ function closeModal(id) {
 }
 
 function resetLoginModal() {
-  verificationCode = null;
   document.querySelectorAll('.login-step').forEach(s => s.classList.remove('active'));
   document.getElementById('login-step-email').classList.add('active');
-  const emailEl = document.getElementById('login-email');
-  if (emailEl) { emailEl.value = ''; emailEl.style.borderColor = ''; }
-  const errEl = document.getElementById('login-email-error');
-  if (errEl) errEl.remove();
-  const codeErr = document.getElementById('code-error');
-  if (codeErr) codeErr.style.display = 'none';
-  const btn = document.querySelector('#login-step-email .form-submit');
-  if (btn) { btn.classList.remove('btn-loading'); btn.disabled = false; }
+  const errEl = document.getElementById('google-signin-error');
+  if (errEl) errEl.style.display = 'none';
+  const btn = document.getElementById('google-signin-btn');
+  if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+}
+
+async function signInWithGoogle() {
+  const btn = document.getElementById('google-signin-btn');
+  const errEl = document.getElementById('google-signin-error');
+  errEl.style.display = 'none';
+
+  if (!window._fbGoogleSignIn) {
+    errEl.textContent = '⚙️ Firebase not configured yet. Add your Firebase config at the top of this file.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.style.opacity = '0.7';
+
+  try {
+    const user = await window._fbGoogleSignIn();
+    handleFirebaseSignIn(user.email);
+  } catch(err) {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') return;
+    errEl.textContent = 'Sign-in failed: ' + (err.message || 'Unknown error. Please try again.');
+    errEl.style.display = 'block';
+    console.error('Google sign-in error:', err);
+  }
 }
 
 function backToEmail() {
-  verificationCode = null;
-  const codeErr = document.getElementById('code-error');
-  if (codeErr) codeErr.style.display = 'none';
-  const errEl = document.getElementById('login-email-error');
-  if (errEl) errEl.remove();
-  const btn = document.querySelector('#login-step-email .form-submit');
-  if (btn) { btn.classList.remove('btn-loading'); btn.disabled = false; }
-  document.querySelectorAll('.login-step').forEach(s => s.classList.remove('active'));
-  document.getElementById('login-step-email').classList.add('active');
-  setTimeout(() => { const el = document.getElementById('login-email'); if (el) el.focus(); }, 100);
+  resetLoginModal();
 }
 
 // ════════════════════════════════
@@ -2070,81 +2039,7 @@ function resolveArtistId(fullName) {
   return match ? match.id : null;
 }
 
-async function sendCode() {
-  const email = document.getElementById('login-email').value.trim().toLowerCase();
-  const btn = document.querySelector('#login-step-email .form-submit');
-  if (!email.includes('@') || !email.includes('.')) {
-    document.getElementById('login-email').style.borderColor = '#c0392b';
-    return;
-  }
-  document.getElementById('login-email').style.borderColor = '';
-  if (btn) { btn.classList.add('btn-loading'); btn.disabled = true; }
-
-  await loadApprovedEmails();
-
-  if (sheetLoadFailed) {
-    if (btn) { btn.classList.remove('btn-loading'); btn.disabled = false; }
-    document.getElementById('login-email').style.borderColor = '#c0392b';
-    showLoginError('Unable to reach our access list right now. Please try again in a moment.');
-    return;
-  }
-
-  if (!approvedEmails.includes(email)) {
-    if (btn) { btn.classList.remove('btn-loading'); btn.disabled = false; }
-    document.getElementById('login-email').style.borderColor = '#c0392b';
-    showLoginError('This email is not on our approved list. Apply to join LocalStage first.');
-    return;
-  }
-
-  // ── FIREBASE: send magic sign-in link ──
-  if (!window._fbSendLink || FIREBASE_CONFIG.apiKey === 'YOUR_API_KEY') {
-    // Firebase not configured yet — show setup notice
-    if (btn) { btn.classList.remove('btn-loading'); btn.disabled = false; }
-    document.getElementById('login-email').style.borderColor = '#f4b400';
-    showLoginError('⚙️ Firebase not configured yet. Add your Firebase config in the <script> block at the top of this file to enable email sign-in.', '#7a6000', '#fff8e1', '#f4b400');
-    return;
-  }
-
-  try {
-    await window._fbSendLink(email);
-    if (btn) { btn.classList.remove('btn-loading'); btn.disabled = false; }
-    const errEl = document.getElementById('login-email-error');
-    if (errEl) errEl.remove();
-    document.getElementById('login-code-email-display').textContent = email;
-    document.querySelectorAll('.login-step').forEach(s => s.classList.remove('active'));
-    document.getElementById('login-step-code').classList.add('active');
-  } catch(err) {
-    if (btn) { btn.classList.remove('btn-loading'); btn.disabled = false; }
-    console.error('sendSignInLinkToEmail error:', err);
-    showLoginError('Failed to send sign-in link: ' + (err.message || 'Unknown error. Make sure this domain is authorized in Firebase console.'));
-  }
-}
-
-function showLoginError(msg, color='#c0392b', bg='#fde8e8', border='#c0392b') {
-  let errEl = document.getElementById('login-email-error');
-  if (!errEl) {
-    errEl = document.createElement('p');
-    errEl.id = 'login-email-error';
-    const field = document.getElementById('login-step-email').querySelector('.form-field');
-    if (field) field.appendChild(errEl);
-    else document.getElementById('login-step-email').appendChild(errEl);
-  }
-  errEl.style.cssText = `font-size:0.8rem;color:${color};background:${bg};border:1px solid ${border};border-radius:8px;padding:8px 12px;margin-top:8px;line-height:1.5;text-align:center`;
-  errEl.textContent = msg;
-}
-
-async function resendCode() {
-  const email = document.getElementById('login-email').value.trim().toLowerCase();
-  if (!email || !window._fbSendLink) return;
-  try {
-    await window._fbSendLink(email);
-    document.getElementById('login-code-sub').innerHTML = 'A new sign-in link has been sent to <strong>' + email + '</strong>.';
-    document.getElementById('code-error').style.display='none';
-  } catch(err) {
-    document.getElementById('code-error').textContent = 'Resend failed. Please try again.';
-    document.getElementById('code-error').style.display='block';
-  }
-}
+// sendCode / showLoginError / resendCode removed — replaced by Google sign-in
 
 // Called by the Firebase module after magic-link redirect
 function handleFirebaseSignIn(email) {
