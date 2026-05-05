@@ -2002,31 +2002,27 @@ function resetLoginModal() {
   verificationCode = null;
   document.querySelectorAll('.login-step').forEach(s => s.classList.remove('active'));
   document.getElementById('login-step-email').classList.add('active');
-  document.getElementById('login-email').value = '';
-  document.getElementById('login-email').style.borderColor = '';
+  const emailEl = document.getElementById('login-email');
+  if (emailEl) { emailEl.value = ''; emailEl.style.borderColor = ''; }
   const errEl = document.getElementById('login-email-error');
   if (errEl) errEl.remove();
-  for (let i=0;i<6;i++) document.getElementById('code-'+i).value='';
-  document.getElementById('code-error').style.display='none';
+  const codeErr = document.getElementById('code-error');
+  if (codeErr) codeErr.style.display = 'none';
   const btn = document.querySelector('#login-step-email .form-submit');
   if (btn) { btn.classList.remove('btn-loading'); btn.disabled = false; }
 }
 
 function backToEmail() {
-  // Full reset so a new email send works cleanly
   verificationCode = null;
-  for (let i = 0; i < 6; i++) document.getElementById('code-' + i).value = '';
-  document.getElementById('code-error').style.display = 'none';
-  // Clear any lingering email error
+  const codeErr = document.getElementById('code-error');
+  if (codeErr) codeErr.style.display = 'none';
   const errEl = document.getElementById('login-email-error');
   if (errEl) errEl.remove();
-  // Reset button state in case it got stuck
   const btn = document.querySelector('#login-step-email .form-submit');
   if (btn) { btn.classList.remove('btn-loading'); btn.disabled = false; }
   document.querySelectorAll('.login-step').forEach(s => s.classList.remove('active'));
   document.getElementById('login-step-email').classList.add('active');
-  // Focus the email field for convenience
-  setTimeout(() => document.getElementById('login-email').focus(), 100);
+  setTimeout(() => { const el = document.getElementById('login-email'); if (el) el.focus(); }, 100);
 }
 
 // ════════════════════════════════
