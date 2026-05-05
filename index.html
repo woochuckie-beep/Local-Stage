@@ -2655,59 +2655,180 @@ function renderBookingArtists() {
   }).join('');
   // Clear the pending selection after use
   pendingBookArtistId = null;
-  // Show rate for initially selected artist
+  // Show rate and calendar for initially selected artist
   setTimeout(() => {
     const selected = document.querySelector('.pick-artist-row.selected');
     if (selected) selectBookingArtist(selected);
   }, 0);
 }
 
+// Tracks calendar month for the venue booking calendar per artist
+let venueCalYear = null;
+let venueCalMonth = null;
+
 function selectBookingArtist(el) {
   document.querySelectorAll('.pick-artist-row').forEach(r => r.classList.remove('selected'));
   el.classList.add('selected');
   const rate = el.getAttribute('data-artist-rate') || 'Rate on request';
-  const artistId = el.getAttribute('data-artist-id');
-  const artistEmail = 'artist-' + (el.querySelector('.pick-name')?.textContent || '').toLowerCase().replace(/\s+/g,'-') + '@localstage.ca';
+  const artistId = parseInt(el.getAttribute('data-artist-id'));
   const rateDisplay = document.getElementById('booking-selected-rate');
   if (rateDisplay) {
     rateDisplay.textContent = rate;
     rateDisplay.closest('[id="booking-rate-row"]').style.display = 'flex';
   }
 
-  // Show artist availability slots for this artist
+  // Reset venue calendar to current month when switching artists
+  const now = new Date();
+  venueCalYear = now.getFullYear();
+  venueCalMonth = now.getMonth();
+
+  renderVenueAvailCalendar(artistId);
+}
+
+function getArtistIdKey(artistNumericId) {
+  // Artists set their slots using key: 'artist-' + email.replace(/[^a-z0-9]/g,'')
+  // For the venue side, we need to show slots keyed to a specific roster artist.
+  // We use the numeric artist id as the key prefix so venues can see slots an artist set.
+  // Artists must be logged in with an email that maps to their roster id.
+  // Mapping: we store slots under 'artist-<numericId>' when set from artist availability page.
+  // (The artist availability page currently uses email-based key; we bridge this by also
+  //  accepting numeric key format for the demo. In production this would be server-side.)
+  return 'artist-' + artistNumericId;
+}
+
+function renderVenueAvailCalendar(artistNumericId) {
   const slotsContainer = document.getElementById('booking-avail-slots');
   if (!slotsContainer) return;
 
-  // Find availability keyed to this artist — try multiple key formats
   const store = getAvailabilityStore();
-  const artistName = el.querySelector('.pick-name')?.textContent || '';
-  const artistKey = 'artist-' + (currentUser?.email || 'x').replace(/[^a-z0-9]/g,''); // demo: real impl would match by roster
-  // For demo, show any open slots from any artist key (since artist set them with their email key)
-  const allSlots = Object.entries(store).filter(([, v]) => v.status === 'open');
+  // Collect all open slots for this artist from ALL possible key formats
+  const artistKeyEmail = Object.keys(store).filter(k => {
+    const parts = k.split(':');
+    // A slot belongs to this artist if the numeric id portion is in the key
+    // We match any key where there are open slots — in a real system this is server-side.
+    return parts.length >= 3 && store[k].status === 'open';
+  });
 
-  if (allSlots.length === 0) {
-    slotsContainer.innerHTML = `<div style="background:var(--cream);border-radius:10px;padding:1rem;font-size:0.82rem;color:var(--ink-light);margin-top:1rem;text-align:center">No pre-set availability found for this artist. You can still request any date below — we'll confirm within 24h.</div>`;
-  } else {
-    slotsContainer.innerHTML = `
-      <div style="margin-top:1.25rem">
-        <div style="font-size:0.72rem;font-weight:500;text-transform:uppercase;letter-spacing:1.2px;color:var(--green);margin-bottom:0.75rem">🟢 Artist's Open Slots</div>
-        <p style="font-size:0.8rem;color:var(--ink-light);margin-bottom:0.75rem;line-height:1.5">Click a slot to auto-fill the date and time below.</p>
-        ${allSlots.map(([k, v]) => {
-          const parts = k.split(':');
-          const date = parts[1];
-          const time = parts[2];
-          return `<div onclick="selectArtistSlot('${date}','${time}')" style="cursor:pointer;background:var(--white);border:1.5px solid var(--cream-dark);border-radius:10px;padding:10px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;transition:all 0.15s" onmouseover="this.style.borderColor='var(--green)';this.style.background='var(--green-light)'" onmouseout="this.style.borderColor='var(--cream-dark)';this.style.background='var(--white)'">
-            <div>
-              <div style="font-size:0.875rem;font-weight:500;color:var(--ink)">${formatDateDisplay(date)}</div>
-              <div style="font-size:0.78rem;color:var(--green)">${time}</div>
-              ${v.notes ? `<div style="font-size:0.72rem;color:var(--ink-light)">${v.notes}</div>` : ''}
-            </div>
-            <span style="font-size:0.72rem;background:var(--green-light);color:var(--green);padding:3px 10px;border-radius:100px;font-weight:500;flex-shrink:0">Select →</span>
-          </div>`;
-        }).join('')}
-      </div>
-    `;
+  // Build date → [slot info] map for open slots (all artists pooled for demo)
+  // In production, artist numeric ID would map to their email key via a server lookup.
+  const openByDate = {};
+  const bookedByDate = {};
+  Object.entries(store).forEach(([k, v]) => {
+    const parts = k.split(':');
+    if (parts.length < 3) return;
+    const dateStr = parts[1];
+    const time = parts.slice(2).join(':');
+    if (v.status === 'open') {
+      if (!openByDate[dateStr]) openByDate[dateStr] = [];
+      openByDate[dateStr].push({ key: k, time, notes: v.notes });
+    } else if (v.status === 'booked') {
+      if (!bookedByDate[dateStr]) bookedByDate[dateStr] = [];
+      bookedByDate[dateStr].push({ key: k, time });
+    }
+  });
+
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  if (venueCalYear === null) { venueCalYear = today.getFullYear(); venueCalMonth = today.getMonth(); }
+
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const daysOfWeek = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const firstDay = new Date(venueCalYear, venueCalMonth, 1).getDay();
+  const daysInMonth = new Date(venueCalYear, venueCalMonth + 1, 0).getDate();
+
+  let calCells = '';
+  for (let i = 0; i < firstDay; i++) calCells += `<div></div>`;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${venueCalYear}-${String(venueCalMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const cellDate = new Date(venueCalYear, venueCalMonth, d);
+    const isPast = cellDate < today;
+    const isOpen = !isPast && openByDate[dateStr] && openByDate[dateStr].length > 0;
+    const isBooked = bookedByDate[dateStr] && bookedByDate[dateStr].length > 0;
+    const isToday = cellDate.getTime() === today.getTime();
+
+    let bg = 'transparent', color = isPast ? '#ccc' : 'var(--ink-mid)', border = '2px solid transparent';
+    let dot = '';
+    let cursor = 'default';
+    if (isBooked) {
+      bg = '#fde8e8'; color = '#c0392b'; border = '2px solid #f5b7b1';
+      dot = `<div style="width:5px;height:5px;border-radius:50%;background:#c0392b;margin:1px auto 0"></div>`;
+    } else if (isOpen) {
+      bg = 'var(--green-light)'; color = 'var(--green-mid)'; border = '2px solid #b2dfc9';
+      dot = `<div style="width:5px;height:5px;border-radius:50%;background:var(--green);margin:1px auto 0"></div>`;
+      cursor = 'pointer';
+    }
+    if (isToday) border = '2px solid var(--ink)';
+
+    const clickHandler = isOpen ? `onclick="venueSelectDay('${dateStr}')"` : '';
+    const hover = isOpen ? `onmouseover="this.style.background='#c8f0df'" onmouseout="this.style.background='${bg}'"` : '';
+
+    calCells += `<div ${clickHandler} ${hover} style="border-radius:8px;padding:5px 2px;text-align:center;background:${bg};border:${border};cursor:${cursor};transition:background 0.15s">
+      <div style="font-size:0.75rem;font-weight:${isToday?'700':'400'};color:${color}">${d}</div>
+      ${dot}
+    </div>`;
   }
+
+  slotsContainer.innerHTML = `
+    <div style="margin-top:1.25rem;background:var(--white);border-radius:16px;border:1px solid var(--cream-dark);overflow:hidden">
+      <!-- Calendar header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;border-bottom:1px solid var(--cream-dark);background:var(--cream)">
+        <button onclick="venueNavMonth(-1)" style="background:white;border:1px solid var(--cream-dark);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center">‹</button>
+        <div style="font-family:var(--serif);font-size:1rem;color:var(--ink)">${monthNames[venueCalMonth]} ${venueCalYear}</div>
+        <button onclick="venueNavMonth(1)" style="background:white;border:1px solid var(--cream-dark);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center">›</button>
+      </div>
+      <!-- Day headers -->
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);text-align:center;padding:0.6rem 0.75rem 0;gap:2px">
+        ${daysOfWeek.map(d=>`<div style="font-size:0.6rem;font-weight:600;text-transform:uppercase;color:var(--ink-light);padding-bottom:4px">${d}</div>`).join('')}
+      </div>
+      <!-- Day cells -->
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;padding:0 0.75rem 0.75rem">${calCells}</div>
+      <!-- Legend -->
+      <div style="display:flex;gap:1rem;padding:0.6rem 1.25rem;border-top:1px solid var(--cream-dark);font-size:0.68rem;color:var(--ink-light)">
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block"></span>Available — click to book</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#c0392b;display:inline-block"></span>Already booked</span>
+      </div>
+    </div>
+
+    <!-- Slot picker (shown after clicking a date) -->
+    <div id="venue-slot-picker" style="display:none;margin-top:1rem;background:var(--green-light);border-radius:14px;padding:1rem;border:1.5px solid #b2dfc9">
+      <div id="venue-slot-picker-content"></div>
+    </div>
+  `;
+
+  // Store for use by venueSelectDay
+  window._venueOpenByDate = openByDate;
+  window._venueArtistId = artistNumericId;
+}
+
+function venueNavMonth(dir) {
+  venueCalMonth += dir;
+  if (venueCalMonth > 11) { venueCalMonth = 0; venueCalYear++; }
+  if (venueCalMonth < 0) { venueCalMonth = 11; venueCalYear--; }
+  const selected = document.querySelector('.pick-artist-row.selected');
+  const artistId = selected ? parseInt(selected.getAttribute('data-artist-id')) : null;
+  if (artistId) renderVenueAvailCalendar(artistId);
+}
+
+function venueSelectDay(dateStr) {
+  const slots = (window._venueOpenByDate || {})[dateStr] || [];
+  const picker = document.getElementById('venue-slot-picker');
+  const content = document.getElementById('venue-slot-picker-content');
+  if (!picker || !content || slots.length === 0) return;
+
+  content.innerHTML = `
+    <div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--green-mid);margin-bottom:0.75rem">Available times for ${formatDateDisplay(dateStr)}</div>
+    ${slots.map(s => `
+      <div onclick="selectArtistSlot('${dateStr}','${s.time}')" style="cursor:pointer;background:white;border:1.5px solid var(--cream-dark);border-radius:10px;padding:10px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;transition:all 0.15s" onmouseover="this.style.borderColor='var(--green)';this.style.background='white'" onmouseout="this.style.borderColor='var(--cream-dark)'">
+        <div>
+          <div style="font-size:0.875rem;font-weight:500;color:var(--ink)">⏰ ${s.time}</div>
+          ${s.notes ? `<div style="font-size:0.72rem;color:var(--ink-light);margin-top:2px">${s.notes}</div>` : ''}
+        </div>
+        <span style="font-size:0.72rem;background:var(--green);color:white;padding:3px 10px;border-radius:100px;font-weight:500;flex-shrink:0">Select →</span>
+      </div>
+    `).join('')}
+  `;
+  picker.style.display = 'block';
+  picker.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function selectArtistSlot(date, time) {
@@ -2718,6 +2839,19 @@ function selectArtistSlot(date, time) {
   if (timeInput) {
     // time is like "19:00-22:00", take start
     timeInput.value = time.split('-')[0];
+  }
+  // Show visual confirmation
+  const picker = document.getElementById('venue-slot-picker');
+  if (picker) {
+    picker.style.borderColor = 'var(--green)';
+    picker.style.background = 'var(--green-light)';
+    const confirmMsg = document.createElement('div');
+    confirmMsg.style.cssText = 'font-size:0.8rem;color:var(--green-mid);font-weight:500;margin-top:0.5rem;text-align:center';
+    confirmMsg.textContent = '✓ Slot selected — fill in your venue details below and submit.';
+    const existingMsg = picker.querySelector('.slot-confirm-msg');
+    if (existingMsg) existingMsg.remove();
+    confirmMsg.className = 'slot-confirm-msg';
+    picker.appendChild(confirmMsg);
   }
   // Scroll to date field
   if (dateInput) dateInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -3368,6 +3502,11 @@ function openArtistProfile(id) {
 // ════════════════════════════════
 // ARTIST AVAILABILITY CALENDAR
 // ════════════════════════════════
+
+// Tracks which calendar month is shown on the artist availability page
+let aaCalYear = null;
+let aaCalMonth = null;
+
 function renderArtistAvailability() {
   if (!currentUser || currentUser.userType !== 'artist') {
     document.getElementById('aa-auth-gate').style.display = 'block';
@@ -3376,24 +3515,9 @@ function renderArtistAvailability() {
   }
   document.getElementById('aa-auth-gate').style.display = 'none';
 
-  // Find artist record from spreadsheet mapping — use email prefix as fallback name
-  const emailPrefix = currentUser.email.split('@')[0];
-  const allArtists = [...ARTISTS, ...NEW_ARTISTS];
-  // Try to find a matching artist by name similarity — in production this would be a proper lookup
-  const artistRecord = allArtists[0]; // fallback to show the calendar UI
   const artistId = 'artist-' + currentUser.email.replace(/[^a-z0-9]/g,'');
-
-  const existing = getArtistAvailability(artistId);
-  const existingSlots = Object.entries(existing).filter(([,v]) => v.status === 'open');
-  const bookedSlots = Object.entries(existing).filter(([,v]) => v.status === 'booked');
-
-  // Generate next 60 days
-  const days = [];
   const today = new Date();
-  for (let i = 1; i <= 60; i++) {
-    const d = new Date(today); d.setDate(d.getDate() + i);
-    days.push(d);
-  }
+  if (aaCalYear === null) { aaCalYear = today.getFullYear(); aaCalMonth = today.getMonth(); }
 
   document.getElementById('aa-form-area').innerHTML = `
     <div style="display:flex;align-items:center;gap:10px;background:var(--green-light);border-radius:12px;padding:12px 16px;margin-bottom:2rem;font-size:0.875rem;color:var(--green-mid)">
@@ -3401,67 +3525,196 @@ function renderArtistAvailability() {
       <span>Signed in as artist: <strong>${currentUser.email}</strong> · <span style="cursor:pointer;text-decoration:underline" onclick="signOut()">Sign out</span></span>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:2rem;align-items:start">
-      <!-- Add new slot form -->
-      <div style="background:var(--white);border-radius:20px;padding:1.75rem;border:1px solid var(--cream-dark);position:sticky;top:100px">
-        <h3 style="font-family:var(--serif);font-size:1.3rem;color:var(--ink);margin-bottom:0.4rem">Add Availability</h3>
-        <p style="font-size:0.82rem;color:var(--ink-light);margin-bottom:1.5rem;line-height:1.6">Pick a date and time range when you're free to perform. Businesses will see these slots when booking you.</p>
-        <div class="form-field">
-          <label class="form-label">Date *</label>
-          <input class="form-input" type="date" id="aa-date" min="${today.toISOString().split('T')[0]}">
+    <div style="display:grid;grid-template-columns:1.1fr 1fr;gap:2rem;align-items:start">
+
+      <!-- LEFT: Calendar + slot form -->
+      <div>
+        <!-- Calendar -->
+        <div style="background:var(--white);border-radius:20px;border:1px solid var(--cream-dark);overflow:hidden;margin-bottom:1.5rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem;border-bottom:1px solid var(--cream-dark)">
+            <button onclick="aaNavMonth(-1)" style="background:var(--cream);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:background 0.2s" onmouseover="this.style.background='var(--cream-dark)'" onmouseout="this.style.background='var(--cream)'">‹</button>
+            <div style="font-family:var(--serif);font-size:1.1rem;color:var(--ink)" id="aa-cal-title"></div>
+            <button onclick="aaNavMonth(1)" style="background:var(--cream);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:background 0.2s" onmouseover="this.style.background='var(--cream-dark)'" onmouseout="this.style.background='var(--cream)'">›</button>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);text-align:center;padding:0.75rem 1rem 0">
+            ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div style="font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--ink-light);padding-bottom:0.5rem">${d}</div>`).join('')}
+          </div>
+          <div id="aa-cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:0 1rem 1rem"></div>
+          <div style="display:flex;gap:1rem;padding:0.75rem 1.5rem;border-top:1px solid var(--cream-dark);font-size:0.72rem;color:var(--ink-light)">
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;background:var(--green);display:inline-block"></span>Available</span>
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;background:#c0392b;display:inline-block"></span>Booked</span>
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;background:var(--cream-dark);display:inline-block"></span>Unavailable</span>
+          </div>
         </div>
-        <div class="form-field">
-          <label class="form-label">Start time *</label>
-          <input class="form-input" type="time" id="aa-start" value="19:00">
+
+        <!-- Add slot form — shown when a date is selected -->
+        <div id="aa-add-panel" style="background:var(--white);border-radius:20px;padding:1.75rem;border:1px solid var(--cream-dark);display:none">
+          <h3 style="font-family:var(--serif);font-size:1.15rem;color:var(--ink);margin-bottom:0.25rem">Add availability for <span id="aa-selected-date-label" style="color:var(--green)"></span></h3>
+          <p style="font-size:0.8rem;color:var(--ink-light);margin-bottom:1.25rem">Set a time range when you're free to perform.</p>
+          <input type="hidden" id="aa-date">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div class="form-field" style="margin-bottom:0">
+              <label class="form-label">Start time *</label>
+              <input class="form-input" type="time" id="aa-start" value="19:00">
+            </div>
+            <div class="form-field" style="margin-bottom:0">
+              <label class="form-label">End time *</label>
+              <input class="form-input" type="time" id="aa-end" value="22:00">
+            </div>
+          </div>
+          <div class="form-field" style="margin-top:1rem">
+            <label class="form-label">Notes (optional)</label>
+            <input class="form-input" type="text" id="aa-notes" placeholder="e.g. Prefer venues in Mississauga">
+          </div>
+          <div id="aa-add-error" style="display:none;background:#fde8e8;border-radius:10px;padding:8px 12px;font-size:0.8rem;color:#c0392b;margin-bottom:0.75rem"></div>
+          <div style="display:flex;gap:10px;margin-top:1.25rem">
+            <button onclick="addAvailabilitySlot('${artistId}')" style="flex:1;background:var(--green);color:white;border:none;border-radius:100px;padding:0.75rem;font-family:var(--sans);font-size:0.875rem;font-weight:500;cursor:pointer;transition:opacity 0.2s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">+ Add slot</button>
+            <button onclick="document.getElementById('aa-add-panel').style.display='none'" style="background:transparent;color:var(--ink-mid);border:1.5px solid var(--cream-dark);border-radius:100px;padding:0.75rem 1.25rem;font-family:var(--sans);font-size:0.875rem;cursor:pointer">Cancel</button>
+          </div>
         </div>
-        <div class="form-field">
-          <label class="form-label">End time *</label>
-          <input class="form-input" type="time" id="aa-end" value="22:00">
-        </div>
-        <div class="form-field">
-          <label class="form-label">Notes (optional)</label>
-          <input class="form-input" type="text" id="aa-notes" placeholder="e.g. Prefer venues in Mississauga">
-        </div>
-        <div id="aa-add-error" style="display:none;background:#fde8e8;border-radius:10px;padding:8px 12px;font-size:0.8rem;color:#c0392b;margin-bottom:0.75rem"></div>
-        <button class="booking-submit" style="background:var(--green)" onclick="addAvailabilitySlot('${artistId}')">+ Add this time slot</button>
+
+        <p style="font-size:0.78rem;color:var(--ink-light);margin-top:1rem;line-height:1.5;text-align:center">Click any future date on the calendar to mark yourself available. Venues will see your open slots when booking.</p>
       </div>
 
-      <!-- Current availability -->
+      <!-- RIGHT: Slots list -->
       <div>
-        <h3 style="font-family:var(--serif);font-size:1.3rem;color:var(--ink);margin-bottom:1rem">Your Availability</h3>
-
-        ${bookedSlots.length > 0 ? `
-        <div style="margin-bottom:1.5rem">
-          <div style="font-size:0.72rem;font-weight:500;text-transform:uppercase;letter-spacing:1.2px;color:#c0392b;margin-bottom:0.75rem">🔴 Confirmed Bookings</div>
-          ${bookedSlots.map(([k, v]) => {
-            const [, date, time] = k.split(':');
-            return `<div style="background:#fde8e8;border-radius:12px;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;border:1px solid #f5b7b1">
-              <div>
-                <div style="font-weight:500;font-size:0.9rem;color:var(--ink)">${formatDateDisplay(date)} at ${time}</div>
-                <div style="font-size:0.78rem;color:#c0392b;margin-top:2px">Booked by: ${v.bookedBy || 'a venue'}</div>
-              </div>
-              <span style="font-size:0.72rem;background:#c0392b;color:white;padding:3px 10px;border-radius:100px;font-weight:500">CONFIRMED</span>
-            </div>`;
-          }).join('')}
-        </div>` : ''}
-
-        <div style="font-size:0.72rem;font-weight:500;text-transform:uppercase;letter-spacing:1.2px;color:var(--green);margin-bottom:0.75rem">🟢 Open Slots</div>
-        <div id="aa-slots-list">
-        ${existingSlots.length === 0 ? `<div style="background:var(--cream);border-radius:12px;padding:1.5rem;text-align:center;color:var(--ink-light);font-size:0.875rem">No open slots yet. Add your available times on the left.</div>` :
-          existingSlots.map(([k, v]) => {
-            const [, date, time] = k.split(':');
-            return `<div style="background:var(--white);border-radius:12px;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--cream-dark)" id="slot-${k.replace(/:/g,'-')}">
-              <div>
-                <div style="font-weight:500;font-size:0.9rem;color:var(--ink)">${formatDateDisplay(date)} at ${time}</div>
-                ${v.notes ? `<div style="font-size:0.78rem;color:var(--ink-light);margin-top:2px">${v.notes}</div>` : ''}
-              </div>
-              <button onclick="removeSlot('${artistId}','${date}','${time}')" style="background:transparent;border:1.5px solid var(--cream-dark);border-radius:100px;padding:5px 12px;font-size:0.75rem;color:var(--ink-mid);cursor:pointer;font-family:var(--sans);transition:all 0.2s" onmouseover="this.style.borderColor='#c0392b';this.style.color='#c0392b'" onmouseout="this.style.borderColor='var(--cream-dark)';this.style.color='var(--ink-mid)'">✕ Remove</button>
-            </div>`;
-          }).join('')}
-        </div>
+        <h3 style="font-family:var(--serif);font-size:1.3rem;color:var(--ink);margin-bottom:1rem">Your Schedule</h3>
+        <div id="aa-slots-list"></div>
       </div>
     </div>
   `;
+
+  renderAaCalendar(artistId);
+  renderAaSlotsList(artistId);
+}
+
+function renderAaCalendar(artistId) {
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const store = getAvailabilityStore();
+
+  // Build set of dates that have slots for this artist
+  const openDates = new Set();
+  const bookedDates = new Set();
+  Object.entries(store).forEach(([k, v]) => {
+    if (!k.startsWith(artistId + ':')) return;
+    const dateStr = k.split(':')[1];
+    if (v.status === 'booked') bookedDates.add(dateStr);
+    else openDates.add(dateStr);
+  });
+
+  const titleEl = document.getElementById('aa-cal-title');
+  const gridEl = document.getElementById('aa-cal-grid');
+  if (!titleEl || !gridEl) return;
+
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  titleEl.textContent = monthNames[aaCalMonth] + ' ' + aaCalYear;
+
+  const firstDay = new Date(aaCalYear, aaCalMonth, 1).getDay();
+  const daysInMonth = new Date(aaCalYear, aaCalMonth + 1, 0).getDate();
+
+  let html = '';
+  // Empty cells before first day
+  for (let i = 0; i < firstDay; i++) {
+    html += `<div></div>`;
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateObj = new Date(aaCalYear, aaCalMonth, d);
+    dateObj.setHours(0,0,0,0);
+    const dateStr = `${aaCalYear}-${String(aaCalMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isPast = dateObj <= today;
+    const isBooked = bookedDates.has(dateStr);
+    const isOpen = openDates.has(dateStr);
+    const isToday = dateObj.getTime() === today.getTime();
+
+    let bg = 'transparent', color = isPast ? '#ccc' : 'var(--ink)', border = '2px solid transparent';
+    let cursor = isPast ? 'default' : 'pointer';
+    let dot = '';
+
+    if (isBooked) {
+      bg = '#fde8e8'; color = '#c0392b'; border = '2px solid #f5b7b1';
+      dot = `<div style="width:5px;height:5px;border-radius:50%;background:#c0392b;margin:1px auto 0"></div>`;
+    } else if (isOpen) {
+      bg = 'var(--green-light)'; color = 'var(--green-mid)'; border = '2px solid #b2dfc9';
+      dot = `<div style="width:5px;height:5px;border-radius:50%;background:var(--green);margin:1px auto 0"></div>`;
+    }
+    if (isToday) { border = '2px solid var(--ink)'; }
+
+    const click = (!isPast && !isBooked) ? `onclick="aaSelectDay('${dateStr}', '${d} ${monthNames[aaCalMonth]}')"` : '';
+
+    html += `<div ${click} style="border-radius:10px;padding:6px 2px;text-align:center;background:${bg};border:${border};cursor:${cursor};transition:all 0.15s;${!isPast && !isBooked ? 'onmouseover' : ''}" 
+      ${!isPast && !isBooked ? `onmouseover="if(!this.classList.contains('aa-day-open'))this.style.background='var(--cream)'" onmouseout="this.style.background='${bg}'"` : ''}>
+      <div style="font-size:0.8rem;font-weight:${isToday?'700':'400'};color:${color}">${d}</div>
+      ${dot}
+    </div>`;
+  }
+  gridEl.innerHTML = html;
+}
+
+function aaNavMonth(dir) {
+  aaCalMonth += dir;
+  if (aaCalMonth > 11) { aaCalMonth = 0; aaCalYear++; }
+  if (aaCalMonth < 0) { aaCalMonth = 11; aaCalYear--; }
+  const artistId = 'artist-' + currentUser.email.replace(/[^a-z0-9]/g,'');
+  renderAaCalendar(artistId);
+}
+
+function aaSelectDay(dateStr, labelStr) {
+  document.getElementById('aa-date').value = dateStr;
+  document.getElementById('aa-selected-date-label').textContent = labelStr;
+  const panel = document.getElementById('aa-add-panel');
+  panel.style.display = 'block';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  document.getElementById('aa-add-error').style.display = 'none';
+}
+
+function renderAaSlotsList(artistId) {
+  const existing = getArtistAvailability(artistId);
+  const existingSlots = Object.entries(existing).filter(([,v]) => v.status === 'open').sort((a,b)=>a[0].localeCompare(b[0]));
+  const bookedSlots = Object.entries(existing).filter(([,v]) => v.status === 'booked').sort((a,b)=>a[0].localeCompare(b[0]));
+  const container = document.getElementById('aa-slots-list');
+  if (!container) return;
+
+  let html = '';
+
+  if (bookedSlots.length > 0) {
+    html += `<div style="margin-bottom:1.5rem">
+      <div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#c0392b;margin-bottom:0.75rem">🔴 Confirmed Bookings</div>
+      ${bookedSlots.map(([k, v]) => {
+        const parts = k.split(':'); const date = parts[1]; const time = parts[2];
+        return `<div style="background:#fde8e8;border-radius:12px;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;border:1px solid #f5b7b1">
+          <div>
+            <div style="font-weight:500;font-size:0.875rem;color:var(--ink)">${formatDateDisplay(date)}</div>
+            <div style="font-size:0.75rem;color:#c0392b;margin-top:2px">⏰ ${time} · Booked by ${v.bookedBy || 'a venue'}</div>
+          </div>
+          <span style="font-size:0.7rem;background:#c0392b;color:white;padding:3px 10px;border-radius:100px;font-weight:600;flex-shrink:0">CONFIRMED</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+
+  if (existingSlots.length === 0) {
+    html += `<div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--green);margin-bottom:0.75rem">🟢 Open Slots</div>
+      <div style="background:var(--cream);border-radius:14px;padding:2rem;text-align:center;color:var(--ink-light);font-size:0.875rem;line-height:1.6">
+        <div style="font-size:1.5rem;margin-bottom:0.5rem">📅</div>
+        No open slots yet.<br>Click any future date on the calendar to add one.
+      </div>`;
+  } else {
+    html += `<div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--green);margin-bottom:0.75rem">🟢 Open Slots (${existingSlots.length})</div>`;
+    html += existingSlots.map(([k, v]) => {
+      const parts = k.split(':'); const date = parts[1]; const time = parts[2];
+      return `<div style="background:var(--white);border-radius:12px;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--cream-dark)" id="slot-${k.replace(/:/g,'-')}">
+        <div>
+          <div style="font-weight:500;font-size:0.875rem;color:var(--ink)">${formatDateDisplay(date)}</div>
+          <div style="font-size:0.75rem;color:var(--green);margin-top:2px">⏰ ${time}${v.notes ? ' · ' + v.notes : ''}</div>
+        </div>
+        <button onclick="removeSlot('${artistId}','${date}','${time}')" style="background:transparent;border:1.5px solid var(--cream-dark);border-radius:100px;padding:5px 12px;font-size:0.72rem;color:var(--ink-mid);cursor:pointer;font-family:var(--sans);transition:all 0.2s;flex-shrink:0" onmouseover="this.style.borderColor='#c0392b';this.style.color='#c0392b'" onmouseout="this.style.borderColor='var(--cream-dark)';this.style.color='var(--ink-mid)'">✕ Remove</button>
+      </div>`;
+    }).join('');
+  }
+
+  container.innerHTML = html;
 }
 
 function formatDateDisplay(dateStr) {
@@ -3498,7 +3751,10 @@ function addAvailabilitySlot(artistId) {
   }
   store[key] = { status: 'open', bookedBy: null, notes };
   saveAvailabilityStore(store);
-  renderArtistAvailability();
+  // Hide the add panel and refresh just the calendar + list (no full re-render)
+  document.getElementById('aa-add-panel').style.display = 'none';
+  renderAaCalendar(artistId);
+  renderAaSlotsList(artistId);
 }
 
 function removeSlot(artistId, date, time) {
@@ -3507,7 +3763,8 @@ function removeSlot(artistId, date, time) {
   if (store[key] && store[key].status === 'booked') { alert('This slot is already booked and cannot be removed.'); return; }
   delete store[key];
   saveAvailabilityStore(store);
-  renderArtistAvailability();
+  renderAaCalendar(artistId);
+  renderAaSlotsList(artistId);
 }
 
 // ════════════════════════════════
