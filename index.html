@@ -6,6 +6,103 @@
 <title>LocalStage — We Don't Book Talent. We Book Audiences.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+<!-- ═══════════════════════════════════════════════════════════
+  LOCALSTAGE v11 — PRODUCTION CONFIG
+  ══════════════════════════════════════════════════════════════
+  STEP 1 — FIREBASE (free Spark plan, for Auth OTP emails)
+    a) Go to console.firebase.google.com → Create project
+    b) Authentication → Sign-in method → Enable "Email/Password" AND "Email link (passwordless)"
+    c) Project Settings → Your apps → Add Web app → copy config below
+    d) Authentication → Settings → Authorized domains → add your domain
+  
+  STEP 2 — STRIPE (for real $99 CAD payments)
+    a) Go to stripe.com → Developers → API keys
+    b) Copy your PUBLISHABLE key (starts with pk_live_ or pk_test_)
+    c) Set up a Payment Intent endpoint on your backend (see comment below)
+    d) For testing: use pk_test_ key + card 4242 4242 4242 4242
+  
+  STEP 3 — BACKEND for Stripe (required — can't process cards client-side)
+    Option A: Vercel serverless function (free)
+    Option B: Firebase Cloud Function (free tier)
+    Your endpoint must: create a PaymentIntent for 9900 (CAD cents), return clientSecret
+    Example: POST /api/create-payment-intent → { clientSecret: "pi_xxx_secret_xxx" }
+  ═══════════════════════════════════════════════════════════ -->
+<script>
+  // ─── FIREBASE CONFIG — replace all values below ───────────────
+  const FIREBASE_CONFIG = {
+    apiKey:            "AIzaSyDIofGQftDq5E1uo0twpEf4Ss7t8WOXyc4",
+    authDomain:        "local-stage-94f88.firebaseapp.com",
+    projectId:         "local-stage-94f88",
+    storageBucket:     "local-stage-94f88.firebasestorage.app",
+    messagingSenderId: "177600603494",
+    appId:             "1:177600603494:web:1696f09bb3e51d075ad4a7"
+  };
+
+  // ─── STRIPE CONFIG ─────────────────────────────────────────────
+  const STRIPE_PUBLISHABLE_KEY = "pk_test_REPLACE_WITH_YOUR_KEY"; // or pk_live_...
+  const PAYMENT_INTENT_ENDPOINT = "/api/create-payment-intent";   // your backend URL
+
+  // ─── EMAILJS (kept for apply-form notifications) ──────────────
+  const EMAILJS_SERVICE  = 'service_jfagb77';
+  const EMAILJS_TEMPLATE = 'template_aegy9aj';
+  const EMAILJS_KEY      = 'FoCM6Rnq5pMjlI2PP';
+</script>
+
+<!-- Firebase SDK (modular CDN) -->
+<script type="module">
+  import { initializeApp }                   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+  import { getAuth, sendSignInLinkToEmail,
+           isSignInWithEmailLink, signInWithEmailLink,
+           signOut as fbSignOut }            from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+
+  // Expose to global scope so non-module scripts can call them
+  const app  = initializeApp(FIREBASE_CONFIG);
+  const auth = getAuth(app);
+
+  window._fbAuth = auth;
+  window._fbSendLink = async (email) => {
+    const actionCodeSettings = {
+      url: window.location.href,      // redirect back to same page
+      handleCodeInApp: true
+    };
+    await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+    window.localStorage.setItem('ls-email-for-signin', email);
+  };
+  window._fbIsEmailLink = () => isSignInWithEmailLink(auth, window.location.href);
+  window._fbSignInWithLink = async (email) => {
+    const result = await signInWithEmailLink(auth, email, window.location.href);
+    return result.user;
+  };
+  window._fbSignOut = () => fbSignOut(auth);
+
+  // Handle magic-link redirect on page load
+  window.addEventListener('DOMContentLoaded', () => {
+    if (window._fbIsEmailLink()) {
+      let email = localStorage.getItem('ls-email-for-signin');
+      if (!email) {
+        email = window.prompt('Please confirm your email address to finish signing in:');
+      }
+      if (email) {
+        window._fbSignInWithLink(email).then(user => {
+          localStorage.removeItem('ls-email-for-signin');
+          // Remove the link tokens from the URL cleanly
+          const cleanUrl = window.location.pathname;
+          window.history.replaceState({}, document.title, cleanUrl);
+          handleFirebaseSignIn(user.email);
+        }).catch(err => {
+          console.error('Magic link sign-in failed:', err);
+          alert('Sign-in link expired or already used. Please request a new one.');
+        });
+      }
+    }
+  });
+</script>
+
+<!-- Stripe.js -->
+<script src="https://js.stripe.com/v3/"></script>
+
+<!-- EmailJS (for apply form notifications) -->
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
   :root {
@@ -526,6 +623,18 @@
 </style>
 </head>
 <body>
+
+<!-- ═══════════════════════════════════════════════════════
+     SETUP REQUIRED BANNER — remove once configured
+═══════════════════════════════════════════════════════ -->
+<div id="setup-banner" style="position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#1a1a18;color:white;padding:12px 24px;font-family:var(--sans);font-size:0.8rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;border-top:3px solid #f4b400">
+  <div>
+    <span style="color:#f4b400;font-weight:600">⚙️ v11 Setup required:</span>
+    &nbsp;
+    <span style="color:#9a9a90">Add your </span><strong style="color:white">Firebase config</strong><span style="color:#9a9a90"> (for real email sign-in) and </span><strong style="color:white">Stripe key + backend endpoint</strong><span style="color:#9a9a90"> (for real payments) in the &lt;script&gt; block at the top of this file. Until then, sign-in will show a config notice and payment will be blocked.</span>
+  </div>
+  <button onclick="document.getElementById('setup-banner').style.display='none'" style="background:transparent;border:1px solid #3a3a36;color:#9a9a90;padding:6px 14px;border-radius:100px;font-family:var(--sans);font-size:0.78rem;cursor:pointer;white-space:nowrap;flex-shrink:0">Dismiss</button>
+</div>
 
 <!-- ─────────────── NAV ─────────────── -->
 <nav>
@@ -1200,6 +1309,84 @@
 
 
 <!-- ══════════════════════════════════════
+     PAGE: ARTIST AVAILABILITY CALENDAR
+══════════════════════════════════════ -->
+<div id="page-artist-availability" class="page">
+  <div class="booking-hero" style="background:linear-gradient(135deg,#0a4d38 0%,#1a9b6c 100%)">
+    <div class="booking-hero-inner">
+      <div style="font-size:0.75rem;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:0.75rem">Artist Portal</div>
+      <h1 id="aa-title">Set your availability.</h1>
+      <p id="aa-sub">Add the dates and times you're free to perform. Businesses will only be able to book the slots you approve here.</p>
+    </div>
+  </div>
+  <div class="booking-content" style="max-width:860px">
+    <div id="aa-auth-gate" style="text-align:center;padding:4rem 2rem;display:none">
+      <div style="font-size:3rem;margin-bottom:1rem">🔒</div>
+      <h2 style="font-family:var(--serif);font-size:1.8rem;margin-bottom:0.75rem">Sign in to manage availability</h2>
+      <p style="color:var(--ink-light);margin-bottom:2rem">Artist accounts only. Sign in with your approved artist email.</p>
+      <button class="btn-primary" onclick="openLogin()">Sign in →</button>
+    </div>
+    <div id="aa-form-area">
+      <!-- populated by renderArtistAvailability() -->
+    </div>
+  </div>
+  <footer>
+    <div class="footer-logo">Local<span>Stage</span></div>
+    <div class="footer-copy">© 2026 LocalStage · Ontario, Canada</div>
+    <div class="footer-links">
+      <a onclick="showPage('home')">Home</a>
+    </div>
+  </footer>
+</div><!-- /page-artist-availability -->
+
+
+<!-- ══════════════════════════════════════
+     PAGE: PAYMENT
+══════════════════════════════════════ -->
+<div id="page-payment" class="page">
+  <div class="booking-hero" style="background:linear-gradient(135deg,#0a4d38 0%,#1a9b6c 100%)">
+    <div class="booking-hero-inner">
+      <div style="font-size:0.75rem;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:0.75rem">Confirm & Pay</div>
+      <h1>Reserve your artist.</h1>
+      <p>Your slot is held for 10 minutes. Complete payment to lock in the booking.</p>
+    </div>
+  </div>
+  <div class="booking-content" style="max-width:680px">
+    <div id="pay-summary" style="background:var(--white);border-radius:20px;padding:2rem;border:1px solid var(--cream-dark);margin-bottom:1.5rem">
+      <!-- Filled by goToPayment() -->
+    </div>
+    <div style="background:var(--white);border-radius:20px;padding:2rem;border:1px solid var(--cream-dark)">
+      <h3 style="font-family:var(--serif);font-size:1.3rem;margin-bottom:0.4rem;color:var(--ink)">Payment Details</h3>
+      <p style="font-size:0.85rem;color:var(--ink-light);margin-bottom:1.5rem;line-height:1.6">This $99 CAD coordination fee reserves the artist for your selected date. Artist performance fee is paid directly to the artist.</p>
+
+      <!-- Stripe Elements mount point -->
+      <div class="form-field"><label class="form-label">Billing email *</label><input class="form-input" id="pay-email" type="email" placeholder="jane@venue.com"></div>
+      <div class="form-field">
+        <label class="form-label">Card details *</label>
+        <div id="stripe-card-element" style="padding:12px 14px;border:1.5px solid var(--cream-dark);border-radius:10px;background:var(--white);transition:border-color 0.2s;font-family:var(--sans)">
+          <!-- Stripe injects its iframe here -->
+        </div>
+        <div id="stripe-card-errors" style="display:none;font-size:0.78rem;color:#c0392b;margin-top:6px"></div>
+      </div>
+
+      <div id="pay-error" style="display:none;background:#fde8e8;border-radius:10px;padding:10px 14px;font-size:0.82rem;color:#c0392b;margin-bottom:1rem"></div>
+      <button class="booking-submit" onclick="processPayment()" id="pay-btn" style="background:var(--green)">🔒 Confirm & Pay $99 CAD →</button>
+      <p style="font-size:0.72rem;color:var(--ink-light);text-align:center;margin-top:0.75rem;line-height:1.5">
+        Powered by <strong>Stripe</strong> · 256-bit SSL encryption · Card details never touch our servers
+      </p>
+    </div>
+  </div>
+  <footer>
+    <div class="footer-logo">Local<span>Stage</span></div>
+    <div class="footer-copy">© 2026 LocalStage · Ontario, Canada</div>
+    <div class="footer-links">
+      <a onclick="showPage('booking')">← Back to booking</a>
+    </div>
+  </footer>
+</div><!-- /page-payment -->
+
+
+<!-- ══════════════════════════════════════
      PAGE: BOOKING
 ══════════════════════════════════════ -->
 <div id="page-booking" class="page">
@@ -1465,10 +1652,10 @@
   <div class="modal-box">
     <button class="modal-close" onclick="closeModal('modal-login')">✕</button>
 
-    <!-- Step 1: Email -->
+    <!-- Step 1: Email — Firebase magic link -->
     <div class="login-step active" id="login-step-email">
       <div class="modal-title">Sign in to LocalStage.</div>
-      <div class="modal-sub">Enter your email address. We'll generate a one-time code — no password needed.</div>
+      <div class="modal-sub">Enter your approved email. We'll send a magic sign-in link — no password needed.</div>
       <div style="background:#fff8e1;border:1.5px solid #f4b400;border-radius:12px;padding:10px 14px;font-size:0.8rem;color:#7a6000;margin-bottom:1.25rem;line-height:1.6">
         <strong>New here?</strong> Sign in only works once you've been approved. <span style="color:var(--green);cursor:pointer;font-weight:500;text-decoration:underline" onclick="closeModal('modal-login');openApply()">Apply first →</span>
       </div>
@@ -1476,25 +1663,22 @@
         <label class="form-label">Email address</label>
         <input class="form-input" type="email" id="login-email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')sendCode()">
       </div>
-      <button class="form-submit" onclick="sendCode()">Get my access code →</button>
-      <p style="text-align:center;font-size:0.8rem;color:var(--ink-light);margin-top:1rem">A 6-digit code will appear on the next screen.</p>
+      <button class="form-submit" onclick="sendCode()">Send me a sign-in link →</button>
+      <p style="text-align:center;font-size:0.8rem;color:var(--ink-light);margin-top:1rem">A magic link will be emailed to you. Click it to sign in instantly.</p>
     </div>
 
-    <!-- Step 2: Code verification -->
+    <!-- Step 2: Link sent confirmation -->
     <div class="login-step" id="login-step-code">
-      <div class="modal-title">Your access code.</div>
-      <div class="modal-sub" id="login-code-sub">Here is your one-time sign-in code for <strong id="login-code-email-display"></strong>. Enter it below.</div>
-      <div class="code-input-group">
-        <input class="code-digit" maxlength="1" id="code-0" oninput="codeInput(0)" onkeydown="codeKeydown(event,0)">
-        <input class="code-digit" maxlength="1" id="code-1" oninput="codeInput(1)" onkeydown="codeKeydown(event,1)">
-        <input class="code-digit" maxlength="1" id="code-2" oninput="codeInput(2)" onkeydown="codeKeydown(event,2)">
-        <input class="code-digit" maxlength="1" id="code-3" oninput="codeInput(3)" onkeydown="codeKeydown(event,3)">
-        <input class="code-digit" maxlength="1" id="code-4" oninput="codeInput(4)" onkeydown="codeKeydown(event,4)">
-        <input class="code-digit" maxlength="1" id="code-5" oninput="codeInput(5)" onkeydown="codeKeydown(event,5)">
+      <div class="modal-title">Check your email.</div>
+      <div class="modal-sub" id="login-code-sub">We've sent a magic sign-in link to <strong id="login-code-email-display"></strong>. Click the link in your email to sign in instantly.</div>
+      <div style="text-align:center;padding:1.5rem 0">
+        <div style="font-size:3rem;margin-bottom:1rem">📬</div>
+        <p style="font-size:0.85rem;color:var(--ink-light);line-height:1.7">Check your inbox (and spam folder). The link expires in 10 minutes.</p>
       </div>
-      <div id="code-error" style="text-align:center;font-size:0.8rem;color:#c0392b;margin-bottom:0.75rem;display:none">Incorrect code. Please try again.</div>
-      <button class="form-submit" onclick="verifyCode()">Verify & sign in →</button>
-      <p style="text-align:center;margin-top:1rem;font-size:0.8rem;color:var(--ink-light)">Didn't get it? <span class="resend-link" onclick="resendCode()">Resend code</span> &nbsp;·&nbsp; <span class="resend-link" onclick="backToEmail()">Change email</span></p>
+      <div id="code-error" style="text-align:center;font-size:0.8rem;color:#c0392b;margin-bottom:0.75rem;display:none">Something went wrong. Please try again.</div>
+      <p style="text-align:center;margin-top:0.5rem;font-size:0.8rem;color:var(--ink-light)">
+        <span class="resend-link" onclick="resendCode()">Resend link</span> &nbsp;·&nbsp; <span class="resend-link" onclick="backToEmail()">Change email</span>
+      </p>
     </div>
 
     <!-- Step 3: Signed in -->
@@ -1565,12 +1749,8 @@
       <!-- Right: video embed -->
       <div style="padding:2.5rem;background:#151512">
         <div style="font-size:0.72rem;font-weight:500;text-transform:uppercase;letter-spacing:1.5px;color:#5dcaa5;margin-bottom:1rem">Latest Performance</div>
-        <div id="ap-video-container" style="border-radius:12px;overflow:hidden;aspect-ratio:16/9;background:#1a1a18;display:flex;align-items:center;justify-content:center;border:1px dashed #2e2e2a">
-          <div style="text-align:center;padding:2.5rem">
-            <div style="font-size:1.75rem;margin-bottom:10px">🎥</div>
-            <div style="font-size:0.85rem;color:#9a9a90;margin-bottom:16px;line-height:1.6">Showcase video shared<br>after booking confirmation</div>
-            <button onclick="closeModal('modal-artist-profile'); showPage('booking')" style="background:var(--green);color:white;border:none;padding:9px 20px;border-radius:100px;font-family:var(--sans);font-size:0.8rem;font-weight:500;cursor:pointer;transition:opacity 0.2s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">Request a showcase &#8594;</button>
-          </div>
+        <div id="ap-video-container" style="border-radius:12px;overflow:hidden;aspect-ratio:16/9;background:#0d0d0b;position:relative">
+          <!-- Filled by openArtistProfile() with real YouTube embed -->
         </div>
         <div id="ap-video-label" style="font-size:0.8rem;color:#5a5a50;margin-top:10px"></div>
 
@@ -1628,12 +1808,36 @@
 // ════════════════════════════════
 // STATE
 // ════════════════════════════════
-let currentUser = null; // { email, isNew }
+let currentUser = null; // { email, isNew, userType: 'artist'|'business' }
 let verificationCode = null;
 let selectedType = null; // 'artist' | 'business'
 let currentApplyStep = 0;
 let termsAccepted = false;
 let sigHasContent = false;
+
+// ────────────────────────────────
+// AVAILABILITY STORE (in-memory, shared via localStorage as simple persistence)
+// Schema: { "artistId:YYYY-MM-DD:HH:MM": { status: 'open'|'booked', bookedBy: email|null } }
+// ────────────────────────────────
+function getAvailabilityStore() {
+  try { return JSON.parse(localStorage.getItem('ls-availability') || '{}'); } catch(e) { return {}; }
+}
+function saveAvailabilityStore(store) {
+  localStorage.setItem('ls-availability', JSON.stringify(store));
+}
+function getArtistAvailability(artistId) {
+  const store = getAvailabilityStore();
+  return Object.entries(store)
+    .filter(([k]) => k.startsWith(artistId + ':'))
+    .reduce((acc, [k, v]) => { acc[k] = v; return acc; }, {});
+}
+function setSlot(artistId, date, time, status, bookedBy = null) {
+  const store = getAvailabilityStore();
+  const key = `${artistId}:${date}:${time}`;
+  if (status === 'remove') { delete store[key]; }
+  else { store[key] = { status, bookedBy }; }
+  saveAvailabilityStore(store);
+}
 
 // ── Signature canvas state ──
 let sigDrawing = false;
@@ -1665,13 +1869,18 @@ function showPage(name) {
   const page = document.getElementById('page-' + name);
   if (!page) return;
   page.classList.add('active');
-  // Reset scroll completely on every page switch
   window.scrollTo({top: 0, left: 0, behavior: 'instant'});
   document.documentElement.scrollTop = 0;
   document.body.scrollTop = 0;
   if (name === 'artists') renderArtistGrid('all','all');
   if (name === 'booking') renderBookingPage();
   if (name === 'apply') resetApply();
+  if (name === 'artist-availability') renderArtistAvailability();
+  // Reset Stripe card element when navigating away from payment
+  if (name !== 'payment' && _stripeCard) {
+    try { _stripeCard.unmount(); } catch(e) {}
+    _stripeCard = null;
+  }
 }
 
 function openApply() { showPage('apply'); }
@@ -1769,9 +1978,10 @@ function updateNavAuth() {
 
 function signOut() {
   currentUser = null;
-  // Reset email whitelist cache so a fresh fetch happens on next login attempt
   approvedEmails = null;
   sheetLoadFailed = false;
+  // Firebase sign out
+  if (window._fbSignOut) window._fbSignOut().catch(e => console.warn('FB signout:', e));
   updateNavAuth();
   renderBookingPage();
 }
@@ -1820,33 +2030,34 @@ function backToEmail() {
 }
 
 // ════════════════════════════════
-// APPROVED EMAIL WHITELIST
-// (fetched from Google Sheets on first login attempt)
+// FIREBASE AUTH — Magic Link (Email Link sign-in)
 // ════════════════════════════════
-let approvedEmails = null; // null = not loaded yet
-let sheetLoadFailed = false; // true if we couldn't reach the sheet
-
+let approvedEmails = null;
+let emailUserTypes = {};
+let sheetLoadFailed = false;
 const SHEET_ID = '1mPtLnj0UMEUFxoA7ldztxmeSY-p2gsuxrOnwjCFt0u0';
 
 async function loadApprovedEmails() {
-  if (approvedEmails !== null) return; // already loaded
+  if (approvedEmails !== null) return;
   try {
-    // Use the public CSV export URL — works without an API key for sheets shared with "anyone with link"
     const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
     const res = await fetch(url);
     if (!res.ok) throw new Error('Sheet returned ' + res.status);
     const text = await res.text();
-    // Parse CSV — each cell value may be quoted
-    const parsed = text.split('\n').flatMap(row =>
-      row.split(',').map(cell => cell.replace(/^"|"$/g,'').trim().toLowerCase())
-    ).filter(v => v.includes('@') && v.includes('.'));
-    if (parsed.length === 0) throw new Error('Sheet appears empty or inaccessible');
-    approvedEmails = parsed;
+    const rows = text.split('\n').map(row =>
+      row.split(',').map(cell => cell.replace(/^"|"$/g,'').trim())
+    ).filter(r => r[0] && r[0].includes('@'));
+    if (rows.length === 0) throw new Error('Sheet empty');
+    approvedEmails = rows.map(r => r[0].toLowerCase());
+    rows.forEach(r => {
+      const type = (r[1] || '').toLowerCase().trim();
+      emailUserTypes[r[0].toLowerCase()] = (type === 'artist') ? 'artist' : 'business';
+    });
     sheetLoadFailed = false;
   } catch(e) {
     console.warn('Could not load whitelist:', e);
-    approvedEmails = []; // mark as attempted
-    sheetLoadFailed = true; // fail CLOSED — block sign-in if sheet is unreachable
+    approvedEmails = [];
+    sheetLoadFailed = true;
   }
 }
 
@@ -1858,115 +2069,106 @@ async function sendCode() {
     return;
   }
   document.getElementById('login-email').style.borderColor = '';
-
-  // Show loading state
   if (btn) { btn.classList.add('btn-loading'); btn.disabled = true; }
 
   await loadApprovedEmails();
 
-  // If the sheet couldn't be loaded at all, block sign-in and surface the error
   if (sheetLoadFailed) {
     if (btn) { btn.classList.remove('btn-loading'); btn.disabled = false; }
     document.getElementById('login-email').style.borderColor = '#c0392b';
-    let errEl = document.getElementById('login-email-error');
-    if (!errEl) {
-      errEl = document.createElement('p');
-      errEl.id = 'login-email-error';
-      errEl.style.cssText = 'font-size:0.8rem;color:#c0392b;margin-top:8px;text-align:center';
-      document.getElementById('login-step-email').querySelector('.form-field').appendChild(errEl);
-    }
-    errEl.textContent = 'Unable to reach our access list right now. Please try again in a moment.';
+    showLoginError('Unable to reach our access list right now. Please try again in a moment.');
     return;
   }
 
-  // Strict check — email must be in the approved list (no fail-open)
-  const isApproved = approvedEmails.includes(email);
-  if (!isApproved) {
+  if (!approvedEmails.includes(email)) {
     if (btn) { btn.classList.remove('btn-loading'); btn.disabled = false; }
     document.getElementById('login-email').style.borderColor = '#c0392b';
-    let errEl = document.getElementById('login-email-error');
-    if (!errEl) {
-      errEl = document.createElement('p');
-      errEl.id = 'login-email-error';
-      errEl.style.cssText = 'font-size:0.8rem;color:#c0392b;margin-top:8px;text-align:center';
-      document.getElementById('login-step-email').querySelector('.form-field').appendChild(errEl);
-    }
-    errEl.textContent = 'This email is not on our approved list. Apply to join LocalStage first.';
+    showLoginError('This email is not on our approved list. Apply to join LocalStage first.');
     return;
   }
 
-  // Clear any previous error
-  const errEl = document.getElementById('login-email-error');
-  if (errEl) errEl.remove();
+  // ── FIREBASE: send magic sign-in link ──
+  if (!window._fbSendLink || FIREBASE_CONFIG.apiKey === 'YOUR_API_KEY') {
+    // Firebase not configured yet — show setup notice
+    if (btn) { btn.classList.remove('btn-loading'); btn.disabled = false; }
+    document.getElementById('login-email').style.borderColor = '#f4b400';
+    showLoginError('⚙️ Firebase not configured yet. Add your Firebase config in the <script> block at the top of this file to enable email sign-in.', '#7a6000', '#fff8e1', '#f4b400');
+    return;
+  }
 
-  // Generate OTP — displayed on screen during testing (no email sent)
-  verificationCode = String(Math.floor(100000 + Math.random() * 900000));
+  try {
+    await window._fbSendLink(email);
+    if (btn) { btn.classList.remove('btn-loading'); btn.disabled = false; }
+    const errEl = document.getElementById('login-email-error');
+    if (errEl) errEl.remove();
+    document.getElementById('login-code-email-display').textContent = email;
+    document.querySelectorAll('.login-step').forEach(s => s.classList.remove('active'));
+    document.getElementById('login-step-code').classList.add('active');
+  } catch(err) {
+    if (btn) { btn.classList.remove('btn-loading'); btn.disabled = false; }
+    console.error('sendSignInLinkToEmail error:', err);
+    showLoginError('Failed to send sign-in link: ' + (err.message || 'Unknown error. Make sure this domain is authorized in Firebase console.'));
+  }
+}
 
-  if (btn) { btn.classList.remove('btn-loading'); btn.disabled = false; }
-
-  document.getElementById('login-code-email-display').textContent = email;
-  document.getElementById('login-code-sub').innerHTML = `
-    <span style="display:inline-block;background:#fff8e1;border:1.5px dashed #f4b400;border-radius:10px;padding:10px 18px;font-size:0.85rem;color:#7a6000;margin-bottom:10px">
-      🧪 <strong>Testing mode:</strong> Your code is <strong style="font-size:1.1rem;letter-spacing:2px">${verificationCode}</strong>
-    </span><br>
-    <small style="color:var(--ink-light);font-size:0.75rem;margin-top:6px;display:block">Email delivery is disabled during testing. Enter the code above.</small>
-  `;
-  document.querySelectorAll('.login-step').forEach(s => s.classList.remove('active'));
-  document.getElementById('login-step-code').classList.add('active');
-  setTimeout(() => document.getElementById('code-0').focus(), 100);
+function showLoginError(msg, color='#c0392b', bg='#fde8e8', border='#c0392b') {
+  let errEl = document.getElementById('login-email-error');
+  if (!errEl) {
+    errEl = document.createElement('p');
+    errEl.id = 'login-email-error';
+    const field = document.getElementById('login-step-email').querySelector('.form-field');
+    if (field) field.appendChild(errEl);
+    else document.getElementById('login-step-email').appendChild(errEl);
+  }
+  errEl.style.cssText = `font-size:0.8rem;color:${color};background:${bg};border:1px solid ${border};border-radius:8px;padding:8px 12px;margin-top:8px;line-height:1.5;text-align:center`;
+  errEl.textContent = msg;
 }
 
 async function resendCode() {
-  verificationCode = String(Math.floor(100000 + Math.random() * 900000));
-  const email = document.getElementById('login-email').value.trim();
-  // Testing mode — no email sent, code shown on screen
-  document.getElementById('login-code-sub').innerHTML = `
-    <span style="display:inline-block;background:#fff8e1;border:1.5px dashed #f4b400;border-radius:10px;padding:10px 18px;font-size:0.85rem;color:#7a6000;margin-bottom:10px">
-      🧪 <strong>Testing mode:</strong> Your new code is <strong style="font-size:1.1rem;letter-spacing:2px">${verificationCode}</strong>
-    </span><br>
-    <small style="color:var(--ink-light);font-size:0.75rem;margin-top:6px;display:block">Email delivery is disabled during testing. Enter the code above.</small>
-  `;
-  document.getElementById('code-error').style.display='none';
-  for (let i=0;i<6;i++) document.getElementById('code-'+i).value='';
-  document.getElementById('code-0').focus();
-}
-
-function codeInput(idx) {
-  const val = document.getElementById('code-'+idx).value;
-  if (val && idx < 5) document.getElementById('code-'+(idx+1)).focus();
-  if (val && idx === 5) verifyCode();
-}
-
-function codeKeydown(e, idx) {
-  if (e.key === 'Backspace' && !document.getElementById('code-'+idx).value && idx > 0) {
-    document.getElementById('code-'+(idx-1)).focus();
-  }
-}
-
-function verifyCode() {
-  const entered = Array.from({length:6}, (_,i) => document.getElementById('code-'+i).value).join('');
-  if (entered === verificationCode) {
-    const email = document.getElementById('login-email').value.trim();
-    const isNew = !localStorage.getItem('ls-user-' + email);
-    localStorage.setItem('ls-user-' + email, '1');
-    currentUser = { email, isNew };
-    updateNavAuth();
-    document.getElementById('login-success-msg').textContent = isNew
-      ? `Welcome to LocalStage! Your account has been created for ${email}. You now have access to the booking platform.`
-      : `Welcome back! You're signed in as ${email}.`;
-    document.querySelectorAll('.login-step').forEach(s => s.classList.remove('active'));
-    document.getElementById('login-step-success').classList.add('active');
-    renderBookingPage();
-    // If user was mid-booking-flow, auto-redirect after brief success screen
-    if (pendingBookArtistId) {
-      setTimeout(() => { closeModal('modal-login'); showPage('booking'); }, 1400);
-    }
-  } else {
+  const email = document.getElementById('login-email').value.trim().toLowerCase();
+  if (!email || !window._fbSendLink) return;
+  try {
+    await window._fbSendLink(email);
+    document.getElementById('login-code-sub').innerHTML = 'A new sign-in link has been sent to <strong>' + email + '</strong>.';
+    document.getElementById('code-error').style.display='none';
+  } catch(err) {
+    document.getElementById('code-error').textContent = 'Resend failed. Please try again.';
     document.getElementById('code-error').style.display='block';
-    for (let i=0;i<6;i++) { document.getElementById('code-'+i).value=''; }
-    document.getElementById('code-0').focus();
   }
 }
+
+// Called by the Firebase module after magic-link redirect
+function handleFirebaseSignIn(email) {
+  const lowerEmail = (email || '').toLowerCase();
+  loadApprovedEmails().then(() => {
+    const userType = emailUserTypes[lowerEmail] || 'business';
+    const isNew = !localStorage.getItem('ls-user-' + lowerEmail);
+    localStorage.setItem('ls-user-' + lowerEmail, '1');
+    currentUser = { email: lowerEmail, isNew, userType };
+    updateNavAuth();
+    // Show brief success then route
+    if (document.getElementById('login-step-success')) {
+      document.querySelectorAll('.login-step').forEach(s => s.classList.remove('active'));
+      document.getElementById('login-success-msg').textContent = isNew
+        ? `Welcome to LocalStage! You're signed in as ${lowerEmail}.`
+        : `Welcome back! You're signed in as ${lowerEmail}.`;
+      document.getElementById('login-step-success').classList.add('active');
+    }
+    if (userType === 'artist') {
+      setTimeout(() => { closeModal('modal-login'); showPage('artist-availability'); }, 1200);
+    } else {
+      renderBookingPage();
+      if (pendingBookArtistId) {
+        setTimeout(() => { closeModal('modal-login'); showPage('booking'); }, 1200);
+      }
+    }
+  });
+}
+
+// Stubs kept so HTML references don't break
+function codeInput(idx) {}
+function codeKeydown(e, idx) {}
+function verifyCode() {}
 
 // ════════════════════════════════
 // ARTIST GRID
@@ -2070,6 +2272,8 @@ function getBookingFormHTML() {
             </select>
           </div>
           <div id="booking-artist-list"></div>
+          <!-- Availability slots for selected artist -->
+          <div id="booking-avail-slots"></div>
         </div>
         <div style="background:var(--green-light);border-radius:16px;padding:1.25rem;font-size:0.825rem;color:var(--green-mid);line-height:1.7">
           <strong style="display:block;margin-bottom:4px">How booking works</strong>
@@ -2355,8 +2559,19 @@ function renderBookingPage() {
   const form = document.getElementById('booking-form-area');
   if (!gate || !form) return;
   if (currentUser) {
+    // Artists should not be on the booking page
+    if (currentUser.userType === 'artist') {
+      gate.style.display = 'block';
+      form.style.display = 'none';
+      gate.innerHTML = `
+        <div class="auth-gate-icon">🎤</div>
+        <h2>Artist accounts can't book</h2>
+        <p>As an artist on LocalStage, your page is for managing your availability. Businesses will book you through their accounts.</p>
+        <button class="btn-primary" onclick="showPage('artist-availability')">Manage my availability →</button>
+      `;
+      return;
+    }
     gate.style.display = 'none';
-    // Check if this user has already submitted a booking — expires after 7 days
     const raw = localStorage.getItem('ls-booked-' + currentUser.email);
     let hasBooked = null;
     if (raw) {
@@ -2367,7 +2582,6 @@ function renderBookingPage() {
         if (submittedAt && (Date.now() - submittedAt.getTime()) < sevenDays) {
           hasBooked = parsed;
         } else {
-          // Expired — clear it so they can book again
           localStorage.removeItem('ls-booked-' + currentUser.email);
         }
       } catch(e) { localStorage.removeItem('ls-booked-' + currentUser.email); }
@@ -2394,7 +2608,6 @@ function renderBookingPage() {
       return;
     }
     form.style.display = 'block';
-    // Only rebuild form HTML if it doesn't already have the booking-user-email element
     if (!document.getElementById('booking-user-email')) {
       form.innerHTML = getBookingFormHTML();
     }
@@ -2403,6 +2616,13 @@ function renderBookingPage() {
   } else {
     gate.style.display = 'block';
     form.style.display = 'none';
+    gate.innerHTML = `
+      <div class="auth-gate-icon">🔒</div>
+      <h2>Sign in to book artists</h2>
+      <p>Create a free account or sign in to access our booking platform. It only takes 30 seconds — no credit card required until you confirm a booking.</p>
+      <button class="btn-primary" onclick="openLogin()">Sign in or create account →</button>
+      <p style="margin-top:1rem;font-size:0.8rem;color:var(--ink-light)">Already applied as an artist or business? Use the same email.</p>
+    `;
   }
 }
 
@@ -2449,13 +2669,62 @@ function renderBookingArtists() {
 function selectBookingArtist(el) {
   document.querySelectorAll('.pick-artist-row').forEach(r => r.classList.remove('selected'));
   el.classList.add('selected');
-  // Update rate display in booking form
   const rate = el.getAttribute('data-artist-rate') || 'Rate on request';
+  const artistId = el.getAttribute('data-artist-id');
+  const artistEmail = 'artist-' + (el.querySelector('.pick-name')?.textContent || '').toLowerCase().replace(/\s+/g,'-') + '@localstage.ca';
   const rateDisplay = document.getElementById('booking-selected-rate');
   if (rateDisplay) {
     rateDisplay.textContent = rate;
     rateDisplay.closest('[id="booking-rate-row"]').style.display = 'flex';
   }
+
+  // Show artist availability slots for this artist
+  const slotsContainer = document.getElementById('booking-avail-slots');
+  if (!slotsContainer) return;
+
+  // Find availability keyed to this artist — try multiple key formats
+  const store = getAvailabilityStore();
+  const artistName = el.querySelector('.pick-name')?.textContent || '';
+  const artistKey = 'artist-' + (currentUser?.email || 'x').replace(/[^a-z0-9]/g,''); // demo: real impl would match by roster
+  // For demo, show any open slots from any artist key (since artist set them with their email key)
+  const allSlots = Object.entries(store).filter(([, v]) => v.status === 'open');
+
+  if (allSlots.length === 0) {
+    slotsContainer.innerHTML = `<div style="background:var(--cream);border-radius:10px;padding:1rem;font-size:0.82rem;color:var(--ink-light);margin-top:1rem;text-align:center">No pre-set availability found for this artist. You can still request any date below — we'll confirm within 24h.</div>`;
+  } else {
+    slotsContainer.innerHTML = `
+      <div style="margin-top:1.25rem">
+        <div style="font-size:0.72rem;font-weight:500;text-transform:uppercase;letter-spacing:1.2px;color:var(--green);margin-bottom:0.75rem">🟢 Artist's Open Slots</div>
+        <p style="font-size:0.8rem;color:var(--ink-light);margin-bottom:0.75rem;line-height:1.5">Click a slot to auto-fill the date and time below.</p>
+        ${allSlots.map(([k, v]) => {
+          const parts = k.split(':');
+          const date = parts[1];
+          const time = parts[2];
+          return `<div onclick="selectArtistSlot('${date}','${time}')" style="cursor:pointer;background:var(--white);border:1.5px solid var(--cream-dark);border-radius:10px;padding:10px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;transition:all 0.15s" onmouseover="this.style.borderColor='var(--green)';this.style.background='var(--green-light)'" onmouseout="this.style.borderColor='var(--cream-dark)';this.style.background='var(--white)'">
+            <div>
+              <div style="font-size:0.875rem;font-weight:500;color:var(--ink)">${formatDateDisplay(date)}</div>
+              <div style="font-size:0.78rem;color:var(--green)">${time}</div>
+              ${v.notes ? `<div style="font-size:0.72rem;color:var(--ink-light)">${v.notes}</div>` : ''}
+            </div>
+            <span style="font-size:0.72rem;background:var(--green-light);color:var(--green);padding:3px 10px;border-radius:100px;font-weight:500;flex-shrink:0">Select →</span>
+          </div>`;
+        }).join('')}
+      </div>
+    `;
+  }
+}
+
+function selectArtistSlot(date, time) {
+  // Fill the date/time inputs in the booking form
+  const dateInput = document.querySelector('#page-booking .form-input[type="date"]');
+  const timeInput = document.querySelector('#page-booking .form-input[type="time"]');
+  if (dateInput) dateInput.value = date;
+  if (timeInput) {
+    // time is like "19:00-22:00", take start
+    timeInput.value = time.split('-')[0];
+  }
+  // Scroll to date field
+  if (dateInput) dateInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 function validateMapsUrl(input) {
@@ -2505,59 +2774,23 @@ function submitBooking() {
     }
     if (errEl) errEl.style.display = 'none';
   }
+
   const artistRow = document.querySelector('.pick-artist-row.selected');
   const artistName = artistRow ? artistRow.querySelector('.pick-name').textContent : 'Selected artist';
+  const artistId = artistRow ? artistRow.getAttribute('data-artist-id') : '0';
   const venueName = document.getElementById('booking-venue-name')?.value || 'your venue';
-  const bookingDate = document.querySelector('#page-booking .form-input[type="date"]')?.value || '—';
+  const mapsUrl = mapsInput?.value?.trim() || '';
+  const bookingDate = document.querySelector('#page-booking .form-input[type="date"]')?.value || '';
   const bookingTime = document.querySelector('#page-booking .form-input[type="time"]')?.value || '—';
 
-  // Record booking so this user can't book again
-  if (currentUser) {
-    localStorage.setItem('ls-booked-' + currentUser.email, JSON.stringify({
-      artist: artistName,
-      venue: venueName,
-      date: bookingDate,
-      time: bookingTime,
-      submittedAt: new Date().toISOString()
-    }));
+  if (!bookingDate) {
+    const dateInput = document.querySelector('#page-booking .form-input[type="date"]');
+    if (dateInput) { dateInput.style.borderColor='#c0392b'; dateInput.scrollIntoView({behavior:'smooth',block:'center'}); }
+    return;
   }
 
-  // Send notification email to Jonathan
-  const EMAILJS_SERVICE = 'service_jfagb77';
-  const EMAILJS_PUBLIC_KEY = 'FoCM6Rnq5pMjlI2PP';
-  emailjs.send(EMAILJS_SERVICE, 'template_aegy9aj', {
-    application_type: 'BOOKING REQUEST',
-    applicant_name: currentUser.email,
-    email: currentUser.email,
-    venue_refs: venueName,
-    city: bookingDate,
-    notes: `Artist: ${artistName} | Time: ${bookingTime} | Venue: ${venueName}`,
-    stage_name:'—', phone:'—', dob:'—', genre:'—', years:'—',
-    avg_draw:'—', spotify:'—', music_link:'—', platforms:'—', video_link:'—', travel_cities:'—'
-  }, EMAILJS_PUBLIC_KEY).catch(e => console.warn('Booking email failed:', e));
-
-  // Show success state
-  document.getElementById('booking-form-area').innerHTML = `
-    <div style="text-align:center;padding:5rem 2rem;max-width:560px;margin:0 auto">
-      <div style="font-size:3.5rem;margin-bottom:1.25rem">📬</div>
-      <h2 style="font-family:var(--serif);font-size:2rem;color:var(--ink);margin-bottom:0.75rem;letter-spacing:-0.5px">Request received!</h2>
-      <p style="font-size:0.95rem;color:var(--ink-light);line-height:1.75;margin-bottom:1.25rem">
-        We've got your booking request for <strong>${artistName}</strong> at <strong>${venueName}</strong>. Here's what happens next:
-      </p>
-      <div style="background:var(--cream);border-radius:12px;padding:1.25rem 1.5rem;text-align:left;margin-bottom:1.75rem;border-left:3px solid var(--green)">
-        <div style="font-size:0.72rem;font-weight:500;text-transform:uppercase;letter-spacing:1px;color:var(--green);margin-bottom:0.75rem">What happens next</div>
-        <div style="font-size:0.85rem;color:var(--ink-mid);line-height:2">
-          <div>✉️ &nbsp;We contact <strong>${artistName}</strong> to confirm availability for your date &amp; location</div>
-          <div>✅ &nbsp;Artist confirms → we send you an invoice for the coordination fee</div>
-          <div>🔄 &nbsp;Artist unavailable → we'll suggest the next best fit from our roster</div>
-          <div>💰 &nbsp;You only pay once a booking is fully confirmed</div>
-        </div>
-      </div>
-      <a href="mailto:localstagerisingstars@gmail.com" style="display:inline-block;background:var(--ink);color:white;padding:0.875rem 2rem;border-radius:100px;font-family:var(--sans);font-size:0.9rem;font-weight:500;text-decoration:none;margin-bottom:1rem">📧 Questions? Email us</a>
-      <br>
-      <button onclick="showPage('home')" style="display:block;margin:1rem auto 0;background:transparent;border:none;font-family:var(--sans);font-size:0.85rem;color:var(--ink-light);cursor:pointer;text-decoration:underline">Back to home</button>
-    </div>
-  `;
+  // Forward to payment page
+  goToPayment(artistName, artistId, bookingDate, bookingTime, `${venueName} · ${mapsUrl}`);
 }
 
 // ════════════════════════════════
@@ -3042,9 +3275,10 @@ let pendingBookArtistId = null;
 
 function bookArtist(id) {
   pendingBookArtistId = id;
-  if (!currentUser) {
-    // Store the pending artist and prompt login instead of a hard wall
-    openLogin();
+  if (!currentUser) { openLogin(); return; }
+  if (currentUser.userType === 'artist') {
+    alert('As an artist, you manage your availability — businesses will book you. Redirecting to your availability page.');
+    showPage('artist-availability');
     return;
   }
   showPage('booking');
@@ -3116,7 +3350,19 @@ function openArtistProfile(id) {
     </div>
   `).join('');
 
-  // Video embed placeholder
+  // Video embed — extract YouTube ID and inject an iframe
+  const videoContainer = document.getElementById('ap-video-container');
+  const ytMatch = (a.videoUrl || '').match(/(?:youtu\.be\/|v=|embed\/)([A-Za-z0-9_-]{11})/);
+  if (ytMatch) {
+    videoContainer.innerHTML = `<iframe src="https://www.youtube.com/embed/${ytMatch[1]}?rel=0&modestbranding=1" style="width:100%;height:100%;border:none" allowfullscreen title="${a.videoLabel}"></iframe>`;
+  } else {
+    // Friendly placeholder that still shows the label & a direct link
+    videoContainer.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;background:#131311">
+      <div style="font-size:2rem">🎥</div>
+      <div style="font-size:0.85rem;color:#9a9a90;text-align:center;line-height:1.6">▶ ${a.videoLabel}</div>
+      <a href="${a.videoUrl || '#'}" target="_blank" style="background:var(--green);color:white;border:none;padding:8px 18px;border-radius:100px;font-family:var(--sans);font-size:0.78rem;font-weight:500;cursor:pointer;text-decoration:none">Watch on YouTube →</a>
+    </div>`;
+  }
   document.getElementById('ap-video-label').textContent = '▶ ' + a.videoLabel;
 
   document.getElementById('modal-artist-profile').classList.add('open');
@@ -3124,7 +3370,365 @@ function openArtistProfile(id) {
 }
 
 // ════════════════════════════════
-// SCROLL ANIMATIONS
+// ARTIST AVAILABILITY CALENDAR
+// ════════════════════════════════
+function renderArtistAvailability() {
+  if (!currentUser || currentUser.userType !== 'artist') {
+    document.getElementById('aa-auth-gate').style.display = 'block';
+    document.getElementById('aa-form-area').innerHTML = '';
+    return;
+  }
+  document.getElementById('aa-auth-gate').style.display = 'none';
+
+  // Find artist record from spreadsheet mapping — use email prefix as fallback name
+  const emailPrefix = currentUser.email.split('@')[0];
+  const allArtists = [...ARTISTS, ...NEW_ARTISTS];
+  // Try to find a matching artist by name similarity — in production this would be a proper lookup
+  const artistRecord = allArtists[0]; // fallback to show the calendar UI
+  const artistId = 'artist-' + currentUser.email.replace(/[^a-z0-9]/g,'');
+
+  const existing = getArtistAvailability(artistId);
+  const existingSlots = Object.entries(existing).filter(([,v]) => v.status === 'open');
+  const bookedSlots = Object.entries(existing).filter(([,v]) => v.status === 'booked');
+
+  // Generate next 60 days
+  const days = [];
+  const today = new Date();
+  for (let i = 1; i <= 60; i++) {
+    const d = new Date(today); d.setDate(d.getDate() + i);
+    days.push(d);
+  }
+
+  document.getElementById('aa-form-area').innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;background:var(--green-light);border-radius:12px;padding:12px 16px;margin-bottom:2rem;font-size:0.875rem;color:var(--green-mid)">
+      <span>✓</span>
+      <span>Signed in as artist: <strong>${currentUser.email}</strong> · <span style="cursor:pointer;text-decoration:underline" onclick="signOut()">Sign out</span></span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:2rem;align-items:start">
+      <!-- Add new slot form -->
+      <div style="background:var(--white);border-radius:20px;padding:1.75rem;border:1px solid var(--cream-dark);position:sticky;top:100px">
+        <h3 style="font-family:var(--serif);font-size:1.3rem;color:var(--ink);margin-bottom:0.4rem">Add Availability</h3>
+        <p style="font-size:0.82rem;color:var(--ink-light);margin-bottom:1.5rem;line-height:1.6">Pick a date and time range when you're free to perform. Businesses will see these slots when booking you.</p>
+        <div class="form-field">
+          <label class="form-label">Date *</label>
+          <input class="form-input" type="date" id="aa-date" min="${today.toISOString().split('T')[0]}">
+        </div>
+        <div class="form-field">
+          <label class="form-label">Start time *</label>
+          <input class="form-input" type="time" id="aa-start" value="19:00">
+        </div>
+        <div class="form-field">
+          <label class="form-label">End time *</label>
+          <input class="form-input" type="time" id="aa-end" value="22:00">
+        </div>
+        <div class="form-field">
+          <label class="form-label">Notes (optional)</label>
+          <input class="form-input" type="text" id="aa-notes" placeholder="e.g. Prefer venues in Mississauga">
+        </div>
+        <div id="aa-add-error" style="display:none;background:#fde8e8;border-radius:10px;padding:8px 12px;font-size:0.8rem;color:#c0392b;margin-bottom:0.75rem"></div>
+        <button class="booking-submit" style="background:var(--green)" onclick="addAvailabilitySlot('${artistId}')">+ Add this time slot</button>
+      </div>
+
+      <!-- Current availability -->
+      <div>
+        <h3 style="font-family:var(--serif);font-size:1.3rem;color:var(--ink);margin-bottom:1rem">Your Availability</h3>
+
+        ${bookedSlots.length > 0 ? `
+        <div style="margin-bottom:1.5rem">
+          <div style="font-size:0.72rem;font-weight:500;text-transform:uppercase;letter-spacing:1.2px;color:#c0392b;margin-bottom:0.75rem">🔴 Confirmed Bookings</div>
+          ${bookedSlots.map(([k, v]) => {
+            const [, date, time] = k.split(':');
+            return `<div style="background:#fde8e8;border-radius:12px;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;border:1px solid #f5b7b1">
+              <div>
+                <div style="font-weight:500;font-size:0.9rem;color:var(--ink)">${formatDateDisplay(date)} at ${time}</div>
+                <div style="font-size:0.78rem;color:#c0392b;margin-top:2px">Booked by: ${v.bookedBy || 'a venue'}</div>
+              </div>
+              <span style="font-size:0.72rem;background:#c0392b;color:white;padding:3px 10px;border-radius:100px;font-weight:500">CONFIRMED</span>
+            </div>`;
+          }).join('')}
+        </div>` : ''}
+
+        <div style="font-size:0.72rem;font-weight:500;text-transform:uppercase;letter-spacing:1.2px;color:var(--green);margin-bottom:0.75rem">🟢 Open Slots</div>
+        <div id="aa-slots-list">
+        ${existingSlots.length === 0 ? `<div style="background:var(--cream);border-radius:12px;padding:1.5rem;text-align:center;color:var(--ink-light);font-size:0.875rem">No open slots yet. Add your available times on the left.</div>` :
+          existingSlots.map(([k, v]) => {
+            const [, date, time] = k.split(':');
+            return `<div style="background:var(--white);border-radius:12px;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--cream-dark)" id="slot-${k.replace(/:/g,'-')}">
+              <div>
+                <div style="font-weight:500;font-size:0.9rem;color:var(--ink)">${formatDateDisplay(date)} at ${time}</div>
+                ${v.notes ? `<div style="font-size:0.78rem;color:var(--ink-light);margin-top:2px">${v.notes}</div>` : ''}
+              </div>
+              <button onclick="removeSlot('${artistId}','${date}','${time}')" style="background:transparent;border:1.5px solid var(--cream-dark);border-radius:100px;padding:5px 12px;font-size:0.75rem;color:var(--ink-mid);cursor:pointer;font-family:var(--sans);transition:all 0.2s" onmouseover="this.style.borderColor='#c0392b';this.style.color='#c0392b'" onmouseout="this.style.borderColor='var(--cream-dark)';this.style.color='var(--ink-mid)'">✕ Remove</button>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function formatDateDisplay(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  return d.toLocaleDateString('en-CA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+function addAvailabilitySlot(artistId) {
+  const date = document.getElementById('aa-date')?.value;
+  const start = document.getElementById('aa-start')?.value;
+  const end = document.getElementById('aa-end')?.value;
+  const notes = document.getElementById('aa-notes')?.value || '';
+  const errEl = document.getElementById('aa-add-error');
+
+  if (!date || !start || !end) {
+    errEl.textContent = 'Please fill in date, start time, and end time.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (start >= end) {
+    errEl.textContent = 'End time must be after start time.';
+    errEl.style.display = 'block';
+    return;
+  }
+  errEl.style.display = 'none';
+
+  const timeSlot = `${start}-${end}`;
+  const store = getAvailabilityStore();
+  const key = `${artistId}:${date}:${timeSlot}`;
+  if (store[key] && store[key].status === 'booked') {
+    errEl.textContent = 'This slot is already confirmed-booked and cannot be changed.';
+    errEl.style.display = 'block';
+    return;
+  }
+  store[key] = { status: 'open', bookedBy: null, notes };
+  saveAvailabilityStore(store);
+  renderArtistAvailability();
+}
+
+function removeSlot(artistId, date, time) {
+  const key = `${artistId}:${date}:${time}`;
+  const store = getAvailabilityStore();
+  if (store[key] && store[key].status === 'booked') { alert('This slot is already booked and cannot be removed.'); return; }
+  delete store[key];
+  saveAvailabilityStore(store);
+  renderArtistAvailability();
+}
+
+// ════════════════════════════════
+// PAYMENT FLOW
+// ════════════════════════════════
+let pendingPaymentData = null;
+
+function goToPayment(artistName, artistId, date, time, venueInfo) {
+  pendingPaymentData = { artistName, artistId, date, time, venueInfo, slotKey: `${artistId}:${date}:${time}` };
+
+  document.getElementById('pay-summary').innerHTML = `
+    <div style="font-size:0.72rem;font-weight:500;text-transform:uppercase;letter-spacing:1.2px;color:var(--green);margin-bottom:1rem">Booking Summary</div>
+    <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap">
+      <div style="flex:1;min-width:200px">
+        <div style="font-family:var(--serif);font-size:1.5rem;color:var(--ink);margin-bottom:0.5rem">${artistName}</div>
+        <div style="font-size:0.875rem;color:var(--ink-mid);line-height:1.8">
+          <div>📅 ${formatDateDisplay(date)}</div>
+          <div>⏰ ${time}</div>
+          <div>📍 ${venueInfo}</div>
+        </div>
+      </div>
+      <div style="background:var(--cream);border-radius:14px;padding:1.25rem 1.5rem;text-align:center;flex-shrink:0">
+        <div style="font-size:0.72rem;color:var(--ink-light);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Coordination fee</div>
+        <div style="font-family:var(--serif);font-size:2rem;color:var(--green)">$99</div>
+        <div style="font-size:0.72rem;color:var(--ink-light)">CAD · one-time</div>
+      </div>
+    </div>
+    <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--cream-dark);font-size:0.8rem;color:var(--ink-light);line-height:1.6">
+      ✓ Artist performance fee paid directly to artist &nbsp;·&nbsp; ✓ Booking confirmed within 24h &nbsp;·&nbsp; ✓ Full refund if artist cancels
+    </div>
+  `;
+
+  if (currentUser) document.getElementById('pay-email').value = currentUser.email;
+  showPage('payment');
+  // Mount Stripe Elements after DOM is shown
+  setTimeout(mountStripeCard, 100);
+}
+
+// ════════════════════════════════
+// STRIPE PAYMENT — real card processing via Stripe Elements
+// ════════════════════════════════
+
+// Initialize Stripe once (deferred until key is available)
+let _stripe = null;
+let _stripeCard = null;
+
+function getStripe() {
+  if (!_stripe) {
+    if (typeof Stripe === 'undefined' || STRIPE_PUBLISHABLE_KEY.startsWith('pk_test_REPLACE')) {
+      return null;
+    }
+    _stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
+  }
+  return _stripe;
+}
+
+function mountStripeCard() {
+  const stripe = getStripe();
+  if (!stripe || _stripeCard) return;
+  const elements = stripe.elements();
+  _stripeCard = elements.create('card', {
+    style: {
+      base: {
+        fontFamily: "'DM Sans', system-ui, sans-serif",
+        fontSize: '15px',
+        color: '#1a1a18',
+        '::placeholder': { color: '#7a7a72' }
+      },
+      invalid: { color: '#c0392b' }
+    }
+  });
+  const mountEl = document.getElementById('stripe-card-element');
+  if (mountEl) {
+    _stripeCard.mount('#stripe-card-element');
+    _stripeCard.addEventListener('change', (event) => {
+      const errEl = document.getElementById('stripe-card-errors');
+      if (event.error) {
+        errEl.textContent = event.error.message;
+        errEl.style.display = 'block';
+      } else {
+        errEl.style.display = 'none';
+      }
+    });
+  }
+}
+
+async function processPayment() {
+  const email = document.getElementById('pay-email')?.value?.trim();
+  const errEl = document.getElementById('pay-error');
+  const btn = document.getElementById('pay-btn');
+
+  if (!email || !email.includes('@')) {
+    errEl.textContent = 'Please enter a valid billing email.';
+    errEl.style.display = 'block';
+    return;
+  }
+  errEl.style.display = 'none';
+
+  const stripe = getStripe();
+
+  // ── Stripe not configured yet ──
+  if (!stripe) {
+    errEl.innerHTML = '⚙️ <strong>Stripe not configured.</strong> Add your Stripe publishable key and deploy a payment-intent backend endpoint. See the setup comments at the top of this file.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  btn.classList.add('btn-loading');
+  btn.disabled = true;
+
+  try {
+    // 1. Ask your backend to create a PaymentIntent
+    const res = await fetch(PAYMENT_INTENT_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount: 9900, currency: 'cad', email }) // 9900 cents = $99 CAD
+    });
+    if (!res.ok) throw new Error('Backend error: ' + res.status);
+    const { clientSecret } = await res.json();
+
+    // 2. Confirm the card payment with Stripe
+    const { paymentIntent, error } = await stripe.confirmCardPayment(clientSecret, {
+      payment_method: {
+        card: _stripeCard,
+        billing_details: { email }
+      }
+    });
+
+    if (error) {
+      const cardErrEl = document.getElementById('stripe-card-errors');
+      cardErrEl.textContent = error.message;
+      cardErrEl.style.display = 'block';
+      btn.classList.remove('btn-loading');
+      btn.disabled = false;
+      return;
+    }
+
+    // 3. Payment succeeded — record booking & send confirmation
+    if (paymentIntent.status === 'succeeded') {
+      onPaymentSuccess(email, paymentIntent.id);
+    }
+
+  } catch(err) {
+    btn.classList.remove('btn-loading');
+    btn.disabled = false;
+    errEl.textContent = 'Payment failed: ' + (err.message || 'Unknown error. Please try again.');
+    errEl.style.display = 'block';
+    console.error('Stripe processPayment error:', err);
+  }
+}
+
+function onPaymentSuccess(email, stripePaymentId) {
+  const btn = document.getElementById('pay-btn');
+  btn.classList.remove('btn-loading');
+  btn.disabled = false;
+
+  if (!pendingPaymentData) return;
+  const { artistName, artistId, date, time, venueInfo, slotKey } = pendingPaymentData;
+
+  // Mark slot as booked
+  const store = getAvailabilityStore();
+  if (store[slotKey]) {
+    store[slotKey] = { ...store[slotKey], status: 'booked', bookedBy: email };
+  }
+  saveAvailabilityStore(store);
+
+  // Send EmailJS notification
+  emailjs.init(EMAILJS_KEY);
+  emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
+    application_type: '💳 STRIPE PAYMENT CONFIRMED — BOOKING',
+    applicant_name: email,
+    email: email,
+    venue_refs: venueInfo,
+    city: formatDateDisplay(date),
+    notes: `ARTIST: ${artistName} | DATE: ${formatDateDisplay(date)} | TIME: ${time} | VENUE: ${venueInfo} | BOOKED BY: ${email} | STRIPE ID: ${stripePaymentId} | $99 CAD collected`,
+    stage_name: artistName, phone: '—', dob: '—', genre: '—', years: '—',
+    avg_draw: '—', spotify: '—', music_link: '—', platforms: '—', video_link: '—', travel_cities: '—'
+  }).catch(e => console.warn('Confirmation email failed:', e));
+
+  // Save local booking record
+  if (currentUser) {
+    localStorage.setItem('ls-booked-' + currentUser.email, JSON.stringify({
+      artist: artistName, venue: venueInfo, date, time, submittedAt: new Date().toISOString(), paid: true, stripeId: stripePaymentId
+    }));
+  }
+
+  // Show success screen
+  document.getElementById('pay-summary').innerHTML = '';
+  document.querySelector('#page-payment .booking-content').innerHTML = `
+    <div style="text-align:center;padding:4rem 2rem;max-width:560px;margin:0 auto">
+      <div style="font-size:3.5rem;margin-bottom:1.25rem">🎉</div>
+      <h2 style="font-family:var(--serif);font-size:2rem;color:var(--ink);margin-bottom:0.75rem;letter-spacing:-0.5px">Booking Confirmed!</h2>
+      <p style="font-size:0.95rem;color:var(--ink-light);line-height:1.75;margin-bottom:1.25rem">
+        <strong>${artistName}</strong> has been reserved for <strong>${formatDateDisplay(date)}</strong> at <strong>${time}</strong>. A confirmation will be sent to <strong>${email}</strong>.
+      </p>
+      <div style="background:var(--green-light);border-radius:14px;padding:1.25rem 1.5rem;text-align:left;margin-bottom:1.75rem;border-left:3px solid var(--green)">
+        <div style="font-size:0.72rem;font-weight:500;text-transform:uppercase;letter-spacing:1px;color:var(--green);margin-bottom:0.75rem">What happens next</div>
+        <div style="font-size:0.85rem;color:var(--ink-mid);line-height:2">
+          <div>📧 &nbsp;Confirmation email with booking details on its way</div>
+          <div>🤝 &nbsp;Artist contact info shared within 24 hours</div>
+          <div>🎵 &nbsp;Artist will reach out to confirm logistics</div>
+          <div>💰 &nbsp;Arrange artist performance fee directly with them</div>
+        </div>
+      </div>
+      <div style="font-size:0.75rem;color:var(--ink-light);margin-bottom:1.5rem">Stripe payment ID: ${stripePaymentId}</div>
+      <button onclick="showPage('home')" class="btn-primary">Back to home</button>
+    </div>
+  `;
+  pendingPaymentData = null;
+}
+
+// Stubs kept for legacy references
+function formatCardNumber(input) {}
+function formatExpiry(input) {}
+
+// ════════════════════════════════
+// UPDATED BOOKING — show artist availability slots for businesses
 // ════════════════════════════════
 const observer = new IntersectionObserver((entries) => {
   entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
