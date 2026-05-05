@@ -2030,6 +2030,7 @@ function backToEmail() {
 // ════════════════════════════════
 let approvedEmails = null;
 let emailUserTypes = {};
+let emailArtistNames = {}; // email → full name from column C (e.g. "Maya Reyes")
 let sheetLoadFailed = false;
 const SHEET_ID = '1mPtLnj0UMEUFxoA7ldztxmeSY-p2gsuxrOnwjCFt0u0';
 
@@ -2046,8 +2047,11 @@ async function loadApprovedEmails() {
     if (rows.length === 0) throw new Error('Sheet empty');
     approvedEmails = rows.map(r => r[0].toLowerCase());
     rows.forEach(r => {
+      const email = r[0].toLowerCase();
       const type = (r[1] || '').toLowerCase().trim();
-      emailUserTypes[r[0].toLowerCase()] = (type === 'artist') ? 'artist' : 'business';
+      emailUserTypes[email] = (type === 'artist') ? 'artist' : 'business';
+      // Column C: artist full name e.g. "Maya Reyes" — used to link to roster entry
+      if (r[2] && r[2].trim()) emailArtistNames[email] = r[2].trim();
     });
     sheetLoadFailed = false;
   } catch(e) {
@@ -2055,6 +2059,15 @@ async function loadApprovedEmails() {
     approvedEmails = [];
     sheetLoadFailed = true;
   }
+}
+
+// Match a full name string to a roster artist ID
+function resolveArtistId(fullName) {
+  if (!fullName) return null;
+  const normalised = fullName.trim().toLowerCase();
+  const all = [...ARTISTS, ...NEW_ARTISTS];
+  const match = all.find(a => a.name.toLowerCase() === normalised);
+  return match ? match.id : null;
 }
 
 async function sendCode() {
@@ -2140,14 +2153,24 @@ function handleFirebaseSignIn(email) {
     const userType = emailUserTypes[lowerEmail] || 'business';
     const isNew = !localStorage.getItem('ls-user-' + lowerEmail);
     localStorage.setItem('ls-user-' + lowerEmail, '1');
-    currentUser = { email: lowerEmail, isNew, userType };
+
+    // Resolve artist roster ID from column C name (e.g. "Maya Reyes" → id: 1)
+    let artistId = null;
+    let artistName = null;
+    if (userType === 'artist') {
+      const fullName = emailArtistNames[lowerEmail] || null;
+      artistId = resolveArtistId(fullName);
+      artistName = fullName;
+    }
+
+    currentUser = { email: lowerEmail, isNew, userType, artistId, artistName };
     updateNavAuth();
+
     // Show brief success then route
     if (document.getElementById('login-step-success')) {
       document.querySelectorAll('.login-step').forEach(s => s.classList.remove('active'));
-      document.getElementById('login-success-msg').textContent = isNew
-        ? `Welcome to LocalStage! You're signed in as ${lowerEmail}.`
-        : `Welcome back! You're signed in as ${lowerEmail}.`;
+      const greeting = artistName ? `Welcome back, ${artistName.split(' ')[0]}!` : (isNew ? `Welcome to LocalStage!` : `Welcome back!`);
+      document.getElementById('login-success-msg').textContent = `${greeting} You're signed in as ${lowerEmail}.`;
       document.getElementById('login-step-success').classList.add('active');
     }
     if (userType === 'artist') {
@@ -2701,21 +2724,17 @@ function renderVenueAvailCalendar(artistNumericId) {
   if (!slotsContainer) return;
 
   const store = getAvailabilityStore();
-  // Collect all open slots for this artist from ALL possible key formats
-  const artistKeyEmail = Object.keys(store).filter(k => {
-    const parts = k.split(':');
-    // A slot belongs to this artist if the numeric id portion is in the key
-    // We match any key where there are open slots — in a real system this is server-side.
-    return parts.length >= 3 && store[k].status === 'open';
-  });
+  // Key format used by artists: "artist-{numericId}:{date}:{time}"
+  const artistKey = 'artist-' + artistNumericId;
 
-  // Build date → [slot info] map for open slots (all artists pooled for demo)
-  // In production, artist numeric ID would map to their email key via a server lookup.
+  // Build date → [slot info] map for this specific artist only
   const openByDate = {};
   const bookedByDate = {};
   Object.entries(store).forEach(([k, v]) => {
     const parts = k.split(':');
     if (parts.length < 3) return;
+    // Only include slots that belong to this artist
+    if (!k.startsWith(artistKey + ':')) return;
     const dateStr = parts[1];
     const time = parts.slice(2).join(':');
     if (v.status === 'open') {
@@ -3515,14 +3534,16 @@ function renderArtistAvailability() {
   }
   document.getElementById('aa-auth-gate').style.display = 'none';
 
-  const artistId = 'artist-' + currentUser.email.replace(/[^a-z0-9]/g,'');
+  // Use roster-based key if we resolved a name match (e.g. "artist-1" for Maya Reyes id:1)
+  // Fall back to email-based key for artists not yet mapped in the sheet
+  const artistId = currentUser.artistId ? 'artist-' + currentUser.artistId : 'artist-' + currentUser.email.replace(/[^a-z0-9]/g,'');
   const today = new Date();
   if (aaCalYear === null) { aaCalYear = today.getFullYear(); aaCalMonth = today.getMonth(); }
 
   document.getElementById('aa-form-area').innerHTML = `
     <div style="display:flex;align-items:center;gap:10px;background:var(--green-light);border-radius:12px;padding:12px 16px;margin-bottom:2rem;font-size:0.875rem;color:var(--green-mid)">
       <span>✓</span>
-      <span>Signed in as artist: <strong>${currentUser.email}</strong> · <span style="cursor:pointer;text-decoration:underline" onclick="signOut()">Sign out</span></span>
+      <span>Signed in as${currentUser.artistName ? " <strong>" + currentUser.artistName + "</strong> (" + currentUser.email + ")" : " artist: <strong>" + currentUser.email + "</strong>"} · <span style="cursor:pointer;text-decoration:underline" onclick="signOut()">Sign out</span></span>
     </div>
 
     <div style="display:grid;grid-template-columns:1.1fr 1fr;gap:2rem;align-items:start">
