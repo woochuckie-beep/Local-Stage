@@ -1833,22 +1833,126 @@ let sigDrawing = false;
 let sigLastX = 0, sigLastY = 0;
 
 
-const ARTISTS = [
-  { id:1, init:'MR', name:'Maya Reyes', genre:'R&B · Soul', city:'Mississauga, ON', cityKey:'mississauga', score:84, stars:'★★★★★', rating:4.9, draw:65, tag:'rnb', gradient:'135deg, #a8e6cf, #1a9b6c', instagram:'', videoUrl:'https://youtube.com', videoLabel:'Live at The Dock', rate:'$350/show' },
-  { id:2, init:'JT', name:'Jordan Taye', genre:'Hip-Hop', city:'Brampton, ON', cityKey:'brampton', score:79, stars:'★★★★☆', rating:4.7, draw:55, tag:'hiphop', gradient:'135deg, #667eea, #764ba2', instagram:'', videoUrl:'https://youtube.com', videoLabel:'Freestyle Session', rate:'$275/show' },
-  { id:3, init:'AS', name:'Alicia Simms', genre:'Indie / Alt', city:'Toronto, ON', cityKey:'toronto', score:72, stars:'★★★★☆', rating:4.5, draw:40, tag:'indie', gradient:'135deg, #f093fb, #f5576c', instagram:'', videoUrl:'https://youtube.com', videoLabel:'Acoustic Set', rate:'$225/show' },
-  { id:4, init:'KO', name:'Kwame Osei', genre:'Jazz', city:'Hamilton, ON', cityKey:'hamilton', score:88, stars:'★★★★★', rating:5.0, draw:80, tag:'jazz', gradient:'135deg, #4facfe, #00f2fe', instagram:'', videoUrl:'https://youtube.com', videoLabel:'Quartet at Jazz Room', rate:'$500/show' },
-  { id:5, init:'LD', name:'Lily Dang', genre:'Folk · Country', city:'Oakville, ON', cityKey:'other', score:68, stars:'★★★★☆', rating:4.3, draw:35, tag:'folk', gradient:'135deg, #f6d365, #fda085', instagram:'', videoUrl:'https://youtube.com', videoLabel:'Front Porch Session', rate:'$175/show' },
-  { id:6, init:'RM', name:'Remy Mais', genre:'Pop', city:'Scarborough, ON', cityKey:'other', score:75, stars:'★★★★☆', rating:4.6, draw:50, tag:'pop', gradient:'135deg, #43e97b, #38f9d7', instagram:'', videoUrl:'https://youtube.com', videoLabel:'EP Release Show', rate:'$300/show' },
-  { id:7, init:'SO', name:'Sasha Okafor', genre:'R&B · Soul', city:'Etobicoke, ON', cityKey:'toronto', score:81, stars:'★★★★★', rating:4.8, draw:60, tag:'rnb', gradient:'135deg, #ff9a9e, #fad0c4', instagram:'', videoUrl:'https://youtube.com', videoLabel:'Live at Bar Volo', rate:'$400/show' },
-  { id:8, init:'BL', name:'Ben Lau', genre:'Hip-Hop', city:'Markham, ON', cityKey:'other', score:66, stars:'★★★★☆', rating:4.2, draw:30, tag:'hiphop', gradient:'135deg, #a18cd1, #fbc2eb', instagram:'', videoUrl:'https://youtube.com', videoLabel:'Cypher Session', rate:'$200/show' },
+// ── Artist roster is built entirely from the spreadsheet ──────────────
+// These start empty and get populated by buildRosterFromSheet() after the CSV loads.
+let ARTISTS = [];
+let NEW_ARTISTS = [];
+
+// Gradient palette — cycles through for new artists
+const GRAD_PALETTE = [
+  '135deg, #a8e6cf, #1a9b6c', '135deg, #667eea, #764ba2', '135deg, #f093fb, #f5576c',
+  '135deg, #4facfe, #00f2fe', '135deg, #f6d365, #fda085', '135deg, #43e97b, #38f9d7',
+  '135deg, #ff9a9e, #fad0c4', '135deg, #a18cd1, #fbc2eb', '135deg, #fccb90, #d57eeb',
+  '135deg, #84fab0, #8fd3f4', '135deg, #30cfd0, #667eea', '135deg, #f7971e, #ffd200',
+  '135deg, #fd79a8, #e17055', '135deg, #00b09b, #96c93d', '135deg, #6a3093, #a044ff',
 ];
-const NEW_ARTISTS = [
-  { id:9, init:'TP', name:'Tara Patel', genre:'Indie / Alt', city:'Burlington, ON', cityKey:'other', score:63, stars:'★★★★☆', rating:4.1, draw:25, tag:'indie', gradient:'135deg, #fccb90, #d57eeb', instagram:'', videoUrl:'https://youtube.com', videoLabel:'First Show Highlights', rate:'$150/show' },
-  { id:10, init:'CW', name:'Chase Williams', genre:'Pop', city:'Oshawa, ON', cityKey:'other', score:61, stars:'★★★☆☆', rating:3.9, draw:20, tag:'pop', gradient:'135deg, #84fab0, #8fd3f4', instagram:'', videoUrl:'https://youtube.com', videoLabel:'Studio Vlog', rate:'$150/show' },
-  { id:11, init:'NB', name:'Nina Bakr', genre:'Jazz', city:'Ajax, ON', cityKey:'other', score:70, stars:'★★★★☆', rating:4.4, draw:38, tag:'jazz', gradient:'135deg, #30cfd0, #667eea', instagram:'', videoUrl:'https://youtube.com', videoLabel:'Evening Jazz Session', rate:'$250/show' },
-  { id:12, init:'MF', name:'Marcus Ferreira', genre:'Folk · Country', city:'Guelph, ON', cityKey:'other', score:65, stars:'★★★★☆', rating:4.2, draw:28, tag:'folk', gradient:'135deg, #f7971e, #ffd200', instagram:'', videoUrl:'https://youtube.com', videoLabel:'Campfire Sessions', rate:'$175/show' },
-];
+
+// Guess genre from bio/description text if no genre column present
+function inferGenreFromText(text) {
+  if (!text) return null;
+  const t = text.toLowerCase();
+  if (t.includes('r&b') || t.includes('soul') || t.includes('neo-soul')) return 'R&B · Soul';
+  if (t.includes('hip-hop') || t.includes('hip hop') || t.includes('rap')) return 'Hip-Hop';
+  if (t.includes('jazz')) return 'Jazz';
+  if (t.includes('folk') || t.includes('country')) return 'Folk · Country';
+  if (t.includes('indie') || t.includes('alternative') || t.includes('alt-')) return 'Indie / Alt';
+  if (t.includes('pop')) return 'Pop';
+  if (t.includes('rock')) return 'Rock';
+  if (t.includes('electronic') || t.includes('edm')) return 'Electronic';
+  return null;
+}
+
+function inferGenreTag(genre) {
+  if (!genre) return 'other';
+  const g = genre.toLowerCase();
+  if (g.includes('r&b') || g.includes('soul')) return 'rnb';
+  if (g.includes('hip') || g.includes('hop') || g.includes('rap')) return 'hiphop';
+  if (g.includes('jazz')) return 'jazz';
+  if (g.includes('folk') || g.includes('country')) return 'folk';
+  if (g.includes('pop')) return 'pop';
+  if (g.includes('indie') || g.includes('alt')) return 'indie';
+  if (g.includes('rock')) return 'rock';
+  if (g.includes('electronic') || g.includes('edm')) return 'electronic';
+  return 'other';
+}
+
+function inferCityKey(city) {
+  if (!city) return 'other';
+  const c = city.toLowerCase();
+  if (c.includes('mississauga')) return 'mississauga';
+  if (c.includes('brampton'))    return 'brampton';
+  if (c.includes('toronto') || c.includes('etobicoke') || c.includes('scarborough') || c.includes('north york')) return 'toronto';
+  if (c.includes('hamilton'))    return 'hamilton';
+  return 'other';
+}
+
+function makeInitials(name) {
+  return (name || '').split(' ').filter(Boolean).map(w => w[0].toUpperCase()).join('').slice(0, 2);
+}
+
+function makeStars(rating) {
+  const r = parseFloat(rating) || 0;
+  const full  = Math.floor(r);
+  const half  = (r - full) >= 0.5 ? 1 : 0;
+  const empty = 5 - full - half;
+  return '★'.repeat(full) + (half ? '½' : '') + '☆'.repeat(empty);
+}
+
+// Called after CSV is parsed — builds ARTISTS array entirely from sheet rows
+function buildRosterFromSheet() {
+  const entries = Object.entries(sheetArtistData);
+  if (entries.length === 0) return;
+
+  // Sort by score descending so highest-scored artists appear first
+  entries.sort((a, b) => (b[1].score || 0) - (a[1].score || 0));
+
+  ARTISTS = [];
+  NEW_ARTISTS = [];
+
+  entries.forEach(([nameKey, d], idx) => {
+    // Reconstruct proper-cased name from the emailArtistNames map
+    const name = Object.values(emailArtistNames).find(n => n.toLowerCase() === nameKey) || nameKey;
+    const rating = d.rating || 4.0;
+    const score  = d.score  || 60;
+
+    const artist = {
+      id:         idx + 1,
+      init:       makeInitials(name),
+      name,
+      genre:      d.genre       || inferGenreFromText(d.about || d.description || '') || 'Artist',
+      city:       d.city        || 'Ontario, ON',
+      cityKey:    inferCityKey(d.city),
+      score,
+      stars:      makeStars(rating),
+      rating,
+      draw:       d.avgDraw     || 0,
+      tag:        inferGenreTag(d.genre),
+      gradient:   GRAD_PALETTE[idx % GRAD_PALETTE.length],
+      instagram:  '',
+      videoUrl:   'https://youtube.com',
+      videoLabel: 'Live Performance',
+      rate:       d.artistRate  || 'Rate on request',
+      about:      d.about       || null,
+      description:d.description || null,
+      followersScore:  d.followersScore  || null,
+      engagementRate:  d.engagementRate  || null,
+      avgDrawPct:      d.avgDrawPct      || null,
+      reliability:     d.reliability     || null,
+    };
+
+    // Top artists (score >= 70) go in main roster, others in "New & Emerging"
+    if (score >= 70) ARTISTS.push(artist);
+    else NEW_ARTISTS.push(artist);
+  });
+
+  // Re-render grids and booking page with fresh roster
+  if (typeof renderArtistGrid === 'function') {
+    renderArtistGrid(currentGenreFilter, currentCityFilter);
+  }
+  if (typeof renderBookingPage === 'function') {
+    renderBookingPage();
+  }
+}
 
 // ════════════════════════════════
 // PAGE NAVIGATION
@@ -2217,6 +2321,7 @@ async function loadApprovedEmails(force = false) {
           const artistRate = (r[15] || '').trim() || null;
           const city       = (r[16] || '').trim() || null;
           const description= (r[17] || '').trim() || null;
+          const genre      = (r[18] || '').trim() || null;
 
           const parsed = {
             score:       scoreRaw !== null ? Math.round(scoreRaw) : null,
@@ -2229,11 +2334,10 @@ async function loadApprovedEmails(force = false) {
             rating,
             artistRate,
             city,
-            description
+            description,
+            genre
           };
-          console.log('[LocalStage sheet] ── ' + artistName + ' ──');
-          r.forEach((cell, idx) => { if (cell) console.log('  col[' + idx + '] = ' + cell); });
-          console.log('  PARSED →', JSON.stringify(parsed));
+
           sheetArtistData[nameKey] = parsed;
         }
       }
@@ -2252,44 +2356,9 @@ async function loadApprovedEmails(force = false) {
   }
 }
 
-// Overwrite hardcoded artist fields with live values from the spreadsheet
+// Rebuild the entire roster from sheet data — replaces old merge approach
 function mergeSheetDataIntoRoster() {
-  const all = [...ARTISTS, ...NEW_ARTISTS];
-  all.forEach(a => {
-    const d = sheetArtistData[a.name.toLowerCase()];
-    if (!d) return;
-    if (d.score       !== null) a.score  = d.score;
-    if (d.avgDraw     !== null) a.draw   = d.avgDraw;
-    if (d.rating      !== null) {
-      a.rating = d.rating;
-      // Rebuild star string from rating (rounds to nearest 0.5)
-      const full  = Math.floor(d.rating);
-      const half  = (d.rating - full) >= 0.5 ? 1 : 0;
-      const empty = 5 - full - half;
-      a.stars = '★'.repeat(full) + (half ? '½' : '') + '☆'.repeat(empty);
-    }
-    if (d.followersScore !== null) a.followersScore = d.followersScore; // % contribution to LocalScore
-    if (d.engagementRate !== null) a.engagementRate = d.engagementRate;
-    if (d.avgDrawPct  !== null) a.avgDrawPct  = d.avgDrawPct;
-    if (d.reliability !== null) a.reliability = d.reliability;
-    if (d.about)        a.about = d.about;
-    if (d.artistRate)   a.rate  = d.artistRate;
-    if (d.city) {
-      a.city = d.city;
-      // Rebuild cityKey from city string
-      const cl = d.city.toLowerCase();
-      if (cl.includes('mississauga'))     a.cityKey = 'mississauga';
-      else if (cl.includes('brampton'))   a.cityKey = 'brampton';
-      else if (cl.includes('toronto') || cl.includes('etobicoke') || cl.includes('scarborough')) a.cityKey = 'toronto';
-      else if (cl.includes('hamilton'))   a.cityKey = 'hamilton';
-      else                                a.cityKey = 'other';
-    }
-    if (d.description)  a.description = d.description;
-  });
-  // Re-render grid if the page is already showing artists
-  if (typeof renderArtistGrid === 'function') {
-    renderArtistGrid(currentGenreFilter, currentCityFilter);
-  }
+  buildRosterFromSheet();
 }
 
 // Match a full name string to a roster artist ID
