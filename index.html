@@ -10,11 +10,11 @@
 <!-- ═══════════════════════════════════════════════════════════
   LOCALSTAGE v11 — PRODUCTION CONFIG
   ══════════════════════════════════════════════════════════════
-  STEP 1 — FIREBASE (free Spark plan, for Auth OTP emails)
-    a) Go to console.firebase.google.com → Create project
-    b) Authentication → Sign-in method → Enable "Email/Password" AND "Email link (passwordless)"
+  STEP 1 — FIREBASE (free Spark plan, for Google sign-in)
+    a) Go to console.firebase.google.com → your project
+    b) Authentication → Sign-in method → Enable "Google"
     c) Project Settings → Your apps → Add Web app → copy config below
-    d) Authentication → Settings → Authorized domains → add your domain
+    d) Authentication → Settings → Authorized domains → add your domain (e.g. woochuckie-beep.github.io)
   
   STEP 2 — STRIPE (for real $99 CAD payments)
     a) Go to stripe.com → Developers → API keys
@@ -51,49 +51,39 @@
 
 <!-- Firebase SDK (modular CDN) -->
 <script type="module">
-  import { initializeApp }                   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-  import { getAuth, sendSignInLinkToEmail,
-           isSignInWithEmailLink, signInWithEmailLink,
-           signOut as fbSignOut }            from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+  import { initializeApp }                from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+  import { getAuth, GoogleAuthProvider,
+           signInWithPopup, signOut as fbSignOut,
+           onAuthStateChanged,
+           browserLocalPersistence,
+           setPersistence }               from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
-  // Expose to global scope so non-module scripts can call them
-  const app  = initializeApp(FIREBASE_CONFIG);
-  const auth = getAuth(app);
+  const app      = initializeApp(FIREBASE_CONFIG);
+  const auth     = getAuth(app);
+  const provider = new GoogleAuthProvider();
 
-  window._fbAuth = auth;
-  window._fbSendLink = async (email) => {
-    const actionCodeSettings = {
-      url: window.location.href,      // redirect back to same page
-      handleCodeInApp: true
-    };
-    await sendSignInLinkToEmail(auth, email, actionCodeSettings);
-    window.localStorage.setItem('ls-email-for-signin', email);
-  };
-  window._fbIsEmailLink = () => isSignInWithEmailLink(auth, window.location.href);
-  window._fbSignInWithLink = async (email) => {
-    const result = await signInWithEmailLink(auth, email, window.location.href);
-    return result.user;
-  };
+  // Ensure sign-in state survives page reloads
+  setPersistence(auth, browserLocalPersistence).catch(e => console.warn('Persistence error:', e));
+
+  // Sign out helper
   window._fbSignOut = () => fbSignOut(auth);
 
-  // Handle magic-link redirect on page load
-  window.addEventListener('DOMContentLoaded', () => {
-    if (window._fbIsEmailLink()) {
-      let email = localStorage.getItem('ls-email-for-signin');
-      if (!email) {
-        email = window.prompt('Please confirm your email address to finish signing in:');
-      }
-      if (email) {
-        window._fbSignInWithLink(email).then(user => {
-          localStorage.removeItem('ls-email-for-signin');
-          // Remove the link tokens from the URL cleanly
-          const cleanUrl = window.location.pathname;
-          window.history.replaceState({}, document.title, cleanUrl);
-          handleFirebaseSignIn(user.email);
-        }).catch(err => {
-          console.error('Magic link sign-in failed:', err);
-          alert('Sign-in link expired or already used. Please request a new one.');
-        });
+  // Google popup sign-in helper
+  window._fbGoogleSignIn = async () => {
+    const result = await signInWithPopup(auth, provider);
+    return result.user; // has .email, .displayName
+  };
+
+  // ── Restore session on page load ──────────────────────────────────
+  // onAuthStateChanged fires once immediately with the current user (or null).
+  // We wait for the main script to be ready before calling handleFirebaseSignIn.
+  onAuthStateChanged(auth, (user) => {
+    if (user && user.email) {
+      // If the main JS is already loaded, restore immediately; otherwise queue it.
+      if (typeof handleFirebaseSignIn === 'function') {
+        handleFirebaseSignIn(user.email, /* silent = */ true);
+      } else {
+        window._pendingAuthEmail = user.email;
       }
     }
   });
@@ -1652,36 +1642,23 @@
   <div class="modal-box">
     <button class="modal-close" onclick="closeModal('modal-login')">✕</button>
 
-    <!-- Step 1: Email — Firebase magic link -->
+    <!-- Step 1: Google sign-in -->
     <div class="login-step active" id="login-step-email">
       <div class="modal-title">Sign in to LocalStage.</div>
-      <div class="modal-sub">Enter your approved email. We'll send a magic sign-in link — no password needed.</div>
-      <div style="background:#fff8e1;border:1.5px solid #f4b400;border-radius:12px;padding:10px 14px;font-size:0.8rem;color:#7a6000;margin-bottom:1.25rem;line-height:1.6">
+      <div class="modal-sub">Use your Google account. Access is approved — if you haven't applied yet, do that first.</div>
+      <div style="background:#fff8e1;border:1.5px solid #f4b400;border-radius:12px;padding:10px 14px;font-size:0.8rem;color:#7a6000;margin-bottom:1.5rem;line-height:1.6">
         <strong>New here?</strong> Sign in only works once you've been approved. <span style="color:var(--green);cursor:pointer;font-weight:500;text-decoration:underline" onclick="closeModal('modal-login');openApply()">Apply first →</span>
       </div>
-      <div class="form-field">
-        <label class="form-label">Email address</label>
-        <input class="form-input" type="email" id="login-email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')sendCode()">
-      </div>
-      <button class="form-submit" onclick="sendCode()">Send me a sign-in link →</button>
-      <p style="text-align:center;font-size:0.8rem;color:var(--ink-light);margin-top:1rem">A magic link will be emailed to you. Click it to sign in instantly.</p>
+      <!-- Google Sign-In Button -->
+      <button onclick="signInWithGoogle()" id="google-signin-btn" style="width:100%;display:flex;align-items:center;justify-content:center;gap:12px;background:white;border:1.5px solid #dadce0;border-radius:100px;padding:0.85rem 1.5rem;font-family:var(--sans);font-size:0.95rem;font-weight:500;color:#3c4043;cursor:pointer;transition:box-shadow 0.2s,border-color 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.08)" onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.15)';this.style.borderColor='#c0c0c0'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,0.08)';this.style.borderColor='#dadce0'">
+        <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
+        Continue with Google
+      </button>
+      <div id="google-signin-error" style="display:none;margin-top:1rem;background:#fde8e8;border-radius:10px;padding:10px 14px;font-size:0.8rem;color:#c0392b;text-align:center;line-height:1.5"></div>
+      <p style="text-align:center;font-size:0.78rem;color:var(--ink-light);margin-top:1.25rem;line-height:1.5">Your Google account email must be on the approved list.</p>
     </div>
 
-    <!-- Step 2: Link sent confirmation -->
-    <div class="login-step" id="login-step-code">
-      <div class="modal-title">Check your email.</div>
-      <div class="modal-sub" id="login-code-sub">We've sent a magic sign-in link to <strong id="login-code-email-display"></strong>. Click the link in your email to sign in instantly.</div>
-      <div style="text-align:center;padding:1.5rem 0">
-        <div style="font-size:3rem;margin-bottom:1rem">📬</div>
-        <p style="font-size:0.85rem;color:var(--ink-light);line-height:1.7">Check your inbox (and spam folder). The link expires in 10 minutes.</p>
-      </div>
-      <div id="code-error" style="text-align:center;font-size:0.8rem;color:#c0392b;margin-bottom:0.75rem;display:none">Something went wrong. Please try again.</div>
-      <p style="text-align:center;margin-top:0.5rem;font-size:0.8rem;color:var(--ink-light)">
-        <span class="resend-link" onclick="resendCode()">Resend link</span> &nbsp;·&nbsp; <span class="resend-link" onclick="backToEmail()">Change email</span>
-      </p>
-    </div>
-
-    <!-- Step 3: Signed in -->
+    <!-- Step 2: Signed in -->
     <div class="login-step" id="login-step-success">
       <div class="success-state">
         <div class="success-icon">✅</div>
@@ -1999,30 +1976,49 @@ function closeModal(id) {
 }
 
 function resetLoginModal() {
-  verificationCode = null;
   document.querySelectorAll('.login-step').forEach(s => s.classList.remove('active'));
   document.getElementById('login-step-email').classList.add('active');
-  const emailEl = document.getElementById('login-email');
-  if (emailEl) { emailEl.value = ''; emailEl.style.borderColor = ''; }
-  const errEl = document.getElementById('login-email-error');
-  if (errEl) errEl.remove();
-  const codeErr = document.getElementById('code-error');
-  if (codeErr) codeErr.style.display = 'none';
-  const btn = document.querySelector('#login-step-email .form-submit');
-  if (btn) { btn.classList.remove('btn-loading'); btn.disabled = false; }
+  const errEl = document.getElementById('google-signin-error');
+  if (errEl) errEl.style.display = 'none';
+  const btn = document.getElementById('google-signin-btn');
+  if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+}
+
+async function signInWithGoogle() {
+  const btn = document.getElementById('google-signin-btn');
+  const errEl = document.getElementById('google-signin-error');
+  errEl.style.display = 'none';
+
+  if (!window._fbGoogleSignIn) {
+    errEl.textContent = '⚙️ Firebase not configured yet. Add your Firebase config at the top of this file.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.classList.add('btn-loading');
+
+  try {
+    const user = await window._fbGoogleSignIn();
+    handleFirebaseSignIn(user.email, false);
+  } catch(err) {
+    btn.disabled = false;
+    btn.classList.remove('btn-loading');
+    // User closed the popup — no error needed
+    if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') return;
+    // Unauthorized domain — actionable help
+    if (err.code === 'auth/unauthorized-domain') {
+      errEl.innerHTML = '⚙️ <strong>Domain not authorized.</strong> Go to Firebase Console → Authentication → Settings → Authorized domains and add your site\'s domain.';
+    } else {
+      errEl.textContent = 'Sign-in failed: ' + (err.message || 'Unknown error. Please try again.');
+    }
+    errEl.style.display = 'block';
+    console.error('Google sign-in error:', err);
+  }
 }
 
 function backToEmail() {
-  verificationCode = null;
-  const codeErr = document.getElementById('code-error');
-  if (codeErr) codeErr.style.display = 'none';
-  const errEl = document.getElementById('login-email-error');
-  if (errEl) errEl.remove();
-  const btn = document.querySelector('#login-step-email .form-submit');
-  if (btn) { btn.classList.remove('btn-loading'); btn.disabled = false; }
-  document.querySelectorAll('.login-step').forEach(s => s.classList.remove('active'));
-  document.getElementById('login-step-email').classList.add('active');
-  setTimeout(() => { const el = document.getElementById('login-email'); if (el) el.focus(); }, 100);
+  resetLoginModal();
 }
 
 // ════════════════════════════════
@@ -2030,6 +2026,7 @@ function backToEmail() {
 // ════════════════════════════════
 let approvedEmails = null;
 let emailUserTypes = {};
+let emailArtistNames = {}; // email → full name from column C (e.g. "Maya Reyes")
 let sheetLoadFailed = false;
 const SHEET_ID = '1mPtLnj0UMEUFxoA7ldztxmeSY-p2gsuxrOnwjCFt0u0';
 
@@ -2046,8 +2043,11 @@ async function loadApprovedEmails() {
     if (rows.length === 0) throw new Error('Sheet empty');
     approvedEmails = rows.map(r => r[0].toLowerCase());
     rows.forEach(r => {
+      const email = r[0].toLowerCase();
       const type = (r[1] || '').toLowerCase().trim();
-      emailUserTypes[r[0].toLowerCase()] = (type === 'artist') ? 'artist' : 'business';
+      emailUserTypes[email] = (type === 'artist') ? 'artist' : 'business';
+      // Column C: artist full name e.g. "Maya Reyes" — used to link to roster entry
+      if (r[2] && r[2].trim()) emailArtistNames[email] = r[2].trim();
     });
     sheetLoadFailed = false;
   } catch(e) {
@@ -2057,97 +2057,49 @@ async function loadApprovedEmails() {
   }
 }
 
-async function sendCode() {
-  const email = document.getElementById('login-email').value.trim().toLowerCase();
-  const btn = document.querySelector('#login-step-email .form-submit');
-  if (!email.includes('@') || !email.includes('.')) {
-    document.getElementById('login-email').style.borderColor = '#c0392b';
-    return;
-  }
-  document.getElementById('login-email').style.borderColor = '';
-  if (btn) { btn.classList.add('btn-loading'); btn.disabled = true; }
-
-  await loadApprovedEmails();
-
-  if (sheetLoadFailed) {
-    if (btn) { btn.classList.remove('btn-loading'); btn.disabled = false; }
-    document.getElementById('login-email').style.borderColor = '#c0392b';
-    showLoginError('Unable to reach our access list right now. Please try again in a moment.');
-    return;
-  }
-
-  if (!approvedEmails.includes(email)) {
-    if (btn) { btn.classList.remove('btn-loading'); btn.disabled = false; }
-    document.getElementById('login-email').style.borderColor = '#c0392b';
-    showLoginError('This email is not on our approved list. Apply to join LocalStage first.');
-    return;
-  }
-
-  // ── FIREBASE: send magic sign-in link ──
-  if (!window._fbSendLink || FIREBASE_CONFIG.apiKey === 'YOUR_API_KEY') {
-    // Firebase not configured yet — show setup notice
-    if (btn) { btn.classList.remove('btn-loading'); btn.disabled = false; }
-    document.getElementById('login-email').style.borderColor = '#f4b400';
-    showLoginError('⚙️ Firebase not configured yet. Add your Firebase config in the <script> block at the top of this file to enable email sign-in.', '#7a6000', '#fff8e1', '#f4b400');
-    return;
-  }
-
-  try {
-    await window._fbSendLink(email);
-    if (btn) { btn.classList.remove('btn-loading'); btn.disabled = false; }
-    const errEl = document.getElementById('login-email-error');
-    if (errEl) errEl.remove();
-    document.getElementById('login-code-email-display').textContent = email;
-    document.querySelectorAll('.login-step').forEach(s => s.classList.remove('active'));
-    document.getElementById('login-step-code').classList.add('active');
-  } catch(err) {
-    if (btn) { btn.classList.remove('btn-loading'); btn.disabled = false; }
-    console.error('sendSignInLinkToEmail error:', err);
-    showLoginError('Failed to send sign-in link: ' + (err.message || 'Unknown error. Make sure this domain is authorized in Firebase console.'));
-  }
+// Match a full name string to a roster artist ID
+function resolveArtistId(fullName) {
+  if (!fullName) return null;
+  const normalised = fullName.trim().toLowerCase();
+  const all = [...ARTISTS, ...NEW_ARTISTS];
+  const match = all.find(a => a.name.toLowerCase() === normalised);
+  return match ? match.id : null;
 }
 
-function showLoginError(msg, color='#c0392b', bg='#fde8e8', border='#c0392b') {
-  let errEl = document.getElementById('login-email-error');
-  if (!errEl) {
-    errEl = document.createElement('p');
-    errEl.id = 'login-email-error';
-    const field = document.getElementById('login-step-email').querySelector('.form-field');
-    if (field) field.appendChild(errEl);
-    else document.getElementById('login-step-email').appendChild(errEl);
-  }
-  errEl.style.cssText = `font-size:0.8rem;color:${color};background:${bg};border:1px solid ${border};border-radius:8px;padding:8px 12px;margin-top:8px;line-height:1.5;text-align:center`;
-  errEl.textContent = msg;
-}
+// sendCode / showLoginError / resendCode removed — replaced by Google sign-in
 
-async function resendCode() {
-  const email = document.getElementById('login-email').value.trim().toLowerCase();
-  if (!email || !window._fbSendLink) return;
-  try {
-    await window._fbSendLink(email);
-    document.getElementById('login-code-sub').innerHTML = 'A new sign-in link has been sent to <strong>' + email + '</strong>.';
-    document.getElementById('code-error').style.display='none';
-  } catch(err) {
-    document.getElementById('code-error').textContent = 'Resend failed. Please try again.';
-    document.getElementById('code-error').style.display='block';
-  }
-}
-
-// Called by the Firebase module after magic-link redirect
-function handleFirebaseSignIn(email) {
+// Called by the Firebase module after Google sign-in or on session restore.
+// silent=true when restoring a persisted session (no modal/redirect).
+function handleFirebaseSignIn(email, silent) {
   const lowerEmail = (email || '').toLowerCase();
   loadApprovedEmails().then(() => {
     const userType = emailUserTypes[lowerEmail] || 'business';
     const isNew = !localStorage.getItem('ls-user-' + lowerEmail);
     localStorage.setItem('ls-user-' + lowerEmail, '1');
-    currentUser = { email: lowerEmail, isNew, userType };
+
+    // Resolve artist roster ID from column C name (e.g. "Maya Reyes" → id: 1)
+    let artistId = null;
+    let artistName = null;
+    if (userType === 'artist') {
+      const fullName = emailArtistNames[lowerEmail] || null;
+      artistId = resolveArtistId(fullName);
+      artistName = fullName;
+    }
+
+    currentUser = { email: lowerEmail, isNew, userType, artistId, artistName };
     updateNavAuth();
-    // Show brief success then route
+
+    // Silent restore — just update the nav, no modal or redirect needed
+    if (silent) {
+      renderBookingPage();
+      return;
+    }
+
+    // Interactive sign-in — show success step then route
     if (document.getElementById('login-step-success')) {
       document.querySelectorAll('.login-step').forEach(s => s.classList.remove('active'));
-      document.getElementById('login-success-msg').textContent = isNew
-        ? `Welcome to LocalStage! You're signed in as ${lowerEmail}.`
-        : `Welcome back! You're signed in as ${lowerEmail}.`;
+      const greeting = artistName ? `Welcome back, ${artistName.split(' ')[0]}!` : (isNew ? `Welcome to LocalStage!` : `Welcome back!`);
+      document.getElementById('login-success-msg').textContent = `${greeting} You're signed in as ${lowerEmail}.`;
       document.getElementById('login-step-success').classList.add('active');
     }
     if (userType === 'artist') {
@@ -2655,59 +2607,176 @@ function renderBookingArtists() {
   }).join('');
   // Clear the pending selection after use
   pendingBookArtistId = null;
-  // Show rate for initially selected artist
+  // Show rate and calendar for initially selected artist
   setTimeout(() => {
     const selected = document.querySelector('.pick-artist-row.selected');
     if (selected) selectBookingArtist(selected);
   }, 0);
 }
 
+// Tracks calendar month for the venue booking calendar per artist
+let venueCalYear = null;
+let venueCalMonth = null;
+
 function selectBookingArtist(el) {
   document.querySelectorAll('.pick-artist-row').forEach(r => r.classList.remove('selected'));
   el.classList.add('selected');
   const rate = el.getAttribute('data-artist-rate') || 'Rate on request';
-  const artistId = el.getAttribute('data-artist-id');
-  const artistEmail = 'artist-' + (el.querySelector('.pick-name')?.textContent || '').toLowerCase().replace(/\s+/g,'-') + '@localstage.ca';
+  const artistId = parseInt(el.getAttribute('data-artist-id'));
   const rateDisplay = document.getElementById('booking-selected-rate');
   if (rateDisplay) {
     rateDisplay.textContent = rate;
     rateDisplay.closest('[id="booking-rate-row"]').style.display = 'flex';
   }
 
-  // Show artist availability slots for this artist
+  // Reset venue calendar to current month when switching artists
+  const now = new Date();
+  venueCalYear = now.getFullYear();
+  venueCalMonth = now.getMonth();
+
+  renderVenueAvailCalendar(artistId);
+}
+
+function getArtistIdKey(artistNumericId) {
+  // Artists set their slots using key: 'artist-' + email.replace(/[^a-z0-9]/g,'')
+  // For the venue side, we need to show slots keyed to a specific roster artist.
+  // We use the numeric artist id as the key prefix so venues can see slots an artist set.
+  // Artists must be logged in with an email that maps to their roster id.
+  // Mapping: we store slots under 'artist-<numericId>' when set from artist availability page.
+  // (The artist availability page currently uses email-based key; we bridge this by also
+  //  accepting numeric key format for the demo. In production this would be server-side.)
+  return 'artist-' + artistNumericId;
+}
+
+function renderVenueAvailCalendar(artistNumericId) {
   const slotsContainer = document.getElementById('booking-avail-slots');
   if (!slotsContainer) return;
 
-  // Find availability keyed to this artist — try multiple key formats
   const store = getAvailabilityStore();
-  const artistName = el.querySelector('.pick-name')?.textContent || '';
-  const artistKey = 'artist-' + (currentUser?.email || 'x').replace(/[^a-z0-9]/g,''); // demo: real impl would match by roster
-  // For demo, show any open slots from any artist key (since artist set them with their email key)
-  const allSlots = Object.entries(store).filter(([, v]) => v.status === 'open');
+  // Key format used by artists: "artist-{numericId}:{date}:{time}"
+  const artistKey = 'artist-' + artistNumericId;
 
-  if (allSlots.length === 0) {
-    slotsContainer.innerHTML = `<div style="background:var(--cream);border-radius:10px;padding:1rem;font-size:0.82rem;color:var(--ink-light);margin-top:1rem;text-align:center">No pre-set availability found for this artist. You can still request any date below — we'll confirm within 24h.</div>`;
-  } else {
-    slotsContainer.innerHTML = `
-      <div style="margin-top:1.25rem">
-        <div style="font-size:0.72rem;font-weight:500;text-transform:uppercase;letter-spacing:1.2px;color:var(--green);margin-bottom:0.75rem">🟢 Artist's Open Slots</div>
-        <p style="font-size:0.8rem;color:var(--ink-light);margin-bottom:0.75rem;line-height:1.5">Click a slot to auto-fill the date and time below.</p>
-        ${allSlots.map(([k, v]) => {
-          const parts = k.split(':');
-          const date = parts[1];
-          const time = parts[2];
-          return `<div onclick="selectArtistSlot('${date}','${time}')" style="cursor:pointer;background:var(--white);border:1.5px solid var(--cream-dark);border-radius:10px;padding:10px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;transition:all 0.15s" onmouseover="this.style.borderColor='var(--green)';this.style.background='var(--green-light)'" onmouseout="this.style.borderColor='var(--cream-dark)';this.style.background='var(--white)'">
-            <div>
-              <div style="font-size:0.875rem;font-weight:500;color:var(--ink)">${formatDateDisplay(date)}</div>
-              <div style="font-size:0.78rem;color:var(--green)">${time}</div>
-              ${v.notes ? `<div style="font-size:0.72rem;color:var(--ink-light)">${v.notes}</div>` : ''}
-            </div>
-            <span style="font-size:0.72rem;background:var(--green-light);color:var(--green);padding:3px 10px;border-radius:100px;font-weight:500;flex-shrink:0">Select →</span>
-          </div>`;
-        }).join('')}
-      </div>
-    `;
+  // Build date → [slot info] map for this specific artist only
+  const openByDate = {};
+  const bookedByDate = {};
+  Object.entries(store).forEach(([k, v]) => {
+    const parts = k.split(':');
+    if (parts.length < 3) return;
+    // Only include slots that belong to this artist
+    if (!k.startsWith(artistKey + ':')) return;
+    const dateStr = parts[1];
+    const time = parts.slice(2).join(':');
+    if (v.status === 'open') {
+      if (!openByDate[dateStr]) openByDate[dateStr] = [];
+      openByDate[dateStr].push({ key: k, time, notes: v.notes });
+    } else if (v.status === 'booked') {
+      if (!bookedByDate[dateStr]) bookedByDate[dateStr] = [];
+      bookedByDate[dateStr].push({ key: k, time });
+    }
+  });
+
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  if (venueCalYear === null) { venueCalYear = today.getFullYear(); venueCalMonth = today.getMonth(); }
+
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const daysOfWeek = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const firstDay = new Date(venueCalYear, venueCalMonth, 1).getDay();
+  const daysInMonth = new Date(venueCalYear, venueCalMonth + 1, 0).getDate();
+
+  let calCells = '';
+  for (let i = 0; i < firstDay; i++) calCells += `<div></div>`;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${venueCalYear}-${String(venueCalMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const cellDate = new Date(venueCalYear, venueCalMonth, d);
+    const isPast = cellDate < today;
+    const isOpen = !isPast && openByDate[dateStr] && openByDate[dateStr].length > 0;
+    const isBooked = bookedByDate[dateStr] && bookedByDate[dateStr].length > 0;
+    const isToday = cellDate.getTime() === today.getTime();
+
+    let bg = 'transparent', color = isPast ? '#ccc' : 'var(--ink-mid)', border = '2px solid transparent';
+    let dot = '';
+    let cursor = 'default';
+    if (isBooked) {
+      bg = '#fde8e8'; color = '#c0392b'; border = '2px solid #f5b7b1';
+      dot = `<div style="width:5px;height:5px;border-radius:50%;background:#c0392b;margin:1px auto 0"></div>`;
+    } else if (isOpen) {
+      bg = 'var(--green-light)'; color = 'var(--green-mid)'; border = '2px solid #b2dfc9';
+      dot = `<div style="width:5px;height:5px;border-radius:50%;background:var(--green);margin:1px auto 0"></div>`;
+      cursor = 'pointer';
+    }
+    if (isToday) border = '2px solid var(--ink)';
+
+    const clickHandler = isOpen ? `onclick="venueSelectDay('${dateStr}')"` : '';
+    const hover = isOpen ? `onmouseover="this.style.background='#c8f0df'" onmouseout="this.style.background='${bg}'"` : '';
+
+    calCells += `<div ${clickHandler} ${hover} style="border-radius:8px;padding:5px 2px;text-align:center;background:${bg};border:${border};cursor:${cursor};transition:background 0.15s">
+      <div style="font-size:0.75rem;font-weight:${isToday?'700':'400'};color:${color}">${d}</div>
+      ${dot}
+    </div>`;
   }
+
+  slotsContainer.innerHTML = `
+    <div style="margin-top:1.25rem;background:var(--white);border-radius:16px;border:1px solid var(--cream-dark);overflow:hidden">
+      <!-- Calendar header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;border-bottom:1px solid var(--cream-dark);background:var(--cream)">
+        <button onclick="venueNavMonth(-1)" style="background:white;border:1px solid var(--cream-dark);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center">‹</button>
+        <div style="font-family:var(--serif);font-size:1rem;color:var(--ink)">${monthNames[venueCalMonth]} ${venueCalYear}</div>
+        <button onclick="venueNavMonth(1)" style="background:white;border:1px solid var(--cream-dark);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center">›</button>
+      </div>
+      <!-- Day headers -->
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);text-align:center;padding:0.6rem 0.75rem 0;gap:2px">
+        ${daysOfWeek.map(d=>`<div style="font-size:0.6rem;font-weight:600;text-transform:uppercase;color:var(--ink-light);padding-bottom:4px">${d}</div>`).join('')}
+      </div>
+      <!-- Day cells -->
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;padding:0 0.75rem 0.75rem">${calCells}</div>
+      <!-- Legend -->
+      <div style="display:flex;gap:1rem;padding:0.6rem 1.25rem;border-top:1px solid var(--cream-dark);font-size:0.68rem;color:var(--ink-light)">
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block"></span>Available — click to book</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#c0392b;display:inline-block"></span>Already booked</span>
+      </div>
+    </div>
+
+    <!-- Slot picker (shown after clicking a date) -->
+    <div id="venue-slot-picker" style="display:none;margin-top:1rem;background:var(--green-light);border-radius:14px;padding:1rem;border:1.5px solid #b2dfc9">
+      <div id="venue-slot-picker-content"></div>
+    </div>
+  `;
+
+  // Store for use by venueSelectDay
+  window._venueOpenByDate = openByDate;
+  window._venueArtistId = artistNumericId;
+}
+
+function venueNavMonth(dir) {
+  venueCalMonth += dir;
+  if (venueCalMonth > 11) { venueCalMonth = 0; venueCalYear++; }
+  if (venueCalMonth < 0) { venueCalMonth = 11; venueCalYear--; }
+  const selected = document.querySelector('.pick-artist-row.selected');
+  const artistId = selected ? parseInt(selected.getAttribute('data-artist-id')) : null;
+  if (artistId) renderVenueAvailCalendar(artistId);
+}
+
+function venueSelectDay(dateStr) {
+  const slots = (window._venueOpenByDate || {})[dateStr] || [];
+  const picker = document.getElementById('venue-slot-picker');
+  const content = document.getElementById('venue-slot-picker-content');
+  if (!picker || !content || slots.length === 0) return;
+
+  content.innerHTML = `
+    <div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--green-mid);margin-bottom:0.75rem">Available times for ${formatDateDisplay(dateStr)}</div>
+    ${slots.map(s => `
+      <div onclick="selectArtistSlot('${dateStr}','${s.time}')" style="cursor:pointer;background:white;border:1.5px solid var(--cream-dark);border-radius:10px;padding:10px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;transition:all 0.15s" onmouseover="this.style.borderColor='var(--green)';this.style.background='white'" onmouseout="this.style.borderColor='var(--cream-dark)'">
+        <div>
+          <div style="font-size:0.875rem;font-weight:500;color:var(--ink)">⏰ ${s.time}</div>
+          ${s.notes ? `<div style="font-size:0.72rem;color:var(--ink-light);margin-top:2px">${s.notes}</div>` : ''}
+        </div>
+        <span style="font-size:0.72rem;background:var(--green);color:white;padding:3px 10px;border-radius:100px;font-weight:500;flex-shrink:0">Select →</span>
+      </div>
+    `).join('')}
+  `;
+  picker.style.display = 'block';
+  picker.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function selectArtistSlot(date, time) {
@@ -2718,6 +2787,19 @@ function selectArtistSlot(date, time) {
   if (timeInput) {
     // time is like "19:00-22:00", take start
     timeInput.value = time.split('-')[0];
+  }
+  // Show visual confirmation
+  const picker = document.getElementById('venue-slot-picker');
+  if (picker) {
+    picker.style.borderColor = 'var(--green)';
+    picker.style.background = 'var(--green-light)';
+    const confirmMsg = document.createElement('div');
+    confirmMsg.style.cssText = 'font-size:0.8rem;color:var(--green-mid);font-weight:500;margin-top:0.5rem;text-align:center';
+    confirmMsg.textContent = '✓ Slot selected — fill in your venue details below and submit.';
+    const existingMsg = picker.querySelector('.slot-confirm-msg');
+    if (existingMsg) existingMsg.remove();
+    confirmMsg.className = 'slot-confirm-msg';
+    picker.appendChild(confirmMsg);
   }
   // Scroll to date field
   if (dateInput) dateInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -2795,6 +2877,8 @@ function submitBooking() {
 function resetApply() {
   selectedType = null;
   currentApplyStep = 0;
+  termsAccepted = false;
+  savedSignatureDataUrl = null;
   document.querySelectorAll('.apply-step').forEach(s => s.classList.remove('active'));
   document.getElementById('apply-step-0').classList.add('active');
   document.getElementById('type-artist').classList.remove('selected');
@@ -3149,19 +3233,49 @@ const BUSINESS_TERMS = `
 <p style="font-size:0.78rem;color:var(--ink-light);line-height:1.6;margin-top:0.5rem">Governed by the laws of Ontario. Disputes resolved in the courts of Peel Region. Terms may be updated with 14 days email notice. Questions? <a href="mailto:localstagerisingstars@gmail.com" style="color:var(--green)">localstagerisingstars@gmail.com</a></p>
 `;
 
+// Saved signature data URI — persists for the session so "View Terms Again" restores it
+let savedSignatureDataUrl = null;
+
 function openTermsModal() {
   const content = selectedType === 'artist' ? ARTIST_TERMS : BUSINESS_TERMS;
   const title = selectedType === 'artist' ? 'Artist Terms &amp; Conditions' : 'Business Terms &amp; Conditions';
   document.getElementById('tc-modal-title').innerHTML = title;
   document.getElementById('tc-content').innerHTML = content;
-  document.getElementById('tc-agree-box').checked = false;
-  const esignBox = document.getElementById('tc-esign-box');
-  if (esignBox) esignBox.checked = false;
-  clearSignature();
   document.getElementById('modal-terms').classList.add('open');
-  // Scroll T&C content to top
   document.getElementById('tc-content').scrollTop = 0;
   initSignatureCanvas();
+
+  if (termsAccepted && savedSignatureDataUrl) {
+    // Restore saved signature and checkbox states — user already signed
+    restoreSignature(savedSignatureDataUrl);
+    document.getElementById('tc-agree-box').checked = true;
+    const esignBox = document.getElementById('tc-esign-box');
+    if (esignBox) esignBox.checked = true;
+    const acceptBtn = document.getElementById('tc-accept-btn');
+    if (acceptBtn) { acceptBtn.textContent = 'Already signed ✓'; acceptBtn.disabled = true; acceptBtn.style.opacity = '0.5'; }
+  } else {
+    // Fresh open — reset everything
+    document.getElementById('tc-agree-box').checked = false;
+    const esignBox = document.getElementById('tc-esign-box');
+    if (esignBox) esignBox.checked = false;
+    clearSignature();
+    const acceptBtn = document.getElementById('tc-accept-btn');
+    if (acceptBtn) { acceptBtn.textContent = 'Accept & Sign →'; acceptBtn.disabled = false; acceptBtn.style.opacity = '1'; }
+  }
+}
+
+function restoreSignature(dataUrl) {
+  const canvas = document.getElementById('sig-canvas');
+  const ctx = canvas.getContext('2d');
+  const img = new Image();
+  img.onload = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0);
+    sigHasContent = true;
+    document.getElementById('sig-status').textContent = '✓ Signature captured';
+    document.getElementById('sig-status').style.color = 'var(--green)';
+  };
+  img.src = dataUrl;
 }
 
 function initSignatureCanvas() {
@@ -3226,6 +3340,9 @@ function acceptTerms() {
     alert('Please confirm that you have signed electronically.');
     return;
   }
+  // Save the signature image so it can be restored on "View Terms Again"
+  const canvas = document.getElementById('sig-canvas');
+  savedSignatureDataUrl = canvas.toDataURL('image/png');
   termsAccepted = true;
   closeModal('modal-terms');
   // Update the apply page UI
@@ -3368,6 +3485,11 @@ function openArtistProfile(id) {
 // ════════════════════════════════
 // ARTIST AVAILABILITY CALENDAR
 // ════════════════════════════════
+
+// Tracks which calendar month is shown on the artist availability page
+let aaCalYear = null;
+let aaCalMonth = null;
+
 function renderArtistAvailability() {
   if (!currentUser || currentUser.userType !== 'artist') {
     document.getElementById('aa-auth-gate').style.display = 'block';
@@ -3376,92 +3498,208 @@ function renderArtistAvailability() {
   }
   document.getElementById('aa-auth-gate').style.display = 'none';
 
-  // Find artist record from spreadsheet mapping — use email prefix as fallback name
-  const emailPrefix = currentUser.email.split('@')[0];
-  const allArtists = [...ARTISTS, ...NEW_ARTISTS];
-  // Try to find a matching artist by name similarity — in production this would be a proper lookup
-  const artistRecord = allArtists[0]; // fallback to show the calendar UI
-  const artistId = 'artist-' + currentUser.email.replace(/[^a-z0-9]/g,'');
-
-  const existing = getArtistAvailability(artistId);
-  const existingSlots = Object.entries(existing).filter(([,v]) => v.status === 'open');
-  const bookedSlots = Object.entries(existing).filter(([,v]) => v.status === 'booked');
-
-  // Generate next 60 days
-  const days = [];
+  // Use roster-based key if we resolved a name match (e.g. "artist-1" for Maya Reyes id:1)
+  // Fall back to email-based key for artists not yet mapped in the sheet
+  const artistId = currentUser.artistId ? 'artist-' + currentUser.artistId : 'artist-' + currentUser.email.replace(/[^a-z0-9]/g,'');
   const today = new Date();
-  for (let i = 1; i <= 60; i++) {
-    const d = new Date(today); d.setDate(d.getDate() + i);
-    days.push(d);
-  }
+  if (aaCalYear === null) { aaCalYear = today.getFullYear(); aaCalMonth = today.getMonth(); }
 
   document.getElementById('aa-form-area').innerHTML = `
     <div style="display:flex;align-items:center;gap:10px;background:var(--green-light);border-radius:12px;padding:12px 16px;margin-bottom:2rem;font-size:0.875rem;color:var(--green-mid)">
       <span>✓</span>
-      <span>Signed in as artist: <strong>${currentUser.email}</strong> · <span style="cursor:pointer;text-decoration:underline" onclick="signOut()">Sign out</span></span>
+      <span>Signed in as${currentUser.artistName ? " <strong>" + currentUser.artistName + "</strong> (" + currentUser.email + ")" : " artist: <strong>" + currentUser.email + "</strong>"} · <span style="cursor:pointer;text-decoration:underline" onclick="signOut()">Sign out</span></span>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:2rem;align-items:start">
-      <!-- Add new slot form -->
-      <div style="background:var(--white);border-radius:20px;padding:1.75rem;border:1px solid var(--cream-dark);position:sticky;top:100px">
-        <h3 style="font-family:var(--serif);font-size:1.3rem;color:var(--ink);margin-bottom:0.4rem">Add Availability</h3>
-        <p style="font-size:0.82rem;color:var(--ink-light);margin-bottom:1.5rem;line-height:1.6">Pick a date and time range when you're free to perform. Businesses will see these slots when booking you.</p>
-        <div class="form-field">
-          <label class="form-label">Date *</label>
-          <input class="form-input" type="date" id="aa-date" min="${today.toISOString().split('T')[0]}">
+    <div style="display:grid;grid-template-columns:1.1fr 1fr;gap:2rem;align-items:start">
+
+      <!-- LEFT: Calendar + slot form -->
+      <div>
+        <!-- Calendar -->
+        <div style="background:var(--white);border-radius:20px;border:1px solid var(--cream-dark);overflow:hidden;margin-bottom:1.5rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem;border-bottom:1px solid var(--cream-dark)">
+            <button onclick="aaNavMonth(-1)" style="background:var(--cream);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:background 0.2s" onmouseover="this.style.background='var(--cream-dark)'" onmouseout="this.style.background='var(--cream)'">‹</button>
+            <div style="font-family:var(--serif);font-size:1.1rem;color:var(--ink)" id="aa-cal-title"></div>
+            <button onclick="aaNavMonth(1)" style="background:var(--cream);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:background 0.2s" onmouseover="this.style.background='var(--cream-dark)'" onmouseout="this.style.background='var(--cream)'">›</button>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);text-align:center;padding:0.75rem 1rem 0">
+            ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div style="font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--ink-light);padding-bottom:0.5rem">${d}</div>`).join('')}
+          </div>
+          <div id="aa-cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:0 1rem 1rem"></div>
+          <div style="display:flex;gap:1rem;padding:0.75rem 1.5rem;border-top:1px solid var(--cream-dark);font-size:0.72rem;color:var(--ink-light)">
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;background:var(--green);display:inline-block"></span>Available</span>
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;background:#c0392b;display:inline-block"></span>Booked</span>
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;background:var(--cream-dark);display:inline-block"></span>Unavailable</span>
+          </div>
         </div>
-        <div class="form-field">
-          <label class="form-label">Start time *</label>
-          <input class="form-input" type="time" id="aa-start" value="19:00">
+
+        <!-- Add slot form — shown when a date is selected -->
+        <div id="aa-add-panel" style="background:var(--white);border-radius:20px;padding:1.75rem;border:1px solid var(--cream-dark);display:none">
+          <h3 style="font-family:var(--serif);font-size:1.15rem;color:var(--ink);margin-bottom:0.25rem">Add availability for <span id="aa-selected-date-label" style="color:var(--green)"></span></h3>
+          <p style="font-size:0.8rem;color:var(--ink-light);margin-bottom:1.25rem">Set a time range when you're free to perform.</p>
+          <input type="hidden" id="aa-date">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div class="form-field" style="margin-bottom:0">
+              <label class="form-label">Start time *</label>
+              <input class="form-input" type="time" id="aa-start" value="19:00">
+            </div>
+            <div class="form-field" style="margin-bottom:0">
+              <label class="form-label">End time *</label>
+              <input class="form-input" type="time" id="aa-end" value="22:00">
+            </div>
+          </div>
+          <div class="form-field" style="margin-top:1rem">
+            <label class="form-label">Notes (optional)</label>
+            <input class="form-input" type="text" id="aa-notes" placeholder="e.g. Prefer venues in Mississauga">
+          </div>
+          <div id="aa-add-error" style="display:none;background:#fde8e8;border-radius:10px;padding:8px 12px;font-size:0.8rem;color:#c0392b;margin-bottom:0.75rem"></div>
+          <div style="display:flex;gap:10px;margin-top:1.25rem">
+            <button onclick="addAvailabilitySlot('${artistId}')" style="flex:1;background:var(--green);color:white;border:none;border-radius:100px;padding:0.75rem;font-family:var(--sans);font-size:0.875rem;font-weight:500;cursor:pointer;transition:opacity 0.2s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">+ Add slot</button>
+            <button onclick="document.getElementById('aa-add-panel').style.display='none'" style="background:transparent;color:var(--ink-mid);border:1.5px solid var(--cream-dark);border-radius:100px;padding:0.75rem 1.25rem;font-family:var(--sans);font-size:0.875rem;cursor:pointer">Cancel</button>
+          </div>
         </div>
-        <div class="form-field">
-          <label class="form-label">End time *</label>
-          <input class="form-input" type="time" id="aa-end" value="22:00">
-        </div>
-        <div class="form-field">
-          <label class="form-label">Notes (optional)</label>
-          <input class="form-input" type="text" id="aa-notes" placeholder="e.g. Prefer venues in Mississauga">
-        </div>
-        <div id="aa-add-error" style="display:none;background:#fde8e8;border-radius:10px;padding:8px 12px;font-size:0.8rem;color:#c0392b;margin-bottom:0.75rem"></div>
-        <button class="booking-submit" style="background:var(--green)" onclick="addAvailabilitySlot('${artistId}')">+ Add this time slot</button>
+
+        <p style="font-size:0.78rem;color:var(--ink-light);margin-top:1rem;line-height:1.5;text-align:center">Click any future date on the calendar to mark yourself available. Venues will see your open slots when booking.</p>
       </div>
 
-      <!-- Current availability -->
+      <!-- RIGHT: Slots list -->
       <div>
-        <h3 style="font-family:var(--serif);font-size:1.3rem;color:var(--ink);margin-bottom:1rem">Your Availability</h3>
-
-        ${bookedSlots.length > 0 ? `
-        <div style="margin-bottom:1.5rem">
-          <div style="font-size:0.72rem;font-weight:500;text-transform:uppercase;letter-spacing:1.2px;color:#c0392b;margin-bottom:0.75rem">🔴 Confirmed Bookings</div>
-          ${bookedSlots.map(([k, v]) => {
-            const [, date, time] = k.split(':');
-            return `<div style="background:#fde8e8;border-radius:12px;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;border:1px solid #f5b7b1">
-              <div>
-                <div style="font-weight:500;font-size:0.9rem;color:var(--ink)">${formatDateDisplay(date)} at ${time}</div>
-                <div style="font-size:0.78rem;color:#c0392b;margin-top:2px">Booked by: ${v.bookedBy || 'a venue'}</div>
-              </div>
-              <span style="font-size:0.72rem;background:#c0392b;color:white;padding:3px 10px;border-radius:100px;font-weight:500">CONFIRMED</span>
-            </div>`;
-          }).join('')}
-        </div>` : ''}
-
-        <div style="font-size:0.72rem;font-weight:500;text-transform:uppercase;letter-spacing:1.2px;color:var(--green);margin-bottom:0.75rem">🟢 Open Slots</div>
-        <div id="aa-slots-list">
-        ${existingSlots.length === 0 ? `<div style="background:var(--cream);border-radius:12px;padding:1.5rem;text-align:center;color:var(--ink-light);font-size:0.875rem">No open slots yet. Add your available times on the left.</div>` :
-          existingSlots.map(([k, v]) => {
-            const [, date, time] = k.split(':');
-            return `<div style="background:var(--white);border-radius:12px;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--cream-dark)" id="slot-${k.replace(/:/g,'-')}">
-              <div>
-                <div style="font-weight:500;font-size:0.9rem;color:var(--ink)">${formatDateDisplay(date)} at ${time}</div>
-                ${v.notes ? `<div style="font-size:0.78rem;color:var(--ink-light);margin-top:2px">${v.notes}</div>` : ''}
-              </div>
-              <button onclick="removeSlot('${artistId}','${date}','${time}')" style="background:transparent;border:1.5px solid var(--cream-dark);border-radius:100px;padding:5px 12px;font-size:0.75rem;color:var(--ink-mid);cursor:pointer;font-family:var(--sans);transition:all 0.2s" onmouseover="this.style.borderColor='#c0392b';this.style.color='#c0392b'" onmouseout="this.style.borderColor='var(--cream-dark)';this.style.color='var(--ink-mid)'">✕ Remove</button>
-            </div>`;
-          }).join('')}
-        </div>
+        <h3 style="font-family:var(--serif);font-size:1.3rem;color:var(--ink);margin-bottom:1rem">Your Schedule</h3>
+        <div id="aa-slots-list"></div>
       </div>
     </div>
   `;
+
+  renderAaCalendar(artistId);
+  renderAaSlotsList(artistId);
+}
+
+function renderAaCalendar(artistId) {
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const store = getAvailabilityStore();
+
+  // Build set of dates that have slots for this artist
+  const openDates = new Set();
+  const bookedDates = new Set();
+  Object.entries(store).forEach(([k, v]) => {
+    if (!k.startsWith(artistId + ':')) return;
+    const dateStr = k.split(':')[1];
+    if (v.status === 'booked') bookedDates.add(dateStr);
+    else openDates.add(dateStr);
+  });
+
+  const titleEl = document.getElementById('aa-cal-title');
+  const gridEl = document.getElementById('aa-cal-grid');
+  if (!titleEl || !gridEl) return;
+
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  titleEl.textContent = monthNames[aaCalMonth] + ' ' + aaCalYear;
+
+  const firstDay = new Date(aaCalYear, aaCalMonth, 1).getDay();
+  const daysInMonth = new Date(aaCalYear, aaCalMonth + 1, 0).getDate();
+
+  let html = '';
+  // Empty cells before first day
+  for (let i = 0; i < firstDay; i++) {
+    html += `<div></div>`;
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateObj = new Date(aaCalYear, aaCalMonth, d);
+    dateObj.setHours(0,0,0,0);
+    const dateStr = `${aaCalYear}-${String(aaCalMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isPast = dateObj <= today;
+    const isBooked = bookedDates.has(dateStr);
+    const isOpen = openDates.has(dateStr);
+    const isToday = dateObj.getTime() === today.getTime();
+
+    let bg = 'transparent', color = isPast ? '#ccc' : 'var(--ink)', border = '2px solid transparent';
+    let cursor = isPast ? 'default' : 'pointer';
+    let dot = '';
+
+    if (isBooked) {
+      bg = '#fde8e8'; color = '#c0392b'; border = '2px solid #f5b7b1';
+      dot = `<div style="width:5px;height:5px;border-radius:50%;background:#c0392b;margin:1px auto 0"></div>`;
+    } else if (isOpen) {
+      bg = 'var(--green-light)'; color = 'var(--green-mid)'; border = '2px solid #b2dfc9';
+      dot = `<div style="width:5px;height:5px;border-radius:50%;background:var(--green);margin:1px auto 0"></div>`;
+    }
+    if (isToday) { border = '2px solid var(--ink)'; }
+
+    const click = (!isPast && !isBooked) ? `onclick="aaSelectDay('${dateStr}', '${d} ${monthNames[aaCalMonth]}')"` : '';
+
+    html += `<div ${click} style="border-radius:10px;padding:6px 2px;text-align:center;background:${bg};border:${border};cursor:${cursor};transition:all 0.15s;${!isPast && !isBooked ? 'onmouseover' : ''}" 
+      ${!isPast && !isBooked ? `onmouseover="if(!this.classList.contains('aa-day-open'))this.style.background='var(--cream)'" onmouseout="this.style.background='${bg}'"` : ''}>
+      <div style="font-size:0.8rem;font-weight:${isToday?'700':'400'};color:${color}">${d}</div>
+      ${dot}
+    </div>`;
+  }
+  gridEl.innerHTML = html;
+}
+
+function aaNavMonth(dir) {
+  aaCalMonth += dir;
+  if (aaCalMonth > 11) { aaCalMonth = 0; aaCalYear++; }
+  if (aaCalMonth < 0) { aaCalMonth = 11; aaCalYear--; }
+  const artistId = 'artist-' + currentUser.email.replace(/[^a-z0-9]/g,'');
+  renderAaCalendar(artistId);
+}
+
+function aaSelectDay(dateStr, labelStr) {
+  document.getElementById('aa-date').value = dateStr;
+  document.getElementById('aa-selected-date-label').textContent = labelStr;
+  const panel = document.getElementById('aa-add-panel');
+  panel.style.display = 'block';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  document.getElementById('aa-add-error').style.display = 'none';
+}
+
+function renderAaSlotsList(artistId) {
+  const existing = getArtistAvailability(artistId);
+  const existingSlots = Object.entries(existing).filter(([,v]) => v.status === 'open').sort((a,b)=>a[0].localeCompare(b[0]));
+  const bookedSlots = Object.entries(existing).filter(([,v]) => v.status === 'booked').sort((a,b)=>a[0].localeCompare(b[0]));
+  const container = document.getElementById('aa-slots-list');
+  if (!container) return;
+
+  let html = '';
+
+  if (bookedSlots.length > 0) {
+    html += `<div style="margin-bottom:1.5rem">
+      <div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#c0392b;margin-bottom:0.75rem">🔴 Confirmed Bookings</div>
+      ${bookedSlots.map(([k, v]) => {
+        const parts = k.split(':'); const date = parts[1]; const time = parts[2];
+        return `<div style="background:#fde8e8;border-radius:12px;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;border:1px solid #f5b7b1">
+          <div>
+            <div style="font-weight:500;font-size:0.875rem;color:var(--ink)">${formatDateDisplay(date)}</div>
+            <div style="font-size:0.75rem;color:#c0392b;margin-top:2px">⏰ ${time} · Booked by ${v.bookedBy || 'a venue'}</div>
+          </div>
+          <span style="font-size:0.7rem;background:#c0392b;color:white;padding:3px 10px;border-radius:100px;font-weight:600;flex-shrink:0">CONFIRMED</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+
+  if (existingSlots.length === 0) {
+    html += `<div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--green);margin-bottom:0.75rem">🟢 Open Slots</div>
+      <div style="background:var(--cream);border-radius:14px;padding:2rem;text-align:center;color:var(--ink-light);font-size:0.875rem;line-height:1.6">
+        <div style="font-size:1.5rem;margin-bottom:0.5rem">📅</div>
+        No open slots yet.<br>Click any future date on the calendar to add one.
+      </div>`;
+  } else {
+    html += `<div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--green);margin-bottom:0.75rem">🟢 Open Slots (${existingSlots.length})</div>`;
+    html += existingSlots.map(([k, v]) => {
+      const parts = k.split(':'); const date = parts[1]; const time = parts[2];
+      return `<div style="background:var(--white);border-radius:12px;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--cream-dark)" id="slot-${k.replace(/:/g,'-')}">
+        <div>
+          <div style="font-weight:500;font-size:0.875rem;color:var(--ink)">${formatDateDisplay(date)}</div>
+          <div style="font-size:0.75rem;color:var(--green);margin-top:2px">⏰ ${time}${v.notes ? ' · ' + v.notes : ''}</div>
+        </div>
+        <button onclick="removeSlot('${artistId}','${date}','${time}')" style="background:transparent;border:1.5px solid var(--cream-dark);border-radius:100px;padding:5px 12px;font-size:0.72rem;color:var(--ink-mid);cursor:pointer;font-family:var(--sans);transition:all 0.2s;flex-shrink:0" onmouseover="this.style.borderColor='#c0392b';this.style.color='#c0392b'" onmouseout="this.style.borderColor='var(--cream-dark)';this.style.color='var(--ink-mid)'">✕ Remove</button>
+      </div>`;
+    }).join('');
+  }
+
+  container.innerHTML = html;
 }
 
 function formatDateDisplay(dateStr) {
@@ -3498,7 +3736,10 @@ function addAvailabilitySlot(artistId) {
   }
   store[key] = { status: 'open', bookedBy: null, notes };
   saveAvailabilityStore(store);
-  renderArtistAvailability();
+  // Hide the add panel and refresh just the calendar + list (no full re-render)
+  document.getElementById('aa-add-panel').style.display = 'none';
+  renderAaCalendar(artistId);
+  renderAaSlotsList(artistId);
 }
 
 function removeSlot(artistId, date, time) {
@@ -3507,7 +3748,8 @@ function removeSlot(artistId, date, time) {
   if (store[key] && store[key].status === 'booked') { alert('This slot is already booked and cannot be removed.'); return; }
   delete store[key];
   saveAvailabilityStore(store);
-  renderArtistAvailability();
+  renderAaCalendar(artistId);
+  renderAaSlotsList(artistId);
 }
 
 // ════════════════════════════════
@@ -3739,6 +3981,13 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
 // Init
 updateNavAuth();
 renderArtistGrid('all','all');
+
+// If Firebase's onAuthStateChanged fired before this script finished loading,
+// a pending email was queued — pick it up now for a silent session restore.
+if (window._pendingAuthEmail) {
+  handleFirebaseSignIn(window._pendingAuthEmail, true);
+  window._pendingAuthEmail = null;
+}
 </script>
 </body>
 </html>
