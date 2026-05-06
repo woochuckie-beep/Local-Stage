@@ -61,6 +61,8 @@
   const app      = initializeApp(FIREBASE_CONFIG);
   const auth     = getAuth(app);
   const provider = new GoogleAuthProvider();
+  // Force account picker every time so re-sign-in after sign-out always works
+  provider.setCustomParameters({ prompt: 'select_account' });
 
   // Ensure sign-in state survives page reloads
   setPersistence(auth, browserLocalPersistence).catch(e => console.warn('Persistence error:', e));
@@ -1981,7 +1983,11 @@ function resetLoginModal() {
   const errEl = document.getElementById('google-signin-error');
   if (errEl) errEl.style.display = 'none';
   const btn = document.getElementById('google-signin-btn');
-  if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+  if (btn) {
+    btn.disabled = false;
+    btn.classList.remove('btn-loading');
+    btn.style.opacity = '1';
+  }
 }
 
 async function signInWithGoogle() {
