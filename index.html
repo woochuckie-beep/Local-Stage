@@ -635,6 +635,7 @@
     <li><a onclick="showPage('home'); setTimeout(()=>{ const el=document.getElementById('how'); if(el) el.scrollIntoView({behavior:'smooth'}); },50)">How It Works</a></li>
     <li><a onclick="showPage('artists')">Browse Artists</a></li>
     <li><a onclick="showPage('pricing-page')">Pricing</a></li>
+    <li><a id="nav-portal-link" style="display:none;font-weight:600;color:var(--green) !important"></a></li>
     <li><a class="nav-cta" onclick="openApply()">Get Started →</a></li>
   </ul>
   <div style="display:flex;align-items:center;gap:10px">
@@ -657,6 +658,7 @@
   <a onclick="closeMobileMenu(); showPage('home'); setTimeout(()=>{ const el=document.getElementById('faq'); if(el) el.scrollIntoView({behavior:'smooth'}); },50)">FAQ</a>
   <a onclick="closeMobileMenu(); openApply()">Apply / Join</a>
   <a onclick="closeMobileMenu(); showPage('artists')">Browse Artists to Book</a>
+  <a id="mobile-portal-link" style="display:none;color:var(--green);font-weight:600"></a>
   <div class="mobile-auth-row">
     <button id="mobile-auth-btn" class="btn-primary" style="width:100%;text-align:center" onclick="closeMobileMenu(); openLogin()">Sign In</button>
   </div>
@@ -1306,9 +1308,17 @@
 <div id="page-artist-availability" class="page">
   <div class="booking-hero" style="background:linear-gradient(135deg,#0a4d38 0%,#1a9b6c 100%)">
     <div class="booking-hero-inner">
-      <div style="font-size:0.75rem;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:0.75rem">Artist Portal</div>
-      <h1 id="aa-title">Set your availability.</h1>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.75rem">
+        <span style="font-size:0.75rem;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.6)">🎤 Artist Portal</span>
+        <span style="font-size:0.75rem;color:rgba(255,255,255,0.3)">·</span>
+        <span id="aa-portal-name" style="font-size:0.8rem;color:rgba(255,255,255,0.7)"></span>
+      </div>
+      <h1 id="aa-title">My Availability Dashboard</h1>
       <p id="aa-sub">Add the dates and times you're free to perform. Businesses will only be able to book the slots you approve here.</p>
+      <div style="display:flex;gap:1rem;margin-top:1.25rem;flex-wrap:wrap">
+        <button onclick="showPage('home')" style="background:transparent;border:1.5px solid rgba(255,255,255,0.3);color:rgba(255,255,255,0.8);padding:7px 18px;border-radius:100px;font-family:var(--sans);font-size:0.8rem;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='white';this.style.color='white'" onmouseout="this.style.borderColor='rgba(255,255,255,0.3)';this.style.color='rgba(255,255,255,0.8)'">← Home</button>
+        <button onclick="signOut()" style="background:transparent;border:1.5px solid rgba(255,0,0,0.3);color:rgba(255,180,180,0.9);padding:7px 18px;border-radius:100px;font-family:var(--sans);font-size:0.8rem;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='#c0392b';this.style.color='#ff9999'" onmouseout="this.style.borderColor='rgba(255,0,0,0.3)';this.style.color='rgba(255,180,180,0.9)'">Sign out</button>
+      </div>
     </div>
   </div>
   <div class="booking-content" style="max-width:860px">
@@ -1844,6 +1854,10 @@ const NEW_ARTISTS = [
 // PAGE NAVIGATION
 // ════════════════════════════════
 function showPage(name) {
+  // Artists must never land on the booking page — redirect to their portal
+  if (name === 'booking' && currentUser && currentUser.userType === 'artist') {
+    name = 'artist-availability';
+  }
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   const page = document.getElementById('page-' + name);
   if (!page) return;
@@ -1939,6 +1953,9 @@ function updateNavAuth() {
   const mobileBtn = document.getElementById('mobile-auth-btn');
   const info = document.getElementById('nav-user-info');
   const emailSpan = document.getElementById('nav-user-email');
+  const portalLink = document.getElementById('nav-portal-link');
+  const mobilePortalLink = document.getElementById('mobile-portal-link');
+
   if (currentUser) {
     btn.textContent = 'Sign out';
     btn.classList.add('signout');
@@ -1946,12 +1963,37 @@ function updateNavAuth() {
     info.style.display = 'flex';
     emailSpan.textContent = currentUser.email;
     if (mobileBtn) { mobileBtn.textContent = 'Sign out (' + currentUser.email.split('@')[0] + ')'; mobileBtn.onclick = () => { closeMobileMenu(); signOut(); }; }
+
+    // Show the right portal link based on user type
+    if (portalLink) {
+      if (currentUser.userType === 'artist') {
+        portalLink.textContent = '🎤 My Availability';
+        portalLink.onclick = () => showPage('artist-availability');
+        portalLink.style.display = 'inline';
+      } else {
+        portalLink.textContent = '📅 Book an Artist';
+        portalLink.onclick = () => showPage('booking');
+        portalLink.style.display = 'inline';
+      }
+    }
+    if (mobilePortalLink) {
+      if (currentUser.userType === 'artist') {
+        mobilePortalLink.textContent = '🎤 My Availability';
+        mobilePortalLink.onclick = () => { closeMobileMenu(); showPage('artist-availability'); };
+      } else {
+        mobilePortalLink.textContent = '📅 Book an Artist';
+        mobilePortalLink.onclick = () => { closeMobileMenu(); showPage('booking'); };
+      }
+      mobilePortalLink.style.display = 'block';
+    }
   } else {
     btn.textContent = 'Sign in';
     btn.classList.remove('signout');
     btn.onclick = openLogin;
     info.style.display = 'none';
     if (mobileBtn) { mobileBtn.textContent = 'Sign In'; mobileBtn.onclick = () => { closeMobileMenu(); openLogin(); }; }
+    if (portalLink) portalLink.style.display = 'none';
+    if (mobilePortalLink) mobilePortalLink.style.display = 'none';
   }
 }
 
@@ -1959,15 +2001,28 @@ function signOut() {
   currentUser = null;
   approvedEmails = null;
   sheetLoadFailed = false;
-  // Firebase sign out
   if (window._fbSignOut) window._fbSignOut().catch(e => console.warn('FB signout:', e));
   updateNavAuth();
-  renderBookingPage();
+  // Reset booking page back to locked auth-gate state
+  const gate = document.getElementById('booking-auth-gate');
+  const form = document.getElementById('booking-form-area');
+  if (gate) {
+    gate.style.display = 'block';
+    gate.innerHTML = '<div class="auth-gate-icon">\uD83D\uDD12</div>'
+      + '<h2>Sign in to book artists</h2>'
+      + '<p>Create a free account or sign in to access our booking platform. It only takes 30 seconds \u2014 no credit card required until you confirm a booking.</p>'
+      + '<button class="btn-primary" onclick="openLogin()">Sign in or create account \u2192</button>'
+      + '<p style="margin-top:1rem;font-size:0.8rem;color:var(--ink-light)">Already applied as an artist or business? Use the same email.</p>';
+  }
+  if (form) { form.style.display = 'none'; form.innerHTML = ''; }
+  // If on a protected page, go home
+  const activePage = document.querySelector('.page.active');
+  if (activePage && (activePage.id === 'page-booking' || activePage.id === 'page-artist-availability' || activePage.id === 'page-payment')) {
+    showPage('home');
+  }
 }
 
-// ════════════════════════════════
-// LOGIN MODAL
-// ════════════════════════════════
+
 function openLogin() {
   resetLoginModal();
   document.getElementById('modal-login').classList.add('open');
@@ -2032,34 +2087,179 @@ function backToEmail() {
 // ════════════════════════════════
 let approvedEmails = null;
 let emailUserTypes = {};
-let emailArtistNames = {}; // email → full name from column C (e.g. "Maya Reyes")
+let emailArtistNames = {}; // email → full name from column G (e.g. "Maya Reyes")
 let sheetLoadFailed = false;
-const SHEET_ID = '1mPtLnj0UMEUFxoA7ldztxmeSY-p2gsuxrOnwjCFt0u0';
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSKtXoEt0L7Dt246Pj3MFC6TMn_I_FrCOUGgXx8A9rx9uVSpGQ53_9B-PB_UJvN91Wgn6W6MA3Hx2Of/pub?output=csv';
 
-async function loadApprovedEmails() {
-  if (approvedEmails !== null) return;
+// Stores live artist stats from the spreadsheet, keyed by lowercase artist name
+// Shape: { "maya reyes": { score, followers, engagementRate, avgDraw, reliability, about, rating } }
+let sheetArtistData = {};
+
+// Helper: parse a percentage string like "32%" → 32, or "0.32" → 32
+function parsePct(val) {
+  if (!val) return null;
+  const s = val.toString().replace('%','').trim();
+  const n = parseFloat(s);
+  if (isNaN(n)) return null;
+  // If stored as decimal (e.g. 0.32) convert to whole-number percent
+  return n <= 1 ? Math.round(n * 100) : Math.round(n);
+}
+
+let lastSheetFetch = 0;
+const SHEET_TTL_MS = 60_000; // re-fetch sheet data every 60 seconds
+
+async function loadApprovedEmails(force = false) {
+  const now = Date.now();
+  // Skip if recently fetched and not forced — but always allow auth checks through
+  if (!force && approvedEmails !== null && (now - lastSheetFetch) < SHEET_TTL_MS) return;
+  // Reset so data is fully rebuilt from fresh CSV
+  approvedEmails = null;
+  emailUserTypes = {};
+  emailArtistNames = {};
+  sheetArtistData = {};
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
+    // Cache-bust so the browser doesn't serve a stale response
+    const url = `${SHEET_CSV_URL}&_cb=${now}`;
     const res = await fetch(url);
     if (!res.ok) throw new Error('Sheet returned ' + res.status);
     const text = await res.text();
-    const rows = text.split('\n').map(row =>
-      row.split(',').map(cell => cell.replace(/^"|"$/g,'').trim())
-    ).filter(r => r[0] && r[0].includes('@'));
-    if (rows.length === 0) throw new Error('Sheet empty');
-    approvedEmails = rows.map(r => r[0].toLowerCase());
+
+    // Robust CSV split that respects quoted fields (fields can contain commas)
+    function splitCSVRow(row) {
+      const result = [];
+      let cur = '', inQ = false;
+      for (let i = 0; i < row.length; i++) {
+        const ch = row[i];
+        if (ch === '"') { inQ = !inQ; }
+        else if (ch === ',' && !inQ) { result.push(cur.trim()); cur = ''; }
+        else { cur += ch; }
+      }
+      result.push(cur.trim());
+      return result;
+    }
+
+    // Skip header row (row 1)
+    const allRows = text.split('\n').map(splitCSVRow);
+    const rows = allRows.slice(1).filter(r => r.some(cell => cell.includes('@') || cell.length > 1));
+
+    approvedEmails = [];
+
     rows.forEach(r => {
-      const email = r[0].toLowerCase();
-      const type = (r[1] || '').toLowerCase().trim();
-      emailUserTypes[email] = (type === 'artist') ? 'artist' : 'business';
-      // Column C: artist full name e.g. "Maya Reyes" — used to link to roster entry
-      if (r[2] && r[2].trim()) emailArtistNames[email] = r[2].trim();
+      // ── Business columns ──────────────────────────────────────────
+      // Col B (index 1) = email, Col C (index 2) = name, Col D (index 3) = business name
+      const bizEmail = (r[1] || '').toLowerCase().trim();
+      if (bizEmail.includes('@')) {
+        approvedEmails.push(bizEmail);
+        emailUserTypes[bizEmail] = 'business';
+      }
+
+      // ── Artist columns ────────────────────────────────────────────
+      // Col F (index 5)  = email
+      // Col G (index 6)  = name
+      // Col H (index 7)  = Local Stage Score  (e.g. "84")
+      // Col I (index 8)  = Local followers %  (e.g. "32%")
+      // Col J (index 9)  = Engagement rate    (e.g. "24%")
+      // Col K (index 10) = Avg show draw      (e.g. "18%")
+      // Col L (index 11) = Reliability        (e.g. "10%")
+      // Col M (index 12) = About              (bio text)
+      // Col N (index 13) = Avg Draw           (numeric, e.g. "65")
+      // Col O (index 14) = Rating             (e.g. "4.9")
+      // Col P (index 15) = Artist rate        (e.g. "$350/show")
+      // Col Q (index 16) = City               (e.g. "Mississauga, ON")
+      // Col R (index 17) = Description        (short tagline/description)
+      const artistEmail = (r[5] || '').toLowerCase().trim();
+      if (artistEmail.includes('@')) {
+        approvedEmails.push(artistEmail);
+        emailUserTypes[artistEmail] = 'artist';
+        const artistName = (r[6] || '').trim();
+        if (artistName) {
+          emailArtistNames[artistEmail] = artistName;
+
+          // Parse and store all stats keyed by lowercase name
+          const nameKey = artistName.toLowerCase();
+          const scoreRaw   = parseFloat(r[7])  || null;
+          const followersScoreRaw = parsePct(r[8]); // Col I = % contribution to LocalScore
+          const engRate    = parsePct(r[9]);
+          const avgDrawPct = parsePct(r[10]);
+          const reliability= parsePct(r[11]);
+          const about      = (r[12] || '').trim();
+          const avgDraw    = parseFloat(r[13]) || null;
+          const rating     = parseFloat(r[14]) || null;
+          const artistRate = (r[15] || '').trim() || null;
+          const city       = (r[16] || '').trim() || null;
+          const description= (r[17] || '').trim() || null;
+
+          const parsed = {
+            score:       scoreRaw !== null ? Math.round(scoreRaw) : null,
+            followersScore: followersScoreRaw,
+            engagementRate: engRate,
+            avgDrawPct,
+            reliability,
+            about:       about || null,
+            avgDraw:     avgDraw !== null ? Math.round(avgDraw) : null,
+            rating,
+            artistRate,
+            city,
+            description
+          };
+          console.log('[LocalStage sheet] ── ' + artistName + ' ──');
+          r.forEach((cell, idx) => { if (cell) console.log('  col[' + idx + '] = ' + cell); });
+          console.log('  PARSED →', JSON.stringify(parsed));
+          sheetArtistData[nameKey] = parsed;
+        }
+      }
     });
+
+    // Merge live sheet data into ARTISTS and NEW_ARTISTS arrays
+    mergeSheetDataIntoRoster();
+    lastSheetFetch = Date.now();
+
+    if (approvedEmails.length === 0) throw new Error('No emails found in sheet');
     sheetLoadFailed = false;
   } catch(e) {
     console.warn('Could not load whitelist:', e);
     approvedEmails = [];
     sheetLoadFailed = true;
+  }
+}
+
+// Overwrite hardcoded artist fields with live values from the spreadsheet
+function mergeSheetDataIntoRoster() {
+  const all = [...ARTISTS, ...NEW_ARTISTS];
+  all.forEach(a => {
+    const d = sheetArtistData[a.name.toLowerCase()];
+    if (!d) return;
+    if (d.score       !== null) a.score  = d.score;
+    if (d.avgDraw     !== null) a.draw   = d.avgDraw;
+    if (d.rating      !== null) {
+      a.rating = d.rating;
+      // Rebuild star string from rating (rounds to nearest 0.5)
+      const full  = Math.floor(d.rating);
+      const half  = (d.rating - full) >= 0.5 ? 1 : 0;
+      const empty = 5 - full - half;
+      a.stars = '★'.repeat(full) + (half ? '½' : '') + '☆'.repeat(empty);
+    }
+    if (d.followersScore !== null) a.followersScore = d.followersScore; // % contribution to LocalScore
+    if (d.engagementRate !== null) a.engagementRate = d.engagementRate;
+    if (d.avgDrawPct  !== null) a.avgDrawPct  = d.avgDrawPct;
+    if (d.reliability !== null) a.reliability = d.reliability;
+    if (d.about)        a.about = d.about;
+    if (d.artistRate)   a.rate  = d.artistRate;
+    if (d.city) {
+      a.city = d.city;
+      // Rebuild cityKey from city string
+      const cl = d.city.toLowerCase();
+      if (cl.includes('mississauga'))     a.cityKey = 'mississauga';
+      else if (cl.includes('brampton'))   a.cityKey = 'brampton';
+      else if (cl.includes('toronto') || cl.includes('etobicoke') || cl.includes('scarborough')) a.cityKey = 'toronto';
+      else if (cl.includes('hamilton'))   a.cityKey = 'hamilton';
+      else                                a.cityKey = 'other';
+    }
+    if (d.description)  a.description = d.description;
+  });
+  // Re-render grid if the page is already showing artists
+  if (typeof renderArtistGrid === 'function') {
+    renderArtistGrid(currentGenreFilter, currentCityFilter);
   }
 }
 
@@ -3422,7 +3622,7 @@ function openArtistProfile(id) {
   // Social handles shared after booking confirmation — keeps all coordination through LocalStage
   document.getElementById('ap-social-bar').innerHTML = '<div style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:100px;padding:5px 14px;font-size:0.72rem;color:#8a8a80">&#128274; Social handles shared after booking is confirmed</div>';
 
-  // Stats
+  // Stats — no Local followers stat here; that shows as a % in the LocalScore bars below
   document.getElementById('ap-stats-row').innerHTML = [
     {val: a.score, lbl: 'LocalScore™'},
     {val: a.draw+'', lbl: 'Avg. draw'},
@@ -3436,8 +3636,8 @@ function openArtistProfile(id) {
     </div>
   `).join('');
 
-  // Bio
-  document.getElementById('ap-bio').textContent = ARTIST_BIOS[id] || `${a.name} is a ${a.genre} artist based in ${a.city}. Known for bringing consistent, reliable energy to every stage.`;
+  // Bio — prefer live sheet value, then static ARTIST_BIOS, then generic fallback
+  document.getElementById('ap-bio').textContent = a.about || a.description || ARTIST_BIOS[id] || `${a.name} is a ${a.genre} artist based in ${a.city}. Known for bringing consistent, reliable energy to every stage.`;
 
   // Upcoming shows
   const shows = ARTIST_SHOWS[id] || [];
@@ -3451,12 +3651,12 @@ function openArtistProfile(id) {
     </div>
   `).join('') : `<div style="font-size:0.85rem;color:#5a5a50;padding:1rem 0">No upcoming shows scheduled — book ${a.name.split(' ')[0]} for your venue!</div>`;
 
-  // LocalScore bars
+  // LocalScore bars — use real sheet values when available, else derive from total score
   const scoreData = [
-    {lbl:'Local followers', pct: Math.round((a.score/100)*38)},
-    {lbl:'Engagement rate', pct: Math.round((a.score/100)*28)},
-    {lbl:'Avg. show draw', pct: Math.round((a.score/100)*22)},
-    {lbl:'Reliability', pct: Math.round((a.score/100)*12)},
+    {lbl:'Local followers',  pct: a.followersScore ?? Math.round((a.score/100)*38)},
+    {lbl:'Engagement rate',  pct: a.engagementRate ?? Math.round((a.score/100)*28)},
+    {lbl:'Avg. show draw',   pct: a.avgDrawPct      ?? Math.round((a.score/100)*22)},
+    {lbl:'Reliability',      pct: a.reliability     ?? Math.round((a.score/100)*12)},
   ];
   document.getElementById('ap-score-bars').innerHTML = scoreData.map(b => `
     <div style="margin-bottom:10px">
@@ -3500,9 +3700,16 @@ function renderArtistAvailability() {
   if (!currentUser || currentUser.userType !== 'artist') {
     document.getElementById('aa-auth-gate').style.display = 'block';
     document.getElementById('aa-form-area').innerHTML = '';
+    // Reset portal name label too
+    const portalName = document.getElementById('aa-portal-name');
+    if (portalName) portalName.textContent = '';
     return;
   }
   document.getElementById('aa-auth-gate').style.display = 'none';
+
+  // Update the header name badge
+  const portalName = document.getElementById('aa-portal-name');
+  if (portalName) portalName.textContent = currentUser.artistName || currentUser.email;
 
   // Use roster-based key if we resolved a name match (e.g. "artist-1" for Maya Reyes id:1)
   // Fall back to email-based key for artists not yet mapped in the sheet
@@ -3513,7 +3720,7 @@ function renderArtistAvailability() {
   document.getElementById('aa-form-area').innerHTML = `
     <div style="display:flex;align-items:center;gap:10px;background:var(--green-light);border-radius:12px;padding:12px 16px;margin-bottom:2rem;font-size:0.875rem;color:var(--green-mid)">
       <span>✓</span>
-      <span>Signed in as${currentUser.artistName ? " <strong>" + currentUser.artistName + "</strong> (" + currentUser.email + ")" : " artist: <strong>" + currentUser.email + "</strong>"} · <span style="cursor:pointer;text-decoration:underline" onclick="signOut()">Sign out</span></span>
+      <span>Signed in as${currentUser.artistName ? " <strong>" + currentUser.artistName + "</strong> (" + currentUser.email + ")" : " artist: <strong>" + currentUser.email + "</strong>"}</span>
     </div>
 
     <div style="display:grid;grid-template-columns:1.1fr 1fr;gap:2rem;align-items:start">
@@ -3589,7 +3796,7 @@ function renderAaCalendar(artistId) {
   const bookedDates = new Set();
   Object.entries(store).forEach(([k, v]) => {
     if (!k.startsWith(artistId + ':')) return;
-    const dateStr = k.split(':')[1];
+    const dateStr = k.substring(k.indexOf(':') + 1, k.indexOf(':', k.indexOf(':') + 1));
     if (v.status === 'booked') bookedDates.add(dateStr);
     else openDates.add(dateStr);
   });
@@ -3673,7 +3880,10 @@ function renderAaSlotsList(artistId) {
     html += `<div style="margin-bottom:1.5rem">
       <div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#c0392b;margin-bottom:0.75rem">🔴 Confirmed Bookings</div>
       ${bookedSlots.map(([k, v]) => {
-        const parts = k.split(':'); const date = parts[1]; const time = parts[2];
+        const firstColon = k.indexOf(':');
+        const secondColon = k.indexOf(':', firstColon + 1);
+        const date = k.substring(firstColon + 1, secondColon);
+        const time = k.substring(secondColon + 1);
         return `<div style="background:#fde8e8;border-radius:12px;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;border:1px solid #f5b7b1">
           <div>
             <div style="font-weight:500;font-size:0.875rem;color:var(--ink)">${formatDateDisplay(date)}</div>
@@ -3694,7 +3904,11 @@ function renderAaSlotsList(artistId) {
   } else {
     html += `<div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--green);margin-bottom:0.75rem">🟢 Open Slots (${existingSlots.length})</div>`;
     html += existingSlots.map(([k, v]) => {
-      const parts = k.split(':'); const date = parts[1]; const time = parts[2];
+      // Key = "artistId:YYYY-MM-DD:HH:MM-HH:MM" — split only on first two colons
+      const firstColon = k.indexOf(':');
+      const secondColon = k.indexOf(':', firstColon + 1);
+      const date = k.substring(firstColon + 1, secondColon);
+      const time = k.substring(secondColon + 1);
       return `<div style="background:var(--white);border-radius:12px;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--cream-dark)" id="slot-${k.replace(/:/g,'-')}">
         <div>
           <div style="font-weight:500;font-size:0.875rem;color:var(--ink)">${formatDateDisplay(date)}</div>
@@ -3751,7 +3965,8 @@ function addAvailabilitySlot(artistId) {
 function removeSlot(artistId, date, time) {
   const key = `${artistId}:${date}:${time}`;
   const store = getAvailabilityStore();
-  if (store[key] && store[key].status === 'booked') { alert('This slot is already booked and cannot be removed.'); return; }
+  if (!store[key]) { console.warn('Slot key not found:', key, Object.keys(store)); return; }
+  if (store[key].status === 'booked') { alert('This slot is already booked and cannot be removed.'); return; }
   delete store[key];
   saveAvailabilityStore(store);
   renderAaCalendar(artistId);
@@ -3987,6 +4202,13 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
 // Init
 updateNavAuth();
 renderArtistGrid('all','all');
+
+// Eagerly fetch spreadsheet so artist cards and profiles show live stats
+// without waiting for the user to sign in.
+loadApprovedEmails().catch(() => {});
+
+// Periodically re-fetch the sheet so updates (draw, rate, etc.) show without a page reload
+setInterval(() => loadApprovedEmails(true).catch(() => {}), 60_000);
 
 // If Firebase's onAuthStateChanged fired before this script finished loading,
 // a pending email was queued — pick it up now for a silent session restore.
