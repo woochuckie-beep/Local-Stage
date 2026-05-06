@@ -2087,9 +2087,23 @@ function backToEmail() {
 // ════════════════════════════════
 let approvedEmails = null;
 let emailUserTypes = {};
-let emailArtistNames = {}; // email → full name from column C (e.g. "Maya Reyes")
+let emailArtistNames = {}; // email → full name from column G (e.g. "Maya Reyes")
 let sheetLoadFailed = false;
 const SHEET_ID = '1mPtLnj0UMEUFxoA7ldztxmeSY-p2gsuxrOnwjCFt0u0';
+
+// Stores live artist stats from the spreadsheet, keyed by lowercase artist name
+// Shape: { "maya reyes": { score, followers, engagementRate, avgDraw, reliability, about, rating } }
+let sheetArtistData = {};
+
+// Helper: parse a percentage string like "32%" → 32, or "0.32" → 32
+function parsePct(val) {
+  if (!val) return null;
+  const s = val.toString().replace('%','').trim();
+  const n = parseFloat(s);
+  if (isNaN(n)) return null;
+  // If stored as decimal (e.g. 0.32) convert to whole-number percent
+  return n <= 1 ? Math.round(n * 100) : Math.round(n);
+}
 
 async function loadApprovedEmails() {
   if (approvedEmails !== null) return;
@@ -2098,30 +2112,92 @@ async function loadApprovedEmails() {
     const res = await fetch(url);
     if (!res.ok) throw new Error('Sheet returned ' + res.status);
     const text = await res.text();
-    // Parse CSV rows, skipping the header row (row 1 has column labels)
-    const rows = text.split('\n').map(row =>
-      row.split(',').map(cell => cell.replace(/^"|"$/g,'').trim())
-    ).filter(r => r.some(cell => cell.includes('@')));
+
+    // Robust CSV split that respects quoted fields (fields can contain commas)
+    function splitCSVRow(row) {
+      const result = [];
+      let cur = '', inQ = false;
+      for (let i = 0; i < row.length; i++) {
+        const ch = row[i];
+        if (ch === '"') { inQ = !inQ; }
+        else if (ch === ',' && !inQ) { result.push(cur.trim()); cur = ''; }
+        else { cur += ch; }
+      }
+      result.push(cur.trim());
+      return result;
+    }
+
+    // Skip header row (row 1)
+    const allRows = text.split('\n').map(splitCSVRow);
+    const rows = allRows.slice(1).filter(r => r.some(cell => cell.includes('@') || cell.length > 1));
 
     approvedEmails = [];
 
     rows.forEach(r => {
-      // Business section: col B (index 1) = email, col C (index 2) = name, col D (index 3) = business name
+      // ── Business columns ──────────────────────────────────────────
+      // Col B (index 1) = email, Col C (index 2) = name, Col D (index 3) = business name
       const bizEmail = (r[1] || '').toLowerCase().trim();
       if (bizEmail.includes('@')) {
         approvedEmails.push(bizEmail);
         emailUserTypes[bizEmail] = 'business';
       }
 
-      // Artist section: col F (index 5) = email, col G (index 6) = name
+      // ── Artist columns ────────────────────────────────────────────
+      // Col F (index 5)  = email
+      // Col G (index 6)  = name
+      // Col H (index 7)  = Local Stage Score  (e.g. "84")
+      // Col I (index 8)  = Local followers    (e.g. "32%" or raw number)
+      // Col J (index 9)  = Engagement rate    (e.g. "24%")
+      // Col K (index 10) = Avg show draw      (e.g. "18%")
+      // Col L (index 11) = Reliability        (e.g. "10%")
+      // Col M (index 12) = About              (bio text)
+      // Col N (index 13) = Avg Draw           (numeric, e.g. "65")
+      // Col O (index 14) = Rating             (e.g. "4.9")
       const artistEmail = (r[5] || '').toLowerCase().trim();
       if (artistEmail.includes('@')) {
         approvedEmails.push(artistEmail);
         emailUserTypes[artistEmail] = 'artist';
         const artistName = (r[6] || '').trim();
-        if (artistName) emailArtistNames[artistEmail] = artistName;
+        if (artistName) {
+          emailArtistNames[artistEmail] = artistName;
+
+          // Parse and store all stats keyed by lowercase name
+          const nameKey = artistName.toLowerCase();
+          const scoreRaw   = parseFloat(r[7])  || null;
+          const followersRaw = r[8]  ? r[8].replace(/[^0-9.kK,]/g,'').trim() : null;
+          const engRate    = parsePct(r[9]);
+          const avgDrawPct = parsePct(r[10]);
+          const reliability= parsePct(r[11]);
+          const about      = (r[12] || '').trim();
+          const avgDraw    = parseFloat(r[13]) || null;
+          const rating     = parseFloat(r[14]) || null;
+
+          // Normalise followers string: "3.2k" → 3200, "3200" → 3200
+          let followers = null;
+          if (followersRaw) {
+            if (/k/i.test(followersRaw)) {
+              followers = Math.round(parseFloat(followersRaw) * 1000);
+            } else {
+              followers = parseInt(followersRaw.replace(/,/g,'')) || null;
+            }
+          }
+
+          sheetArtistData[nameKey] = {
+            score:       scoreRaw !== null ? Math.round(scoreRaw) : null,
+            followers,
+            engagementRate: engRate,
+            avgDrawPct,
+            reliability,
+            about:       about || null,
+            avgDraw:     avgDraw !== null ? Math.round(avgDraw) : null,
+            rating
+          };
+        }
       }
     });
+
+    // Merge live sheet data into ARTISTS and NEW_ARTISTS arrays
+    mergeSheetDataIntoRoster();
 
     if (approvedEmails.length === 0) throw new Error('No emails found in sheet');
     sheetLoadFailed = false;
@@ -2129,6 +2205,34 @@ async function loadApprovedEmails() {
     console.warn('Could not load whitelist:', e);
     approvedEmails = [];
     sheetLoadFailed = true;
+  }
+}
+
+// Overwrite hardcoded artist fields with live values from the spreadsheet
+function mergeSheetDataIntoRoster() {
+  const all = [...ARTISTS, ...NEW_ARTISTS];
+  all.forEach(a => {
+    const d = sheetArtistData[a.name.toLowerCase()];
+    if (!d) return;
+    if (d.score       !== null) a.score  = d.score;
+    if (d.avgDraw     !== null) a.draw   = d.avgDraw;
+    if (d.rating      !== null) {
+      a.rating = d.rating;
+      // Rebuild star string from rating (rounds to nearest 0.5)
+      const full  = Math.floor(d.rating);
+      const half  = (d.rating - full) >= 0.5 ? 1 : 0;
+      const empty = 5 - full - half;
+      a.stars = '★'.repeat(full) + (half ? '½' : '') + '☆'.repeat(empty);
+    }
+    if (d.followers   !== null) a.followers = d.followers; // new field — used in profile
+    if (d.engagementRate !== null) a.engagementRate = d.engagementRate;
+    if (d.avgDrawPct  !== null) a.avgDrawPct  = d.avgDrawPct;
+    if (d.reliability !== null) a.reliability = d.reliability;
+    if (d.about)                 a.about = d.about;
+  });
+  // Re-render grid if the page is already showing artists
+  if (typeof renderArtistGrid === 'function') {
+    renderArtistGrid(currentGenreFilter, currentCityFilter);
   }
 }
 
@@ -3492,8 +3596,12 @@ function openArtistProfile(id) {
   document.getElementById('ap-social-bar').innerHTML = '<div style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:100px;padding:5px 14px;font-size:0.72rem;color:#8a8a80">&#128274; Social handles shared after booking is confirmed</div>';
 
   // Stats
+  const followersDisplay = a.followers
+    ? (a.followers >= 1000 ? (a.followers/1000).toFixed(1).replace(/\.0$/,'') + 'k' : a.followers)
+    : '—';
   document.getElementById('ap-stats-row').innerHTML = [
     {val: a.score, lbl: 'LocalScore™'},
+    {val: followersDisplay, lbl: 'Local followers'},
     {val: a.draw+'', lbl: 'Avg. draw'},
     {val: a.rating.toFixed(1)+'★', lbl: 'Rating'},
     {val: a.rate || 'TBD', lbl: 'Artist rate'},
@@ -3505,8 +3613,8 @@ function openArtistProfile(id) {
     </div>
   `).join('');
 
-  // Bio
-  document.getElementById('ap-bio').textContent = ARTIST_BIOS[id] || `${a.name} is a ${a.genre} artist based in ${a.city}. Known for bringing consistent, reliable energy to every stage.`;
+  // Bio — prefer live sheet value, then static ARTIST_BIOS, then generic fallback
+  document.getElementById('ap-bio').textContent = a.about || ARTIST_BIOS[id] || `${a.name} is a ${a.genre} artist based in ${a.city}. Known for bringing consistent, reliable energy to every stage.`;
 
   // Upcoming shows
   const shows = ARTIST_SHOWS[id] || [];
@@ -3520,12 +3628,12 @@ function openArtistProfile(id) {
     </div>
   `).join('') : `<div style="font-size:0.85rem;color:#5a5a50;padding:1rem 0">No upcoming shows scheduled — book ${a.name.split(' ')[0]} for your venue!</div>`;
 
-  // LocalScore bars
+  // LocalScore bars — use real sheet values when available, else derive from total score
   const scoreData = [
-    {lbl:'Local followers', pct: Math.round((a.score/100)*38)},
-    {lbl:'Engagement rate', pct: Math.round((a.score/100)*28)},
-    {lbl:'Avg. show draw', pct: Math.round((a.score/100)*22)},
-    {lbl:'Reliability', pct: Math.round((a.score/100)*12)},
+    {lbl:'Local followers', pct: a.engagementRate ?? Math.round((a.score/100)*38)},
+    {lbl:'Engagement rate', pct: a.engagementRate ?? Math.round((a.score/100)*28)},
+    {lbl:'Avg. show draw',  pct: a.avgDrawPct      ?? Math.round((a.score/100)*22)},
+    {lbl:'Reliability',     pct: a.reliability     ?? Math.round((a.score/100)*12)},
   ];
   document.getElementById('ap-score-bars').innerHTML = scoreData.map(b => `
     <div style="margin-bottom:10px">
@@ -4071,6 +4179,10 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
 // Init
 updateNavAuth();
 renderArtistGrid('all','all');
+
+// Eagerly fetch spreadsheet so artist cards and profiles show live stats
+// without waiting for the user to sign in.
+loadApprovedEmails().catch(() => {});
 
 // If Firebase's onAuthStateChanged fired before this script finished loading,
 // a pending email was queued — pick it up now for a silent session restore.
