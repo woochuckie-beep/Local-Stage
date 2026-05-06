@@ -2089,7 +2089,7 @@ let approvedEmails = null;
 let emailUserTypes = {};
 let emailArtistNames = {}; // email → full name from column G (e.g. "Maya Reyes")
 let sheetLoadFailed = false;
-const SHEET_ID = '1mPtLnj0UMEUFxoA7ldztxmeSY-p2gsuxrOnwjCFt0u0';
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSKtXoEt0L7Dt246Pj3MFC6TMn_I_FrCOUGgXx8A9rx9uVSpGQ53_9B-PB_UJvN91Wgn6W6MA3Hx2Of/pub?output=csv';
 
 // Stores live artist stats from the spreadsheet, keyed by lowercase artist name
 // Shape: { "maya reyes": { score, followers, engagementRate, avgDraw, reliability, about, rating } }
@@ -2119,7 +2119,7 @@ async function loadApprovedEmails(force = false) {
   sheetArtistData = {};
   try {
     // Cache-bust so the browser doesn't serve a stale response
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&_cb=${now}`;
+    const url = `${SHEET_CSV_URL}&_cb=${now}`;
     const res = await fetch(url);
     if (!res.ok) throw new Error('Sheet returned ' + res.status);
     const text = await res.text();
@@ -2189,7 +2189,7 @@ async function loadApprovedEmails(force = false) {
           const city       = (r[16] || '').trim() || null;
           const description= (r[17] || '').trim() || null;
 
-          sheetArtistData[nameKey] = {
+          const parsed = {
             score:       scoreRaw !== null ? Math.round(scoreRaw) : null,
             followersScore: followersScoreRaw,
             engagementRate: engRate,
@@ -2202,6 +2202,10 @@ async function loadApprovedEmails(force = false) {
             city,
             description
           };
+          console.log('[LocalStage sheet] ── ' + artistName + ' ──');
+          r.forEach((cell, idx) => { if (cell) console.log('  col[' + idx + '] = ' + cell); });
+          console.log('  PARSED →', JSON.stringify(parsed));
+          sheetArtistData[nameKey] = parsed;
         }
       }
     });
