@@ -2001,30 +2001,28 @@ function signOut() {
   currentUser = null;
   approvedEmails = null;
   sheetLoadFailed = false;
-  // Firebase sign out
   if (window._fbSignOut) window._fbSignOut().catch(e => console.warn('FB signout:', e));
   updateNavAuth();
-  // Reset booking page to auth-gate state
+  // Reset booking page back to locked auth-gate state
   const gate = document.getElementById('booking-auth-gate');
   const form = document.getElementById('booking-form-area');
-  if (gate) { gate.style.display = 'block'; gate.innerHTML = \`
-    <div class="auth-gate-icon">🔒</div>
-    <h2>Sign in to book artists</h2>
-    <p>Create a free account or sign in to access our booking platform. It only takes 30 seconds — no credit card required until you confirm a booking.</p>
-    <button class="btn-primary" onclick="openLogin()">Sign in or create account →</button>
-    <p style="margin-top:1rem;font-size:0.8rem;color:var(--ink-light)">Already applied as an artist or business? Use the same email.</p>
-  \`; }
+  if (gate) {
+    gate.style.display = 'block';
+    gate.innerHTML = '<div class="auth-gate-icon">\uD83D\uDD12</div>'
+      + '<h2>Sign in to book artists</h2>'
+      + '<p>Create a free account or sign in to access our booking platform. It only takes 30 seconds \u2014 no credit card required until you confirm a booking.</p>'
+      + '<button class="btn-primary" onclick="openLogin()">Sign in or create account \u2192</button>'
+      + '<p style="margin-top:1rem;font-size:0.8rem;color:var(--ink-light)">Already applied as an artist or business? Use the same email.</p>';
+  }
   if (form) { form.style.display = 'none'; form.innerHTML = ''; }
-  // If currently on the booking or artist-availability page, go home
+  // If on a protected page, go home
   const activePage = document.querySelector('.page.active');
   if (activePage && (activePage.id === 'page-booking' || activePage.id === 'page-artist-availability' || activePage.id === 'page-payment')) {
     showPage('home');
   }
 }
 
-// ════════════════════════════════
-// LOGIN MODAL
-// ════════════════════════════════
+
 function openLogin() {
   resetLoginModal();
   document.getElementById('modal-login').classList.add('open');
