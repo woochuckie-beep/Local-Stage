@@ -2146,13 +2146,16 @@ async function loadApprovedEmails() {
       // Col F (index 5)  = email
       // Col G (index 6)  = name
       // Col H (index 7)  = Local Stage Score  (e.g. "84")
-      // Col I (index 8)  = Local followers    (e.g. "32%" or raw number)
+      // Col I (index 8)  = Local followers %  (e.g. "32%")
       // Col J (index 9)  = Engagement rate    (e.g. "24%")
       // Col K (index 10) = Avg show draw      (e.g. "18%")
       // Col L (index 11) = Reliability        (e.g. "10%")
       // Col M (index 12) = About              (bio text)
       // Col N (index 13) = Avg Draw           (numeric, e.g. "65")
       // Col O (index 14) = Rating             (e.g. "4.9")
+      // Col P (index 15) = Artist rate        (e.g. "$350/show")
+      // Col Q (index 16) = City               (e.g. "Mississauga, ON")
+      // Col R (index 17) = Description        (short tagline/description)
       const artistEmail = (r[5] || '').toLowerCase().trim();
       if (artistEmail.includes('@')) {
         approvedEmails.push(artistEmail);
@@ -2164,33 +2167,29 @@ async function loadApprovedEmails() {
           // Parse and store all stats keyed by lowercase name
           const nameKey = artistName.toLowerCase();
           const scoreRaw   = parseFloat(r[7])  || null;
-          const followersRaw = r[8]  ? r[8].replace(/[^0-9.kK,]/g,'').trim() : null;
+          const followersScoreRaw = parsePct(r[8]); // Col I = % contribution to LocalScore
           const engRate    = parsePct(r[9]);
           const avgDrawPct = parsePct(r[10]);
           const reliability= parsePct(r[11]);
           const about      = (r[12] || '').trim();
           const avgDraw    = parseFloat(r[13]) || null;
           const rating     = parseFloat(r[14]) || null;
-
-          // Normalise followers string: "3.2k" → 3200, "3200" → 3200
-          let followers = null;
-          if (followersRaw) {
-            if (/k/i.test(followersRaw)) {
-              followers = Math.round(parseFloat(followersRaw) * 1000);
-            } else {
-              followers = parseInt(followersRaw.replace(/,/g,'')) || null;
-            }
-          }
+          const artistRate = (r[15] || '').trim() || null;
+          const city       = (r[16] || '').trim() || null;
+          const description= (r[17] || '').trim() || null;
 
           sheetArtistData[nameKey] = {
             score:       scoreRaw !== null ? Math.round(scoreRaw) : null,
-            followers,
+            followersScore: followersScoreRaw,
             engagementRate: engRate,
             avgDrawPct,
             reliability,
             about:       about || null,
             avgDraw:     avgDraw !== null ? Math.round(avgDraw) : null,
-            rating
+            rating,
+            artistRate,
+            city,
+            description
           };
         }
       }
@@ -2224,11 +2223,23 @@ function mergeSheetDataIntoRoster() {
       const empty = 5 - full - half;
       a.stars = '★'.repeat(full) + (half ? '½' : '') + '☆'.repeat(empty);
     }
-    if (d.followers   !== null) a.followers = d.followers; // new field — used in profile
+    if (d.followersScore !== null) a.followersScore = d.followersScore; // % contribution to LocalScore
     if (d.engagementRate !== null) a.engagementRate = d.engagementRate;
     if (d.avgDrawPct  !== null) a.avgDrawPct  = d.avgDrawPct;
     if (d.reliability !== null) a.reliability = d.reliability;
-    if (d.about)                 a.about = d.about;
+    if (d.about)        a.about = d.about;
+    if (d.artistRate)   a.rate  = d.artistRate;
+    if (d.city) {
+      a.city = d.city;
+      // Rebuild cityKey from city string
+      const cl = d.city.toLowerCase();
+      if (cl.includes('mississauga'))     a.cityKey = 'mississauga';
+      else if (cl.includes('brampton'))   a.cityKey = 'brampton';
+      else if (cl.includes('toronto') || cl.includes('etobicoke') || cl.includes('scarborough')) a.cityKey = 'toronto';
+      else if (cl.includes('hamilton'))   a.cityKey = 'hamilton';
+      else                                a.cityKey = 'other';
+    }
+    if (d.description)  a.description = d.description;
   });
   // Re-render grid if the page is already showing artists
   if (typeof renderArtistGrid === 'function') {
@@ -3595,13 +3606,9 @@ function openArtistProfile(id) {
   // Social handles shared after booking confirmation — keeps all coordination through LocalStage
   document.getElementById('ap-social-bar').innerHTML = '<div style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:100px;padding:5px 14px;font-size:0.72rem;color:#8a8a80">&#128274; Social handles shared after booking is confirmed</div>';
 
-  // Stats
-  const followersDisplay = a.followers
-    ? (a.followers >= 1000 ? (a.followers/1000).toFixed(1).replace(/\.0$/,'') + 'k' : a.followers)
-    : '—';
+  // Stats — no Local followers stat here; that shows as a % in the LocalScore bars below
   document.getElementById('ap-stats-row').innerHTML = [
     {val: a.score, lbl: 'LocalScore™'},
-    {val: followersDisplay, lbl: 'Local followers'},
     {val: a.draw+'', lbl: 'Avg. draw'},
     {val: a.rating.toFixed(1)+'★', lbl: 'Rating'},
     {val: a.rate || 'TBD', lbl: 'Artist rate'},
@@ -3614,7 +3621,7 @@ function openArtistProfile(id) {
   `).join('');
 
   // Bio — prefer live sheet value, then static ARTIST_BIOS, then generic fallback
-  document.getElementById('ap-bio').textContent = a.about || ARTIST_BIOS[id] || `${a.name} is a ${a.genre} artist based in ${a.city}. Known for bringing consistent, reliable energy to every stage.`;
+  document.getElementById('ap-bio').textContent = a.about || a.description || ARTIST_BIOS[id] || `${a.name} is a ${a.genre} artist based in ${a.city}. Known for bringing consistent, reliable energy to every stage.`;
 
   // Upcoming shows
   const shows = ARTIST_SHOWS[id] || [];
@@ -3630,10 +3637,10 @@ function openArtistProfile(id) {
 
   // LocalScore bars — use real sheet values when available, else derive from total score
   const scoreData = [
-    {lbl:'Local followers', pct: a.engagementRate ?? Math.round((a.score/100)*38)},
-    {lbl:'Engagement rate', pct: a.engagementRate ?? Math.round((a.score/100)*28)},
-    {lbl:'Avg. show draw',  pct: a.avgDrawPct      ?? Math.round((a.score/100)*22)},
-    {lbl:'Reliability',     pct: a.reliability     ?? Math.round((a.score/100)*12)},
+    {lbl:'Local followers',  pct: a.followersScore ?? Math.round((a.score/100)*38)},
+    {lbl:'Engagement rate',  pct: a.engagementRate ?? Math.round((a.score/100)*28)},
+    {lbl:'Avg. show draw',   pct: a.avgDrawPct      ?? Math.round((a.score/100)*22)},
+    {lbl:'Reliability',      pct: a.reliability     ?? Math.round((a.score/100)*12)},
   ];
   document.getElementById('ap-score-bars').innerHTML = scoreData.map(b => `
     <div style="margin-bottom:10px">
