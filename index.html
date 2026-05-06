@@ -635,6 +635,7 @@
     <li><a onclick="showPage('home'); setTimeout(()=>{ const el=document.getElementById('how'); if(el) el.scrollIntoView({behavior:'smooth'}); },50)">How It Works</a></li>
     <li><a onclick="showPage('artists')">Browse Artists</a></li>
     <li><a onclick="showPage('pricing-page')">Pricing</a></li>
+    <li><a id="nav-portal-link" style="display:none;font-weight:600;color:var(--green) !important"></a></li>
     <li><a class="nav-cta" onclick="openApply()">Get Started →</a></li>
   </ul>
   <div style="display:flex;align-items:center;gap:10px">
@@ -657,6 +658,7 @@
   <a onclick="closeMobileMenu(); showPage('home'); setTimeout(()=>{ const el=document.getElementById('faq'); if(el) el.scrollIntoView({behavior:'smooth'}); },50)">FAQ</a>
   <a onclick="closeMobileMenu(); openApply()">Apply / Join</a>
   <a onclick="closeMobileMenu(); showPage('artists')">Browse Artists to Book</a>
+  <a id="mobile-portal-link" style="display:none;color:var(--green);font-weight:600"></a>
   <div class="mobile-auth-row">
     <button id="mobile-auth-btn" class="btn-primary" style="width:100%;text-align:center" onclick="closeMobileMenu(); openLogin()">Sign In</button>
   </div>
@@ -1306,9 +1308,17 @@
 <div id="page-artist-availability" class="page">
   <div class="booking-hero" style="background:linear-gradient(135deg,#0a4d38 0%,#1a9b6c 100%)">
     <div class="booking-hero-inner">
-      <div style="font-size:0.75rem;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:0.75rem">Artist Portal</div>
-      <h1 id="aa-title">Set your availability.</h1>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.75rem">
+        <span style="font-size:0.75rem;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.6)">🎤 Artist Portal</span>
+        <span style="font-size:0.75rem;color:rgba(255,255,255,0.3)">·</span>
+        <span id="aa-portal-name" style="font-size:0.8rem;color:rgba(255,255,255,0.7)"></span>
+      </div>
+      <h1 id="aa-title">My Availability Dashboard</h1>
       <p id="aa-sub">Add the dates and times you're free to perform. Businesses will only be able to book the slots you approve here.</p>
+      <div style="display:flex;gap:1rem;margin-top:1.25rem;flex-wrap:wrap">
+        <button onclick="showPage('home')" style="background:transparent;border:1.5px solid rgba(255,255,255,0.3);color:rgba(255,255,255,0.8);padding:7px 18px;border-radius:100px;font-family:var(--sans);font-size:0.8rem;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='white';this.style.color='white'" onmouseout="this.style.borderColor='rgba(255,255,255,0.3)';this.style.color='rgba(255,255,255,0.8)'">← Home</button>
+        <button onclick="signOut()" style="background:transparent;border:1.5px solid rgba(255,0,0,0.3);color:rgba(255,180,180,0.9);padding:7px 18px;border-radius:100px;font-family:var(--sans);font-size:0.8rem;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='#c0392b';this.style.color='#ff9999'" onmouseout="this.style.borderColor='rgba(255,0,0,0.3)';this.style.color='rgba(255,180,180,0.9)'">Sign out</button>
+      </div>
     </div>
   </div>
   <div class="booking-content" style="max-width:860px">
@@ -1844,6 +1854,10 @@ const NEW_ARTISTS = [
 // PAGE NAVIGATION
 // ════════════════════════════════
 function showPage(name) {
+  // Artists must never land on the booking page — redirect to their portal
+  if (name === 'booking' && currentUser && currentUser.userType === 'artist') {
+    name = 'artist-availability';
+  }
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   const page = document.getElementById('page-' + name);
   if (!page) return;
@@ -1939,6 +1953,9 @@ function updateNavAuth() {
   const mobileBtn = document.getElementById('mobile-auth-btn');
   const info = document.getElementById('nav-user-info');
   const emailSpan = document.getElementById('nav-user-email');
+  const portalLink = document.getElementById('nav-portal-link');
+  const mobilePortalLink = document.getElementById('mobile-portal-link');
+
   if (currentUser) {
     btn.textContent = 'Sign out';
     btn.classList.add('signout');
@@ -1946,12 +1963,37 @@ function updateNavAuth() {
     info.style.display = 'flex';
     emailSpan.textContent = currentUser.email;
     if (mobileBtn) { mobileBtn.textContent = 'Sign out (' + currentUser.email.split('@')[0] + ')'; mobileBtn.onclick = () => { closeMobileMenu(); signOut(); }; }
+
+    // Show the right portal link based on user type
+    if (portalLink) {
+      if (currentUser.userType === 'artist') {
+        portalLink.textContent = '🎤 My Availability';
+        portalLink.onclick = () => showPage('artist-availability');
+        portalLink.style.display = 'inline';
+      } else {
+        portalLink.textContent = '📅 Book an Artist';
+        portalLink.onclick = () => showPage('booking');
+        portalLink.style.display = 'inline';
+      }
+    }
+    if (mobilePortalLink) {
+      if (currentUser.userType === 'artist') {
+        mobilePortalLink.textContent = '🎤 My Availability';
+        mobilePortalLink.onclick = () => { closeMobileMenu(); showPage('artist-availability'); };
+      } else {
+        mobilePortalLink.textContent = '📅 Book an Artist';
+        mobilePortalLink.onclick = () => { closeMobileMenu(); showPage('booking'); };
+      }
+      mobilePortalLink.style.display = 'block';
+    }
   } else {
     btn.textContent = 'Sign in';
     btn.classList.remove('signout');
     btn.onclick = openLogin;
     info.style.display = 'none';
     if (mobileBtn) { mobileBtn.textContent = 'Sign In'; mobileBtn.onclick = () => { closeMobileMenu(); openLogin(); }; }
+    if (portalLink) portalLink.style.display = 'none';
+    if (mobilePortalLink) mobilePortalLink.style.display = 'none';
   }
 }
 
@@ -1962,7 +2004,22 @@ function signOut() {
   // Firebase sign out
   if (window._fbSignOut) window._fbSignOut().catch(e => console.warn('FB signout:', e));
   updateNavAuth();
-  renderBookingPage();
+  // Reset booking page to auth-gate state
+  const gate = document.getElementById('booking-auth-gate');
+  const form = document.getElementById('booking-form-area');
+  if (gate) { gate.style.display = 'block'; gate.innerHTML = \`
+    <div class="auth-gate-icon">🔒</div>
+    <h2>Sign in to book artists</h2>
+    <p>Create a free account or sign in to access our booking platform. It only takes 30 seconds — no credit card required until you confirm a booking.</p>
+    <button class="btn-primary" onclick="openLogin()">Sign in or create account →</button>
+    <p style="margin-top:1rem;font-size:0.8rem;color:var(--ink-light)">Already applied as an artist or business? Use the same email.</p>
+  \`; }
+  if (form) { form.style.display = 'none'; form.innerHTML = ''; }
+  // If currently on the booking or artist-availability page, go home
+  const activePage = document.querySelector('.page.active');
+  if (activePage && (activePage.id === 'page-booking' || activePage.id === 'page-artist-availability' || activePage.id === 'page-payment')) {
+    showPage('home');
+  }
 }
 
 // ════════════════════════════════
@@ -3514,9 +3571,16 @@ function renderArtistAvailability() {
   if (!currentUser || currentUser.userType !== 'artist') {
     document.getElementById('aa-auth-gate').style.display = 'block';
     document.getElementById('aa-form-area').innerHTML = '';
+    // Reset portal name label too
+    const portalName = document.getElementById('aa-portal-name');
+    if (portalName) portalName.textContent = '';
     return;
   }
   document.getElementById('aa-auth-gate').style.display = 'none';
+
+  // Update the header name badge
+  const portalName = document.getElementById('aa-portal-name');
+  if (portalName) portalName.textContent = currentUser.artistName || currentUser.email;
 
   // Use roster-based key if we resolved a name match (e.g. "artist-1" for Maya Reyes id:1)
   // Fall back to email-based key for artists not yet mapped in the sheet
@@ -3527,7 +3591,7 @@ function renderArtistAvailability() {
   document.getElementById('aa-form-area').innerHTML = `
     <div style="display:flex;align-items:center;gap:10px;background:var(--green-light);border-radius:12px;padding:12px 16px;margin-bottom:2rem;font-size:0.875rem;color:var(--green-mid)">
       <span>✓</span>
-      <span>Signed in as${currentUser.artistName ? " <strong>" + currentUser.artistName + "</strong> (" + currentUser.email + ")" : " artist: <strong>" + currentUser.email + "</strong>"} · <span style="cursor:pointer;text-decoration:underline" onclick="signOut()">Sign out</span></span>
+      <span>Signed in as${currentUser.artistName ? " <strong>" + currentUser.artistName + "</strong> (" + currentUser.email + ")" : " artist: <strong>" + currentUser.email + "</strong>"}</span>
     </div>
 
     <div style="display:grid;grid-template-columns:1.1fr 1fr;gap:2rem;align-items:start">
