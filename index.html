@@ -2124,22 +2124,51 @@ async function loadApprovedEmails(force = false) {
     if (!res.ok) throw new Error('Sheet returned ' + res.status);
     const text = await res.text();
 
-    // Robust CSV split that respects quoted fields (fields can contain commas)
+    // Robust CSV parser that correctly handles quoted fields containing commas and newlines
     function splitCSVRow(row) {
       const result = [];
       let cur = '', inQ = false;
       for (let i = 0; i < row.length; i++) {
         const ch = row[i];
-        if (ch === '"') { inQ = !inQ; }
-        else if (ch === ',' && !inQ) { result.push(cur.trim()); cur = ''; }
-        else { cur += ch; }
+        if (ch === '"') {
+          // Handle escaped quotes ("")
+          if (inQ && row[i + 1] === '"') { cur += '"'; i++; }
+          else { inQ = !inQ; }
+        } else if (ch === ',' && !inQ) {
+          result.push(cur.trim());
+          cur = '';
+        } else {
+          cur += ch;
+        }
       }
       result.push(cur.trim());
       return result;
     }
 
+    // Parse entire CSV respecting multi-line quoted fields
+    function parseCSV(text) {
+      const rows = [];
+      let cur = '', inQ = false;
+      const lines = [];
+      // First, re-join lines that are inside quoted fields
+      let rebuilt = '';
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        if (ch === '"') { inQ = !inQ; rebuilt += ch; }
+        else if ((ch === '\n' || ch === '\r') && !inQ) {
+          if (ch === '\r' && text[i+1] === '\n') i++; // skip \r\n pair
+          lines.push(rebuilt);
+          rebuilt = '';
+        } else {
+          rebuilt += ch;
+        }
+      }
+      if (rebuilt) lines.push(rebuilt);
+      return lines.map(splitCSVRow);
+    }
+
     // Skip header row (row 1)
-    const allRows = text.split('\n').map(splitCSVRow);
+    const allRows = parseCSV(text);
     const rows = allRows.slice(1).filter(r => r.some(cell => cell.includes('@') || cell.length > 1));
 
     approvedEmails = [];
