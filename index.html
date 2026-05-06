@@ -2105,10 +2105,21 @@ function parsePct(val) {
   return n <= 1 ? Math.round(n * 100) : Math.round(n);
 }
 
-async function loadApprovedEmails() {
-  if (approvedEmails !== null) return;
+let lastSheetFetch = 0;
+const SHEET_TTL_MS = 60_000; // re-fetch sheet data every 60 seconds
+
+async function loadApprovedEmails(force = false) {
+  const now = Date.now();
+  // Skip if recently fetched and not forced — but always allow auth checks through
+  if (!force && approvedEmails !== null && (now - lastSheetFetch) < SHEET_TTL_MS) return;
+  // Reset so data is fully rebuilt from fresh CSV
+  approvedEmails = null;
+  emailUserTypes = {};
+  emailArtistNames = {};
+  sheetArtistData = {};
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
+    // Cache-bust so the browser doesn't serve a stale response
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&_cb=${now}`;
     const res = await fetch(url);
     if (!res.ok) throw new Error('Sheet returned ' + res.status);
     const text = await res.text();
@@ -2197,6 +2208,7 @@ async function loadApprovedEmails() {
 
     // Merge live sheet data into ARTISTS and NEW_ARTISTS arrays
     mergeSheetDataIntoRoster();
+    lastSheetFetch = Date.now();
 
     if (approvedEmails.length === 0) throw new Error('No emails found in sheet');
     sheetLoadFailed = false;
@@ -4190,6 +4202,9 @@ renderArtistGrid('all','all');
 // Eagerly fetch spreadsheet so artist cards and profiles show live stats
 // without waiting for the user to sign in.
 loadApprovedEmails().catch(() => {});
+
+// Periodically re-fetch the sheet so updates (draw, rate, etc.) show without a page reload
+setInterval(() => loadApprovedEmails(true).catch(() => {}), 60_000);
 
 // If Firebase's onAuthStateChanged fired before this script finished loading,
 // a pending email was queued — pick it up now for a silent session restore.
