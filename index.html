@@ -3933,10 +3933,18 @@ function renderAaCalendar(artistId) {
     }
     if (isToday) { border = '2px solid var(--ink)'; }
 
-    const click = (!isPast && !isBooked) ? `onclick="aaSelectDay('${dateStr}', '${d} ${monthNames[aaCalMonth]}')"` : '';
+    let click = '';
+    if (!isPast) {
+      if (isBooked || isOpen) {
+        click = `onclick="aaShowDayOptions('${dateStr}', '${d} ${monthNames[aaCalMonth]}', ${isBooked})"`;
+      } else {
+        click = `onclick="aaSelectDay('${dateStr}', '${d} ${monthNames[aaCalMonth]}')"`;
+      }
+    }
 
-    html += `<div ${click} style="border-radius:10px;padding:6px 2px;text-align:center;background:${bg};border:${border};cursor:${cursor};transition:all 0.15s;${!isPast && !isBooked ? 'onmouseover' : ''}" 
-      ${!isPast && !isBooked ? `onmouseover="if(!this.classList.contains('aa-day-open'))this.style.background='var(--cream)'" onmouseout="this.style.background='${bg}'"` : ''}>
+    const isClickable = !isPast;
+    html += `<div ${click} style="border-radius:10px;padding:6px 2px;text-align:center;background:${bg};border:${border};cursor:${isClickable ? 'pointer' : 'default'};transition:all 0.15s"
+      ${isClickable ? `onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'"` : ''}>
       <div style="font-size:0.8rem;font-weight:${isToday?'700':'400'};color:${color}">${d}</div>
       ${dot}
     </div>`;
@@ -3950,6 +3958,73 @@ function aaNavMonth(dir) {
   if (aaCalMonth < 0) { aaCalMonth = 11; aaCalYear--; }
   const artistId = 'artist-' + currentUser.email.replace(/[^a-z0-9]/g,'');
   renderAaCalendar(artistId);
+}
+
+function aaShowDayOptions(dateStr, labelStr, isBooked) {
+  const artistId = 'artist-' + currentUser.email.replace(/[^a-z0-9]/g,'');
+  const store = getAvailabilityStore();
+
+  // Find all slots for this day
+  const daySlots = Object.entries(store).filter(([k]) => k.startsWith(artistId + ':' + dateStr + ':'));
+
+  const panel = document.getElementById('aa-add-panel');
+  const errEl = document.getElementById('aa-add-error');
+  errEl.style.display = 'none';
+
+  // Build slot list with remove buttons
+  const slotsHTML = daySlots.map(([k, v]) => {
+    const time = k.substring(k.indexOf(':', k.indexOf(':') + 1) + 1);
+    const isSlotBooked = v.status === 'booked';
+    return `<div style="display:flex;align-items:center;justify-content:space-between;background:${isSlotBooked ? '#fde8e8' : 'var(--cream)'};border-radius:10px;padding:10px 14px;margin-bottom:8px;border:1px solid ${isSlotBooked ? '#f5b7b1' : 'var(--cream-dark)'}">
+      <div>
+        <span style="font-size:0.85rem;font-weight:600;color:${isSlotBooked ? '#c0392b' : 'var(--ink)'}">⏰ ${time}</span>
+        <span style="font-size:0.7rem;margin-left:8px;color:var(--ink-light)">${isSlotBooked ? '🔴 Confirmed booking' : '🟢 Open'}</span>
+        ${isSlotBooked && v.bookedBy ? `<div style="font-size:0.7rem;color:var(--ink-light);margin-top:2px">Booked by ${v.bookedBy}</div>` : ''}
+      </div>
+      <button onclick="aaRemoveSlotFromPanel('${artistId}','${dateStr}','${time.replace(/'/g,"\\'")}','${isSlotBooked}')" style="background:transparent;border:1.5px solid ${isSlotBooked ? '#c0392b' : 'var(--cream-dark)'};color:${isSlotBooked ? '#c0392b' : 'var(--ink-mid)'};border-radius:100px;padding:4px 12px;font-size:0.72rem;cursor:pointer;font-family:var(--sans);flex-shrink:0">✕ Remove</button>
+    </div>`;
+  }).join('');
+
+  // Show manage panel instead of add panel
+  document.getElementById('aa-date').value = dateStr;
+  document.getElementById('aa-selected-date-label').textContent = labelStr;
+
+  const existingTimesEl = document.getElementById('aa-existing-times');
+  existingTimesEl.innerHTML = daySlots.length > 0 ? `
+    <div style="margin-bottom:1rem">
+      <div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--ink-mid);margin-bottom:8px">Scheduled slots — click ✕ to remove</div>
+      ${slotsHTML}
+    </div>
+    <div style="border-top:1px solid var(--cream-dark);padding-top:1rem;margin-bottom:1rem">
+      <div style="font-size:0.78rem;font-weight:600;color:var(--ink);margin-bottom:0.75rem">+ Add another slot for this day</div>
+    </div>` : '';
+  existingTimesEl.style.display = 'block';
+
+  panel.style.display = 'block';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function aaRemoveSlotFromPanel(artistId, date, time, isBooked) {
+  if (isBooked === 'true') {
+    if (!confirm('This slot has a confirmed booking. Are you sure you want to remove it? This cannot be undone.')) return;
+  }
+  const key = `${artistId}:${date}:${time}`;
+  const store = getAvailabilityStore();
+  delete store[key];
+  saveAvailabilityStore(store);
+  renderAaCalendar(artistId);
+  renderAaSlotsList(artistId);
+  renderAaUpcomingEvents(artistId);
+
+  // Refresh the panel if still open
+  const daySlots = Object.entries(getAvailabilityStore()).filter(([k]) => k.startsWith(artistId + ':' + date + ':'));
+  if (daySlots.length === 0) {
+    document.getElementById('aa-add-panel').style.display = 'none';
+  } else {
+    // Re-open with updated list
+    const labelStr = document.getElementById('aa-selected-date-label').textContent;
+    aaShowDayOptions(date, labelStr, false);
+  }
 }
 
 function aaSelectDay(dateStr, labelStr) {
@@ -4054,56 +4129,46 @@ function renderAaUpcomingEvents(artistId) {
   const today = new Date();
   today.setHours(0,0,0,0);
 
-  // Gather all upcoming booked and open slots for this artist
+  // Only gather BOOKED (confirmed) slots
   const upcoming = [];
   Object.entries(store).forEach(([k, v]) => {
     if (!k.startsWith(artistId + ':')) return;
+    if (v.status !== 'booked') return;
     const firstColon = k.indexOf(':');
     const secondColon = k.indexOf(':', firstColon + 1);
     const dateStr = k.substring(firstColon + 1, secondColon);
     const time = k.substring(secondColon + 1);
     const dateObj = new Date(dateStr + 'T12:00:00');
     if (dateObj >= today) {
-      upcoming.push({ dateStr, time, status: v.status, bookedBy: v.bookedBy, notes: v.notes, dateObj });
+      upcoming.push({ dateStr, time, bookedBy: v.bookedBy, notes: v.notes, dateObj });
     }
   });
 
-  // Sort by date ascending
   upcoming.sort((a, b) => a.dateObj - b.dateObj);
-
-  // Take top 3
   const top3 = upcoming.slice(0, 3);
 
   if (top3.length === 0) {
     container.innerHTML = `
       <div style="background:var(--cream);border-radius:14px;padding:2rem;text-align:center;color:var(--ink-light);font-size:0.875rem;line-height:1.6">
-        <div style="font-size:1.5rem;margin-bottom:0.5rem">📅</div>
-        No upcoming events yet.<br>Click any future date on the calendar to add availability.
+        <div style="font-size:1.5rem;margin-bottom:0.5rem">📭</div>
+        No confirmed bookings yet.<br><span style="font-size:0.8rem">When a venue books you, it'll appear here.</span>
       </div>`;
     return;
   }
 
-  container.innerHTML = top3.map(ev => {
-    const isBooked = ev.status === 'booked';
-    const bg = isBooked ? '#fde8e8' : 'var(--white)';
-    const border = isBooked ? '1px solid #f5b7b1' : '1px solid var(--cream-dark)';
-    const timeColor = isBooked ? '#c0392b' : 'var(--green)';
-    const badge = isBooked
-      ? `<span style="font-size:0.68rem;background:#c0392b;color:white;padding:3px 9px;border-radius:100px;font-weight:600;flex-shrink:0">BOOKED</span>`
-      : `<span style="font-size:0.68rem;background:var(--green-light);color:var(--green-mid);padding:3px 9px;border-radius:100px;font-weight:600;flex-shrink:0;border:1px solid #b2dfc9">OPEN</span>`;
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
-    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  container.innerHTML = top3.map(ev => {
     const d = ev.dateObj;
     const shortDate = `${dayNames[d.getDay()]}, ${monthNames[d.getMonth()]} ${d.getDate()}`;
-
-    return `<div style="background:${bg};border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;border:${border}">
+    return `<div style="background:#fde8e8;border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;border:1px solid #f5b7b1">
       <div>
         <div style="font-weight:600;font-size:0.9rem;color:var(--ink);margin-bottom:2px">${shortDate}</div>
-        <div style="font-size:0.75rem;color:${timeColor};margin-top:2px">⏰ ${ev.time}${ev.notes ? ' · ' + ev.notes : ''}</div>
-        ${isBooked && ev.bookedBy ? `<div style="font-size:0.7rem;color:var(--ink-light);margin-top:2px">Booked by ${ev.bookedBy}</div>` : ''}
+        <div style="font-size:0.75rem;color:#c0392b;margin-top:2px">⏰ ${ev.time}</div>
+        ${ev.bookedBy ? `<div style="font-size:0.7rem;color:var(--ink-light);margin-top:2px">Booked by ${ev.bookedBy}</div>` : ''}
       </div>
-      ${badge}
+      <span style="font-size:0.68rem;background:#c0392b;color:white;padding:3px 9px;border-radius:100px;font-weight:600;flex-shrink:0">CONFIRMED</span>
     </div>`;
   }).join('');
 }
