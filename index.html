@@ -636,7 +636,7 @@
     <li><a onclick="showPage('artists')">Browse Artists</a></li>
     <li><a onclick="showPage('pricing-page')">Pricing</a></li>
     <li><a id="nav-portal-link" style="display:none;font-weight:600;color:var(--green) !important"></a></li>
-    <li id="nav-get-started"><a class="nav-cta" onclick="openApply()">Get Started →</a></li>
+    <li><a class="nav-cta" onclick="openApply()">Get Started →</a></li>
   </ul>
   <div style="display:flex;align-items:center;gap:10px">
     <span id="nav-user-info" class="nav-user-info" style="display:none">
@@ -682,8 +682,8 @@
         <div style="display:flex;align-items:center;gap:6px;font-size:0.8rem;color:var(--ink-mid)"><span style="color:var(--green);font-weight:600">✓</span> Venues pay only when confirmed</div>
         <div style="display:flex;align-items:center;gap:6px;font-size:0.8rem;color:var(--ink-mid)"><span style="color:var(--green);font-weight:600">✓</span> Response within 24h</div>
       </div>
-      <!-- Dual CTA row — hidden when signed in -->
-      <div id="hero-cta-logged-out" style="display:flex;flex-direction:column;gap:0.75rem">
+      <!-- Dual CTA row -->
+      <div style="display:flex;flex-direction:column;gap:0.75rem">
         <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center">
           <span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--ink-light);white-space:nowrap;min-width:72px">Artists</span>
           <button class="btn-primary" onclick="openApply()" style="flex:1;min-width:200px;text-align:center">Apply to get booked →</button>
@@ -691,14 +691,6 @@
         <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center">
           <span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--ink-light);white-space:nowrap;min-width:72px">Venues</span>
           <button class="btn-secondary" onclick="showPage('artists')" style="flex:1;min-width:200px;text-align:center">Browse the roster →</button>
-        </div>
-      </div>
-      <!-- Signed-in hero CTA — shown only when logged in -->
-      <div id="hero-cta-logged-in" style="display:none;flex-direction:column;gap:0.75rem">
-        <div id="hero-future-events-preview"></div>
-        <div style="display:flex;gap:0.75rem;flex-wrap:wrap">
-          <button class="btn-primary" id="hero-portal-btn" onclick="showPage('artist-availability')" style="flex:1;min-width:200px;text-align:center">My Portal →</button>
-          <button class="btn-secondary" onclick="showPage('home'); setTimeout(()=>{ const el=document.getElementById('how'); if(el) el.scrollIntoView({behavior:'smooth'}); },50)" style="flex:1;min-width:200px;text-align:center">How It Works</button>
         </div>
       </div>
     </div>
@@ -2043,11 +2035,6 @@ function updateNavAuth() {
   const portalLink = document.getElementById('nav-portal-link');
   const mobilePortalLink = document.getElementById('mobile-portal-link');
 
-  const navGetStarted = document.getElementById('nav-get-started');
-  const heroCTAOut = document.getElementById('hero-cta-logged-out');
-  const heroCTAIn = document.getElementById('hero-cta-logged-in');
-  const heroPortalBtn = document.getElementById('hero-portal-btn');
-
   if (currentUser) {
     btn.textContent = 'Sign out';
     btn.classList.add('signout');
@@ -2055,24 +2042,6 @@ function updateNavAuth() {
     info.style.display = 'flex';
     emailSpan.textContent = currentUser.email;
     if (mobileBtn) { mobileBtn.textContent = 'Sign out (' + currentUser.email.split('@')[0] + ')'; mobileBtn.onclick = () => { closeMobileMenu(); signOut(); }; }
-
-    // Hide "Get Started →" in nav when signed in
-    if (navGetStarted) navGetStarted.style.display = 'none';
-
-    // Swap hero CTAs
-    if (heroCTAOut) heroCTAOut.style.display = 'none';
-    if (heroCTAIn) { heroCTAIn.style.display = 'flex'; }
-    if (heroPortalBtn) {
-      if (currentUser.userType === 'artist') {
-        heroPortalBtn.textContent = '🎤 My Availability →';
-        heroPortalBtn.onclick = () => showPage('artist-availability');
-      } else {
-        heroPortalBtn.textContent = '📅 Book an Artist →';
-        heroPortalBtn.onclick = () => showPage('booking');
-      }
-    }
-    // Render the future-events preview in the hero
-    renderHeroFutureEvents();
 
     // Show the right portal link based on user type
     if (portalLink) {
@@ -2104,10 +2073,6 @@ function updateNavAuth() {
     if (mobileBtn) { mobileBtn.textContent = 'Sign In'; mobileBtn.onclick = () => { closeMobileMenu(); openLogin(); }; }
     if (portalLink) portalLink.style.display = 'none';
     if (mobilePortalLink) mobilePortalLink.style.display = 'none';
-    // Restore "Get Started →" and hero CTAs when signed out
-    if (navGetStarted) navGetStarted.style.display = '';
-    if (heroCTAOut) heroCTAOut.style.display = 'flex';
-    if (heroCTAIn) heroCTAIn.style.display = 'none';
   }
 }
 
@@ -2134,118 +2099,6 @@ function signOut() {
   if (activePage && (activePage.id === 'page-booking' || activePage.id === 'page-artist-availability' || activePage.id === 'page-payment')) {
     showPage('home');
   }
-}
-
-
-// ════════════════════════════════
-// FUTURE EVENTS — stored per user, auto-expire past dates
-// ════════════════════════════════
-function getFutureEventsKey() {
-  return currentUser ? 'ls-future-events-' + currentUser.email : null;
-}
-
-function loadFutureEvents() {
-  const key = getFutureEventsKey();
-  if (!key) return [];
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return [];
-    const events = JSON.parse(raw);
-    // Auto-delete past events (compare date only)
-    const today = new Date();
-    today.setHours(0,0,0,0);
-    const filtered = events.filter(ev => {
-      const d = new Date(ev.date + 'T00:00:00');
-      return d >= today;
-    });
-    if (filtered.length !== events.length) {
-      localStorage.setItem(key, JSON.stringify(filtered));
-    }
-    return filtered;
-  } catch(e) { return []; }
-}
-
-function saveFutureEvents(events) {
-  const key = getFutureEventsKey();
-  if (!key) return;
-  localStorage.setItem(key, JSON.stringify(events));
-}
-
-function addFutureEvent(event) {
-  // event = { title, date, time, venue, type }
-  const events = loadFutureEvents();
-  events.push({ ...event, id: Date.now() + Math.random().toString(36).slice(2) });
-  // Sort by date
-  events.sort((a,b) => a.date.localeCompare(b.date));
-  saveFutureEvents(events);
-}
-
-function removeFutureEvent(id) {
-  const events = loadFutureEvents().filter(ev => ev.id !== id);
-  saveFutureEvents(events);
-  renderFutureEvents();
-  renderHeroFutureEvents();
-}
-
-function renderHeroFutureEvents() {
-  const el = document.getElementById('hero-future-events-preview');
-  if (!el) return;
-  const events = loadFutureEvents();
-  if (events.length === 0) { el.innerHTML = ''; return; }
-  const next = events[0];
-  el.innerHTML = `
-    <div style="background:var(--green-light);border-radius:12px;padding:10px 16px;font-size:0.82rem;color:var(--green-mid);border:1.5px solid #b2dfc9;margin-bottom:0.75rem;display:flex;align-items:center;gap:10px">
-      <span style="font-size:1rem">📅</span>
-      <div>
-        <span style="font-weight:600">Next event:</span> ${next.title}
-        <span style="color:var(--ink-light);font-size:0.75rem;margin-left:6px">${formatDateDisplay(next.date)}${next.time ? ' · ' + next.time : ''}</span>
-      </div>
-      ${events.length > 1 ? `<span style="margin-left:auto;background:var(--green);color:white;border-radius:100px;padding:2px 8px;font-size:0.7rem;font-weight:600;white-space:nowrap">+${events.length-1} more</span>` : ''}
-    </div>
-  `;
-}
-
-function renderFutureEvents() {
-  const container = document.getElementById('future-events-section');
-  if (!container) return;
-  const events = loadFutureEvents();
-
-  if (events.length === 0) {
-    container.innerHTML = `
-      <div style="background:var(--cream);border-radius:14px;padding:2rem;text-align:center;color:var(--ink-light);font-size:0.875rem;line-height:1.6">
-        <div style="font-size:1.75rem;margin-bottom:0.5rem">🗓️</div>
-        No upcoming events yet.<br>Events are added automatically when you book or set availability.
-      </div>`;
-    return;
-  }
-
-  container.innerHTML = events.map(ev => `
-    <div style="background:var(--white);border-radius:14px;padding:1rem 1.25rem;margin-bottom:10px;display:flex;align-items:center;gap:1rem;border:1.5px solid var(--cream-dark);transition:box-shadow 0.15s" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.07)'" onmouseout="this.style.boxShadow='none'">
-      <div style="flex-shrink:0;width:44px;height:44px;border-radius:12px;background:var(--green-light);display:flex;flex-direction:column;align-items:center;justify-content:center;border:1.5px solid #b2dfc9">
-        <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--green)">${formatEventMonth(ev.date)}</div>
-        <div style="font-family:var(--serif);font-size:1.1rem;color:var(--green-mid);line-height:1">${formatEventDay(ev.date)}</div>
-      </div>
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:600;font-size:0.9rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ev.title}</div>
-        <div style="font-size:0.75rem;color:var(--ink-light);margin-top:2px">
-          ${ev.time ? `⏰ ${ev.time}` : ''}${ev.time && ev.venue ? ' · ' : ''}${ev.venue ? `📍 ${ev.venue}` : ''}
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-        <span style="font-size:0.7rem;background:${ev.type === 'booked' ? 'var(--green)' : ev.type === 'performing' ? '#c0392b' : 'var(--ink)'};color:white;padding:3px 10px;border-radius:100px;font-weight:600;white-space:nowrap">${ev.type === 'booked' ? 'BOOKED' : ev.type === 'performing' ? 'PERFORMING' : 'UPCOMING'}</span>
-        <button onclick="removeFutureEvent('${ev.id}')" style="background:transparent;border:1.5px solid var(--cream-dark);border-radius:100px;padding:4px 10px;font-size:0.7rem;color:var(--ink-light);cursor:pointer;font-family:var(--sans);transition:all 0.2s;white-space:nowrap" onmouseover="this.style.borderColor='#c0392b';this.style.color='#c0392b'" onmouseout="this.style.borderColor='var(--cream-dark)';this.style.color='var(--ink-light)'">✕</button>
-      </div>
-    </div>
-  `).join('');
-}
-
-function formatEventMonth(dateStr) {
-  const d = new Date(dateStr + 'T12:00:00');
-  return d.toLocaleDateString('en-CA', { month: 'short' }).toUpperCase();
-}
-function formatEventDay(dateStr) {
-  const d = new Date(dateStr + 'T12:00:00');
-  return d.getDate();
 }
 
 
@@ -2611,38 +2464,6 @@ function getBookingFormHTML() {
     <div style="display:flex;align-items:center;gap:10px;background:var(--green-light);border-radius:12px;padding:12px 16px;margin-bottom:2rem;font-size:0.875rem;color:var(--green-mid)">
       <span>✓</span>
       <span>Signed in as <strong id="booking-user-email"></strong> · <span style="cursor:pointer;text-decoration:underline" onclick="signOut()">Sign out</span></span>
-    </div>
-
-    <!-- Future Events section for venues -->
-    <div style="background:var(--white);border-radius:20px;padding:1.75rem;border:1px solid var(--cream-dark);margin-bottom:2rem">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem">
-        <h3 style="font-family:var(--serif);font-size:1.3rem;color:var(--ink)">🗓️ Future Events</h3>
-        <button onclick="showVenueAddEventModal()" style="background:var(--ink);color:white;border:none;border-radius:100px;padding:6px 14px;font-family:var(--sans);font-size:0.78rem;font-weight:500;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='var(--green)'" onmouseout="this.style.background='var(--ink)'">+ Add Event</button>
-      </div>
-      <div id="venue-future-events-section"></div>
-    </div>
-
-    <!-- Venue Add Event Modal -->
-    <div id="venue-add-event-modal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(26,26,24,0.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:1.5rem">
-      <div style="background:var(--white);border-radius:20px;padding:2rem;width:100%;max-width:440px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.2)">
-        <button onclick="hideVenueAddEventModal()" style="position:absolute;top:1rem;right:1rem;background:var(--cream);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center">✕</button>
-        <h3 style="font-family:var(--serif);font-size:1.4rem;color:var(--ink);margin-bottom:0.25rem">Add Future Event</h3>
-        <p style="font-size:0.82rem;color:var(--ink-light);margin-bottom:1.5rem">Events past their date will be removed automatically.</p>
-        <div class="form-field"><label class="form-label">Event title *</label><input class="form-input" type="text" id="venue-event-title" placeholder="e.g. Friday Night Live"></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
-          <div class="form-field" style="margin-bottom:0"><label class="form-label">Date *</label><input class="form-input" type="date" id="venue-event-date"></div>
-          <div class="form-field" style="margin-bottom:0"><label class="form-label">Time</label><input class="form-input" type="time" id="venue-event-time"></div>
-        </div>
-        <div class="form-field" style="margin-top:1rem"><label class="form-label">Artist / details</label><input class="form-input" type="text" id="venue-event-venue" placeholder="e.g. Maya Reyes performing"></div>
-        <div class="form-field"><label class="form-label">Type</label>
-          <select class="form-input form-select" id="venue-event-type">
-            <option value="upcoming">Upcoming</option>
-            <option value="booked">Booked</option>
-          </select>
-        </div>
-        <div id="venue-add-event-error" style="display:none;background:#fde8e8;border-radius:10px;padding:8px 12px;font-size:0.8rem;color:#c0392b;margin-bottom:0.75rem"></div>
-        <button onclick="saveVenueNewEvent()" style="width:100%;background:var(--green);color:white;border:none;border-radius:100px;padding:0.85rem;font-family:var(--sans);font-size:0.95rem;font-weight:500;cursor:pointer;margin-top:0.5rem;transition:opacity 0.2s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">Save Event →</button>
-      </div>
     </div>
 
     <!-- Booking type toggle -->
@@ -3019,8 +2840,6 @@ function renderBookingPage() {
     }
     document.getElementById('booking-user-email').textContent = currentUser.email;
     renderBookingArtists();
-    // Render venue's future events if venue section exists
-    renderVenueFutureEvents();
   } else {
     gate.style.display = 'block';
     form.style.display = 'none';
@@ -4043,168 +3862,18 @@ function renderArtistAvailability() {
         <p style="font-size:0.78rem;color:var(--ink-light);margin-top:1rem;line-height:1.5;text-align:center">Click any future date on the calendar to mark yourself available. Venues will see your open slots when booking.</p>
       </div>
 
-      <!-- RIGHT: Future Events + Slots list -->
+      <!-- RIGHT: Slots list -->
       <div>
-        <!-- Future Events Section -->
-        <div style="margin-bottom:2rem">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
-            <h3 style="font-family:var(--serif);font-size:1.3rem;color:var(--ink)">🗓️ Future Events</h3>
-            <button onclick="showAddEventModal()" style="background:var(--ink);color:white;border:none;border-radius:100px;padding:6px 14px;font-family:var(--sans);font-size:0.78rem;font-weight:500;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='var(--green)'" onmouseout="this.style.background='var(--ink)'">+ Add Event</button>
-          </div>
-          <div id="future-events-section"></div>
-        </div>
         <h3 style="font-family:var(--serif);font-size:1.3rem;color:var(--ink);margin-bottom:1rem">Your Schedule</h3>
         <div id="aa-slots-list"></div>
-      </div>
-    </div>
-
-    <!-- Add Event Modal (inline) -->
-    <div id="add-event-modal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(26,26,24,0.6);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:1.5rem">
-      <div style="background:var(--white);border-radius:20px;padding:2rem;width:100%;max-width:440px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.2)">
-        <button onclick="hideAddEventModal()" style="position:absolute;top:1rem;right:1rem;background:var(--cream);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center">✕</button>
-        <h3 style="font-family:var(--serif);font-size:1.4rem;color:var(--ink);margin-bottom:0.25rem">Add Future Event</h3>
-        <p style="font-size:0.82rem;color:var(--ink-light);margin-bottom:1.5rem">Events past their date will be removed automatically.</p>
-        <div class="form-field"><label class="form-label">Event title *</label><input class="form-input" type="text" id="new-event-title" placeholder="e.g. Live at The Dock"></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
-          <div class="form-field" style="margin-bottom:0"><label class="form-label">Date *</label><input class="form-input" type="date" id="new-event-date"></div>
-          <div class="form-field" style="margin-bottom:0"><label class="form-label">Time</label><input class="form-input" type="time" id="new-event-time"></div>
-        </div>
-        <div class="form-field" style="margin-top:1rem"><label class="form-label">Venue / location</label><input class="form-input" type="text" id="new-event-venue" placeholder="e.g. The Dock, Mississauga"></div>
-        <div class="form-field"><label class="form-label">Type</label>
-          <select class="form-input form-select" id="new-event-type">
-            <option value="upcoming">Upcoming</option>
-            <option value="performing">Performing</option>
-            <option value="booked">Booked</option>
-          </select>
-        </div>
-        <div id="add-event-error" style="display:none;background:#fde8e8;border-radius:10px;padding:8px 12px;font-size:0.8rem;color:#c0392b;margin-bottom:0.75rem"></div>
-        <button onclick="saveNewEvent()" style="width:100%;background:var(--green);color:white;border:none;border-radius:100px;padding:0.85rem;font-family:var(--sans);font-size:0.95rem;font-weight:500;cursor:pointer;margin-top:0.5rem;transition:opacity 0.2s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">Save Event →</button>
       </div>
     </div>
   `;
 
   renderAaCalendar(artistId);
   renderAaSlotsList(artistId);
-  renderFutureEvents();
 }
 
-function renderVenueFutureEvents() {
-  const container = document.getElementById('venue-future-events-section');
-  if (!container) return;
-  const events = loadFutureEvents();
-
-  if (events.length === 0) {
-    container.innerHTML = `
-      <div style="background:var(--cream);border-radius:14px;padding:1.5rem;text-align:center;color:var(--ink-light);font-size:0.875rem;line-height:1.6">
-        <div style="font-size:1.5rem;margin-bottom:0.5rem">🗓️</div>
-        No upcoming events yet. Add one above, or events will appear automatically when you confirm bookings.
-      </div>`;
-    return;
-  }
-
-  container.innerHTML = events.map(ev => `
-    <div style="background:var(--cream);border-radius:14px;padding:0.9rem 1.1rem;margin-bottom:8px;display:flex;align-items:center;gap:0.875rem;border:1.5px solid var(--cream-dark);transition:box-shadow 0.15s" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.07)'" onmouseout="this.style.boxShadow='none'">
-      <div style="flex-shrink:0;width:40px;height:40px;border-radius:10px;background:var(--green-light);display:flex;flex-direction:column;align-items:center;justify-content:center;border:1.5px solid #b2dfc9">
-        <div style="font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--green)">${formatEventMonth(ev.date)}</div>
-        <div style="font-family:var(--serif);font-size:1.05rem;color:var(--green-mid);line-height:1">${formatEventDay(ev.date)}</div>
-      </div>
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:600;font-size:0.875rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ev.title}</div>
-        <div style="font-size:0.72rem;color:var(--ink-light);margin-top:2px">
-          ${ev.time ? `⏰ ${ev.time}` : ''}${ev.time && ev.venue ? ' · ' : ''}${ev.venue ? `📍 ${ev.venue}` : ''}
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-        <span style="font-size:0.68rem;background:${ev.type === 'booked' ? 'var(--green)' : 'var(--ink)'};color:white;padding:2px 9px;border-radius:100px;font-weight:600;white-space:nowrap">${ev.type === 'booked' ? 'BOOKED' : 'UPCOMING'}</span>
-        <button onclick="removeVenueFutureEvent('${ev.id}')" style="background:transparent;border:1.5px solid var(--cream-dark);border-radius:100px;padding:3px 9px;font-size:0.68rem;color:var(--ink-light);cursor:pointer;font-family:var(--sans);transition:all 0.2s;white-space:nowrap" onmouseover="this.style.borderColor='#c0392b';this.style.color='#c0392b'" onmouseout="this.style.borderColor='var(--cream-dark)';this.style.color='var(--ink-light)'">✕</button>
-      </div>
-    </div>
-  `).join('');
-}
-
-function removeVenueFutureEvent(id) {
-  removeFutureEvent(id);
-  renderVenueFutureEvents();
-}
-
-function showVenueAddEventModal() {
-  const modal = document.getElementById('venue-add-event-modal');
-  if (!modal) return;
-  modal.style.display = 'flex';
-  const today = new Date().toISOString().split('T')[0];
-  const dateInput = document.getElementById('venue-event-date');
-  if (dateInput) { dateInput.min = today; dateInput.value = ''; }
-  ['venue-event-title','venue-event-time','venue-event-venue'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.value = '';
-  });
-  const errEl = document.getElementById('venue-add-event-error');
-  if (errEl) errEl.style.display = 'none';
-}
-
-function hideVenueAddEventModal() {
-  const modal = document.getElementById('venue-add-event-modal');
-  if (modal) modal.style.display = 'none';
-}
-
-function saveVenueNewEvent() {
-  const title = document.getElementById('venue-event-title')?.value?.trim();
-  const date = document.getElementById('venue-event-date')?.value;
-  const time = document.getElementById('venue-event-time')?.value;
-  const venue = document.getElementById('venue-event-venue')?.value?.trim();
-  const type = document.getElementById('venue-event-type')?.value || 'upcoming';
-  const errEl = document.getElementById('venue-add-event-error');
-
-  if (!title) { errEl.textContent = 'Please enter an event title.'; errEl.style.display = 'block'; return; }
-  if (!date) { errEl.textContent = 'Please select a date.'; errEl.style.display = 'block'; return; }
-
-  const today = new Date(); today.setHours(0,0,0,0);
-  const d = new Date(date + 'T00:00:00');
-  if (d < today) { errEl.textContent = 'Date must be today or in the future.'; errEl.style.display = 'block'; return; }
-
-  addFutureEvent({ title, date, time: time || '', venue: venue || '', type });
-  hideVenueAddEventModal();
-  renderVenueFutureEvents();
-  renderHeroFutureEvents();
-}
-
-function showAddEventModal() {
-  const modal = document.getElementById('add-event-modal');
-  const today = new Date().toISOString().split('T')[0];
-  const dateInput = document.getElementById('new-event-date');
-  if (dateInput) { dateInput.min = today; dateInput.value = ''; }
-  if (document.getElementById('new-event-title')) document.getElementById('new-event-title').value = '';
-  if (document.getElementById('new-event-time')) document.getElementById('new-event-time').value = '';
-  if (document.getElementById('new-event-venue')) document.getElementById('new-event-venue').value = '';
-  const errEl = document.getElementById('add-event-error');
-  if (errEl) errEl.style.display = 'none';
-}
-
-function hideAddEventModal() {
-  const modal = document.getElementById('add-event-modal');
-  if (modal) modal.style.display = 'none';
-}
-
-function saveNewEvent() {
-  const title = document.getElementById('new-event-title')?.value?.trim();
-  const date = document.getElementById('new-event-date')?.value;
-  const time = document.getElementById('new-event-time')?.value;
-  const venue = document.getElementById('new-event-venue')?.value?.trim();
-  const type = document.getElementById('new-event-type')?.value || 'upcoming';
-  const errEl = document.getElementById('add-event-error');
-
-  if (!title) { errEl.textContent = 'Please enter an event title.'; errEl.style.display = 'block'; return; }
-  if (!date) { errEl.textContent = 'Please select a date.'; errEl.style.display = 'block'; return; }
-
-  // Check date is in the future
-  const today = new Date(); today.setHours(0,0,0,0);
-  const d = new Date(date + 'T00:00:00');
-  if (d < today) { errEl.textContent = 'Date must be today or in the future.'; errEl.style.display = 'block'; return; }
-
-  addFutureEvent({ title, date, time: time || '', venue: venue || '', type });
-  hideAddEventModal();
-  renderFutureEvents();
-  renderHeroFutureEvents();
-}
 function renderAaCalendar(artistId) {
   const today = new Date();
   today.setHours(0,0,0,0);
@@ -4555,15 +4224,6 @@ function onPaymentSuccess(email, stripePaymentId) {
     store[slotKey] = { ...store[slotKey], status: 'booked', bookedBy: email };
   }
   saveAvailabilityStore(store);
-  // If the currently signed-in user is the artist whose slot was booked, add it to their future events
-  if (currentUser && currentUser.userType === 'artist') {
-    const parts = slotKey.split(':');
-    if (parts.length >= 3) {
-      const evDate = parts[1];
-      const evTime = parts.slice(2).join(':');
-      addFutureEvent({ title: 'Confirmed booking', date: evDate, time: evTime, venue: 'Booked by ' + email, type: 'performing' });
-    }
-  }
 
   // Send EmailJS notification
   emailjs.init(EMAILJS_KEY);
@@ -4583,14 +4243,6 @@ function onPaymentSuccess(email, stripePaymentId) {
     localStorage.setItem('ls-booked-' + currentUser.email, JSON.stringify({
       artist: artistName, venue: venueInfo, date, time, submittedAt: new Date().toISOString(), paid: true, stripeId: stripePaymentId
     }));
-    // Auto-add to future events
-    addFutureEvent({
-      title: artistName + ' at ' + (venueInfo.split('·')[0].trim() || 'your venue'),
-      date,
-      time,
-      venue: venueInfo,
-      type: 'booked'
-    });
   }
 
   // Show success screen
