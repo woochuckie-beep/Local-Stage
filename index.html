@@ -743,7 +743,17 @@
   </div>
 </nav>
 
-<!-- Mobile menu -->
+<!-- Build timestamp badge — updates on each file load -->
+<div id="build-timestamp" style="position:fixed;bottom:10px;right:12px;z-index:9999;font-family:var(--sans);font-size:0.62rem;color:var(--ink-light);background:rgba(247,244,239,0.92);border:1px solid var(--cream-dark);border-radius:8px;padding:3px 9px;pointer-events:none;backdrop-filter:blur(4px);letter-spacing:0.2px"></div>
+<script>
+  (function() {
+    const pad = n => String(n).padStart(2,'0');
+    const now = new Date();
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const label = `Updated ${months[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()} · ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    document.getElementById('build-timestamp').textContent = label;
+  })();
+</script>
 <div class="mobile-menu" id="mobile-menu">
   <a onclick="closeMobileMenu(); showPage('home'); setTimeout(()=>{ const el=document.getElementById('how'); if(el) el.scrollIntoView({behavior:'smooth'}); },50)">How It Works</a>
   <a onclick="closeMobileMenu(); showPage('artists')">Browse Artists</a>
@@ -4291,6 +4301,7 @@ function saveVenueNewEvent() {
 
 function showAddEventModal() {
   const modal = document.getElementById('add-event-modal');
+  if (modal) modal.style.display = 'flex';
   const today = new Date().toISOString().split('T')[0];
   const dateInput = document.getElementById('new-event-date');
   if (dateInput) { dateInput.min = today; dateInput.value = ''; }
@@ -4326,6 +4337,11 @@ function saveNewEvent() {
   hideAddEventModal();
   renderFutureEvents();
   renderHeroFutureEvents();
+  // Also refresh the Full Schedule so "Next 3 Shows" updates immediately
+  if (currentUser && currentUser.userType === 'artist') {
+    const aId = currentUser.artistId ? 'artist-' + currentUser.artistId : 'artist-' + currentUser.email.replace(/[^a-z0-9]/g,'');
+    renderAaSlotsList(aId);
+  }
 }
 // Track selected date
 let aaSelectedDateStr = null;
@@ -4512,6 +4528,10 @@ function aaHideAddForm() {
 }
 
 function renderAaSlotsList(artistId) {
+  const container = document.getElementById('aa-slots-list');
+  if (!container) return;
+
+  // Scan both roster-based and email-based keys
   const altId = currentUser ? ('artist-' + currentUser.email.replace(/[^a-z0-9]/g,'')) : null;
   const keysToScan = [artistId];
   if (altId && altId !== artistId) keysToScan.push(altId);
@@ -4522,46 +4542,39 @@ function renderAaSlotsList(artistId) {
     Object.entries(store).forEach(([k, v]) => { if (k.startsWith(id + ':')) allSlots[k] = v; });
   });
 
-  const existingSlots = Object.entries(allSlots).filter(([,v]) => v.status === 'open').sort((a,b)=>a[0].localeCompare(b[0]));
-  const bookedSlots   = Object.entries(allSlots).filter(([,v]) => v.status === 'booked').sort((a,b)=>a[0].localeCompare(b[0]));
-  const container = document.getElementById('aa-slots-list');
-  if (!container) return;
-
   const parseKey = k => {
     const parts = k.split(':');
     return { date: parts[1], time: parts.slice(2).join(':') };
   };
 
-  // Build top 3 next events by merging future events + confirmed booked slots
-  const _today = new Date(); _today.setHours(0,0,0,0);
+  const existingSlots = Object.entries(allSlots).filter(([,v]) => v.status === 'open').sort((a,b)=>a[0].localeCompare(b[0]));
+  const bookedSlots   = Object.entries(allSlots).filter(([,v]) => v.status === 'booked').sort((a,b)=>a[0].localeCompare(b[0]));
+
+  // ── Build top 3: merge manually-added future events + confirmed booked slots ──
+  const nowDate = new Date(); nowDate.setHours(0,0,0,0);
   const manualEvents = loadFutureEvents();
-  // Convert booked slots to event objects so they can be merged
   const bookedAsEvents = bookedSlots.map(([k, v]) => {
     const { date, time } = parseKey(k);
-    return { date, time, title: 'Confirmed booking', venue: v.bookedBy ? 'Booked by ' + v.bookedBy : '', type: 'booked', _fromSlot: true };
-  }).filter(ev => new Date(ev.date + 'T00:00:00') >= _today);
-  // Merge: prefer manual events; deduplicate by date+time
+    return { date, time, title: 'Confirmed booking', venue: v.bookedBy ? 'Booked by ' + v.bookedBy : '', type: 'booked' };
+  }).filter(ev => new Date(ev.date + 'T00:00:00') >= nowDate);
   const manualKeys = new Set(manualEvents.map(ev => ev.date + ':' + (ev.time || '')));
-  const mergedEvents = [
+  const top3 = [
     ...manualEvents,
     ...bookedAsEvents.filter(ev => !manualKeys.has(ev.date + ':' + ev.time))
-  ].sort((a, b) => a.date.localeCompare(b.date) || (a.time || '').localeCompare(b.time || ''));
-  const top3 = mergedEvents.slice(0, 3);
+  ].sort((a, b) => a.date.localeCompare(b.date) || (a.time||'').localeCompare(b.time||'')).slice(0, 3);
 
   let html = '';
 
-  // ── Next 3 upcoming shows — date-badge card format ──────
+  // ── Next 3 Shows section ──
   if (top3.length > 0) {
     html += `<div style="font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--green);padding:0.85rem 1rem 0.5rem">🎤 Next 3 Shows</div>`;
     top3.forEach(ev => {
       const typeColor = ev.type === 'booked' ? 'var(--green)' : ev.type === 'performing' ? '#c0392b' : 'var(--ink)';
       const typeLabel = ev.type === 'booked' ? 'BOOKED' : ev.type === 'performing' ? 'LIVE' : 'SOON';
-      const mo = formatEventMonth(ev.date);
-      const dy = formatEventDay(ev.date);
       html += `<div class="aa-event-row" style="cursor:default">
         <div class="aa-event-date-badge">
-          <div class="mo">${mo}</div>
-          <div class="dy">${dy}</div>
+          <div class="mo">${formatEventMonth(ev.date)}</div>
+          <div class="dy">${formatEventDay(ev.date)}</div>
         </div>
         <div style="flex:1;min-width:0">
           <div class="aa-event-title">${ev.title}</div>
@@ -4570,48 +4583,49 @@ function renderAaSlotsList(artistId) {
         <span style="font-size:0.58rem;font-weight:700;letter-spacing:0.5px;background:${typeColor};color:white;padding:2px 9px;border-radius:100px;white-space:nowrap;flex-shrink:0">${typeLabel}</span>
       </div>`;
     });
-    html += `<div style="height:1px;background:var(--cream-dark);margin:6px 0 0"></div>`;
+    html += `<div style="height:1px;background:var(--cream-dark);margin:4px 0 2px"></div>`;
   }
 
-  if (bookedSlots.length === 0 && existingSlots.length === 0) {
-    if (top3.length === 0) {
-      container.innerHTML = `<div style="padding:1.5rem;text-align:center;color:var(--ink-light);font-size:0.82rem;line-height:1.6">
-        <div style="font-size:1.5rem;margin-bottom:0.5rem">📅</div>No shows yet.<br>Add events above or click a calendar date to add availability.
-      </div>`;
-    } else {
-      html += `<div style="padding:0.75rem 1rem 1rem;text-align:center;color:var(--ink-light);font-size:0.78rem">No availability slots yet — click a date to add one.</div>`;
-      container.innerHTML = html;
-    }
+  // ── Availability Slots ──
+  const hasSlots = bookedSlots.length > 0 || existingSlots.length > 0;
+
+  if (!hasSlots && top3.length === 0) {
+    container.innerHTML = `<div style="padding:1.5rem;text-align:center;color:var(--ink-light);font-size:0.82rem;line-height:1.7">
+      <div style="font-size:1.5rem;margin-bottom:0.5rem">📅</div>
+      No schedule yet.<br>Add events with <strong>+ Add</strong> above,<br>or click a calendar date to set availability.
+    </div>`;
     return;
   }
-  // Section header for the slots list below upcoming shows
-  if (top3.length > 0) {
-    html += `<div style="font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--ink-light);padding:0.6rem 1rem 0.4rem">Availability Slots</div>`;
+
+  if (hasSlots) {
+    if (top3.length > 0) {
+      html += `<div style="font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--ink-light);padding:0.5rem 1rem 0.35rem">Availability Slots</div>`;
+    }
+    bookedSlots.forEach(([k, v]) => {
+      const { date, time } = parseKey(k);
+      html += `<div class="aa-sched-row" onclick="aaSelectDay('${date}')">
+        <div class="aa-sched-dot booked"></div>
+        <div style="flex:1;min-width:0">
+          <div class="aa-sched-date">${formatDateDisplay(date)}</div>
+          <div class="aa-sched-time">⏰ ${time} · ${v.bookedBy || 'a venue'}</div>
+        </div>
+        <span class="aa-sched-tag booked">Booked</span>
+      </div>`;
+    });
+    existingSlots.forEach(([k, v]) => {
+      const { date, time } = parseKey(k);
+      html += `<div class="aa-sched-row" onclick="aaSelectDay('${date}')">
+        <div class="aa-sched-dot open"></div>
+        <div style="flex:1;min-width:0">
+          <div class="aa-sched-date">${formatDateDisplay(date)}</div>
+          <div class="aa-sched-time">⏰ ${time}${v.notes ? ' · ' + v.notes : ''}</div>
+        </div>
+        <span class="aa-sched-tag open">Open</span>
+      </div>`;
+    });
+  } else if (top3.length > 0) {
+    html += `<div style="padding:0.75rem 1rem 1rem;text-align:center;color:var(--ink-light);font-size:0.75rem">No availability slots — click a date to add one.</div>`;
   }
-
-  bookedSlots.forEach(([k, v]) => {
-    const { date, time } = parseKey(k);
-    html += `<div class="aa-sched-row" onclick="aaSelectDay('${date}')">
-      <div class="aa-sched-dot booked"></div>
-      <div>
-        <div class="aa-sched-date">${formatDateDisplay(date)}</div>
-        <div class="aa-sched-time">⏰ ${time} · ${v.bookedBy || 'a venue'}</div>
-      </div>
-      <span class="aa-sched-tag booked">Booked</span>
-    </div>`;
-  });
-
-  existingSlots.forEach(([k, v]) => {
-    const { date, time } = parseKey(k);
-    html += `<div class="aa-sched-row" onclick="aaSelectDay('${date}')">
-      <div class="aa-sched-dot open"></div>
-      <div>
-        <div class="aa-sched-date">${formatDateDisplay(date)}</div>
-        <div class="aa-sched-time">⏰ ${time}${v.notes ? ' · ' + v.notes : ''}</div>
-      </div>
-      <span class="aa-sched-tag open">Open</span>
-    </div>`;
-  });
 
   container.innerHTML = html;
 }
