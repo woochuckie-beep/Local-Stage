@@ -2249,6 +2249,7 @@ function formatEventDay(dateStr) {
 }
 
 
+function openLogin() {
   resetLoginModal();
   document.getElementById('modal-login').classList.add('open');
 }
@@ -4166,11 +4167,8 @@ function saveVenueNewEvent() {
   renderHeroFutureEvents();
 }
 
-
+function showAddEventModal() {
   const modal = document.getElementById('add-event-modal');
-  if (!modal) return;
-  modal.style.display = 'flex';
-  // Set min date to today
   const today = new Date().toISOString().split('T')[0];
   const dateInput = document.getElementById('new-event-date');
   if (dateInput) { dateInput.min = today; dateInput.value = ''; }
@@ -4207,8 +4205,7 @@ function saveNewEvent() {
   renderFutureEvents();
   renderHeroFutureEvents();
 }
-
-
+function renderAaCalendar(artistId) {
   const today = new Date();
   today.setHours(0,0,0,0);
   const store = getAvailabilityStore();
