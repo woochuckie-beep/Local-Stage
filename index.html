@@ -2549,8 +2549,16 @@ function getBookingFormHTML() {
           </select>
         </div>
         <div class="date-time-row">
-          <div class="form-field"><label class="form-label">Preferred date *</label><input class="form-input" type="date"></div>
-          <div class="form-field"><label class="form-label">Start time *</label><input class="form-input" type="time"></div>
+          <div class="form-field">
+            <label class="form-label">Preferred date *</label>
+            <input class="form-input" type="date" id="booking-date-field" readonly style="background:var(--cream);cursor:not-allowed;color:var(--ink-mid)" placeholder="Select from calendar →">
+            <div class="form-hint" id="booking-date-hint">← Select an available date from the artist's calendar on the left.</div>
+          </div>
+          <div class="form-field">
+            <label class="form-label">Start time *</label>
+            <input class="form-input" type="time" id="booking-time-field" readonly style="background:var(--cream);cursor:not-allowed;color:var(--ink-mid)">
+            <div class="form-hint" id="booking-time-hint">Time is set automatically when you pick a slot.</div>
+          </div>
         </div>
         <div class="form-field"><label class="form-label">Venue capacity</label>
           <select class="form-input form-select">
@@ -3104,7 +3112,7 @@ function venueSelectDay(dateStr) {
   content.innerHTML = `
     <div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--green-mid);margin-bottom:0.75rem">Available times for ${formatDateDisplay(dateStr)}</div>
     ${slots.map(s => `
-      <div onclick="selectArtistSlot('${dateStr}','${s.time}')" style="cursor:pointer;background:white;border:1.5px solid var(--cream-dark);border-radius:10px;padding:10px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;transition:all 0.15s" onmouseover="this.style.borderColor='var(--green)';this.style.background='white'" onmouseout="this.style.borderColor='var(--cream-dark)'">
+      <div onclick="selectArtistSlot('${dateStr}','${s.time}','${s.key}')" style="cursor:pointer;background:white;border:1.5px solid var(--cream-dark);border-radius:10px;padding:10px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;transition:all 0.15s" onmouseover="this.style.borderColor='var(--green)';this.style.background='white'" onmouseout="this.style.borderColor='var(--cream-dark)'">
         <div>
           <div style="font-size:0.875rem;font-weight:500;color:var(--ink)">⏰ ${s.time}</div>
           ${s.notes ? `<div style="font-size:0.72rem;color:var(--ink-light);margin-top:2px">${s.notes}</div>` : ''}
@@ -3117,29 +3125,43 @@ function venueSelectDay(dateStr) {
   picker.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-function selectArtistSlot(date, time) {
-  // Fill the date/time inputs in the booking form
-  const dateInput = document.querySelector('#page-booking .form-input[type="date"]');
-  const timeInput = document.querySelector('#page-booking .form-input[type="time"]');
+function selectArtistSlot(date, time, slotKey) {
+  // Fill the locked date/time inputs in the booking form
+  const dateInput = document.getElementById('booking-date-field');
+  const timeInput = document.getElementById('booking-time-field');
   if (dateInput) dateInput.value = date;
   if (timeInput) {
     // time is like "19:00-22:00", take start
     timeInput.value = time.split('-')[0];
   }
-  // Show visual confirmation
+
+  // Store the slot key so we can remove it from availability after payment
+  window._selectedSlotKey = slotKey;
+
+  // Update hint text to confirm selection
+  const dateHint = document.getElementById('booking-date-hint');
+  const timeHint = document.getElementById('booking-time-hint');
+  if (dateHint) { dateHint.textContent = 'Date locked from artist availability.'; dateHint.style.color = 'var(--green)'; }
+  if (timeHint) { timeHint.textContent = 'Time locked from artist availability.'; timeHint.style.color = 'var(--green)'; }
+
+  // Update date/time fields to show locked state
+  if (dateInput) { dateInput.style.borderColor = 'var(--green)'; dateInput.style.background = 'var(--green-light)'; }
+  if (timeInput) { timeInput.style.borderColor = 'var(--green)'; timeInput.style.background = 'var(--green-light)'; }
+
+  // Show visual confirmation in slot picker
   const picker = document.getElementById('venue-slot-picker');
   if (picker) {
     picker.style.borderColor = 'var(--green)';
     picker.style.background = 'var(--green-light)';
     const confirmMsg = document.createElement('div');
-    confirmMsg.style.cssText = 'font-size:0.8rem;color:var(--green-mid);font-weight:500;margin-top:0.5rem;text-align:center';
-    confirmMsg.textContent = '✓ Slot selected — fill in your venue details below and submit.';
+    confirmMsg.style.cssText = 'font-size:0.8rem;color:var(--green-mid);font-weight:500;margin-top:0.5rem;text-align:center;padding:6px;background:white;border-radius:8px;border:1px solid #b2dfc9';
+    confirmMsg.textContent = 'Slot selected -- fill in your venue details below and submit.';
     const existingMsg = picker.querySelector('.slot-confirm-msg');
     if (existingMsg) existingMsg.remove();
     confirmMsg.className = 'slot-confirm-msg';
     picker.appendChild(confirmMsg);
   }
-  // Scroll to date field
+  // Scroll to form
   if (dateInput) dateInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
@@ -3196,12 +3218,15 @@ function submitBooking() {
   const artistId = 'artist-' + artistNumericId;
   const venueName = document.getElementById('booking-venue-name')?.value || 'your venue';
   const mapsUrl = mapsInput?.value?.trim() || '';
-  const bookingDate = document.querySelector('#page-booking .form-input[type="date"]')?.value || '';
-  const bookingTime = document.querySelector('#page-booking .form-input[type="time"]')?.value || '—';
+  const bookingDate = document.getElementById('booking-date-field')?.value || '';
+  const bookingTime = document.getElementById('booking-time-field')?.value || '—';
 
   if (!bookingDate) {
-    const dateInput = document.querySelector('#page-booking .form-input[type="date"]');
+    const dateInput = document.getElementById('booking-date-field');
     if (dateInput) { dateInput.style.borderColor='#c0392b'; dateInput.scrollIntoView({behavior:'smooth',block:'center'}); }
+    // Show a clear message to use the calendar
+    const dateHint = document.getElementById('booking-date-hint');
+    if (dateHint) { dateHint.textContent = 'Please select an available date from the artist calendar on the left.'; dateHint.style.color = '#c0392b'; }
     return;
   }
 
@@ -4320,7 +4345,9 @@ function removeSlot(artistId, date, time) {
 let pendingPaymentData = null;
 
 function goToPayment(artistName, artistId, date, time, venueInfo) {
-  pendingPaymentData = { artistName, artistId, date, time, venueInfo, slotKey: `${artistId}:${date}:${time}` };
+  // Use the exact slot key captured when the business selected the slot
+  const slotKey = window._selectedSlotKey || `${artistId}:${date}:${time.split('-')[0]}`;
+  pendingPaymentData = { artistName, artistId, date, time, venueInfo, slotKey };
 
   document.getElementById('pay-summary').innerHTML = `
     <div style="font-size:0.72rem;font-weight:500;text-transform:uppercase;letter-spacing:1.2px;color:var(--green);margin-bottom:1rem">Booking Summary</div>
@@ -4471,10 +4498,18 @@ function onPaymentSuccess(email, stripePaymentId) {
   if (!pendingPaymentData) return;
   const { artistName, artistId, date, time, venueInfo, slotKey } = pendingPaymentData;
 
-  // Mark slot as booked on the artist's calendar (create it if artist hadn't pre-added it)
+  // Remove the booked slot from the artist's availability so no other business can book it
   const store = getAvailabilityStore();
-  store[slotKey] = { ...( store[slotKey] || {}), status: 'booked', bookedBy: email };
+  if (store[slotKey]) {
+    // Mark as booked (keeps it visible as "booked" on artist's calendar) with booker info
+    store[slotKey] = { ...store[slotKey], status: 'booked', bookedBy: email };
+  } else {
+    // Slot key may be slightly different format — store it as booked anyway
+    store[slotKey] = { status: 'booked', bookedBy: email };
+  }
   saveAvailabilityStore(store);
+  // Clear the selected slot key so it can't be reused
+  window._selectedSlotKey = null;
 
   // Send EmailJS notification
   emailjs.init(EMAILJS_KEY);
