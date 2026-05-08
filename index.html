@@ -1799,6 +1799,74 @@ function saveBusinessBooking(email, booking) {
   localStorage.setItem('ls-biz-bookings-' + (email||'').toLowerCase(), JSON.stringify(bookings));
 }
 
+function cancelBusinessBooking(bookingIndex) {
+  const bookings = getBusinessBookings(currentUser.email);
+  const booking = bookings[bookingIndex];
+  if (!booking) return;
+
+  // Calculate days until the event for cancellation policy messaging
+  const eventDate = new Date(booking.date + 'T12:00:00');
+  const today = new Date(); today.setHours(0,0,0,0);
+  const daysUntil = Math.ceil((eventDate - today) / (1000 * 60 * 60 * 24));
+
+  let policyMsg = '';
+  let refundMsg = '';
+  if (daysUntil >= 14) {
+    policyMsg = `${daysUntil} days until the event.`;
+    refundMsg = '50% refund of the $99 coordination fee applies (14+ days notice).';
+  } else if (daysUntil >= 7) {
+    policyMsg = `${daysUntil} days until the event.`;
+    refundMsg = 'No refund applies (7–13 days notice).';
+  } else {
+    policyMsg = `Only ${daysUntil} day${daysUntil !== 1 ? 's' : ''} until the event.`;
+    refundMsg = 'No refund + 25% cancellation fee to the artist applies (under 7 days notice).';
+  }
+
+  const confirmed = window.confirm(
+    `Cancel booking?\n\n` +
+    `Artist: ${booking.artist}\n` +
+    `Date: ${booking.date} at ${booking.time || '—'}\n\n` +
+    `${policyMsg}\n` +
+    `Cancellation policy: ${refundMsg}\n\n` +
+    `Are you sure you want to cancel?`
+  );
+  if (!confirmed) return;
+
+  // Remove from business bookings list
+  bookings.splice(bookingIndex, 1);
+  localStorage.setItem('ls-biz-bookings-' + (currentUser.email || '').toLowerCase(), JSON.stringify(bookings));
+
+  // Re-open the slot on the artist's availability calendar so it can be rebooked
+  if (booking.artistId && booking.date && booking.time) {
+    const store = getAvailabilityStore();
+    // Try the exact slotKey formats
+    const timeStart = (booking.time || '').split('-')[0];
+    const possibleKeys = [
+      `${booking.artistId}:${booking.date}:${booking.time}`,
+      `${booking.artistId}:${booking.date}:${timeStart}`
+    ];
+    let found = false;
+    possibleKeys.forEach(key => {
+      if (store[key]) {
+        store[key] = { ...store[key], status: 'open', bookedBy: null };
+        found = true;
+      }
+    });
+    // If no key matched, scan for a booked slot on that artist+date and re-open it
+    if (!found) {
+      Object.keys(store).forEach(key => {
+        if (key.startsWith(booking.artistId + ':' + booking.date + ':') && store[key].status === 'booked') {
+          store[key] = { ...store[key], status: 'open', bookedBy: null };
+        }
+      });
+    }
+    saveAvailabilityStore(store);
+  }
+
+  // Re-render the bookings section
+  renderBusinessUpcomingEvents();
+}
+
 function getArtistAvailability(artistId) {
   const store = getAvailabilityStore();
   return Object.entries(store)
@@ -2880,20 +2948,32 @@ function renderBusinessUpcomingEvents() {
 
   if (upcoming.length > 0) {
     html += `<div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--green);margin-bottom:0.75rem">&#9989; Upcoming Bookings (${upcoming.length})</div>`;
-    html += upcoming.map(b => {
+    html += upcoming.map((b, i) => {
+      // Find actual index in the full bookings array for cancel
+      const fullIndex = bookings.indexOf(b);
       const d = new Date(b.date + 'T12:00:00');
       const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
       const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
       const shortDate = `${dayNames[d.getDay()]}, ${monthNames[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
       const venueParts = (b.venue || '').split(' · ');
       const venueName = venueParts[0] || b.venue;
-      return `<div style="background:var(--green-light);border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;border:1.5px solid #b2dfc9">
-        <div>
-          <div style="font-weight:600;font-size:0.9rem;color:var(--ink);margin-bottom:2px">&#127908; ${b.artist || 'Artist'}</div>
-          <div style="font-size:0.78rem;color:var(--green-mid);margin-top:2px">&#128197; ${shortDate} &nbsp;&middot;&nbsp; &#9200; ${b.time || '—'}</div>
-          <div style="font-size:0.72rem;color:var(--ink-light);margin-top:2px">&#128205; ${venueName}</div>
+      // Days until event for policy hint
+      const today2 = new Date(); today2.setHours(0,0,0,0);
+      const daysUntil = Math.ceil((d - today2) / (1000 * 60 * 60 * 24));
+      const policyHint = daysUntil >= 14 ? '50% refund eligible' : daysUntil >= 7 ? 'No refund' : 'No refund + cancellation fee';
+      return `<div style="background:var(--green-light);border-radius:14px;padding:14px 16px;margin-bottom:10px;border:1.5px solid #b2dfc9">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:600;font-size:0.9rem;color:var(--ink);margin-bottom:2px">&#127908; ${b.artist || 'Artist'}</div>
+            <div style="font-size:0.78rem;color:var(--green-mid);margin-top:2px">&#128197; ${shortDate} &nbsp;&middot;&nbsp; &#9200; ${b.time || '—'}</div>
+            <div style="font-size:0.72rem;color:var(--ink-light);margin-top:2px">&#128205; ${venueName}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
+            <span style="font-size:0.68rem;background:var(--green);color:white;padding:3px 10px;border-radius:100px;font-weight:600">CONFIRMED</span>
+            <button onclick="cancelBusinessBooking(${fullIndex})" style="font-size:0.68rem;background:transparent;border:1.5px solid #c0392b;color:#c0392b;padding:3px 10px;border-radius:100px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all 0.2s;white-space:nowrap" onmouseover="this.style.background='#c0392b';this.style.color='white'" onmouseout="this.style.background='transparent';this.style.color='#c0392b'">&#10005; Cancel</button>
+          </div>
         </div>
-        <span style="font-size:0.68rem;background:var(--green);color:white;padding:3px 10px;border-radius:100px;font-weight:600;flex-shrink:0">CONFIRMED</span>
+        <div style="margin-top:8px;font-size:0.68rem;color:var(--ink-light);border-top:1px solid #b2dfc9;padding-top:6px">&#9432; Cancellation policy: ${policyHint} &nbsp;&middot;&nbsp; ${daysUntil} day${daysUntil !== 1 ? 's' : ''} away</div>
       </div>`;
     }).join('');
   }
