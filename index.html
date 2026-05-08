@@ -2803,10 +2803,21 @@ function getBookingFormHTML() {
             <option>Pop-up / activation</option>
           </select>
         </div>
-        <div class="date-time-row">
-          <div class="form-field"><label class="form-label">Preferred date *</label><input class="form-input" type="date"></div>
-          <div class="form-field"><label class="form-label">Start time *</label><input class="form-input" type="time"></div>
+        <!-- Slot selection display — populated by clicking a slot in the calendar above -->
+        <div id="booking-slot-display" style="margin-bottom:1.25rem;display:none">
+          <label class="form-label">Selected date &amp; time *</label>
+          <div style="display:flex;align-items:center;gap:10px;background:var(--green-light);border:1.5px solid #b2dfc9;border-radius:10px;padding:12px 16px">
+            <span id="booking-slot-display-text" style="flex:1;font-size:0.9rem;font-weight:500;color:var(--green-mid)"></span>
+            <button type="button" onclick="clearBookingSlot()" style="background:transparent;border:none;font-size:0.85rem;color:var(--ink-light);cursor:pointer;padding:2px 6px;border-radius:100px;transition:color 0.2s" onmouseover="this.style.color='#c0392b'" onmouseout="this.style.color='var(--ink-light)'">✕ Change</button>
+          </div>
+          <!-- Hidden fields to hold the selected values -->
+          <input type="hidden" id="booking-selected-date" value="">
+          <input type="hidden" id="booking-selected-time" value="">
         </div>
+        <div id="booking-slot-prompt" style="margin-bottom:1.25rem;background:var(--cream);border-radius:10px;padding:12px 16px;border:1.5px dashed var(--cream-dark)">
+          <p style="font-size:0.82rem;color:var(--ink-light);margin:0">📅 Select an artist above, then click an available (green) date on their calendar to pick a time slot.</p>
+        </div>
+        <div id="booking-slot-error" style="display:none;font-size:0.78rem;color:#c0392b;margin-bottom:0.75rem">Please select a date and time from the artist's available slots above.</div>
         <div class="form-field"><label class="form-label">Venue capacity</label>
           <select class="form-input form-select">
             <option value="">Select capacity</option>
@@ -3178,6 +3189,16 @@ function selectBookingArtist(el) {
     rateDisplay.closest('[id="booking-rate-row"]').style.display = 'flex';
   }
 
+  // Clear any previously selected slot when switching artists
+  const dateHid = document.getElementById('booking-selected-date');
+  const timeHid = document.getElementById('booking-selected-time');
+  const display = document.getElementById('booking-slot-display');
+  const prompt = document.getElementById('booking-slot-prompt');
+  if (dateHid) dateHid.value = '';
+  if (timeHid) timeHid.value = '';
+  if (display) display.style.display = 'none';
+  if (prompt) prompt.style.display = 'block';
+
   // Reset venue calendar to current month when switching artists
   const now = new Date();
   venueCalYear = now.getFullYear();
@@ -3265,6 +3286,8 @@ function renderVenueAvailCalendar(artistNumericId) {
     </div>`;
   }
 
+  const hasAnyOpen = Object.keys(openByDate).length > 0;
+
   slotsContainer.innerHTML = `
     <div style="margin-top:1.25rem;background:var(--white);border-radius:16px;border:1px solid var(--cream-dark);overflow:hidden">
       <!-- Calendar header -->
@@ -3279,6 +3302,8 @@ function renderVenueAvailCalendar(artistNumericId) {
       </div>
       <!-- Day cells -->
       <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;padding:0 0.75rem 0.75rem">${calCells}</div>
+      <!-- No slots notice -->
+      ${!hasAnyOpen ? `<div style="padding:0.75rem 1.25rem;background:#fffbf0;border-top:1px solid var(--cream-dark);font-size:0.75rem;color:#9a6700;line-height:1.5">⏳ This artist hasn't posted open slots yet. Submit your request below and we'll check their availability within 24h.</div>` : ''}
       <!-- Legend -->
       <div style="display:flex;gap:1rem;padding:0.6rem 1.25rem;border-top:1px solid var(--cream-dark);font-size:0.68rem;color:var(--ink-light)">
         <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block"></span>Available — click to book</span>
@@ -3328,16 +3353,32 @@ function venueSelectDay(dateStr) {
   picker.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
+function clearBookingSlot() {
+  document.getElementById('booking-selected-date').value = '';
+  document.getElementById('booking-selected-time').value = '';
+  document.getElementById('booking-slot-display').style.display = 'none';
+  document.getElementById('booking-slot-prompt').style.display = 'block';
+  document.getElementById('booking-slot-error').style.display = 'none';
+}
+
 function selectArtistSlot(date, time) {
-  // Fill the date/time inputs in the booking form
-  const dateInput = document.querySelector('#page-booking .form-input[type="date"]');
-  const timeInput = document.querySelector('#page-booking .form-input[type="time"]');
+  // Store selected slot in hidden fields
+  const dateInput = document.getElementById('booking-selected-date');
+  const timeInput = document.getElementById('booking-selected-time');
   if (dateInput) dateInput.value = date;
-  if (timeInput) {
-    // time is like "19:00-22:00", take start
-    timeInput.value = time.split('-')[0];
-  }
-  // Show visual confirmation
+  if (timeInput) timeInput.value = time;
+
+  // Show the selected slot display
+  const display = document.getElementById('booking-slot-display');
+  const displayText = document.getElementById('booking-slot-display-text');
+  const prompt = document.getElementById('booking-slot-prompt');
+  const slotErr = document.getElementById('booking-slot-error');
+  if (displayText) displayText.textContent = '📅 ' + formatDateDisplay(date) + '  ·  ⏰ ' + time;
+  if (display) display.style.display = 'block';
+  if (prompt) prompt.style.display = 'none';
+  if (slotErr) slotErr.style.display = 'none';
+
+  // Show visual confirmation in slot picker
   const picker = document.getElementById('venue-slot-picker');
   if (picker) {
     picker.style.borderColor = 'var(--green)';
@@ -3407,12 +3448,12 @@ function submitBooking() {
   const artistId = artistRow ? artistRow.getAttribute('data-artist-id') : '0';
   const venueName = document.getElementById('booking-venue-name')?.value || 'your venue';
   const mapsUrl = mapsInput?.value?.trim() || '';
-  const bookingDate = document.querySelector('#page-booking .form-input[type="date"]')?.value || '';
-  const bookingTime = document.querySelector('#page-booking .form-input[type="time"]')?.value || '—';
+  const bookingDate = document.getElementById('booking-selected-date')?.value || '';
+  const bookingTime = document.getElementById('booking-selected-time')?.value || '—';
 
   if (!bookingDate) {
-    const dateInput = document.querySelector('#page-booking .form-input[type="date"]');
-    if (dateInput) { dateInput.style.borderColor='#c0392b'; dateInput.scrollIntoView({behavior:'smooth',block:'center'}); }
+    const slotErr = document.getElementById('booking-slot-error');
+    if (slotErr) { slotErr.style.display = 'block'; slotErr.scrollIntoView({behavior:'smooth',block:'center'}); }
     return;
   }
 
@@ -4514,14 +4555,39 @@ function renderAaSlotsList(artistId) {
     return { date: parts[1], time: parts.slice(2).join(':') };
   };
 
-  if (bookedSlots.length === 0 && existingSlots.length === 0) {
-    container.innerHTML = `<div style="padding:1.5rem;text-align:center;color:var(--ink-light);font-size:0.82rem;line-height:1.6">
-      <div style="font-size:1.5rem;margin-bottom:0.5rem">📅</div>No slots yet.<br>Click a date on the calendar to add one.
-    </div>`;
-    return;
-  }
+  // Pull next 3 upcoming shows from future events
+  const futureEvents = loadFutureEvents().slice(0, 3);
 
   let html = '';
+
+  // ── Next 3 upcoming shows ──────────────────────────────
+  if (futureEvents.length > 0) {
+    html += `<div style="font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--green);margin:0 0 8px;padding:0.75rem 1rem 0">Next 3 Shows</div>`;
+    futureEvents.forEach(ev => {
+      const typeColor = ev.type === 'booked' ? 'var(--green)' : ev.type === 'performing' ? '#c0392b' : 'var(--ink)';
+      const typeLabel = ev.type === 'booked' ? 'Booked' : ev.type === 'performing' ? 'Live' : 'Upcoming';
+      html += `<div class="aa-sched-row" style="padding:0.6rem 1rem">
+        <div class="aa-sched-dot" style="background:${typeColor}"></div>
+        <div>
+          <div class="aa-sched-date" style="font-weight:600">${ev.title}</div>
+          <div class="aa-sched-time">${formatDateDisplay(ev.date)}${ev.time ? ' · ⏰ ' + ev.time : ''}${ev.venue ? ' · ' + ev.venue : ''}</div>
+        </div>
+        <span class="aa-sched-tag" style="background:${typeColor};color:white;font-size:0.58rem;padding:2px 8px;border-radius:100px;font-weight:700">${typeLabel}</span>
+      </div>`;
+    });
+    html += `<div style="height:1px;background:var(--cream-dark);margin:8px 0"></div>`;
+  }
+
+  if (bookedSlots.length === 0 && existingSlots.length === 0) {
+    if (futureEvents.length === 0) {
+      container.innerHTML = `<div style="padding:1.5rem;text-align:center;color:var(--ink-light);font-size:0.82rem;line-height:1.6">
+        <div style="font-size:1.5rem;margin-bottom:0.5rem">📅</div>No slots yet.<br>Click a date on the calendar to add one.
+      </div>`;
+    } else {
+      container.innerHTML = html;
+    }
+    return;
+  }
 
   bookedSlots.forEach(([k, v]) => {
     const { date, time } = parseKey(k);
