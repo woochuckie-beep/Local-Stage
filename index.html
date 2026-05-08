@@ -3191,7 +3191,9 @@ function submitBooking() {
 
   const artistRow = document.querySelector('.pick-artist-row.selected');
   const artistName = artistRow ? artistRow.querySelector('.pick-name').textContent : 'Selected artist';
-  const artistId = artistRow ? artistRow.getAttribute('data-artist-id') : '0';
+  const artistNumericId = artistRow ? artistRow.getAttribute('data-artist-id') : '0';
+  // Must match the key format artists use when setting availability: "artist-{numericId}"
+  const artistId = 'artist-' + artistNumericId;
   const venueName = document.getElementById('booking-venue-name')?.value || 'your venue';
   const mapsUrl = mapsInput?.value?.trim() || '';
   const bookingDate = document.querySelector('#page-booking .form-input[type="date"]')?.value || '';
@@ -4437,11 +4439,9 @@ function onPaymentSuccess(email, stripePaymentId) {
   if (!pendingPaymentData) return;
   const { artistName, artistId, date, time, venueInfo, slotKey } = pendingPaymentData;
 
-  // Mark slot as booked
+  // Mark slot as booked on the artist's calendar (create it if artist hadn't pre-added it)
   const store = getAvailabilityStore();
-  if (store[slotKey]) {
-    store[slotKey] = { ...store[slotKey], status: 'booked', bookedBy: email };
-  }
+  store[slotKey] = { ...( store[slotKey] || {}), status: 'booked', bookedBy: email };
   saveAvailabilityStore(store);
 
   // Send EmailJS notification
