@@ -584,6 +584,98 @@
     border: 2px solid rgba(255,255,255,0.35); border-top-color: white;
     border-radius: 50%; animation: spin 0.7s linear infinite;
   }
+  /* ═══════════════════════════════
+     ─── ARTIST PORTAL ───
+  ═══════════════════════════════ */
+  #page-artist-availability { background: var(--cream); padding-top: 80px; min-height: 100vh; }
+  .aa-hero { background: linear-gradient(135deg, #0d6e4e 0%, #1a9b6c 100%); padding: 3.5rem 3rem 3rem; }
+  .aa-hero-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 2rem; flex-wrap: wrap; }
+  .aa-hero h1 { font-family: var(--serif); font-size: clamp(1.8rem, 3vw, 2.5rem); color: white; margin-bottom: 0.3rem; letter-spacing: -0.5px; }
+  .aa-hero p { font-size: 0.9rem; color: rgba(255,255,255,0.75); line-height: 1.6; }
+  #aa-portal-name { color: #5dcaa5; }
+
+  .aa-layout { max-width: 1200px; margin: 0 auto; padding: 2.5rem 3rem; display: grid; grid-template-columns: 280px 1fr 300px; gap: 2rem; align-items: start; }
+
+  /* Calendar column */
+  .aa-cal-card { background: var(--white); border-radius: 20px; border: 1px solid var(--cream-dark); overflow: hidden; }
+  .aa-cal-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.1rem; border-bottom: 1px solid var(--cream-dark); }
+  .aa-cal-nav { background: var(--cream); border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; color: var(--ink-mid); transition: background 0.2s; }
+  .aa-cal-nav:hover { background: var(--cream-dark); }
+  .aa-cal-title { font-family: var(--serif); font-size: 0.95rem; color: var(--ink); }
+  .aa-cal-dow { display: grid; grid-template-columns: repeat(7,1fr); text-align: center; padding: 0.5rem 0.75rem 0; }
+  .aa-cal-dow span { font-size: 0.58rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--ink-light); padding-bottom: 0.35rem; }
+  .aa-cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; padding: 0 0.75rem 0.75rem; }
+  .aa-cal-day { border-radius: 7px; padding: 5px 2px; text-align: center; cursor: pointer; transition: all 0.15s; border: 1.5px solid transparent; position: relative; }
+  .aa-cal-day:hover:not(.past) { background: var(--cream); }
+  .aa-cal-day.past { cursor: default; opacity: 0.35; }
+  .aa-cal-day.has-open { background: var(--green-light); border-color: #b2dfc9; }
+  .aa-cal-day.has-booked { background: #fde8e8; border-color: #f5b7b1; }
+  .aa-cal-day.is-today { border-color: var(--ink-light) !important; }
+  .aa-cal-day.selected { border-color: var(--ink) !important; box-shadow: 0 0 0 2px rgba(26,26,24,0.1); }
+  .aa-cal-day .day-num { font-size: 0.72rem; font-weight: 400; color: var(--ink); line-height: 1; }
+  .aa-cal-day.past .day-num { color: #bbb; }
+  .aa-cal-day.has-open .day-num { color: var(--green-mid); font-weight: 600; }
+  .aa-cal-day.has-booked .day-num { color: #c0392b; font-weight: 600; }
+  .aa-cal-day .day-dot { width: 4px; height: 4px; border-radius: 50%; margin: 2px auto 0; }
+  .aa-cal-day.has-open .day-dot { background: var(--green); }
+  .aa-cal-day.has-booked .day-dot { background: #c0392b; }
+  .aa-cal-legend { display: flex; gap: 10px; flex-wrap: wrap; padding: 0.6rem 1rem; border-top: 1px solid var(--cream-dark); }
+  .aa-cal-legend span { display: flex; align-items: center; gap: 5px; font-size: 0.62rem; color: var(--ink-light); }
+  .aa-cal-legend i { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* Day detail column */
+  .aa-day-card { background: var(--white); border-radius: 20px; border: 1px solid var(--cream-dark); overflow: hidden; min-height: 260px; }
+  .aa-day-card-header { padding: 1.1rem 1.4rem; border-bottom: 1px solid var(--cream-dark); display: flex; align-items: center; justify-content: space-between; gap: 1rem; background: var(--white); }
+  .aa-day-card-title { font-family: var(--serif); font-size: 1.1rem; color: var(--ink); }
+  .aa-day-card-sub { font-size: 0.72rem; color: var(--ink-light); margin-top: 2px; }
+  .aa-day-card-body { padding: 1.25rem 1.4rem; }
+  .aa-day-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3.5rem 2rem; text-align: center; color: var(--ink-light); gap: 0.5rem; }
+  .aa-day-empty .icon { font-size: 2rem; opacity: 0.5; }
+  .aa-day-empty p { font-size: 0.85rem; line-height: 1.6; }
+
+  /* Slot row inside day detail */
+  .aa-slot-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border-radius: 12px; margin-bottom: 6px; border: 1px solid transparent; }
+  .aa-slot-row.open { background: var(--green-light); border-color: #b2dfc9; }
+  .aa-slot-row.booked { background: #fde8e8; border-color: #f5b7b1; }
+  .aa-slot-time { font-size: 0.875rem; font-weight: 600; color: var(--ink); }
+  .aa-slot-meta { font-size: 0.7rem; color: var(--ink-light); margin-top: 2px; }
+  .aa-slot-row.booked .aa-slot-meta { color: #c0392b; }
+  .aa-slot-badge { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 3px 9px; border-radius: 100px; white-space: nowrap; flex-shrink: 0; }
+  .aa-slot-badge.confirmed { background: #c0392b; color: white; }
+  .aa-slot-badge.open { background: var(--green); color: white; }
+  .aa-slot-remove { background: transparent; border: 1.5px solid var(--cream-dark); border-radius: 100px; padding: 3px 9px; font-size: 0.68rem; color: var(--ink-light); cursor: pointer; font-family: var(--sans); transition: all 0.2s; white-space: nowrap; }
+  .aa-slot-remove:hover { border-color: #c0392b; color: #c0392b; }
+
+  /* Add-slot form panel */
+  .aa-add-panel { background: var(--white); border-radius: 20px; border: 1px solid var(--cream-dark); padding: 1.4rem; margin-top: 1rem; display: none; }
+  .aa-add-panel h4 { font-family: var(--serif); font-size: 1rem; color: var(--ink); margin-bottom: 0.2rem; }
+  .aa-add-panel p { font-size: 0.75rem; color: var(--ink-light); margin-bottom: 1rem; }
+
+  /* Right schedule column */
+  .aa-schedule-card { background: var(--white); border-radius: 20px; border: 1px solid var(--cream-dark); overflow: hidden; }
+  .aa-schedule-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--cream-dark); display: flex; align-items: center; justify-content: space-between; }
+  .aa-schedule-header h3 { font-family: var(--serif); font-size: 1rem; color: var(--ink); }
+  .aa-sched-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--cream-dark); transition: background 0.15s; cursor: pointer; }
+  .aa-sched-row:last-child { border-bottom: none; }
+  .aa-sched-row:hover { background: var(--cream); }
+  .aa-sched-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .aa-sched-dot.open { background: var(--green); }
+  .aa-sched-dot.booked { background: #c0392b; }
+  .aa-sched-date { font-size: 0.78rem; font-weight: 500; color: var(--ink); }
+  .aa-sched-time { font-size: 0.7rem; color: var(--ink-light); margin-top: 1px; }
+  .aa-sched-tag { margin-left: auto; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 2px 8px; border-radius: 100px; white-space: nowrap; }
+  .aa-sched-tag.open { background: var(--green-light); color: var(--green); }
+  .aa-sched-tag.booked { background: #fde8e8; color: #c0392b; }
+
+  /* Future events mini-list */
+  .aa-event-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--cream-dark); }
+  .aa-event-row:last-child { border-bottom: none; }
+  .aa-event-date-badge { width: 36px; height: 36px; border-radius: 10px; background: var(--green-light); border: 1.5px solid #b2dfc9; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; }
+  .aa-event-date-badge .mo { font-size: 0.5rem; font-weight: 700; text-transform: uppercase; color: var(--green); letter-spacing: 0.5px; }
+  .aa-event-date-badge .dy { font-family: var(--serif); font-size: 0.95rem; color: var(--green-mid); line-height: 1; }
+  .aa-event-title { font-size: 0.78rem; font-weight: 500; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .aa-event-sub { font-size: 0.68rem; color: var(--ink-light); margin-top: 1px; }
+
   @media (max-width: 768px) {
     nav { padding: 1rem 1.5rem; }
     .nav-links { display: none; }
@@ -611,6 +703,7 @@
     #ap-content-grid { grid-template-columns: 1fr !important; }
     #ap-banner { padding: 4rem 1.5rem 1.5rem !important; }
     #ap-banner > div { flex-direction: column; gap: 1rem; }
+    .aa-layout { grid-template-columns: 1fr; padding: 1.5rem; }
   }
 </style>
 </head>
@@ -1289,38 +1382,40 @@
      PAGE: ARTIST AVAILABILITY CALENDAR
 ══════════════════════════════════════ -->
 <div id="page-artist-availability" class="page">
-  <div class="booking-hero" style="background:linear-gradient(135deg,#0a4d38 0%,#1a9b6c 100%)">
-    <div class="booking-hero-inner">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.75rem">
-        <span style="font-size:0.75rem;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.6)">🎤 Artist Portal</span>
-        <span style="font-size:0.75rem;color:rgba(255,255,255,0.3)">·</span>
-        <span id="aa-portal-name" style="font-size:0.8rem;color:rgba(255,255,255,0.7)"></span>
+
+  <!-- Hero -->
+  <div class="aa-hero">
+    <div class="aa-hero-inner">
+      <div>
+        <div style="font-size:0.7rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:0.4rem">🎤 Artist Portal</div>
+        <h1 class="aa-hero">My Availability</h1>
+        <p>Mark the dates and times you're free to perform. Venues see your open slots and can book directly.</p>
       </div>
-      <h1 id="aa-title">My Availability Dashboard</h1>
-      <p id="aa-sub">Add the dates and times you're free to perform. Businesses will only be able to book the slots you approve here.</p>
-      <div style="display:flex;gap:1rem;margin-top:1.25rem;flex-wrap:wrap">
-        <button onclick="showPage('home')" style="background:transparent;border:1.5px solid rgba(255,255,255,0.3);color:rgba(255,255,255,0.8);padding:7px 18px;border-radius:100px;font-family:var(--sans);font-size:0.8rem;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='white';this.style.color='white'" onmouseout="this.style.borderColor='rgba(255,255,255,0.3)';this.style.color='rgba(255,255,255,0.8)'">← Home</button>
-        <button onclick="signOut()" style="background:transparent;border:1.5px solid rgba(255,0,0,0.3);color:rgba(255,180,180,0.9);padding:7px 18px;border-radius:100px;font-family:var(--sans);font-size:0.8rem;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='#c0392b';this.style.color='#ff9999'" onmouseout="this.style.borderColor='rgba(255,0,0,0.3)';this.style.color='rgba(255,180,180,0.9)'">Sign out</button>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.5rem">
+        <span id="aa-portal-name" style="font-size:0.85rem;font-weight:500;color:rgba(255,255,255,0.85)"></span>
+        <div style="display:flex;gap:0.75rem">
+          <button onclick="showPage('home')" style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.85);padding:6px 16px;border-radius:100px;font-family:var(--sans);font-size:0.78rem;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">← Home</button>
+          <button onclick="signOut()" style="background:rgba(192,57,43,0.25);border:1px solid rgba(192,57,43,0.4);color:rgba(255,180,180,0.9);padding:6px 16px;border-radius:100px;font-family:var(--sans);font-size:0.78rem;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(192,57,43,0.4)'" onmouseout="this.style.background='rgba(192,57,43,0.25)'">Sign out</button>
+        </div>
       </div>
     </div>
   </div>
-  <div class="booking-content" style="max-width:860px">
-    <div id="aa-auth-gate" style="text-align:center;padding:4rem 2rem;display:none">
-      <div style="font-size:3rem;margin-bottom:1rem">🔒</div>
-      <h2 style="font-family:var(--serif);font-size:1.8rem;margin-bottom:0.75rem">Sign in to manage availability</h2>
-      <p style="color:var(--ink-light);margin-bottom:2rem">Artist accounts only. Sign in with your approved artist email.</p>
-      <button class="btn-primary" onclick="openLogin()">Sign in →</button>
-    </div>
-    <div id="aa-form-area">
-      <!-- populated by renderArtistAvailability() -->
-    </div>
+
+  <!-- Auth gate -->
+  <div id="aa-auth-gate" style="display:none;text-align:center;padding:6rem 2rem">
+    <div style="font-size:3rem;margin-bottom:1rem">🔒</div>
+    <h2 style="font-family:var(--serif);font-size:1.8rem;color:var(--ink);margin-bottom:0.75rem">Sign in to manage availability</h2>
+    <p style="color:var(--ink-light);margin-bottom:2rem;font-size:0.95rem">Artist accounts only. Sign in with your approved artist email.</p>
+    <button class="btn-primary" onclick="openLogin()">Sign in →</button>
   </div>
-  <footer>
+
+  <!-- 3-column layout (rendered by JS) -->
+  <div id="aa-form-area"></div>
+
+  <footer style="margin-top:2rem">
     <div class="footer-logo">Local<span>Stage</span></div>
     <div class="footer-copy">© 2026 LocalStage · Ontario, Canada</div>
-    <div class="footer-links">
-      <a onclick="showPage('home')">Home</a>
-    </div>
+    <div class="footer-links"><a onclick="showPage('home')">Home</a></div>
   </footer>
 </div><!-- /page-artist-availability -->
 
@@ -2211,29 +2306,23 @@ function renderFutureEvents() {
   const events = loadFutureEvents();
 
   if (events.length === 0) {
-    container.innerHTML = `
-      <div style="background:var(--cream);border-radius:14px;padding:2rem;text-align:center;color:var(--ink-light);font-size:0.875rem;line-height:1.6">
-        <div style="font-size:1.75rem;margin-bottom:0.5rem">🗓️</div>
-        No upcoming events yet.<br>Events are added automatically when you book or set availability.
-      </div>`;
+    container.innerHTML = `<div style="padding:1rem 1.25rem;text-align:center;color:var(--ink-light);font-size:0.8rem;line-height:1.6">No events yet. Add one above.</div>`;
     return;
   }
 
   container.innerHTML = events.map(ev => `
-    <div style="background:var(--white);border-radius:14px;padding:1rem 1.25rem;margin-bottom:10px;display:flex;align-items:center;gap:1rem;border:1.5px solid var(--cream-dark);transition:box-shadow 0.15s" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.07)'" onmouseout="this.style.boxShadow='none'">
-      <div style="flex-shrink:0;width:44px;height:44px;border-radius:12px;background:var(--green-light);display:flex;flex-direction:column;align-items:center;justify-content:center;border:1.5px solid #b2dfc9">
-        <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--green)">${formatEventMonth(ev.date)}</div>
-        <div style="font-family:var(--serif);font-size:1.1rem;color:var(--green-mid);line-height:1">${formatEventDay(ev.date)}</div>
+    <div class="aa-event-row">
+      <div class="aa-event-date-badge">
+        <div class="mo">${formatEventMonth(ev.date)}</div>
+        <div class="dy">${formatEventDay(ev.date)}</div>
       </div>
       <div style="flex:1;min-width:0">
-        <div style="font-weight:600;font-size:0.9rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ev.title}</div>
-        <div style="font-size:0.75rem;color:var(--ink-light);margin-top:2px">
-          ${ev.time ? `⏰ ${ev.time}` : ''}${ev.time && ev.venue ? ' · ' : ''}${ev.venue ? `📍 ${ev.venue}` : ''}
-        </div>
+        <div class="aa-event-title">${ev.title}</div>
+        <div class="aa-event-sub">${ev.time ? '⏰ ' + ev.time : ''}${ev.time && ev.venue ? ' · ' : ''}${ev.venue ? ev.venue : ''}</div>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-        <span style="font-size:0.7rem;background:${ev.type === 'booked' ? 'var(--green)' : ev.type === 'performing' ? '#c0392b' : 'var(--ink)'};color:white;padding:3px 10px;border-radius:100px;font-weight:600;white-space:nowrap">${ev.type === 'booked' ? 'BOOKED' : ev.type === 'performing' ? 'PERFORMING' : 'UPCOMING'}</span>
-        <button onclick="removeFutureEvent('${ev.id}')" style="background:transparent;border:1.5px solid var(--cream-dark);border-radius:100px;padding:4px 10px;font-size:0.7rem;color:var(--ink-light);cursor:pointer;font-family:var(--sans);transition:all 0.2s;white-space:nowrap" onmouseover="this.style.borderColor='#c0392b';this.style.color='#c0392b'" onmouseout="this.style.borderColor='var(--cream-dark)';this.style.color='var(--ink-light)'">✕</button>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        <span style="font-size:0.58rem;font-weight:700;text-transform:uppercase;padding:2px 8px;border-radius:100px;background:${ev.type==='booked'?'var(--green)':ev.type==='performing'?'#c0392b':'var(--ink)'};color:white">${ev.type==='booked'?'Booked':ev.type==='performing'?'Live':'Soon'}</span>
+        <button onclick="removeFutureEvent('${ev.id}')" class="aa-slot-remove">✕</button>
       </div>
     </div>
   `).join('');
@@ -3969,80 +4058,67 @@ function renderArtistAvailability() {
   if (!currentUser || currentUser.userType !== 'artist') {
     document.getElementById('aa-auth-gate').style.display = 'block';
     document.getElementById('aa-form-area').innerHTML = '';
-    // Reset portal name label too
     const portalName = document.getElementById('aa-portal-name');
     if (portalName) portalName.textContent = '';
     return;
   }
   document.getElementById('aa-auth-gate').style.display = 'none';
 
-  // Update the header name badge
   const portalName = document.getElementById('aa-portal-name');
   if (portalName) portalName.textContent = currentUser.artistName || currentUser.email;
 
-  // Use roster-based key if we resolved a name match (e.g. "artist-1" for Maya Reyes id:1)
-  // Fall back to email-based key for artists not yet mapped in the sheet
   const artistId = currentUser.artistId ? 'artist-' + currentUser.artistId : 'artist-' + currentUser.email.replace(/[^a-z0-9]/g,'');
   const today = new Date();
   if (aaCalYear === null) { aaCalYear = today.getFullYear(); aaCalMonth = today.getMonth(); }
 
   document.getElementById('aa-form-area').innerHTML = `
-    <div style="display:flex;align-items:center;gap:10px;background:var(--green-light);border-radius:12px;padding:12px 16px;margin-bottom:2rem;font-size:0.875rem;color:var(--green-mid)">
-      <span>✓</span>
-      <span>Signed in as${currentUser.artistName ? " <strong>" + currentUser.artistName + "</strong> (" + currentUser.email + ")" : " artist: <strong>" + currentUser.email + "</strong>"}</span>
-    </div>
+    <div class="aa-layout">
 
-    <!-- 3-column grid: Calendar | Day Detail + Add Form | Full Schedule -->
-    <div style="display:grid;grid-template-columns:auto 1fr 1fr;gap:1.5rem;align-items:start">
-
-      <!-- COL 1: Calendar only -->
-      <div style="min-width:260px;max-width:300px">
-        <div style="background:var(--white);border-radius:20px;border:1px solid var(--cream-dark);overflow:hidden">
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;border-bottom:1px solid var(--cream-dark)">
-            <button onclick="aaNavMonth(-1)" style="background:var(--cream);border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:background 0.2s" onmouseover="this.style.background='var(--cream-dark)'" onmouseout="this.style.background='var(--cream)'">‹</button>
-            <div style="font-family:var(--serif);font-size:1rem;color:var(--ink)" id="aa-cal-title"></div>
-            <button onclick="aaNavMonth(1)" style="background:var(--cream);border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:background 0.2s" onmouseover="this.style.background='var(--cream-dark)'" onmouseout="this.style.background='var(--cream)'">›</button>
+      <!-- COL 1: Calendar -->
+      <div>
+        <div class="aa-cal-card">
+          <div class="aa-cal-header">
+            <button class="aa-cal-nav" onclick="aaNavMonth(-1)">‹</button>
+            <div class="aa-cal-title" id="aa-cal-title"></div>
+            <button class="aa-cal-nav" onclick="aaNavMonth(1)">›</button>
           </div>
-          <div style="display:grid;grid-template-columns:repeat(7,1fr);text-align:center;padding:0.6rem 0.75rem 0">
-            ${['S','M','T','W','T','F','S'].map(d=>`<div style="font-size:0.6rem;font-weight:700;text-transform:uppercase;color:var(--ink-light);padding-bottom:0.4rem">${d}</div>`).join('')}
+          <div class="aa-cal-dow">
+            ${['S','M','T','W','T','F','S'].map(d=>`<span>${d}</span>`).join('')}
           </div>
-          <div id="aa-cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;padding:0 0.75rem 0.75rem"></div>
-          <div style="display:flex;flex-wrap:wrap;gap:8px;padding:0.6rem 1rem;border-top:1px solid var(--cream-dark);font-size:0.65rem;color:var(--ink-light)">
-            <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block"></span>Available</span>
-            <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#c0392b;display:inline-block"></span>Booked</span>
+          <div class="aa-cal-grid" id="aa-cal-grid"></div>
+          <div class="aa-cal-legend">
+            <span><i style="background:var(--green)"></i>Available</span>
+            <span><i style="background:#c0392b"></i>Booked</span>
           </div>
         </div>
-        <p style="font-size:0.72rem;color:var(--ink-light);margin-top:0.75rem;line-height:1.5;text-align:center">Click a date to view or add slots.</p>
+        <p style="font-size:0.7rem;color:var(--ink-light);margin-top:0.75rem;line-height:1.5;text-align:center;padding:0 0.5rem">Click any date to view or add slots.</p>
       </div>
 
-      <!-- COL 2: Day detail panel (slots for selected day + add form) -->
+      <!-- COL 2: Day detail + add form -->
       <div>
-        <!-- Day detail — shown after clicking a date -->
-        <div id="aa-day-panel" style="background:var(--white);border-radius:20px;border:1px solid var(--cream-dark);overflow:hidden;margin-bottom:1rem">
-          <!-- Empty state -->
-          <div id="aa-day-empty" style="padding:2.5rem 1.5rem;text-align:center;color:var(--ink-light)">
-            <div style="font-size:2rem;margin-bottom:0.5rem">📅</div>
-            <div style="font-size:0.875rem;line-height:1.6">Select a date on the<br>calendar to see details.</div>
+        <div class="aa-day-card">
+          <div id="aa-day-empty" class="aa-day-empty">
+            <div class="icon">📅</div>
+            <p>Select a date on the calendar<br>to see your slots for that day.</p>
           </div>
-          <!-- Loaded state (hidden until day selected) -->
           <div id="aa-day-content" style="display:none">
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;border-bottom:1px solid var(--cream-dark);background:var(--cream)">
+            <div class="aa-day-card-header">
               <div>
-                <div style="font-family:var(--serif);font-size:1.05rem;color:var(--ink)" id="aa-day-title"></div>
-                <div style="font-size:0.72rem;color:var(--ink-light);margin-top:2px" id="aa-day-subtitle"></div>
+                <div class="aa-day-card-title" id="aa-day-title"></div>
+                <div class="aa-day-card-sub" id="aa-day-sub"></div>
               </div>
-              <button id="aa-add-slot-btn" onclick="aaShowAddForm()" style="background:var(--green);color:white;border:none;border-radius:100px;padding:6px 14px;font-family:var(--sans);font-size:0.75rem;font-weight:500;cursor:pointer;white-space:nowrap;transition:opacity 0.2s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">+ Add slot</button>
+              <button id="aa-add-slot-btn" onclick="aaShowAddForm()" style="background:var(--green);color:white;border:none;border-radius:100px;padding:7px 16px;font-family:var(--sans);font-size:0.78rem;font-weight:500;cursor:pointer;white-space:nowrap;transition:opacity 0.2s;flex-shrink:0" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">+ Add slot</button>
             </div>
-            <div id="aa-day-slots" style="padding:1rem 1.25rem"></div>
+            <div class="aa-day-card-body" id="aa-day-slots"></div>
           </div>
         </div>
 
-        <!-- Add slot form — shown when + Add slot is clicked -->
-        <div id="aa-add-panel" style="background:var(--white);border-radius:20px;padding:1.5rem;border:1px solid var(--cream-dark);display:none">
-          <h3 style="font-family:var(--serif);font-size:1.05rem;color:var(--ink);margin-bottom:0.2rem">Add availability for <span id="aa-selected-date-label" style="color:var(--green)"></span></h3>
-          <p style="font-size:0.78rem;color:var(--ink-light);margin-bottom:1rem">Set a time range when you're free to perform.</p>
+        <!-- Add slot form -->
+        <div class="aa-add-panel" id="aa-add-panel">
+          <h4>Add slot for <span id="aa-selected-date-label" style="color:var(--green)"></span></h4>
+          <p>Set the time range when you're free to perform.</p>
           <input type="hidden" id="aa-date">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.75rem">
             <div class="form-field" style="margin-bottom:0">
               <label class="form-label">Start time *</label>
               <input class="form-input" type="time" id="aa-start" value="19:00">
@@ -4052,49 +4128,53 @@ function renderArtistAvailability() {
               <input class="form-input" type="time" id="aa-end" value="22:00">
             </div>
           </div>
-          <div class="form-field" style="margin-top:0.75rem;margin-bottom:0">
+          <div class="form-field" style="margin-bottom:0.75rem">
             <label class="form-label">Notes (optional)</label>
             <input class="form-input" type="text" id="aa-notes" placeholder="e.g. Prefer venues in Mississauga">
           </div>
-          <div id="aa-add-error" style="display:none;background:#fde8e8;border-radius:10px;padding:8px 12px;font-size:0.8rem;color:#c0392b;margin-top:0.75rem"></div>
-          <div style="display:flex;gap:10px;margin-top:1rem">
-            <button onclick="addAvailabilitySlot('${artistId}')" style="flex:1;background:var(--green);color:white;border:none;border-radius:100px;padding:0.7rem;font-family:var(--sans);font-size:0.875rem;font-weight:500;cursor:pointer;transition:opacity 0.2s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">+ Save slot</button>
-            <button onclick="aaHideAddForm()" style="background:transparent;color:var(--ink-mid);border:1.5px solid var(--cream-dark);border-radius:100px;padding:0.7rem 1.1rem;font-family:var(--sans);font-size:0.875rem;cursor:pointer">Cancel</button>
+          <div id="aa-add-error" style="display:none;background:#fde8e8;border-radius:10px;padding:8px 12px;font-size:0.78rem;color:#c0392b;margin-bottom:0.75rem"></div>
+          <div style="display:flex;gap:8px">
+            <button onclick="addAvailabilitySlot('${artistId}')" style="flex:1;background:var(--green);color:white;border:none;border-radius:100px;padding:0.7rem;font-family:var(--sans);font-size:0.85rem;font-weight:500;cursor:pointer;transition:opacity 0.2s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">Save slot →</button>
+            <button onclick="aaHideAddForm()" style="background:transparent;color:var(--ink-mid);border:1.5px solid var(--cream-dark);border-radius:100px;padding:0.7rem 1rem;font-family:var(--sans);font-size:0.85rem;cursor:pointer;transition:border-color 0.2s" onmouseover="this.style.borderColor='var(--ink-mid)'" onmouseout="this.style.borderColor='var(--cream-dark)'">Cancel</button>
           </div>
         </div>
       </div>
 
-      <!-- COL 3: Full schedule — all open slots + confirmed bookings -->
+      <!-- COL 3: Schedule + Events -->
       <div>
         <!-- Future Events -->
-        <div style="margin-bottom:1.5rem">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
-            <h3 style="font-family:var(--serif);font-size:1.15rem;color:var(--ink)">🗓️ Future Events</h3>
-            <button onclick="showAddEventModal()" style="background:var(--ink);color:white;border:none;border-radius:100px;padding:5px 12px;font-family:var(--sans);font-size:0.72rem;font-weight:500;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='var(--green)'" onmouseout="this.style.background='var(--ink)'">+ Add</button>
+        <div class="aa-schedule-card" style="margin-bottom:1.25rem">
+          <div class="aa-schedule-header">
+            <h3>🗓️ Events</h3>
+            <button onclick="showAddEventModal()" style="background:transparent;border:1.5px solid var(--cream-dark);color:var(--ink-mid);border-radius:100px;padding:4px 12px;font-family:var(--sans);font-size:0.72rem;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'" onmouseout="this.style.borderColor='var(--cream-dark)';this.style.color='var(--ink-mid)'">+ Add</button>
           </div>
           <div id="future-events-section"></div>
         </div>
         <!-- Full schedule -->
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
-          <h3 style="font-family:var(--serif);font-size:1.15rem;color:var(--ink)">Your Full Schedule</h3>
+        <div class="aa-schedule-card">
+          <div class="aa-schedule-header">
+            <h3>📋 Full Schedule</h3>
+          </div>
+          <div id="aa-slots-list"></div>
         </div>
-        <div id="aa-slots-list"></div>
       </div>
-    </div>
 
-    <!-- Add Event Modal (inline) -->
+    </div><!-- /aa-layout -->
+
+    <!-- Add Event Modal -->
     <div id="add-event-modal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(26,26,24,0.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:1.5rem">
-      <div style="background:var(--white);border-radius:20px;padding:2rem;width:100%;max-width:440px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.2)">
-        <button onclick="hideAddEventModal()" style="position:absolute;top:1rem;right:1rem;background:var(--cream);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center">✕</button>
-        <h3 style="font-family:var(--serif);font-size:1.4rem;color:var(--ink);margin-bottom:0.25rem">Add Future Event</h3>
-        <p style="font-size:0.82rem;color:var(--ink-light);margin-bottom:1.5rem">Events past their date will be removed automatically.</p>
+      <div style="background:var(--white);border-radius:24px;padding:2rem;width:100%;max-width:440px;position:relative;box-shadow:0 24px 80px rgba(0,0,0,0.18)">
+        <button onclick="hideAddEventModal()" style="position:absolute;top:1rem;right:1rem;background:var(--cream);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;color:var(--ink-mid)">✕</button>
+        <h3 style="font-family:var(--serif);font-size:1.4rem;color:var(--ink);margin-bottom:0.2rem">Add Event</h3>
+        <p style="font-size:0.82rem;color:var(--ink-light);margin-bottom:1.5rem">Past events are removed automatically.</p>
         <div class="form-field"><label class="form-label">Event title *</label><input class="form-input" type="text" id="new-event-title" placeholder="e.g. Live at The Dock"></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
           <div class="form-field" style="margin-bottom:0"><label class="form-label">Date *</label><input class="form-input" type="date" id="new-event-date"></div>
           <div class="form-field" style="margin-bottom:0"><label class="form-label">Time</label><input class="form-input" type="time" id="new-event-time"></div>
         </div>
-        <div class="form-field" style="margin-top:1rem"><label class="form-label">Venue / location</label><input class="form-input" type="text" id="new-event-venue" placeholder="e.g. The Dock, Mississauga"></div>
-        <div class="form-field"><label class="form-label">Type</label>
+        <div class="form-field" style="margin-top:1rem"><label class="form-label">Venue</label><input class="form-input" type="text" id="new-event-venue" placeholder="e.g. The Dock, Mississauga"></div>
+        <div class="form-field">
+          <label class="form-label">Type</label>
           <select class="form-input form-select" id="new-event-type">
             <option value="upcoming">Upcoming</option>
             <option value="performing">Performing</option>
@@ -4102,7 +4182,7 @@ function renderArtistAvailability() {
           </select>
         </div>
         <div id="add-event-error" style="display:none;background:#fde8e8;border-radius:10px;padding:8px 12px;font-size:0.8rem;color:#c0392b;margin-bottom:0.75rem"></div>
-        <button onclick="saveNewEvent()" style="width:100%;background:var(--green);color:white;border:none;border-radius:100px;padding:0.85rem;font-family:var(--sans);font-size:0.95rem;font-weight:500;cursor:pointer;margin-top:0.5rem;transition:opacity 0.2s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">Save Event →</button>
+        <button onclick="saveNewEvent()" style="width:100%;background:var(--green);color:white;border:none;border-radius:100px;padding:0.85rem;font-family:var(--sans);font-size:0.95rem;font-weight:500;cursor:pointer;margin-top:0.25rem;transition:opacity 0.2s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">Save Event →</button>
       </div>
     </div>
   `;
@@ -4229,25 +4309,22 @@ function saveNewEvent() {
   renderFutureEvents();
   renderHeroFutureEvents();
 }
-function renderAaCalendar(artistId) {
-  const today = new Date();
-  today.setHours(0,0,0,0);
-  const store = getAvailabilityStore();
+// Track selected date
+let aaSelectedDateStr = null;
 
-  // Support both numeric-id key (used by venue payment) and email key (used by artist portal)
+function renderAaCalendar(artistId) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const store = getAvailabilityStore();
   const altId = currentUser ? ('artist-' + currentUser.email.replace(/[^a-z0-9]/g,'')) : null;
   const keysToScan = [artistId];
   if (altId && altId !== artistId) keysToScan.push(altId);
 
-  // Build set of dates that have slots for this artist
   const openDates = new Set();
   const bookedDates = new Set();
   Object.entries(store).forEach(([k, v]) => {
-    const matches = keysToScan.some(id => k.startsWith(id + ':'));
-    if (!matches) return;
-    const firstColon = k.indexOf(':');
-    const secondColon = k.indexOf(':', firstColon + 1);
-    const dateStr = k.substring(firstColon + 1, secondColon);
+    if (!keysToScan.some(id => k.startsWith(id + ':'))) return;
+    const parts = k.split(':');
+    const dateStr = parts[1];
     if (v.status === 'booked') bookedDates.add(dateStr);
     else openDates.add(dateStr);
   });
@@ -4263,45 +4340,27 @@ function renderAaCalendar(artistId) {
   const daysInMonth = new Date(aaCalYear, aaCalMonth + 1, 0).getDate();
 
   let html = '';
-  // Empty cells before first day
-  for (let i = 0; i < firstDay; i++) {
-    html += `<div></div>`;
-  }
+  for (let i = 0; i < firstDay; i++) html += '<div></div>';
 
   for (let d = 1; d <= daysInMonth; d++) {
-    const dateObj = new Date(aaCalYear, aaCalMonth, d);
-    dateObj.setHours(0,0,0,0);
+    const dateObj = new Date(aaCalYear, aaCalMonth, d); dateObj.setHours(0,0,0,0);
     const dateStr = `${aaCalYear}-${String(aaCalMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const isPast = dateObj < today;
     const isBooked = bookedDates.has(dateStr);
     const isOpen = openDates.has(dateStr);
     const isToday = dateObj.getTime() === today.getTime();
-    const isSelected = (dateStr === aaSelectedDateStr);
+    const isSelected = dateStr === aaSelectedDateStr;
 
-    let bg = 'transparent', color = isPast ? '#ccc' : 'var(--ink)', border = '2px solid transparent';
-    let cursor = isPast ? 'default' : 'pointer';
-    let dot = '';
+    let cls = 'aa-cal-day';
+    if (isPast) cls += ' past';
+    if (isBooked) cls += ' has-booked';
+    else if (isOpen) cls += ' has-open';
+    if (isToday) cls += ' is-today';
+    if (isSelected) cls += ' selected';
 
-    if (isBooked) {
-      bg = '#fde8e8'; color = '#c0392b'; border = '2px solid #f5b7b1';
-      dot = `<div style="width:5px;height:5px;border-radius:50%;background:#c0392b;margin:1px auto 0"></div>`;
-    } else if (isOpen) {
-      bg = 'var(--green-light)'; color = 'var(--green-mid)'; border = '2px solid #b2dfc9';
-      dot = `<div style="width:5px;height:5px;border-radius:50%;background:var(--green);margin:1px auto 0"></div>`;
-    }
-    if (isToday && !isSelected) { border = '2px solid var(--ink-light)'; }
-    if (isSelected) { border = '2px solid var(--ink)'; }
-
-    // All non-past dates are clickable (booked days show their bookings)
-    const click = !isPast ? `onclick="aaSelectDay('${dateStr}', '', false)"` : `onclick="aaSelectDay('${dateStr}', '', true)"`;
-    const hover = !isPast
-      ? `onmouseover="if(!this.getAttribute('data-selected'))this.style.background='${isBooked?'#f9d0d0':isOpen?'#c8f0df':'var(--cream)'}'" onmouseout="if(!this.getAttribute('data-selected'))this.style.background='${bg}'"`
-      : '';
-
-    html += `<div ${click} ${hover} data-date="${dateStr}" data-orig-border="${border}" ${isSelected ? 'data-selected="1"' : ''} style="border-radius:8px;padding:5px 2px;text-align:center;background:${bg};border:${border};cursor:${cursor};transition:all 0.15s">
-      <div style="font-size:0.75rem;font-weight:${isToday?'700':'400'};color:${color}">${d}</div>
-      ${dot}
-    </div>`;
+    const click = !isPast ? `onclick="aaSelectDay('${dateStr}')"` : '';
+    const dot = (isOpen || isBooked) ? `<div class="day-dot"></div>` : '';
+    html += `<div class="${cls}" data-date="${dateStr}" ${click}><div class="day-num">${d}</div>${dot}</div>`;
   }
   gridEl.innerHTML = html;
 }
@@ -4314,164 +4373,127 @@ function aaNavMonth(dir) {
   renderAaCalendar(artistId);
 }
 
-// Track which date is currently selected in the artist calendar
-let aaSelectedDateStr = null;
-
-function aaSelectDay(dateStr, labelStr, isPast) {
+function aaSelectDay(dateStr) {
   aaSelectedDateStr = dateStr;
+  const artistId = currentUser.artistId ? 'artist-' + currentUser.artistId : 'artist-' + currentUser.email.replace(/[^a-z0-9]/g,'');
+  // Re-render calendar to update selected highlight
+  renderAaCalendar(artistId);
 
-  // Highlight the clicked cell, un-highlight others
-  document.querySelectorAll('#aa-cal-grid [data-date]').forEach(function(cell) {
-    cell.removeAttribute('data-selected');
-    // restore original border from data attribute
-    const origBorder = cell.getAttribute('data-orig-border') || '2px solid transparent';
-    cell.style.border = origBorder;
-  });
-  var clickedCell = document.querySelector('#aa-cal-grid [data-date="' + dateStr + '"]');
-  if (clickedCell) {
-    clickedCell.setAttribute('data-selected', '1');
-    clickedCell.style.border = '2px solid var(--ink)';
-  }
+  const today = new Date(); today.setHours(0,0,0,0);
+  const cellDate = new Date(dateStr + 'T12:00:00'); cellDate.setHours(0,0,0,0);
+  const isPast = cellDate < today;
 
-  // Show the day content panel
+  // Show day content
   document.getElementById('aa-day-empty').style.display = 'none';
   document.getElementById('aa-day-content').style.display = 'block';
 
-  // Set header
-  var d = new Date(dateStr + 'T12:00:00');
-  var dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  var monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  // Header
+  const d = new Date(dateStr + 'T12:00:00');
+  const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   document.getElementById('aa-day-title').textContent = dayNames[d.getDay()] + ', ' + monthNames[d.getMonth()] + ' ' + d.getDate();
 
-  // Show/hide the Add Slot button (past dates can't get new slots)
-  var addBtn = document.getElementById('aa-add-slot-btn');
+  const addBtn = document.getElementById('aa-add-slot-btn');
   if (addBtn) addBtn.style.display = isPast ? 'none' : '';
 
-  // Render slots for this day
-  aaRenderDaySlots(dateStr, isPast);
-
-  // Hide the add form when switching days
+  // Render slots
+  aaRenderDaySlots(dateStr, isPast, artistId);
   aaHideAddForm();
 }
 
-function aaRenderDaySlots(dateStr, isPast) {
-  var artistId = currentUser.artistId ? 'artist-' + currentUser.artistId : 'artist-' + currentUser.email.replace(/[^a-z0-9]/g,'');
-  var store = getAvailabilityStore();
+function aaRenderDaySlots(dateStr, isPast, artistId) {
+  const altId = currentUser ? ('artist-' + currentUser.email.replace(/[^a-z0-9]/g,'')) : null;
+  const keysToScan = [artistId];
+  if (altId && altId !== artistId) keysToScan.push(altId);
 
-  // Collect all slots for this artist on this date
-  // Support both numeric-id key (set by venue payment) and email key (set by artist)
-  var altId = 'artist-' + currentUser.email.replace(/[^a-z0-9]/g,'');
-  var keysToCheck = [artistId];
-  if (altId !== artistId) keysToCheck.push(altId);
-
-  var daySlots = []; // { key, time, status, bookedBy, notes }
-  Object.entries(store).forEach(function([k, v]) {
-    var matched = keysToCheck.some(function(id) { return k.startsWith(id + ':' + dateStr + ':'); });
-    if (!matched) return;
-    var firstColon = k.indexOf(':');
-    var secondColon = k.indexOf(':', firstColon + 1);
-    var time = k.substring(secondColon + 1);
-    daySlots.push({ key: k, time: time, status: v.status, bookedBy: v.bookedBy, notes: v.notes });
+  const store = getAvailabilityStore();
+  const daySlots = [];
+  Object.entries(store).forEach(([k, v]) => {
+    if (!keysToScan.some(id => k.startsWith(id + ':' + dateStr + ':'))) return;
+    const parts = k.split(':');
+    const time = parts.slice(2).join(':');
+    daySlots.push({ key: k, time, status: v.status, bookedBy: v.bookedBy, notes: v.notes });
   });
+  daySlots.sort((a,b) => a.time.localeCompare(b.time));
 
-  // Sort by time
-  daySlots.sort(function(a, b) { return a.time.localeCompare(b.time); });
-
-  var container = document.getElementById('aa-day-slots');
+  const container = document.getElementById('aa-day-slots');
+  const subEl = document.getElementById('aa-day-sub');
   if (!container) return;
 
-  var subtitle = document.getElementById('aa-day-subtitle');
-  var booked = daySlots.filter(function(s) { return s.status === 'booked'; });
-  var open = daySlots.filter(function(s) { return s.status === 'open'; });
+  const booked = daySlots.filter(s => s.status === 'booked');
+  const open = daySlots.filter(s => s.status === 'open');
 
-  if (subtitle) {
-    var parts = [];
-    if (booked.length) parts.push(booked.length + ' confirmed booking' + (booked.length > 1 ? 's' : ''));
-    if (open.length) parts.push(open.length + ' open slot' + (open.length > 1 ? 's' : ''));
-    subtitle.textContent = parts.length ? parts.join(' · ') : (isPast ? 'Past date' : 'No slots yet');
+  if (subEl) {
+    const parts = [];
+    if (booked.length) parts.push(booked.length + ' confirmed');
+    if (open.length) parts.push(open.length + ' open');
+    subEl.textContent = parts.length ? parts.join(' · ') : (isPast ? 'Past date' : 'No slots yet');
   }
 
   if (daySlots.length === 0) {
-    container.innerHTML = '<div style="text-align:center;padding:1.5rem 1rem;color:var(--ink-light);font-size:0.85rem">'
-      + (isPast ? '🔒 Past date — no slots.' : '📭 No slots for this day yet.<br><span style="font-size:0.78rem">Click "+ Add slot" above to mark yourself available.</span>')
-      + '</div>';
+    container.innerHTML = `<div style="text-align:center;padding:2rem 1rem;color:var(--ink-light);font-size:0.85rem;line-height:1.6">
+      ${isPast ? '🔒 Past date.' : '📭 No slots yet.<br><span style="font-size:0.75rem">Click "+ Add slot" above to mark yourself available.</span>'}
+    </div>`;
     return;
   }
 
-  var html = '';
+  let html = '';
 
-  // Confirmed bookings first
-  if (booked.length > 0) {
-    html += '<div style="margin-bottom:1rem">'
-      + '<div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#c0392b;margin-bottom:0.5rem">🔴 Confirmed Bookings</div>';
-    booked.forEach(function(s) {
-      html += '<div style="background:#fde8e8;border-radius:12px;padding:11px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;border:1px solid #f5b7b1">'
-        + '<div>'
-        + '<div style="font-weight:600;font-size:0.875rem;color:var(--ink)">⏰ ' + s.time + '</div>'
-        + '<div style="font-size:0.72rem;color:#c0392b;margin-top:3px">Booked by: ' + (s.bookedBy || 'a venue') + '</div>'
-        + '</div>'
-        + '<span style="font-size:0.68rem;background:#c0392b;color:white;padding:3px 10px;border-radius:100px;font-weight:700;flex-shrink:0">CONFIRMED</span>'
-        + '</div>';
-    });
-    html += '</div>';
+  if (booked.length) {
+    html += `<div style="font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#c0392b;margin-bottom:8px">Confirmed Bookings</div>`;
+    html += booked.map(s => `
+      <div class="aa-slot-row booked">
+        <div>
+          <div class="aa-slot-time">⏰ ${s.time}</div>
+          <div class="aa-slot-meta">Booked by ${s.bookedBy || 'a venue'}</div>
+        </div>
+        <span class="aa-slot-badge confirmed">Confirmed</span>
+      </div>`).join('');
   }
 
-  // Open slots
-  if (open.length > 0) {
-    html += '<div>'
-      + '<div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--green);margin-bottom:0.5rem">🟢 Open Slots</div>';
-    open.forEach(function(s) {
-      var escTime = s.time.replace(/'/g, "\\'");
-      var escDate = dateStr.replace(/'/g, "\\'");
-      html += '<div style="background:var(--green-light);border-radius:12px;padding:11px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;border:1px solid #b2dfc9">'
-        + '<div>'
-        + '<div style="font-weight:600;font-size:0.875rem;color:var(--ink)">⏰ ' + s.time + '</div>'
-        + (s.notes ? '<div style="font-size:0.72rem;color:var(--green-mid);margin-top:3px">' + s.notes + '</div>' : '')
-        + '</div>'
-        + '<button onclick="removeSlot(\'' + artistId + '\',\'' + escDate + '\',\'' + escTime + '\')" style="background:transparent;border:1.5px solid var(--cream-dark);border-radius:100px;padding:4px 10px;font-size:0.7rem;color:var(--ink-mid);cursor:pointer;font-family:var(--sans);transition:all 0.2s;flex-shrink:0" onmouseover="this.style.borderColor=\'#c0392b\';this.style.color=\'#c0392b\'" onmouseout="this.style.borderColor=\'var(--cream-dark)\';this.style.color=\'var(--ink-mid)\'">✕ Remove</button>'
-        + '</div>';
-    });
-    html += '</div>';
+  if (open.length) {
+    if (booked.length) html += `<div style="height:1px;background:var(--cream-dark);margin:10px 0"></div>`;
+    html += `<div style="font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--green);margin-bottom:8px">Open Slots</div>`;
+    html += open.map(s => `
+      <div class="aa-slot-row open">
+        <div>
+          <div class="aa-slot-time">⏰ ${s.time}</div>
+          ${s.notes ? `<div class="aa-slot-meta" style="color:var(--green-mid)">${s.notes}</div>` : ''}
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="aa-slot-badge open">Open</span>
+          <button class="aa-slot-remove" onclick="removeSlot('${artistId}','${dateStr}','${s.time.replace(/'/g,"\\'")}')">✕</button>
+        </div>
+      </div>`).join('');
   }
 
   container.innerHTML = html;
 }
 
 function aaShowAddForm() {
-  var addPanel = document.getElementById('aa-add-panel');
-  var dateLabel = document.getElementById('aa-selected-date-label');
-  var dateInput = document.getElementById('aa-date');
-  if (!addPanel || !aaSelectedDateStr) return;
-
-  // Populate the hidden date + label
+  if (!aaSelectedDateStr) return;
+  const panel = document.getElementById('aa-add-panel');
+  const dateInput = document.getElementById('aa-date');
+  const dateLabel = document.getElementById('aa-selected-date-label');
   if (dateInput) dateInput.value = aaSelectedDateStr;
   if (dateLabel) {
-    var d = new Date(aaSelectedDateStr + 'T12:00:00');
-    var monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const d = new Date(aaSelectedDateStr + 'T12:00:00');
+    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     dateLabel.textContent = monthNames[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
   }
-
-  // Reset fields
-  var startEl = document.getElementById('aa-start');
-  var endEl = document.getElementById('aa-end');
-  var notesEl = document.getElementById('aa-notes');
-  var errEl = document.getElementById('aa-add-error');
-  if (startEl) startEl.value = '19:00';
-  if (endEl) endEl.value = '22:00';
-  if (notesEl) notesEl.value = '';
-  if (errEl) errEl.style.display = 'none';
-
-  addPanel.style.display = 'block';
-  addPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  const startEl = document.getElementById('aa-start'); if (startEl) startEl.value = '19:00';
+  const endEl = document.getElementById('aa-end'); if (endEl) endEl.value = '22:00';
+  const notesEl = document.getElementById('aa-notes'); if (notesEl) notesEl.value = '';
+  const errEl = document.getElementById('aa-add-error'); if (errEl) errEl.style.display = 'none';
+  if (panel) { panel.style.display = 'block'; panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
 }
 
 function aaHideAddForm() {
-  var addPanel = document.getElementById('aa-add-panel');
-  if (addPanel) addPanel.style.display = 'none';
+  const panel = document.getElementById('aa-add-panel');
+  if (panel) panel.style.display = 'none';
 }
 
 function renderAaSlotsList(artistId) {
-  // Collect from both numeric-id key and email key
   const altId = currentUser ? ('artist-' + currentUser.email.replace(/[^a-z0-9]/g,'')) : null;
   const keysToScan = [artistId];
   if (altId && altId !== artistId) keysToScan.push(altId);
@@ -4479,123 +4501,89 @@ function renderAaSlotsList(artistId) {
   const store = getAvailabilityStore();
   const allSlots = {};
   keysToScan.forEach(id => {
-    Object.entries(store).forEach(([k, v]) => {
-      if (k.startsWith(id + ':')) allSlots[k] = v;
-    });
+    Object.entries(store).forEach(([k, v]) => { if (k.startsWith(id + ':')) allSlots[k] = v; });
   });
 
   const existingSlots = Object.entries(allSlots).filter(([,v]) => v.status === 'open').sort((a,b)=>a[0].localeCompare(b[0]));
-  const bookedSlots = Object.entries(allSlots).filter(([,v]) => v.status === 'booked').sort((a,b)=>a[0].localeCompare(b[0]));
+  const bookedSlots   = Object.entries(allSlots).filter(([,v]) => v.status === 'booked').sort((a,b)=>a[0].localeCompare(b[0]));
   const container = document.getElementById('aa-slots-list');
   if (!container) return;
 
+  const parseKey = k => {
+    const parts = k.split(':');
+    return { date: parts[1], time: parts.slice(2).join(':') };
+  };
+
+  if (bookedSlots.length === 0 && existingSlots.length === 0) {
+    container.innerHTML = `<div style="padding:1.5rem;text-align:center;color:var(--ink-light);font-size:0.82rem;line-height:1.6">
+      <div style="font-size:1.5rem;margin-bottom:0.5rem">📅</div>No slots yet.<br>Click a date on the calendar to add one.
+    </div>`;
+    return;
+  }
+
   let html = '';
 
-  if (bookedSlots.length > 0) {
-    html += `<div style="margin-bottom:1.5rem">
-      <div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#c0392b;margin-bottom:0.75rem">🔴 Confirmed Bookings</div>
-      ${bookedSlots.map(([k, v]) => {
-        const firstColon = k.indexOf(':');
-        const secondColon = k.indexOf(':', firstColon + 1);
-        const date = k.substring(firstColon + 1, secondColon);
-        const time = k.substring(secondColon + 1);
-        return `<div style="background:#fde8e8;border-radius:12px;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;border:1px solid #f5b7b1">
-          <div>
-            <div style="font-weight:500;font-size:0.875rem;color:var(--ink)">${formatDateDisplay(date)}</div>
-            <div style="font-size:0.75rem;color:#c0392b;margin-top:2px">⏰ ${time} · Booked by ${v.bookedBy || 'a venue'}</div>
-          </div>
-          <span style="font-size:0.7rem;background:#c0392b;color:white;padding:3px 10px;border-radius:100px;font-weight:600;flex-shrink:0">CONFIRMED</span>
-        </div>`;
-      }).join('')}
+  bookedSlots.forEach(([k, v]) => {
+    const { date, time } = parseKey(k);
+    html += `<div class="aa-sched-row" onclick="aaSelectDay('${date}')">
+      <div class="aa-sched-dot booked"></div>
+      <div>
+        <div class="aa-sched-date">${formatDateDisplay(date)}</div>
+        <div class="aa-sched-time">⏰ ${time} · ${v.bookedBy || 'a venue'}</div>
+      </div>
+      <span class="aa-sched-tag booked">Booked</span>
     </div>`;
-  }
+  });
 
-  if (existingSlots.length === 0) {
-    html += `<div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--green);margin-bottom:0.75rem">🟢 Open Slots</div>
-      <div style="background:var(--cream);border-radius:14px;padding:2rem;text-align:center;color:var(--ink-light);font-size:0.875rem;line-height:1.6">
-        <div style="font-size:1.5rem;margin-bottom:0.5rem">📅</div>
-        No open slots yet.<br>Click any future date on the calendar to add one.
-      </div>`;
-  } else {
-    html += `<div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--green);margin-bottom:0.75rem">🟢 Open Slots (${existingSlots.length})</div>`;
-    html += existingSlots.map(([k, v]) => {
-      // Key = "artistId:YYYY-MM-DD:HH:MM-HH:MM" — split only on first two colons
-      const firstColon = k.indexOf(':');
-      const secondColon = k.indexOf(':', firstColon + 1);
-      const date = k.substring(firstColon + 1, secondColon);
-      const time = k.substring(secondColon + 1);
-      return `<div style="background:var(--white);border-radius:12px;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--cream-dark)" id="slot-${k.replace(/:/g,'-')}">
-        <div>
-          <div style="font-weight:500;font-size:0.875rem;color:var(--ink)">${formatDateDisplay(date)}</div>
-          <div style="font-size:0.75rem;color:var(--green);margin-top:2px">⏰ ${time}${v.notes ? ' · ' + v.notes : ''}</div>
-        </div>
-        <button onclick="removeSlot('${artistId}','${date}','${time}')" style="background:transparent;border:1.5px solid var(--cream-dark);border-radius:100px;padding:5px 12px;font-size:0.72rem;color:var(--ink-mid);cursor:pointer;font-family:var(--sans);transition:all 0.2s;flex-shrink:0" onmouseover="this.style.borderColor='#c0392b';this.style.color='#c0392b'" onmouseout="this.style.borderColor='var(--cream-dark)';this.style.color='var(--ink-mid)'">✕ Remove</button>
-      </div>`;
-    }).join('');
-  }
+  existingSlots.forEach(([k, v]) => {
+    const { date, time } = parseKey(k);
+    html += `<div class="aa-sched-row" onclick="aaSelectDay('${date}')">
+      <div class="aa-sched-dot open"></div>
+      <div>
+        <div class="aa-sched-date">${formatDateDisplay(date)}</div>
+        <div class="aa-sched-time">⏰ ${time}${v.notes ? ' · ' + v.notes : ''}</div>
+      </div>
+      <span class="aa-sched-tag open">Open</span>
+    </div>`;
+  });
 
   container.innerHTML = html;
 }
 
-function formatDateDisplay(dateStr) {
-  const d = new Date(dateStr + 'T12:00:00');
-  return d.toLocaleDateString('en-CA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-}
-
 function addAvailabilitySlot(artistId) {
-  const date = document.getElementById('aa-date')?.value;
+  const date  = document.getElementById('aa-date')?.value;
   const start = document.getElementById('aa-start')?.value;
-  const end = document.getElementById('aa-end')?.value;
+  const end   = document.getElementById('aa-end')?.value;
   const notes = document.getElementById('aa-notes')?.value || '';
   const errEl = document.getElementById('aa-add-error');
 
-  if (!date || !start || !end) {
-    errEl.textContent = 'Please fill in date, start time, and end time.';
-    errEl.style.display = 'block';
-    return;
-  }
-  if (start >= end) {
-    errEl.textContent = 'End time must be after start time.';
-    errEl.style.display = 'block';
-    return;
-  }
+  if (!date || !start || !end) { errEl.textContent = 'Please fill in start and end time.'; errEl.style.display = 'block'; return; }
+  if (start >= end) { errEl.textContent = 'End time must be after start time.'; errEl.style.display = 'block'; return; }
   errEl.style.display = 'none';
 
   const timeSlot = `${start}-${end}`;
   const store = getAvailabilityStore();
   const key = `${artistId}:${date}:${timeSlot}`;
-  if (store[key] && store[key].status === 'booked') {
-    errEl.textContent = 'This slot is already confirmed-booked and cannot be changed.';
-    errEl.style.display = 'block';
-    return;
-  }
+  if (store[key]?.status === 'booked') { errEl.textContent = 'This slot is already confirmed and cannot be changed.'; errEl.style.display = 'block'; return; }
   store[key] = { status: 'open', bookedBy: null, notes };
   saveAvailabilityStore(store);
-  // Hide the add panel and refresh calendar + list + day panel
+
   aaHideAddForm();
   renderAaCalendar(artistId);
   renderAaSlotsList(artistId);
-  // Refresh the day detail panel if this date is currently selected
-  if (aaSelectedDateStr === date) {
-    aaRenderDaySlots(date, false);
-    var subtitleEl = document.getElementById('aa-day-subtitle');
-    // subtitle will be re-set inside aaRenderDaySlots via aaSelectDay, but we trigger a light refresh:
-    aaSelectDay(date, '', false);
-  }
+  if (aaSelectedDateStr === date) aaRenderDaySlots(date, false, artistId);
 }
 
 function removeSlot(artistId, date, time) {
   const key = `${artistId}:${date}:${time}`;
   const store = getAvailabilityStore();
-  if (!store[key]) { console.warn('Slot key not found:', key, Object.keys(store)); return; }
+  if (!store[key]) return;
   if (store[key].status === 'booked') { alert('This slot is already booked and cannot be removed.'); return; }
   delete store[key];
   saveAvailabilityStore(store);
   renderAaCalendar(artistId);
   renderAaSlotsList(artistId);
-  if (aaSelectedDateStr === date) {
-    aaSelectDay(date, '', false);
-  }
+  if (aaSelectedDateStr === date) aaRenderDaySlots(date, false, artistId);
 }
 
 // ════════════════════════════════
