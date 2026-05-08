@@ -3280,8 +3280,8 @@ function renderVenueAvailCalendar(artistNumericId) {
     const clickHandler = isOpen ? `onclick="venueSelectDay('${dateStr}')"` : '';
     const hover = isOpen ? `onmouseover="this.style.background='#c8f0df'" onmouseout="this.style.background='${bg}'"` : '';
 
-    calCells += `<div ${clickHandler} ${hover} style="border-radius:8px;padding:5px 2px;text-align:center;background:${bg};border:${border};cursor:${cursor};transition:background 0.15s">
-      <div style="font-size:0.75rem;font-weight:${isToday?'700':'400'};color:${color}">${d}</div>
+    calCells += `<div class="venue-cal-cell" data-date="${dateStr}" ${clickHandler} ${hover} style="border-radius:8px;padding:5px 2px;text-align:center;background:${bg};border:${border};cursor:${cursor};transition:background 0.15s">
+      <div class="vcell-num" style="font-size:0.75rem;font-weight:${isToday?'700':'400'};color:${color}">${d}</div>
       ${dot}
     </div>`;
   }
@@ -3300,8 +3300,8 @@ function renderVenueAvailCalendar(artistNumericId) {
       <div style="display:grid;grid-template-columns:repeat(7,1fr);text-align:center;padding:0.6rem 0.75rem 0;gap:2px">
         ${daysOfWeek.map(d=>`<div style="font-size:0.6rem;font-weight:600;text-transform:uppercase;color:var(--ink-light);padding-bottom:4px">${d}</div>`).join('')}
       </div>
-      <!-- Day cells -->
-      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;padding:0 0.75rem 0.75rem">${calCells}</div>
+      <!-- Day cells (popup inserts inline here) -->
+      <div id="venue-cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;padding:0 0.75rem 0.75rem">${calCells}</div>
       <!-- No slots notice -->
       ${!hasAnyOpen ? `<div style="padding:0.75rem 1.25rem;background:#fffbf0;border-top:1px solid var(--cream-dark);font-size:0.75rem;color:#9a6700;line-height:1.5">⏳ This artist hasn't posted open slots yet. Submit your request below and we'll check their availability within 24h.</div>` : ''}
       <!-- Legend -->
@@ -3311,10 +3311,6 @@ function renderVenueAvailCalendar(artistNumericId) {
       </div>
     </div>
 
-    <!-- Slot picker (shown after clicking a date) -->
-    <div id="venue-slot-picker" style="display:none;margin-top:1rem;background:var(--green-light);border-radius:14px;padding:1rem;border:1.5px solid #b2dfc9">
-      <div id="venue-slot-picker-content"></div>
-    </div>
   `;
 
   // Store for use by venueSelectDay
@@ -3333,24 +3329,44 @@ function venueNavMonth(dir) {
 
 function venueSelectDay(dateStr) {
   const slots = (window._venueOpenByDate || {})[dateStr] || [];
-  const picker = document.getElementById('venue-slot-picker');
-  const content = document.getElementById('venue-slot-picker-content');
-  if (!picker || !content || slots.length === 0) return;
+  if (slots.length === 0) return;
 
-  content.innerHTML = `
-    <div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--green-mid);margin-bottom:0.75rem">Available times for ${formatDateDisplay(dateStr)}</div>
-    ${slots.map(s => `
-      <div onclick="selectArtistSlot('${dateStr}','${s.time}')" style="cursor:pointer;background:white;border:1.5px solid var(--cream-dark);border-radius:10px;padding:10px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;transition:all 0.15s" onmouseover="this.style.borderColor='var(--green)';this.style.background='white'" onmouseout="this.style.borderColor='var(--cream-dark)'">
-        <div>
-          <div style="font-size:0.875rem;font-weight:500;color:var(--ink)">⏰ ${s.time}</div>
-          ${s.notes ? `<div style="font-size:0.72rem;color:var(--ink-light);margin-top:2px">${s.notes}</div>` : ''}
-        </div>
-        <span style="font-size:0.72rem;background:var(--green);color:white;padding:3px 10px;border-radius:100px;font-weight:500;flex-shrink:0">Select →</span>
-      </div>
-    `).join('')}
-  `;
-  picker.style.display = 'block';
-  picker.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  // Remove any existing inline popup
+  const existingPopup = document.getElementById('venue-inline-slot-popup');
+  if (existingPopup) existingPopup.remove();
+
+  // Highlight selected cell, clear others
+  document.querySelectorAll('.venue-cal-cell.selected-day').forEach(function(c) { c.classList.remove('selected-day'); });
+  const clickedCell = document.querySelector('.venue-cal-cell[data-date="' + dateStr + '"]');
+  if (clickedCell) clickedCell.classList.add('selected-day');
+
+  // Add animation + selected style once
+  if (!document.getElementById('venue-popup-style')) {
+    const styleEl = document.createElement('style');
+    styleEl.id = 'venue-popup-style';
+    styleEl.textContent = '@keyframes vFadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}} .venue-cal-cell.selected-day{background:var(--green)!important;border-color:var(--green)!important;} .venue-cal-cell.selected-day .vcell-num{color:white!important;}';
+    document.head.appendChild(styleEl);
+  }
+
+  // Build slot rows
+  var slotsHtml = slots.map(function(s) {
+    var safeTime = (s.time || '').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return '<div onclick="selectArtistSlot(\'' + dateStr + '\',\'' + safeTime + '\')" style="cursor:pointer;background:white;border:1.5px solid var(--cream-dark);border-radius:8px;padding:8px 12px;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;transition:border-color 0.15s" onmouseover="this.style.borderColor=\'var(--green)\'" onmouseout="this.style.borderColor=\'var(--cream-dark)\'">' +
+      '<div style="font-size:0.82rem;font-weight:500;color:var(--ink)">⏰ ' + (s.time || '') + (s.notes ? '<span style=\"font-size:0.7rem;color:var(--ink-light);font-weight:400;margin-left:6px\">' + s.notes + '</span>' : '') + '</div>' +
+      '<span style="font-size:0.7rem;background:var(--green);color:white;padding:3px 10px;border-radius:100px;font-weight:600;flex-shrink:0;white-space:nowrap">Select →</span>' +
+      '</div>';
+  }).join('');
+
+  const popup = document.createElement('div');
+  popup.id = 'venue-inline-slot-popup';
+  popup.style.cssText = 'grid-column:1/-1;background:var(--green-light);border:1.5px solid #b2dfc9;border-radius:12px;padding:10px 12px;margin:3px 0;animation:vFadeIn 0.18s ease';
+  popup.innerHTML = '<div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--green-mid);margin-bottom:8px">Pick a time — ' + formatDateDisplay(dateStr) + '</div>' +
+    slotsHtml +
+    '<div style="text-align:right;margin-top:2px"><button onclick="document.getElementById(\'venue-inline-slot-popup\').remove();document.querySelectorAll(\'.venue-cal-cell.selected-day\').forEach(function(c){c.classList.remove(\'selected-day\')})" style="background:transparent;border:none;font-size:0.7rem;color:var(--ink-light);cursor:pointer">✕ Close</button></div>';
+
+  if (clickedCell && clickedCell.parentNode) {
+    clickedCell.parentNode.insertBefore(popup, clickedCell.nextSibling);
+  }
 }
 
 function clearBookingSlot() {
@@ -3378,21 +3394,14 @@ function selectArtistSlot(date, time) {
   if (prompt) prompt.style.display = 'none';
   if (slotErr) slotErr.style.display = 'none';
 
-  // Show visual confirmation in slot picker
-  const picker = document.getElementById('venue-slot-picker');
-  if (picker) {
-    picker.style.borderColor = 'var(--green)';
-    picker.style.background = 'var(--green-light)';
-    const confirmMsg = document.createElement('div');
-    confirmMsg.style.cssText = 'font-size:0.8rem;color:var(--green-mid);font-weight:500;margin-top:0.5rem;text-align:center';
-    confirmMsg.textContent = '✓ Slot selected — fill in your venue details below and submit.';
-    const existingMsg = picker.querySelector('.slot-confirm-msg');
-    if (existingMsg) existingMsg.remove();
-    confirmMsg.className = 'slot-confirm-msg';
-    picker.appendChild(confirmMsg);
-  }
-  // Scroll to date field
-  if (dateInput) dateInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  // Close the inline popup after selection
+  const popup = document.getElementById('venue-inline-slot-popup');
+  if (popup) popup.remove();
+  document.querySelectorAll('.venue-cal-cell.selected-day').forEach(function(c) { c.classList.remove('selected-day'); });
+
+  // Scroll the booking form date display into view
+  const slotDisplay = document.getElementById('booking-slot-display');
+  if (slotDisplay) slotDisplay.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 function validateMapsUrl(input) {
@@ -4560,33 +4569,43 @@ function renderAaSlotsList(artistId) {
 
   let html = '';
 
-  // ── Next 3 upcoming shows ──────────────────────────────
+  // ── Next 3 upcoming shows — date-badge card format ──────
   if (futureEvents.length > 0) {
-    html += `<div style="font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--green);margin:0 0 8px;padding:0.75rem 1rem 0">Next 3 Shows</div>`;
+    html += `<div style="font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--green);padding:0.85rem 1rem 0.5rem">🎤 Next 3 Shows</div>`;
     futureEvents.forEach(ev => {
       const typeColor = ev.type === 'booked' ? 'var(--green)' : ev.type === 'performing' ? '#c0392b' : 'var(--ink)';
-      const typeLabel = ev.type === 'booked' ? 'Booked' : ev.type === 'performing' ? 'Live' : 'Upcoming';
-      html += `<div class="aa-sched-row" style="padding:0.6rem 1rem">
-        <div class="aa-sched-dot" style="background:${typeColor}"></div>
-        <div>
-          <div class="aa-sched-date" style="font-weight:600">${ev.title}</div>
-          <div class="aa-sched-time">${formatDateDisplay(ev.date)}${ev.time ? ' · ⏰ ' + ev.time : ''}${ev.venue ? ' · ' + ev.venue : ''}</div>
+      const typeLabel = ev.type === 'booked' ? 'BOOKED' : ev.type === 'performing' ? 'LIVE' : 'SOON';
+      const mo = formatEventMonth(ev.date);
+      const dy = formatEventDay(ev.date);
+      html += `<div class="aa-event-row" style="cursor:default">
+        <div class="aa-event-date-badge">
+          <div class="mo">${mo}</div>
+          <div class="dy">${dy}</div>
         </div>
-        <span class="aa-sched-tag" style="background:${typeColor};color:white;font-size:0.58rem;padding:2px 8px;border-radius:100px;font-weight:700">${typeLabel}</span>
+        <div style="flex:1;min-width:0">
+          <div class="aa-event-title">${ev.title}</div>
+          <div class="aa-event-sub">${ev.time ? '⏰ ' + ev.time : ''}${ev.time && ev.venue ? ' · ' : ''}${ev.venue ? '📍 ' + ev.venue : ''}</div>
+        </div>
+        <span style="font-size:0.58rem;font-weight:700;letter-spacing:0.5px;background:${typeColor};color:white;padding:2px 9px;border-radius:100px;white-space:nowrap;flex-shrink:0">${typeLabel}</span>
       </div>`;
     });
-    html += `<div style="height:1px;background:var(--cream-dark);margin:8px 0"></div>`;
+    html += `<div style="height:1px;background:var(--cream-dark);margin:6px 0 0"></div>`;
   }
 
   if (bookedSlots.length === 0 && existingSlots.length === 0) {
     if (futureEvents.length === 0) {
       container.innerHTML = `<div style="padding:1.5rem;text-align:center;color:var(--ink-light);font-size:0.82rem;line-height:1.6">
-        <div style="font-size:1.5rem;margin-bottom:0.5rem">📅</div>No slots yet.<br>Click a date on the calendar to add one.
+        <div style="font-size:1.5rem;margin-bottom:0.5rem">📅</div>No shows yet.<br>Add events above or click a calendar date to add availability.
       </div>`;
     } else {
+      html += `<div style="padding:0.75rem 1rem 1rem;text-align:center;color:var(--ink-light);font-size:0.78rem">No availability slots yet — click a date to add one.</div>`;
       container.innerHTML = html;
     }
     return;
+  }
+  // Section header for the slots list below upcoming shows
+  if (futureEvents.length > 0) {
+    html += `<div style="font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--ink-light);padding:0.6rem 1rem 0.4rem">Availability Slots</div>`;
   }
 
   bookedSlots.forEach(([k, v]) => {
