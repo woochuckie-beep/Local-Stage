@@ -3923,9 +3923,17 @@ function renderArtistAvailability() {
         <p style="font-size:0.78rem;color:var(--ink-light);margin-top:1rem;line-height:1.5;text-align:center">Click any future date on the calendar to see your slots or add a new one.</p>
       </div>
     </div>
+
+    <!-- Upcoming Bookings -->
+    <div style="margin-top:2.5rem;border-top:1px solid var(--cream-dark);padding-top:2rem;max-width:620px;margin-left:auto;margin-right:auto">
+      <h3 style="font-family:var(--serif);font-size:1.3rem;color:var(--ink);margin-bottom:0.4rem">Upcoming Bookings</h3>
+      <p style="font-size:0.78rem;color:var(--ink-light);margin-bottom:1.25rem;line-height:1.5">Confirmed bookings from venues.</p>
+      <div id="aa-upcoming-events"></div>
+    </div>
   `;
 
   renderAaCalendar(artistId);
+  renderAaUpcomingEvents(artistId);
 }
 
 function renderAaCalendar(artistId) {
