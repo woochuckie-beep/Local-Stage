@@ -3923,27 +3923,35 @@ function renderArtistAvailability() {
         <p style="font-size:0.78rem;color:var(--ink-light);margin-top:1rem;line-height:1.5;text-align:center">Click any future date on the calendar to mark yourself available. Venues will see your open slots when booking.</p>
       </div>
 
-      <!-- RIGHT: My Scheduled Times + Upcoming Events -->
+      <!-- RIGHT: My Scheduled Times -->
       <div>
         <h3 style="font-family:var(--serif);font-size:1.3rem;color:var(--ink);margin-bottom:0.5rem">My Scheduled Times</h3>
         <p style="font-size:0.78rem;color:var(--ink-light);margin-bottom:1rem;line-height:1.5">All your open and booked slots. Click <strong>✕ Remove</strong> to take a time off your calendar.</p>
         <div id="aa-slots-list"></div>
-
-        <h3 style="font-family:var(--serif);font-size:1.3rem;color:var(--ink);margin-bottom:1rem;margin-top:2rem">Confirmed Bookings</h3>
-        <div id="aa-upcoming-events"></div>
       </div>
     </div>
   `;
 
   renderAaCalendar(artistId);
   renderAaSlotsList(artistId);
-  renderAaUpcomingEvents(artistId);
 }
 
 function renderAaCalendar(artistId) {
   const today = new Date();
   today.setHours(0,0,0,0);
   const store = getAvailabilityStore();
+
+  // Auto-purge past slots for this artist so they disappear from the calendar
+  let changed = false;
+  Object.keys(store).forEach(k => {
+    if (!k.startsWith(artistId + ':')) return;
+    const firstColon = k.indexOf(':');
+    const secondColon = k.indexOf(':', firstColon + 1);
+    const dateStr = k.substring(firstColon + 1, secondColon);
+    const slotDate = new Date(dateStr + 'T12:00:00');
+    if (slotDate < today) { delete store[k]; changed = true; }
+  });
+  if (changed) saveAvailabilityStore(store);
 
   // Build set of dates that have slots for this artist
   const openDates = new Set();
@@ -4074,7 +4082,6 @@ function aaRemoveSlotFromPanel(artistId, date, time, isBooked) {
   saveAvailabilityStore(store);
   renderAaCalendar(artistId);
   renderAaSlotsList(artistId);
-  renderAaUpcomingEvents(artistId);
 
   // Refresh the panel if still open
   const daySlots = Object.entries(getAvailabilityStore()).filter(([k]) => k.startsWith(artistId + ':' + date + ':'));
@@ -4122,6 +4129,21 @@ function aaSelectDay(dateStr, labelStr) {
 }
 
 function renderAaSlotsList(artistId) {
+  const store = getAvailabilityStore();
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  // Auto-purge any past slots (open or booked) for this artist
+  let changed = false;
+  Object.keys(store).forEach(k => {
+    if (!k.startsWith(artistId + ':')) return;
+    const firstColon = k.indexOf(':');
+    const secondColon = k.indexOf(':', firstColon + 1);
+    const dateStr = k.substring(firstColon + 1, secondColon);
+    const slotDate = new Date(dateStr + 'T12:00:00');
+    if (slotDate < today) { delete store[k]; changed = true; }
+  });
+  if (changed) saveAvailabilityStore(store);
+
   const existing = getArtistAvailability(artistId);
   const existingSlots = Object.entries(existing).filter(([,v]) => v.status === 'open').sort((a,b)=>a[0].localeCompare(b[0]));
   const bookedSlots = Object.entries(existing).filter(([,v]) => v.status === 'booked').sort((a,b)=>a[0].localeCompare(b[0]));
@@ -4267,7 +4289,6 @@ function addAvailabilitySlot(artistId) {
   document.getElementById('aa-add-panel').style.display = 'none';
   renderAaCalendar(artistId);
   renderAaSlotsList(artistId);
-  renderAaUpcomingEvents(artistId);
 }
 
 function removeSlot(artistId, date, time) {
@@ -4279,7 +4300,6 @@ function removeSlot(artistId, date, time) {
   saveAvailabilityStore(store);
   renderAaCalendar(artistId);
   renderAaSlotsList(artistId);
-  renderAaUpcomingEvents(artistId);
 }
 
 // ════════════════════════════════
