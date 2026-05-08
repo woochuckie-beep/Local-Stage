@@ -2702,38 +2702,6 @@ function getBookingFormHTML() {
       <span>Signed in as <strong id="booking-user-email"></strong> · <span style="cursor:pointer;text-decoration:underline" onclick="signOut()">Sign out</span></span>
     </div>
 
-    <!-- Future Events section for venues -->
-    <div style="background:var(--white);border-radius:20px;padding:1.75rem;border:1px solid var(--cream-dark);margin-bottom:2rem">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem">
-        <h3 style="font-family:var(--serif);font-size:1.3rem;color:var(--ink)">🗓️ Future Events</h3>
-        <button onclick="showVenueAddEventModal()" style="background:var(--ink);color:white;border:none;border-radius:100px;padding:6px 14px;font-family:var(--sans);font-size:0.78rem;font-weight:500;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='var(--green)'" onmouseout="this.style.background='var(--ink)'">+ Add Event</button>
-      </div>
-      <div id="venue-future-events-section"></div>
-    </div>
-
-    <!-- Venue Add Event Modal -->
-    <div id="venue-add-event-modal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(26,26,24,0.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:1.5rem">
-      <div style="background:var(--white);border-radius:20px;padding:2rem;width:100%;max-width:440px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.2)">
-        <button onclick="hideVenueAddEventModal()" style="position:absolute;top:1rem;right:1rem;background:var(--cream);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center">✕</button>
-        <h3 style="font-family:var(--serif);font-size:1.4rem;color:var(--ink);margin-bottom:0.25rem">Add Future Event</h3>
-        <p style="font-size:0.82rem;color:var(--ink-light);margin-bottom:1.5rem">Events past their date will be removed automatically.</p>
-        <div class="form-field"><label class="form-label">Event title *</label><input class="form-input" type="text" id="venue-event-title" placeholder="e.g. Friday Night Live"></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
-          <div class="form-field" style="margin-bottom:0"><label class="form-label">Date *</label><input class="form-input" type="date" id="venue-event-date"></div>
-          <div class="form-field" style="margin-bottom:0"><label class="form-label">Time</label><input class="form-input" type="time" id="venue-event-time"></div>
-        </div>
-        <div class="form-field" style="margin-top:1rem"><label class="form-label">Artist / details</label><input class="form-input" type="text" id="venue-event-venue" placeholder="e.g. Maya Reyes performing"></div>
-        <div class="form-field"><label class="form-label">Type</label>
-          <select class="form-input form-select" id="venue-event-type">
-            <option value="upcoming">Upcoming</option>
-            <option value="booked">Booked</option>
-          </select>
-        </div>
-        <div id="venue-add-event-error" style="display:none;background:#fde8e8;border-radius:10px;padding:8px 12px;font-size:0.8rem;color:#c0392b;margin-bottom:0.75rem"></div>
-        <button onclick="saveVenueNewEvent()" style="width:100%;background:var(--green);color:white;border:none;border-radius:100px;padding:0.85rem;font-family:var(--sans);font-size:0.95rem;font-weight:500;cursor:pointer;margin-top:0.5rem;transition:opacity 0.2s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">Save Event →</button>
-      </div>
-    </div>
-
     <!-- Booking type toggle -->
     <div style="margin-bottom:2rem">
       <div style="font-size:0.75rem;font-weight:500;text-transform:uppercase;letter-spacing:1.2px;color:var(--green);margin-bottom:0.75rem">What are you booking for?</div>
@@ -4564,15 +4532,28 @@ function renderAaSlotsList(artistId) {
     return { date: parts[1], time: parts.slice(2).join(':') };
   };
 
-  // Pull next 3 upcoming shows from future events
-  const futureEvents = loadFutureEvents().slice(0, 3);
+  // Build top 3 next events by merging future events + confirmed booked slots
+  const _today = new Date(); _today.setHours(0,0,0,0);
+  const manualEvents = loadFutureEvents();
+  // Convert booked slots to event objects so they can be merged
+  const bookedAsEvents = bookedSlots.map(([k, v]) => {
+    const { date, time } = parseKey(k);
+    return { date, time, title: 'Confirmed booking', venue: v.bookedBy ? 'Booked by ' + v.bookedBy : '', type: 'booked', _fromSlot: true };
+  }).filter(ev => new Date(ev.date + 'T00:00:00') >= _today);
+  // Merge: prefer manual events; deduplicate by date+time
+  const manualKeys = new Set(manualEvents.map(ev => ev.date + ':' + (ev.time || '')));
+  const mergedEvents = [
+    ...manualEvents,
+    ...bookedAsEvents.filter(ev => !manualKeys.has(ev.date + ':' + ev.time))
+  ].sort((a, b) => a.date.localeCompare(b.date) || (a.time || '').localeCompare(b.time || ''));
+  const top3 = mergedEvents.slice(0, 3);
 
   let html = '';
 
   // ── Next 3 upcoming shows — date-badge card format ──────
-  if (futureEvents.length > 0) {
+  if (top3.length > 0) {
     html += `<div style="font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--green);padding:0.85rem 1rem 0.5rem">🎤 Next 3 Shows</div>`;
-    futureEvents.forEach(ev => {
+    top3.forEach(ev => {
       const typeColor = ev.type === 'booked' ? 'var(--green)' : ev.type === 'performing' ? '#c0392b' : 'var(--ink)';
       const typeLabel = ev.type === 'booked' ? 'BOOKED' : ev.type === 'performing' ? 'LIVE' : 'SOON';
       const mo = formatEventMonth(ev.date);
@@ -4593,7 +4574,7 @@ function renderAaSlotsList(artistId) {
   }
 
   if (bookedSlots.length === 0 && existingSlots.length === 0) {
-    if (futureEvents.length === 0) {
+    if (top3.length === 0) {
       container.innerHTML = `<div style="padding:1.5rem;text-align:center;color:var(--ink-light);font-size:0.82rem;line-height:1.6">
         <div style="font-size:1.5rem;margin-bottom:0.5rem">📅</div>No shows yet.<br>Add events above or click a calendar date to add availability.
       </div>`;
@@ -4604,7 +4585,7 @@ function renderAaSlotsList(artistId) {
     return;
   }
   // Section header for the slots list below upcoming shows
-  if (futureEvents.length > 0) {
+  if (top3.length > 0) {
     html += `<div style="font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--ink-light);padding:0.6rem 1rem 0.4rem">Availability Slots</div>`;
   }
 
