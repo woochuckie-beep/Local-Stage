@@ -636,7 +636,7 @@
     <li><a onclick="showPage('artists')">Browse Artists</a></li>
     <li><a onclick="showPage('pricing-page')">Pricing</a></li>
     <li><a id="nav-portal-link" style="display:none;font-weight:600;color:var(--green) !important"></a></li>
-    <li><a class="nav-cta" onclick="openApply()">Get Started →</a></li>
+    <li id="nav-get-started"><a class="nav-cta" onclick="openApply()">Get Started →</a></li>
   </ul>
   <div style="display:flex;align-items:center;gap:10px">
     <span id="nav-user-info" class="nav-user-info" style="display:none">
@@ -2034,6 +2034,7 @@ function updateNavAuth() {
   const emailSpan = document.getElementById('nav-user-email');
   const portalLink = document.getElementById('nav-portal-link');
   const mobilePortalLink = document.getElementById('mobile-portal-link');
+  const getStartedLi = document.getElementById('nav-get-started');
 
   if (currentUser) {
     btn.textContent = 'Sign out';
@@ -2042,6 +2043,7 @@ function updateNavAuth() {
     info.style.display = 'flex';
     emailSpan.textContent = currentUser.email;
     if (mobileBtn) { mobileBtn.textContent = 'Sign out (' + currentUser.email.split('@')[0] + ')'; mobileBtn.onclick = () => { closeMobileMenu(); signOut(); }; }
+    if (getStartedLi) getStartedLi.style.display = 'none';
 
     // Show the right portal link based on user type
     if (portalLink) {
@@ -2073,6 +2075,7 @@ function updateNavAuth() {
     if (mobileBtn) { mobileBtn.textContent = 'Sign In'; mobileBtn.onclick = () => { closeMobileMenu(); openLogin(); }; }
     if (portalLink) portalLink.style.display = 'none';
     if (mobilePortalLink) mobilePortalLink.style.display = 'none';
+    if (getStartedLi) getStartedLi.style.display = '';
   }
 }
 
@@ -3836,8 +3839,10 @@ function renderArtistAvailability() {
         <!-- Add slot form — shown when a date is selected -->
         <div id="aa-add-panel" style="background:var(--white);border-radius:20px;padding:1.75rem;border:1px solid var(--cream-dark);display:none">
           <h3 style="font-family:var(--serif);font-size:1.15rem;color:var(--ink);margin-bottom:0.25rem">Add availability for <span id="aa-selected-date-label" style="color:var(--green)"></span></h3>
-          <p style="font-size:0.8rem;color:var(--ink-light);margin-bottom:1.25rem">Set a time range when you're free to perform.</p>
+          <p style="font-size:0.8rem;color:var(--ink-light);margin-bottom:1rem">Set a time range when you're free to perform.</p>
           <input type="hidden" id="aa-date">
+          <!-- Existing times for this day -->
+          <div id="aa-existing-times" style="display:none"></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
             <div class="form-field" style="margin-bottom:0">
               <label class="form-label">Start time *</label>
@@ -3862,16 +3867,17 @@ function renderArtistAvailability() {
         <p style="font-size:0.78rem;color:var(--ink-light);margin-top:1rem;line-height:1.5;text-align:center">Click any future date on the calendar to mark yourself available. Venues will see your open slots when booking.</p>
       </div>
 
-      <!-- RIGHT: Slots list -->
+      <!-- RIGHT: Upcoming Events -->
       <div>
-        <h3 style="font-family:var(--serif);font-size:1.3rem;color:var(--ink);margin-bottom:1rem">Your Schedule</h3>
-        <div id="aa-slots-list"></div>
+        <h3 style="font-family:var(--serif);font-size:1.3rem;color:var(--ink);margin-bottom:1rem">Upcoming Events</h3>
+        <div id="aa-upcoming-events"></div>
       </div>
     </div>
   `;
 
   renderAaCalendar(artistId);
   renderAaSlotsList(artistId);
+  renderAaUpcomingEvents(artistId);
 }
 
 function renderAaCalendar(artistId) {
@@ -3949,6 +3955,31 @@ function aaNavMonth(dir) {
 function aaSelectDay(dateStr, labelStr) {
   document.getElementById('aa-date').value = dateStr;
   document.getElementById('aa-selected-date-label').textContent = labelStr;
+
+  // Show existing times for this day
+  const artistId = currentUser.artistId ? 'artist-' + currentUser.artistId : 'artist-' + currentUser.email.replace(/[^a-z0-9]/g,'');
+  const store = getAvailabilityStore();
+  const existingToday = Object.entries(store).filter(([k, v]) => k.startsWith(artistId + ':' + dateStr + ':'));
+  const existingTimesEl = document.getElementById('aa-existing-times');
+  if (existingTimesEl) {
+    if (existingToday.length > 0) {
+      existingTimesEl.innerHTML = `
+        <div style="background:var(--cream);border-radius:10px;padding:10px 14px;margin-bottom:1rem;font-size:0.8rem;color:var(--ink-mid)">
+          <div style="font-weight:600;color:var(--ink);margin-bottom:6px;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.8px">Already scheduled this day:</div>
+          ${existingToday.map(([k, v]) => {
+            const time = k.substring(k.indexOf(':', k.indexOf(':') + 1) + 1);
+            const statusColor = v.status === 'booked' ? '#c0392b' : 'var(--green-mid)';
+            const statusDot = v.status === 'booked' ? '🔴' : '🟢';
+            return `<div style="display:flex;align-items:center;gap:6px;padding:3px 0;color:${statusColor}">${statusDot} <strong>${time}</strong><span style="color:var(--ink-light);font-size:0.7rem">${v.status === 'booked' ? ' (booked)' : ' (open)'}</span></div>`;
+          }).join('')}
+        </div>`;
+      existingTimesEl.style.display = 'block';
+    } else {
+      existingTimesEl.innerHTML = '';
+      existingTimesEl.style.display = 'none';
+    }
+  }
+
   const panel = document.getElementById('aa-add-panel');
   panel.style.display = 'block';
   panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -4015,6 +4046,68 @@ function formatDateDisplay(dateStr) {
   return d.toLocaleDateString('en-CA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 }
 
+function renderAaUpcomingEvents(artistId) {
+  const container = document.getElementById('aa-upcoming-events');
+  if (!container) return;
+
+  const store = getAvailabilityStore();
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  // Gather all upcoming booked and open slots for this artist
+  const upcoming = [];
+  Object.entries(store).forEach(([k, v]) => {
+    if (!k.startsWith(artistId + ':')) return;
+    const firstColon = k.indexOf(':');
+    const secondColon = k.indexOf(':', firstColon + 1);
+    const dateStr = k.substring(firstColon + 1, secondColon);
+    const time = k.substring(secondColon + 1);
+    const dateObj = new Date(dateStr + 'T12:00:00');
+    if (dateObj >= today) {
+      upcoming.push({ dateStr, time, status: v.status, bookedBy: v.bookedBy, notes: v.notes, dateObj });
+    }
+  });
+
+  // Sort by date ascending
+  upcoming.sort((a, b) => a.dateObj - b.dateObj);
+
+  // Take top 3
+  const top3 = upcoming.slice(0, 3);
+
+  if (top3.length === 0) {
+    container.innerHTML = `
+      <div style="background:var(--cream);border-radius:14px;padding:2rem;text-align:center;color:var(--ink-light);font-size:0.875rem;line-height:1.6">
+        <div style="font-size:1.5rem;margin-bottom:0.5rem">📅</div>
+        No upcoming events yet.<br>Click any future date on the calendar to add availability.
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = top3.map(ev => {
+    const isBooked = ev.status === 'booked';
+    const bg = isBooked ? '#fde8e8' : 'var(--white)';
+    const border = isBooked ? '1px solid #f5b7b1' : '1px solid var(--cream-dark)';
+    const timeColor = isBooked ? '#c0392b' : 'var(--green)';
+    const badge = isBooked
+      ? `<span style="font-size:0.68rem;background:#c0392b;color:white;padding:3px 9px;border-radius:100px;font-weight:600;flex-shrink:0">BOOKED</span>`
+      : `<span style="font-size:0.68rem;background:var(--green-light);color:var(--green-mid);padding:3px 9px;border-radius:100px;font-weight:600;flex-shrink:0;border:1px solid #b2dfc9">OPEN</span>`;
+
+    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const d = ev.dateObj;
+    const shortDate = `${dayNames[d.getDay()]}, ${monthNames[d.getMonth()]} ${d.getDate()}`;
+
+    return `<div style="background:${bg};border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;border:${border}">
+      <div>
+        <div style="font-weight:600;font-size:0.9rem;color:var(--ink);margin-bottom:2px">${shortDate}</div>
+        <div style="font-size:0.75rem;color:${timeColor};margin-top:2px">⏰ ${ev.time}${ev.notes ? ' · ' + ev.notes : ''}</div>
+        ${isBooked && ev.bookedBy ? `<div style="font-size:0.7rem;color:var(--ink-light);margin-top:2px">Booked by ${ev.bookedBy}</div>` : ''}
+      </div>
+      ${badge}
+    </div>`;
+  }).join('');
+}
+
 function addAvailabilitySlot(artistId) {
   const date = document.getElementById('aa-date')?.value;
   const start = document.getElementById('aa-start')?.value;
@@ -4048,6 +4141,7 @@ function addAvailabilitySlot(artistId) {
   document.getElementById('aa-add-panel').style.display = 'none';
   renderAaCalendar(artistId);
   renderAaSlotsList(artistId);
+  renderAaUpcomingEvents(artistId);
 }
 
 function removeSlot(artistId, date, time) {
@@ -4059,6 +4153,7 @@ function removeSlot(artistId, date, time) {
   saveAvailabilityStore(store);
   renderAaCalendar(artistId);
   renderAaSlotsList(artistId);
+  renderAaUpcomingEvents(artistId);
 }
 
 // ════════════════════════════════
@@ -4305,5 +4400,8 @@ if (window._pendingAuthEmail) {
   window._pendingAuthEmail = null;
 }
 </script>
+<!-- Version timestamp -->
+<div style="position:fixed;bottom:12px;right:16px;z-index:9000;font-family:var(--sans);font-size:0.65rem;color:rgba(122,122,114,0.55);pointer-events:none;letter-spacing:0.3px;user-select:none">v · May 8, 2026 · 11:42 PM</div>
+
 </body>
 </html>
