@@ -3870,7 +3870,7 @@ function renderArtistAvailability() {
       <span>Signed in as${currentUser.artistName ? " <strong>" + currentUser.artistName + "</strong> (" + currentUser.email + ")" : " artist: <strong>" + currentUser.email + "</strong>"}</span>
     </div>
 
-    <div style="display:grid;grid-template-columns:1.1fr 1fr;gap:2rem;align-items:start">
+    <div style="display:grid;grid-template-columns:1fr;gap:2rem;align-items:start;max-width:620px;margin:0 auto">
 
       <!-- LEFT: Calendar + slot form -->
       <div>
@@ -3920,20 +3920,12 @@ function renderArtistAvailability() {
           </div>
         </div>
 
-        <p style="font-size:0.78rem;color:var(--ink-light);margin-top:1rem;line-height:1.5;text-align:center">Click any future date on the calendar to mark yourself available. Venues will see your open slots when booking.</p>
-      </div>
-
-      <!-- RIGHT: My Scheduled Times -->
-      <div>
-        <h3 style="font-family:var(--serif);font-size:1.3rem;color:var(--ink);margin-bottom:0.5rem">My Scheduled Times</h3>
-        <p style="font-size:0.78rem;color:var(--ink-light);margin-bottom:1rem;line-height:1.5">All your open and booked slots. Click <strong>✕ Remove</strong> to take a time off your calendar.</p>
-        <div id="aa-slots-list"></div>
+        <p style="font-size:0.78rem;color:var(--ink-light);margin-top:1rem;line-height:1.5;text-align:center">Click any future date on the calendar to see your slots or add a new one.</p>
       </div>
     </div>
   `;
 
   renderAaCalendar(artistId);
-  renderAaSlotsList(artistId);
 }
 
 function renderAaCalendar(artistId) {
@@ -4003,11 +3995,7 @@ function renderAaCalendar(artistId) {
 
     let click = '';
     if (!isPast) {
-      if (isBooked || isOpen) {
-        click = `onclick="aaShowDayOptions('${dateStr}', '${d} ${monthNames[aaCalMonth]}', ${isBooked})"`;
-      } else {
-        click = `onclick="aaSelectDay('${dateStr}', '${d} ${monthNames[aaCalMonth]}')"`;
-      }
+      click = `onclick="aaSelectDay('${dateStr}', '${d} ${monthNames[aaCalMonth]}')"`;
     }
 
     const isClickable = !isPast;
@@ -4098,24 +4086,36 @@ function aaSelectDay(dateStr, labelStr) {
   document.getElementById('aa-date').value = dateStr;
   document.getElementById('aa-selected-date-label').textContent = labelStr;
 
-  // Show existing times for this day
   const artistId = currentUser.artistId ? 'artist-' + currentUser.artistId : 'artist-' + currentUser.email.replace(/[^a-z0-9]/g,'');
   const store = getAvailabilityStore();
-  const existingToday = Object.entries(store).filter(([k, v]) => k.startsWith(artistId + ':' + dateStr + ':'));
+  const existingToday = Object.entries(store).filter(([k]) => k.startsWith(artistId + ':' + dateStr + ':'));
+
   const existingTimesEl = document.getElementById('aa-existing-times');
   if (existingTimesEl) {
     if (existingToday.length > 0) {
+      existingTimesEl.style.display = 'block';
       existingTimesEl.innerHTML = `
-        <div style="background:var(--cream);border-radius:10px;padding:10px 14px;margin-bottom:1rem;font-size:0.8rem;color:var(--ink-mid)">
-          <div style="font-weight:600;color:var(--ink);margin-bottom:6px;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.8px">Already scheduled this day:</div>
+        <div style="margin-bottom:1.25rem">
+          <div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--ink-mid);margin-bottom:0.6rem">Your slots this day</div>
           ${existingToday.map(([k, v]) => {
             const time = k.substring(k.indexOf(':', k.indexOf(':') + 1) + 1);
-            const statusColor = v.status === 'booked' ? '#c0392b' : 'var(--green-mid)';
-            const statusDot = v.status === 'booked' ? '🔴' : '🟢';
-            return `<div style="display:flex;align-items:center;gap:6px;padding:3px 0;color:${statusColor}">${statusDot} <strong>${time}</strong><span style="color:var(--ink-light);font-size:0.7rem">${v.status === 'booked' ? ' (booked)' : ' (open)'}</span></div>`;
+            const isBooked = v.status === 'booked';
+            const bg = isBooked ? '#fde8e8' : 'var(--green-light)';
+            const border = isBooked ? '1px solid #f5b7b1' : '1.5px solid #b2dfc9';
+            const timeColor = isBooked ? '#c0392b' : 'var(--green-mid)';
+            const dot = isBooked ? '&#128308;' : '&#129001;';
+            const badge = isBooked
+              ? `<span style="font-size:0.65rem;background:#c0392b;color:white;padding:2px 8px;border-radius:100px;font-weight:600;flex-shrink:0">BOOKED</span>`
+              : `<button onclick="removeSlot('${artistId}','${dateStr}','${time}')" style="background:transparent;border:1.5px solid var(--cream-dark);border-radius:100px;padding:4px 10px;font-size:0.7rem;color:var(--ink-mid);cursor:pointer;font-family:var(--sans);transition:all 0.2s;flex-shrink:0" onmouseover="this.style.borderColor='#c0392b';this.style.color='#c0392b';this.style.background='#fde8e8'" onmouseout="this.style.borderColor='var(--cream-dark)';this.style.color='var(--ink-mid)';this.style.background='transparent'">&#10005; Remove</button>`;
+            return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:${bg};border:${border};border-radius:10px;padding:10px 14px;margin-bottom:6px">
+              <div style="font-size:0.85rem;font-weight:500;color:${timeColor}">${dot} ${time}${v.notes ? `<span style="font-size:0.72rem;color:var(--ink-light);font-weight:400"> &middot; ${v.notes}</span>` : ''}</div>
+              ${badge}
+            </div>`;
           }).join('')}
+        </div>
+        <div style="border-top:1px solid var(--cream-dark);padding-top:1rem;margin-bottom:0.75rem">
+          <div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--ink-mid);margin-bottom:0.75rem">Add another slot</div>
         </div>`;
-      existingTimesEl.style.display = 'block';
     } else {
       existingTimesEl.innerHTML = '';
       existingTimesEl.style.display = 'none';
@@ -4299,7 +4299,11 @@ function removeSlot(artistId, date, time) {
   delete store[key];
   saveAvailabilityStore(store);
   renderAaCalendar(artistId);
-  renderAaSlotsList(artistId);
+  // Re-open the day panel so the updated list shows immediately
+  const dateLabel = document.getElementById('aa-selected-date-label');
+  if (dateLabel && dateLabel.textContent) {
+    aaSelectDay(date, dateLabel.textContent);
+  }
 }
 
 // ════════════════════════════════
