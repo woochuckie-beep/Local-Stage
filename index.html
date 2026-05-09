@@ -89,6 +89,8 @@
     --white: #ffffff;
     --serif: 'DM Serif Display', Georgia, serif;
     --sans: 'DM Sans', system-ui, sans-serif;
+    --cal-selected: rgba(26, 155, 108, 0.22);
+    --cal-selected-border: rgba(26, 155, 108, 0.7);
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -3028,6 +3030,7 @@ function selectBookingArtist(el) {
   const now = new Date();
   venueCalYear = now.getFullYear();
   venueCalMonth = now.getMonth();
+  window._venueSelectedDate = null; // clear selection when switching artists
 
   renderVenueAvailCalendar(artistId);
 }
@@ -3089,6 +3092,7 @@ function renderVenueAvailCalendar(artistNumericId) {
     const isBooked = bookedByDate[dateStr] && bookedByDate[dateStr].length > 0;
     const isToday = cellDate.getTime() === today.getTime();
 
+    const isSelected = (window._venueSelectedDate === dateStr);
     let bg = 'transparent', color = isPast ? '#ccc' : 'var(--ink-mid)', border = '2px solid transparent';
     let dot = '';
     let cursor = 'default';
@@ -3100,13 +3104,19 @@ function renderVenueAvailCalendar(artistNumericId) {
       dot = `<div style="width:5px;height:5px;border-radius:50%;background:var(--green);margin:1px auto 0"></div>`;
       cursor = 'pointer';
     }
+    if (isSelected) {
+      bg = 'rgba(26,155,108,0.22)'; border = '2px solid rgba(26,155,108,0.7)';
+      if (!isBooked) color = 'var(--green-mid)';
+    }
     if (isToday) border = '2px solid var(--ink)';
+    if (isSelected && isToday) border = '2px solid var(--green)';
 
     const clickHandler = isOpen ? `onclick="venueSelectDay('${dateStr}')"` : '';
-    const hover = isOpen ? `onmouseover="this.style.background='#c8f0df'" onmouseout="this.style.background='${bg}'"` : '';
+    const hoverBg = isSelected ? 'rgba(26,155,108,0.32)' : '#c8f0df';
+    const hover = isOpen ? `onmouseover="this.style.background='${hoverBg}'" onmouseout="this.style.background='${bg}'"` : '';
 
-    calCells += `<div ${clickHandler} ${hover} style="border-radius:8px;padding:5px 2px;text-align:center;background:${bg};border:${border};cursor:${cursor};transition:background 0.15s">
-      <div style="font-size:0.75rem;font-weight:${isToday?'700':'400'};color:${color}">${d}</div>
+    calCells += `<div ${clickHandler} ${hover} style="border-radius:8px;padding:5px 2px;text-align:center;background:${bg};border:${border};cursor:${cursor};transition:background 0.15s${isSelected ? ';box-shadow:0 0 0 3px rgba(26,155,108,0.15)' : ''}">
+      <div style="font-size:0.75rem;font-weight:${isSelected||isToday?'700':'400'};color:${color}">${d}</div>
       ${dot}
     </div>`;
   }
@@ -3147,6 +3157,7 @@ function venueNavMonth(dir) {
   venueCalMonth += dir;
   if (venueCalMonth > 11) { venueCalMonth = 0; venueCalYear++; }
   if (venueCalMonth < 0) { venueCalMonth = 11; venueCalYear--; }
+  window._venueSelectedDate = null; // clear selection on month change
   const selected = document.querySelector('.pick-artist-row.selected');
   const artistId = selected ? parseInt(selected.getAttribute('data-artist-id')) : null;
   if (artistId) renderVenueAvailCalendar(artistId);
@@ -3157,6 +3168,10 @@ function venueSelectDay(dateStr) {
   const picker = document.getElementById('venue-slot-picker');
   const content = document.getElementById('venue-slot-picker-content');
   if (!picker || !content || slots.length === 0) return;
+
+  // Highlight the selected calendar day
+  window._venueSelectedDate = dateStr;
+  renderVenueAvailCalendar(window._venueArtistId);
 
   content.innerHTML = `
     <div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--green-mid);margin-bottom:0.75rem">Available times for ${formatDateDisplay(dateStr)}</div>
@@ -4062,6 +4077,7 @@ function renderAaCalendar(artistId) {
     const isOpen = openDates.has(dateStr);
     const isToday = dateObj.getTime() === today.getTime();
 
+    const isSelected = (window._aaSelectedDate === dateStr);
     let bg = 'transparent', color = isPast ? '#ccc' : 'var(--ink)', border = '2px solid transparent';
     let cursor = isPast ? 'default' : 'pointer';
     let dot = '';
@@ -4073,7 +4089,12 @@ function renderAaCalendar(artistId) {
       bg = 'var(--green-light)'; color = 'var(--green-mid)'; border = '2px solid #b2dfc9';
       dot = `<div style="width:5px;height:5px;border-radius:50%;background:var(--green);margin:1px auto 0"></div>`;
     }
+    if (isSelected) {
+      bg = 'rgba(26,155,108,0.22)'; border = '2px solid rgba(26,155,108,0.7)';
+      if (!isBooked && !isOpen) color = 'var(--green-mid)';
+    }
     if (isToday) { border = '2px solid var(--ink)'; }
+    if (isSelected && isToday) border = '2px solid var(--green)';
 
     let click = '';
     if (!isPast) {
@@ -4081,9 +4102,9 @@ function renderAaCalendar(artistId) {
     }
 
     const isClickable = !isPast;
-    html += `<div ${click} style="border-radius:10px;padding:6px 2px;text-align:center;background:${bg};border:${border};cursor:${isClickable ? 'pointer' : 'default'};transition:all 0.15s"
+    html += `<div ${click} style="border-radius:10px;padding:6px 2px;text-align:center;background:${bg};border:${border};cursor:${isClickable ? 'pointer' : 'default'};transition:all 0.15s${isSelected ? ';box-shadow:0 0 0 3px rgba(26,155,108,0.15)' : ''}"
       ${isClickable ? `onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'"` : ''}>
-      <div style="font-size:0.8rem;font-weight:${isToday?'700':'400'};color:${color}">${d}</div>
+      <div style="font-size:0.8rem;font-weight:${isSelected||isToday?'700':'400'};color:${color}">${d}</div>
       ${dot}
     </div>`;
   }
@@ -4094,6 +4115,7 @@ function aaNavMonth(dir) {
   aaCalMonth += dir;
   if (aaCalMonth > 11) { aaCalMonth = 0; aaCalYear++; }
   if (aaCalMonth < 0) { aaCalMonth = 11; aaCalYear--; }
+  window._aaSelectedDate = null; // clear selection on month change
   const artistId = 'artist-' + currentUser.email.replace(/[^a-z0-9]/g,'');
   renderAaCalendar(artistId);
 }
@@ -4168,7 +4190,10 @@ function aaSelectDay(dateStr, labelStr) {
   document.getElementById('aa-date').value = dateStr;
   document.getElementById('aa-selected-date-label').textContent = labelStr;
 
+  // Store and re-render to highlight selected date
+  window._aaSelectedDate = dateStr;
   const artistId = currentUser.artistId ? 'artist-' + currentUser.artistId : 'artist-' + currentUser.email.replace(/[^a-z0-9]/g,'');
+  renderAaCalendar(artistId);
   const store = getAvailabilityStore();
   const existingToday = Object.entries(store).filter(([k]) => k.startsWith(artistId + ':' + dateStr + ':'));
 
@@ -4625,6 +4650,33 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
   overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
 });
 
+// ── Remove Maya Reyes booking #8 from all stored business booking lists ──
+(function removeMayaReysBooking8() {
+  try {
+    // Scan all ls-biz-bookings-* keys in localStorage
+    const keysToUpdate = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('ls-biz-bookings-')) keysToUpdate.push(k);
+    }
+    keysToUpdate.forEach(k => {
+      try {
+        let bookings = JSON.parse(localStorage.getItem(k) || '[]');
+        // Remove booking index 7 (0-based #8) if it's Maya Reyes, or any Maya Reyes booking
+        const before = bookings.length;
+        bookings = bookings.filter((b, i) => {
+          const isMaya = (b.artist || '').toLowerCase().includes('maya reyes');
+          const isIndex8 = i === 7; // booking #8 is index 7
+          return !(isMaya && isIndex8) && !(isMaya && b._demoBooking8);
+        });
+        if (bookings.length !== before) {
+          localStorage.setItem(k, JSON.stringify(bookings));
+        }
+      } catch(e) {}
+    });
+  } catch(e) {}
+})();
+
 // Init
 updateNavAuth();
 renderArtistGrid('all','all');
@@ -4644,7 +4696,7 @@ if (window._pendingAuthEmail) {
 }
 </script>
 <!-- Version timestamp -->
-<div style="position:fixed;bottom:12px;right:16px;z-index:9000;font-family:var(--sans);font-size:0.65rem;color:rgba(122,122,114,0.55);pointer-events:none;letter-spacing:0.3px;user-select:none">v · May 8, 2026 · 8:12 PM</div>
+<div style="position:fixed;bottom:12px;right:16px;z-index:9000;font-family:var(--sans);font-size:0.65rem;color:rgba(122,122,114,0.55);pointer-events:none;letter-spacing:0.3px;user-select:none">v · May 8, 2026 · 9:30 PM</div>
 
 </body>
 </html>
