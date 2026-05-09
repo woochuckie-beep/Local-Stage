@@ -7,27 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 
-<!-- ═══════════════════════════════════════════════════════════
-  LOCALSTAGE v11 — PRODUCTION CONFIG
-  ══════════════════════════════════════════════════════════════
-  STEP 1 — FIREBASE (free Spark plan, for Google sign-in)
-    a) Go to console.firebase.google.com → your project
-    b) Authentication → Sign-in method → Enable "Google"
-    c) Project Settings → Your apps → Add Web app → copy config below
-    d) Authentication → Settings → Authorized domains → add your domain (e.g. woochuckie-beep.github.io)
-  
-  STEP 2 — STRIPE (for real $99 CAD payments)
-    a) Go to stripe.com → Developers → API keys
-    b) Copy your PUBLISHABLE key (starts with pk_live_ or pk_test_)
-    c) Set up a Payment Intent endpoint on your backend (see comment below)
-    d) For testing: use pk_test_ key + card 4242 4242 4242 4242
-  
-  STEP 3 — BACKEND for Stripe (required — can't process cards client-side)
-    Option A: Vercel serverless function (free)
-    Option B: Firebase Cloud Function (free tier)
-    Your endpoint must: create a PaymentIntent for 9900 (CAD cents), return clientSecret
-    Example: POST /api/create-payment-intent → { clientSecret: "pi_xxx_secret_xxx" }
-  ═══════════════════════════════════════════════════════════ -->
+<!-- LocalStage — Production config active -->
 <script>
   // ─── FIREBASE CONFIG — replace all values below ───────────────
   const FIREBASE_CONFIG = {
@@ -4675,7 +4655,7 @@ if (window._pendingAuthEmail) {
 }
 </script>
 <!-- Version timestamp -->
-<div style="position:fixed;bottom:12px;right:16px;z-index:9000;font-family:var(--sans);font-size:0.65rem;color:rgba(122,122,114,0.55);pointer-events:none;letter-spacing:0.3px;user-select:none">v · May 8, 2026 · 11:42 PM</div>
+<div style="position:fixed;bottom:12px;right:16px;z-index:9000;font-family:var(--sans);font-size:0.65rem;color:rgba(122,122,114,0.55);pointer-events:none;letter-spacing:0.3px;user-select:none">v · May 8, 2026 · 11:58 PM</div>
 
 </body>
 </html>
