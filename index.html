@@ -3299,10 +3299,10 @@ function makeInitials(name) {
 
 function makeStars(rating) {
   const r = parseFloat(rating) || 0;
-  const full  = Math.floor(r);
-  const half  = (r - full) >= 0.5 ? 1 : 0;
-  const empty = 5 - full - half;
-  return '★'.repeat(full) + (half ? '½' : '') + ''.repeat(empty);
+  // Round to nearest whole star for clean display
+  const full  = Math.round(r);
+  const empty = 5 - full;
+  return '★'.repeat(Math.max(0, full)) + '☆'.repeat(Math.max(0, empty));
 }
 
 // Called after CSV is parsed — builds ARTISTS array entirely from sheet rows
@@ -3326,25 +3326,29 @@ function buildRosterFromSheet() {
       id:         idx + 1,
       init:       makeInitials(name),
       name,
-      genre:      d.genre       || inferGenreFromText(d.about || d.description || '') || 'Artist',
+      genre:      'Personal Support Worker',
       city:       d.city        || 'Ontario, ON',
       cityKey:    inferCityKey(d.city),
       score,
       stars:      makeStars(rating),
       rating,
-      draw:       d.avgDraw     || 0,
-      tag:        inferGenreTag(d.genre),
+      draw:       0,
+      tag:        'caregiver',
       gradient:   GRAD_PALETTE[idx % GRAD_PALETTE.length],
       instagram:  '',
-      videoUrl:   'https://youtube.com',
-      videoLabel: 'Live Performance',
-      rate:       d.artistRate  || 'Rate on request',
+      videoUrl:   '',
+      videoLabel: '',
+      rate:       null,
       about:      d.about       || null,
       description:d.description || null,
-      followersScore:  d.followersScore  || null,
-      engagementRate:  d.engagementRate  || null,
-      avgDrawPct:      d.avgDrawPct      || null,
-      reliability:     d.reliability     || null,
+      certifications: d.certifications || null,
+      pswCertified:   d.pswCertified   || null,
+      phone:          d.phone          || null,
+      languages:      d.languages      || null,
+      followersScore:  null,
+      engagementRate:  null,
+      avgDrawPct:      null,
+      reliability:     null,
     };
 
     // Top artists (score >= 70) go in main roster, others in "New & Emerging"
@@ -3767,56 +3771,54 @@ async function loadApprovedEmails(force = false) {
         emailUserTypes[bizEmail] = 'business';
       }
 
-      // ── Artist columns ────────────────────────────────────────────
-      // Col F (index 5)  = email
-      // Col G (index 6)  = name
-      // Col H (index 7)  = Local Stage Score  (e.g. "84")
-      // Col I (index 8)  = Local followers %  (e.g. "32%")
-      // Col J (index 9)  = Engagement rate    (e.g. "24%")
-      // Col K (index 10) = Avg show draw      (e.g. "18%")
-      // Col L (index 11) = Reliability        (e.g. "10%")
-      // Col M (index 12) = About              (bio text)
-      // Col N (index 13) = Avg Draw           (numeric, e.g. "65")
-      // Col O (index 14) = Rating             (e.g. "4.9")
-      // Col P (index 15) = Artist rate        (e.g. "$350/show")
-      // Col Q (index 16) = City               (e.g. "Mississauga, ON")
-      // Col R (index 17) = Description        (short tagline/description)
-      const artistEmail = (r[5] || '').toLowerCase().trim();
+      // ── Caregiver columns ─────────────────────────────────────────
+      // Col J (index 9)  = Email
+      // Col K (index 10) = Name
+      // Col L (index 11) = About (bio text)
+      // Col M (index 12) = Rating             (e.g. "4.9")
+      // Col N (index 13) = City               (e.g. "Mississauga")
+      // Col O (index 14) = Certifications     (e.g. "First Aid and CPR, 8 Years")
+      // Col P (index 15) = PSW Certified      (e.g. "Yes")
+      // Col Q (index 16) = Phone Number
+      // Col R (index 17) = Languages Spoken   (e.g. "Cantonese, English, French")
+      const artistEmail = (r[9] || '').toLowerCase().trim();
       if (artistEmail.includes('@')) {
         approvedEmails.push(artistEmail);
         emailUserTypes[artistEmail] = 'artist';
-        const artistName = (r[6] || '').trim();
+        const artistName = (r[10] || '').trim();
         if (artistName) {
           emailArtistNames[artistEmail] = artistName;
 
           // Parse and store all stats keyed by lowercase name
           const nameKey = artistName.toLowerCase();
-          const scoreRaw   = parseFloat(r[7])  || null;
-          const followersScoreRaw = parsePct(r[8]); // Col I = % contribution to CareScore
-          const engRate    = parsePct(r[9]);
-          const avgDrawPct = parsePct(r[10]);
-          const reliability= parsePct(r[11]);
-          const about      = (r[12] || '').trim();
-          const avgDraw    = parseFloat(r[13]) || null;
-          const rating     = parseFloat(r[14]) || null;
-          const artistRate = (r[15] || '').trim() || null;
-          const city       = (r[16] || '').trim() || null;
-          const description= (r[17] || '').trim() || null;
-          const genre      = (r[18] || '').trim() || null;
+          const about        = (r[11] || '').trim();
+          const rating       = parseFloat(r[12]) || null;
+          const city         = (r[13] || '').trim() || null;
+          const certifications = (r[14] || '').trim() || null;
+          const pswCertified = (r[15] || '').trim() || null;
+          const phone        = (r[16] || '').trim() || null;
+          const languages    = (r[17] || '').trim() || null;
+
+          // Derive a score from rating (0–100 scale) for sorting
+          const scoreRaw = rating ? Math.round(rating * 20) : null;
 
           const parsed = {
-            score:       scoreRaw !== null ? Math.round(scoreRaw) : null,
-            followersScore: followersScoreRaw,
-            engagementRate: engRate,
-            avgDrawPct,
-            reliability,
-            about:       about || null,
-            avgDraw:     avgDraw !== null ? Math.round(avgDraw) : null,
+            score:          scoreRaw,
+            about:          about || null,
             rating,
-            artistRate,
             city,
-            description,
-            genre
+            certifications,
+            pswCertified,
+            phone,
+            languages,
+            artistRate:     null,  // no rate displayed
+            description:    null,
+            genre:          null,
+            followersScore: null,
+            engagementRate: null,
+            avgDrawPct:     null,
+            reliability:    null,
+            avgDraw:        null,
           };
 
           sheetArtistData[nameKey] = parsed;
@@ -3954,19 +3956,18 @@ function renderGrid(containerId, artists, genreFilter, cityFilter) {
   }
   c.innerHTML = filtered.map(a => `
     <div class="artist-card">
-      <div class="artist-card-img" style="background:linear-gradient(${a.gradient})">
-        ${a.init}
+      <div class="artist-card-img" style="background:linear-gradient(${a.gradient});display:flex;align-items:center;justify-content:center">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
         <div class="play-overlay" onclick="openArtistProfile(${a.id})"><div class="play-btn">▶</div></div>
       </div>
       <div class="artist-card-body">
         <div class="artist-card-name">${a.name}</div>
         <div class="artist-card-genre">${a.genre}</div>
         <div class="artist-card-score">
-          <span class="score-badge">★ ${a.stars || '4.8'}</span>
-          <span class="artist-card-stars" style="font-size:0.72rem;color:var(--ink-light)">${a.score || 'Verified'}</span>
+          <span style="color:#f4b400;letter-spacing:1px;font-size:0.85rem">${makeStars(a.rating)}</span>
+          <span style="font-size:0.72rem;color:var(--ink-light);margin-left:4px">${a.rating ? a.rating.toFixed(1) : ''}</span>
         </div>
-        <div class="artist-card-location"> ${a.city} · ${a.draw || 'available'}</div>
-        <div style="margin-top:4px;display:inline-flex;align-items:center;gap:5px;background:var(--green-light);border-radius:100px;padding:3px 10px;font-size:0.7rem;font-weight:600;color:var(--green-mid)"> ${a.rate || 'Personalized care plan'}</div>
+        <div class="artist-card-location"> ${a.city}</div>
         <div style="margin-top:8px;display:flex;gap:6px">
           <button style="flex:1;padding:5px 8px;background:var(--cream);color:var(--ink-mid);border:1px solid var(--cream-dark);border-radius:100px;font-family:var(--sans);font-size:0.7rem;cursor:pointer" onclick="openArtistProfile(${a.id})">View profile</button>
         </div>
@@ -5580,38 +5581,66 @@ function openArtistProfile(id) {
   const a = allArtists.find(x => x.id === id);
   if (!a) return;
 
-  // Banner — warm caregiver palette
+  // Banner
   document.getElementById('ap-banner').style.background = `linear-gradient(135deg, #3a2e22 0%, #5c4a3a 100%)`;
   document.getElementById('ap-banner-bg').style.background = `linear-gradient(${a.gradient})`;
-  document.getElementById('ap-avatar').style.background = `linear-gradient(${a.gradient})`;
-  document.getElementById('ap-avatar').textContent = a.init;
+
+  // Avatar replaced by photo placeholder
+  const avatarEl = document.getElementById('ap-avatar');
+  avatarEl.style.background = '#4a3a2c';
+  avatarEl.style.border = '3px solid rgba(212,165,116,0.35)';
+  avatarEl.innerHTML = `<svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="rgba(212,165,116,0.5)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`;
+
   document.getElementById('ap-name').textContent = a.name;
-  document.getElementById('ap-genre-city').textContent = `${a.genre || 'Personal Support Worker'}  ·  ${a.city}  ·  ${a.stars} (${a.rating.toFixed(1)})`;
+
+  // Stars display — clean filled/empty, no half symbols
+  const starsHtml = makeStars(a.rating);
+  const ratingNum = a.rating ? a.rating.toFixed(1) : '';
+  document.getElementById('ap-genre-city').innerHTML = `
+    <span style="color:#d4a574;letter-spacing:2px;font-size:1rem">${starsHtml}</span>
+    ${ratingNum ? `<span style="color:#e0cdac;margin-left:6px;font-size:0.88rem">${ratingNum}</span>` : ''}
+    &nbsp;·&nbsp; ${a.city}
+  `;
+
   const bookBtn = document.getElementById('ap-book-btn');
   bookBtn.textContent = `Request ${a.name.split(' ')[0]} →`;
   bookBtn.onclick = () => { closeModal('modal-artist-profile'); bookArtist(id); };
 
-  // Verification badges — replaces social handles
+  // Verification badge
   document.getElementById('ap-social-bar').innerHTML = '<div style="display:inline-flex;align-items:center;gap:7px;background:rgba(212,165,116,0.18);border:1px solid rgba(212,165,116,0.32);border-radius:100px;padding:6px 16px;font-size:0.75rem;color:#d4a574;font-weight:500">Background-checked &amp; insured &nbsp;·&nbsp; ✓ Reference verified</div>';
 
-  // Stats — caregiver credentials, not music metrics
-  document.getElementById('ap-stats-row').innerHTML = [
-    {val: (a.score >= 80 ? '10+' : (a.score >= 70 ? '5+' : '3+')) + ' yrs', lbl: 'Care experience'},
-    {val: 'PSW', lbl: 'Certified'},
-    {val: a.rating.toFixed(1)+'★', lbl: 'Family rating'},
-    {val: a.rate && a.rate !== 'Rate on request' ? a.rate : '$32-38/hr', lbl: 'Care rate'},
-    {val: a.city.split(',')[0], lbl: 'Serves area'},
-  ].map(s => `
+  // Build stats from spreadsheet fields — no rate, no cost/show
+  const statsItems = [];
+  if (a.certifications) {
+    // Parse years from certifications string e.g. "First Aid and CPR, 8 Years"
+    const yearsMatch = a.certifications.match(/(\d+\+?)\s*[Yy]ear/);
+    if (yearsMatch) statsItems.push({val: yearsMatch[1] + ' yrs', lbl: 'Experience'});
+  }
+  if (a.pswCertified) {
+    statsItems.push({val: a.pswCertified === 'Yes' ? 'PSW ✓' : 'PSW', lbl: 'Certified'});
+  }
+  if (a.rating) {
+    statsItems.push({val: a.rating.toFixed(1) + '★', lbl: 'Family rating'});
+  }
+  if (a.city) {
+    statsItems.push({val: a.city.split(',')[0], lbl: 'Serves area'});
+  }
+  if (a.languages) {
+    const langList = a.languages.replace(/\d+\.\s*/g, '').replace(/\n/g, ', ').trim();
+    statsItems.push({val: langList, lbl: 'Languages'});
+  }
+
+  document.getElementById('ap-stats-row').innerHTML = statsItems.map(s => `
     <div style="text-align:center;min-width:90px">
-      <div style="font-family:var(--serif);font-size:1.6rem;color:#d4a574;line-height:1">${s.val}</div>
+      <div style="font-family:var(--serif);font-size:1.4rem;color:#d4a574;line-height:1.2">${s.val}</div>
       <div style="font-size:0.7rem;color:#b8a589;margin-top:6px;text-transform:uppercase;letter-spacing:1px">${s.lbl}</div>
     </div>
   `).join('');
 
-  // Bio — caregiver intro
-  document.getElementById('ap-bio').textContent = a.about || a.description || ARTIST_BIOS[id] || `"Hello — I'm ${a.name}. I've been caring for elderly families across ${a.city} for years, and I treat every visit like I'm visiting my own grandparents. I'd love to meet you and learn what would bring comfort and joy to your loved one's day."`;
+  // Bio from spreadsheet About column
+  document.getElementById('ap-bio').textContent = a.about || `Hello — I'm ${a.name}. I've been caring for elderly families across ${a.city} for years, and I treat every visit like I'm visiting my own grandparents. I'd love to meet you and learn what would bring comfort and joy to your loved one's day.`;
 
-  // Request Care CTA — context-aware
+  // Request Care CTA
   const bookNowEl = document.getElementById('ap-book-now-cta');
   if (bookNowEl) {
     if (!currentUser) {
@@ -5632,15 +5661,15 @@ function openArtistProfile(id) {
     }
   }
 
-  // Clean credentials list (no progress bars — professional check-list)
-  const yearsExp = (a.score >= 80 ? '10+' : (a.score >= 70 ? '5+' : '3+')) + ' years';
+  // Credentials from spreadsheet — certifications, PSW, languages
+  const certLines = a.certifications ? a.certifications.split(',').map(s => s.trim()).filter(Boolean) : [];
   const credentials = [
-    {lbl:'Vulnerable-sector police check',  val: 'Cleared (within 6 months)'},
+    {lbl:'Vulnerable-sector police check', val: 'Cleared (within 6 months)'},
     {lbl:'Liability &amp; WSIB insurance',  val: 'Carried by Hearthlane'},
-    {lbl:'Elder-care experience',           val: yearsExp},
-    {lbl:'Personal references',             val: 'Verified · Available on request'},
+    ...certLines.map(c => ({lbl: c, val: 'Verified'})),
+    ...(a.pswCertified === 'Yes' ? [{lbl:'Personal Support Worker (PSW)', val: 'Certified ✓'}] : []),
+    {lbl:'Personal references', val: 'Verified · Available on request'},
     {lbl:'In-person interview &amp; trial', val: 'Completed'},
-    {lbl:'First Aid &amp; CPR',             val: 'Current'},
   ];
   const checkSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d4a574" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px"><polyline points="20 6 9 17 4 12"/></svg>`;
   document.getElementById('ap-score-bars').innerHTML = credentials.map(b => `
@@ -5653,19 +5682,17 @@ function openArtistProfile(id) {
     </div>
   `).join('');
 
-  // Video embed or caregiver intro
+  // Photo placeholder instead of video
   const videoContainer = document.getElementById('ap-video-container');
-  const ytMatch = (a.videoUrl || '').match(/(?:youtu\.be\/|v=|embed\/)([A-Za-z0-9_-]{11})/);
-  if (ytMatch) {
-    videoContainer.innerHTML = `<iframe src="https://www.youtube.com/embed/${ytMatch[1]}?rel=0&modestbranding=1" style="width:100%;height:100%;border:none" allowfullscreen title="Caregiver introduction"></iframe>`;
-  } else {
-    videoContainer.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:14px;background:linear-gradient(135deg,#1a1410 0%,#3a2e22 100%);padding:1.5rem;text-align:center">
-      <div style="font-size:2.5rem"></div>
-      <div style="font-size:0.95rem;color:#e0cdac;line-height:1.7;font-family:var(--serif);font-style:italic">Video introduction coming soon</div>
-      <div style="font-size:0.78rem;color:#b8a589;line-height:1.6">Meet ${a.name.split(' ')[0]} in person during your free consultation.</div>
+  videoContainer.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;background:linear-gradient(135deg,#2a2018 0%,#3a2e22 100%);padding:2rem;text-align:center">
+      <div style="width:96px;height:96px;border-radius:50%;background:#4a3a2c;border:2px solid rgba(212,165,116,0.3);display:flex;align-items:center;justify-content:center">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="rgba(212,165,116,0.45)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      </div>
+      <div style="font-size:0.88rem;color:#e0cdac;line-height:1.6;font-family:var(--serif);font-style:italic">Photo coming soon</div>
+      <div style="font-size:0.75rem;color:#b8a589;line-height:1.6">Meet ${a.name.split(' ')[0]} in person<br>during your free consultation.</div>
     </div>`;
-  }
-  document.getElementById('ap-video-label').textContent = '— ' + a.name.split(' ')[0] + ', in their own words';
+  document.getElementById('ap-video-label').textContent = '';
 
   document.getElementById('modal-artist-profile').classList.add('open');
   document.getElementById('modal-artist-profile').scrollTop = 0;
