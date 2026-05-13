@@ -1,0 +1,337 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+   CAREGIVER CALENDAR & BOOKING STYLES
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ─ Availability Page Header Fix ─ */
+.availability-header {
+  padding: 2rem 3rem;
+  overflow: visible;
+  white-space: normal;
+  word-wrap: break-word;
+  max-width: 100%;
+}
+
+.availability-header h1 {
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  line-height: 1.2;
+  margin-bottom: 1rem;
+  color: var(--ink);
+  font-family: var(--serif);
+  letter-spacing: -0.5px;
+}
+
+.availability-header p {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--ink-mid);
+  margin: 0;
+}
+
+#page-availability {
+  overflow: visible;
+}
+
+/* ─ Calendar Day Slots Display ─ */
+.day-slots {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.slot {
+  background: var(--white);
+  border: 2px solid var(--cream-dark);
+  border-radius: 12px;
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.slot:hover {
+  border-color: var(--green);
+  box-shadow: 0 4px 16px rgba(192, 133, 104, 0.15);
+  transform: translateY(-2px);
+}
+
+.slot.selected {
+  background: var(--green-light);
+  border-color: var(--green);
+  box-shadow: 0 6px 20px rgba(192, 133, 104, 0.25);
+}
+
+.slot-time {
+  font-family: var(--serif);
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--green);
+  margin-bottom: 0.5rem;
+}
+
+.slot-caregiver {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 0.75rem;
+}
+
+.slot-status {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.4rem 0.8rem;
+  border-radius: 100px;
+  display: inline-block;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.slot-status.available {
+  background: rgba(192, 133, 104, 0.1);
+  color: var(--green);
+}
+
+.slot-status.booked {
+  background: rgba(192, 133, 104, 0.05);
+  color: var(--ink-light);
+  text-decoration: line-through;
+}
+
+/* ─ Caregiver Search Bar ─ */
+.caregiver-search-container {
+  margin-bottom: 2rem;
+}
+
+.caregiver-search-input {
+  width: 100%;
+  padding: 0.9rem 1.25rem;
+  font-size: 1rem;
+  border: 2px solid var(--cream-dark);
+  border-radius: 100px;
+  font-family: var(--sans);
+  color: var(--ink);
+  background: var(--white);
+  transition: all 0.2s ease;
+}
+
+.caregiver-search-input::placeholder {
+  color: var(--ink-light);
+}
+
+.caregiver-search-input:focus {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(192, 133, 104, 0.1);
+  background: var(--cream);
+}
+
+.search-icon {
+  position: absolute;
+  right: 1.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ink-light);
+  font-size: 1.1rem;
+  pointer-events: none;
+}
+
+/* ─ Caregiver Booking List ─ */
+.caregiver-booking-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.caregiver-card {
+  background: var(--white);
+  border-radius: 16px;
+  padding: 1.5rem;
+  border: 1px solid var(--cream-dark);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.caregiver-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  border-color: var(--green);
+}
+
+.caregiver-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.caregiver-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #c08568, #8a5a40);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.caregiver-info {
+  flex: 1;
+}
+
+.caregiver-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 0.25rem;
+}
+
+.caregiver-specialty {
+  font-size: 0.8rem;
+  color: var(--ink-light);
+}
+
+.caregiver-rating {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--green);
+}
+
+.caregiver-details {
+  border-top: 1px solid var(--cream-dark);
+  padding-top: 1rem;
+  margin-top: 1rem;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.detail-label {
+  color: var(--ink-light);
+}
+
+.detail-value {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.caregiver-action {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--cream-dark);
+}
+
+.select-caregiver-btn {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: var(--green);
+  color: white;
+  border: none;
+  border-radius: 100px;
+  font-family: var(--sans);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.select-caregiver-btn:hover {
+  background: var(--green-mid);
+  transform: translateY(-1px);
+}
+
+.select-caregiver-btn:active {
+  transform: translateY(0);
+}
+
+/* ─ Booking Summary ─ */
+.booking-summary {
+  background: var(--green-light);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  border-left: 4px solid var(--green);
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+}
+
+.summary-item:last-child {
+  margin-bottom: 0;
+}
+
+.summary-item .label {
+  font-weight: 500;
+  color: var(--ink-mid);
+}
+
+.summary-item .value {
+  font-weight: 600;
+  color: var(--ink);
+  font-family: var(--serif);
+}
+
+/* ─ No Results Message ─ */
+.no-results-message {
+  padding: 3rem 2rem;
+  text-align: center;
+  color: var(--ink-light);
+  font-size: 1rem;
+}
+
+/* ─ Responsive Design ─ */
+@media (max-width: 768px) {
+  .availability-header {
+    padding: 1.5rem;
+  }
+  
+  .availability-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .day-slots {
+    grid-template-columns: 1fr;
+  }
+  
+  .caregiver-booking-list {
+    grid-template-columns: 1fr;
+  }
+  
+  .caregiver-search-input {
+    padding: 0.8rem 1rem;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .availability-header {
+    padding: 1rem;
+  }
+  
+  .availability-header h1 {
+    font-size: 1.25rem;
+  }
+  
+  .slot {
+    padding: 1rem;
+  }
+  
+  .slot-time {
+    font-size: 1.1rem;
+  }
+}
