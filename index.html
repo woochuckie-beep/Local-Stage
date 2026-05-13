@@ -1068,6 +1068,15 @@
   .booking-form-card h2 { font-family: var(--serif); color: var(--walnut-dark); font-size: 1.7rem; margin-bottom: 0.4rem; letter-spacing: -0.3px; }
   .booking-form-card > p { color: var(--ink-mid); font-family: var(--serif); font-style: italic; font-size: 0.95rem; line-height: 1.65; margin-bottom: 1.5rem; }
 
+  /* Booking page caregiver filter chips */
+  .bk-chip {
+    background: transparent; border: 1.5px solid var(--cream-dark); border-radius: 100px;
+    padding: 5px 12px; font-family: var(--sans); font-size: 0.78rem; font-weight: 500;
+    color: var(--ink-mid); cursor: pointer; transition: all 0.18s; white-space: nowrap;
+  }
+  .bk-chip:hover { border-color: var(--green); color: var(--green); }
+  .bk-chip.active { background: var(--green); border-color: var(--green); color: white; }
+
   /* Caregiver picker sidebar warmth */
   .booking-artist-pick { background: var(--cream-soft); border-radius: 22px; padding: 1.5rem; border: 1px solid var(--cream-dark); }
   .booking-artist-pick h3 { font-family: var(--serif); color: var(--walnut-dark); margin-bottom: 1rem; font-size: 1.15rem; letter-spacing: -0.2px; }
@@ -4180,9 +4189,25 @@ function getBookingFormHTML() {
               <option value="other">Other GTA</option>
             </select>
           </div>
+          <!-- Name search + city filter -->
+          <div style="margin-bottom:12px;display:flex;flex-direction:column;gap:8px">
+            <input type="text" id="booking-name-search" placeholder="🔍 Search by caregiver name…" oninput="renderBookingArtists()" style="width:100%;padding:9px 13px;border-radius:12px;border:1.5px solid var(--cream-dark);font-family:var(--sans);font-size:0.85rem;background:white;color:var(--ink);outline:none;transition:border-color 0.2s" onfocus="this.style.borderColor='var(--green)'" onblur="this.style.borderColor='var(--cream-dark)'">
+            <div style="display:flex;flex-wrap:wrap;gap:6px" id="booking-city-chips">
+              <button class="bk-chip active" data-city="all" onclick="bookingCityChip(this,'all')">All areas</button>
+              <button class="bk-chip" data-city="mississauga" onclick="bookingCityChip(this,'mississauga')">Mississauga</button>
+              <button class="bk-chip" data-city="toronto" onclick="bookingCityChip(this,'toronto')">Toronto / GTA</button>
+              <button class="bk-chip" data-city="brampton" onclick="bookingCityChip(this,'brampton')">Brampton</button>
+              <button class="bk-chip" data-city="hamilton" onclick="bookingCityChip(this,'hamilton')">Hamilton</button>
+              <button class="bk-chip" data-city="other" onclick="bookingCityChip(this,'other')">Other GTA</button>
+            </div>
+          </div>
           <div id="booking-artist-list"></div>
-          <!-- Availability slots for selected caregiver -->
+          <!-- Calendar for selected caregiver -->
           <div id="booking-avail-slots"></div>
+          <!-- Slot picker — lives outside the re-rendered calendar so it persists -->
+          <div id="venue-slot-picker" style="display:none;margin-top:1rem;background:var(--green-light);border-radius:14px;padding:1rem;border:1.5px solid #b2dfc9">
+            <div id="venue-slot-picker-content"></div>
+          </div>
         </div>
         <div style="background:var(--green-light);border-radius:18px;padding:1.5rem;font-size:0.88rem;color:var(--green-mid);line-height:1.75;font-family:var(--serif);font-style:italic;border:1px solid #e5c8b3">
           <strong style="display:block;margin-bottom:6px;font-style:normal;font-family:var(--sans);text-transform:uppercase;letter-spacing:1px;font-size:0.7rem">How this works</strong> Pick a caregiver who feels right → choose a day and time → tell us a bit about your loved one → we call you back within 24 hours to confirm. No payment until everyone's happy with the plan.
@@ -4604,17 +4629,27 @@ function renderBusinessUpcomingEvents() {
   container.innerHTML = html;
 }
 
+function bookingCityChip(el, city) {
+  document.querySelectorAll('#booking-city-chips .bk-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderBookingArtists();
+}
+
 function renderBookingArtists() {
   const c = document.getElementById('booking-artist-list');
   if (!c) return;
-  const cityFilter = document.getElementById('booking-city-filter');
-  const city = cityFilter ? cityFilter.value : 'all';
+  const nameSearch = (document.getElementById('booking-name-search')?.value || '').toLowerCase().trim();
+  const activeChip = document.querySelector('#booking-city-chips .bk-chip.active');
+  const city = activeChip ? activeChip.getAttribute('data-city') : 'all';
   const all = [...ARTISTS, ...NEW_ARTISTS];
   let filtered = city === 'all' ? all : all.filter(a => {
     if (city === 'toronto') return ['toronto','other'].includes(a.cityKey) && ['Scarborough, ON','Etobicoke, ON','Toronto, ON'].includes(a.city);
     return a.cityKey === city;
   });
-  if (filtered.length === 0) filtered = all.slice(0,6);
+  if (nameSearch) {
+    filtered = filtered.filter(a => a.name.toLowerCase().includes(nameSearch));
+  }
+  if (filtered.length === 0) filtered = nameSearch ? [] : all.slice(0,6);
   // If a specific artist was requested, make sure they appear in the list
   if (pendingBookArtistId) {
     const target = all.find(a => a.id === pendingBookArtistId);
@@ -4622,7 +4657,9 @@ function renderBookingArtists() {
       filtered = [target, ...filtered.slice(0, 7)];
     }
   }
-  c.innerHTML = filtered.slice(0,8).map((a) => {
+  c.innerHTML = filtered.length === 0
+    ? `<div style="padding:1.5rem;text-align:center;color:var(--ink-light);font-size:0.85rem;background:var(--cream);border-radius:12px">No caregivers found matching "${nameSearch}"</div>`
+    : filtered.slice(0,8).map((a) => {
     const isSelected = pendingBookArtistId ? a.id === pendingBookArtistId : filtered.indexOf(a) === 0;
     return `
     <div class="pick-artist-row ${isSelected ? 'selected' : ''}" onclick="selectBookingArtist(this)" data-artist-id="${a.id}" data-artist-rate="${a.rate || 'Personalized care plan'}">
@@ -4664,6 +4701,10 @@ function selectBookingArtist(el) {
   venueCalYear = now.getFullYear();
   venueCalMonth = now.getMonth();
   window._venueSelectedDate = null; // clear selection when switching artists
+
+  // Hide the slot picker when switching
+  const picker = document.getElementById('venue-slot-picker');
+  if (picker) picker.style.display = 'none';
 
   renderVenueAvailCalendar(artistId);
 }
@@ -4774,11 +4815,6 @@ function renderVenueAvailCalendar(artistNumericId) {
         <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#c0392b;display:inline-block"></span>Already booked</span>
       </div>
     </div>
-
-    <!-- Slot picker (shown after clicking a date) -->
-    <div id="venue-slot-picker" style="display:none;margin-top:1rem;background:var(--green-light);border-radius:14px;padding:1rem;border:1.5px solid #b2dfc9">
-      <div id="venue-slot-picker-content"></div>
-    </div>
   `;
 
   // Store for use by venueSelectDay
@@ -4791,6 +4827,8 @@ function venueNavMonth(dir) {
   if (venueCalMonth > 11) { venueCalMonth = 0; venueCalYear++; }
   if (venueCalMonth < 0) { venueCalMonth = 11; venueCalYear--; }
   window._venueSelectedDate = null; // clear selection on month change
+  const picker = document.getElementById('venue-slot-picker');
+  if (picker) picker.style.display = 'none';
   const selected = document.querySelector('.pick-artist-row.selected');
   const artistId = selected ? parseInt(selected.getAttribute('data-artist-id')) : null;
   if (artistId) renderVenueAvailCalendar(artistId);
@@ -4798,38 +4836,45 @@ function venueNavMonth(dir) {
 
 function venueSelectDay(dateStr) {
   const slots = (window._venueOpenByDate || {})[dateStr] || [];
-  const picker = document.getElementById('venue-slot-picker');
-  const content = document.getElementById('venue-slot-picker-content');
-  if (!picker || !content || slots.length === 0) return;
 
-  // Highlight the selected calendar day
+  // Highlight the selected calendar day — re-render calendar only (picker is now outside)
   window._venueSelectedDate = dateStr;
   renderVenueAvailCalendar(window._venueArtistId);
 
+  // Now find the picker — it lives outside the re-rendered zone
+  const picker = document.getElementById('venue-slot-picker');
+  const content = document.getElementById('venue-slot-picker-content');
+  if (!picker || !content) return;
+
+  if (slots.length === 0) {
+    picker.style.display = 'none';
+    return;
+  }
+
+  // Store slots array for the confirm handler
+  window._venueCurrentSlots = slots;
+
   // Build dropdown options
   const optionsHTML = slots.map((s, i) =>
-    `<option value="${i}">${s.time}${s.notes ? ' — ' + s.notes : ''}</option>`
+    `<option value="${i}">⏰ ${s.time}${s.notes ? ' — ' + s.notes : ''}</option>`
   ).join('');
 
   content.innerHTML = `
     <div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--green-mid);margin-bottom:0.75rem">Available times for ${formatDateDisplay(dateStr)}</div>
     <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
-      <div style="flex:1;min-width:180px">
+      <div style="flex:1;min-width:160px">
         <label style="font-size:0.75rem;font-weight:600;color:var(--ink-mid);display:block;margin-bottom:5px">Select a time slot</label>
-        <select id="venue-slot-select" style="width:100%;padding:10px 12px;border-radius:12px;border:1.5px solid var(--cream-dark);font-family:var(--sans);font-size:0.9rem;background:white;color:var(--ink);cursor:pointer">
+        <select id="venue-slot-select" style="width:100%;padding:10px 12px;border-radius:12px;border:1.5px solid var(--cream-dark);font-family:var(--sans);font-size:0.88rem;background:white;color:var(--ink);cursor:pointer">
           <option value="">— Choose a time —</option>
           ${optionsHTML}
         </select>
       </div>
-      <button onclick="venueConfirmSlotSelection('${dateStr}')" style="background:var(--green);color:white;border:none;border-radius:100px;padding:10px 20px;font-family:var(--sans);font-size:0.88rem;font-weight:500;cursor:pointer;white-space:nowrap;transition:opacity 0.2s" onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">Confirm slot →</button>
+      <button onclick="venueConfirmSlotSelection('${dateStr}')" style="background:var(--green);color:white;border:none;border-radius:100px;padding:10px 20px;font-family:var(--sans);font-size:0.88rem;font-weight:500;cursor:pointer;white-space:nowrap;transition:opacity 0.2s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">Confirm slot →</button>
     </div>
     <div id="venue-slot-confirm-msg" style="display:none;margin-top:10px;font-size:0.8rem;color:var(--green-mid);font-weight:500;background:white;border-radius:8px;border:1px solid #b2dfc9;padding:8px 12px;text-align:center"></div>
   `;
   picker.style.display = 'block';
   picker.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-  // Store slots array on window for the confirm handler
-  window._venueCurrentSlots = slots;
 }
 
 function venueConfirmSlotSelection(dateStr) {
@@ -6499,8 +6544,8 @@ if (window._pendingAuthEmail) {
   window._pendingAuthEmail = null;
 }
 </script>
-<!-- Version timestamp — last updated: May 13, 2026 · 11:45 PM -->
-<div style="position:fixed;bottom:12px;right:16px;z-index:9000;font-family:var(--sans);font-size:0.65rem;color:rgba(122,122,114,0.55);pointer-events:none;letter-spacing:0.3px;user-select:none">v · May 13, 2026 · 11:45 PM</div>
+<!-- Version timestamp — last updated: May 13, 2026 · 11:58 PM -->
+<div style="position:fixed;bottom:12px;right:16px;z-index:9000;font-family:var(--sans);font-size:0.65rem;color:rgba(122,122,114,0.55);pointer-events:none;letter-spacing:0.3px;user-select:none">v · May 13, 2026 · 11:58 PM</div>
 
 </body>
 </html>
