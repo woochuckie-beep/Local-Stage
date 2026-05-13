@@ -4806,20 +4806,54 @@ function venueSelectDay(dateStr) {
   window._venueSelectedDate = dateStr;
   renderVenueAvailCalendar(window._venueArtistId);
 
+  // Build dropdown options
+  const optionsHTML = slots.map((s, i) =>
+    `<option value="${i}">${s.time}${s.notes ? ' — ' + s.notes : ''}</option>`
+  ).join('');
+
   content.innerHTML = `
     <div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--green-mid);margin-bottom:0.75rem">Available times for ${formatDateDisplay(dateStr)}</div>
-    ${slots.map(s => `
-      <div onclick="selectArtistSlot('${dateStr}','${s.time}','${s.key}')" style="cursor:pointer;background:white;border:1.5px solid var(--cream-dark);border-radius:10px;padding:10px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;transition:all 0.15s" onmouseover="this.style.borderColor='var(--green)';this.style.background='white'" onmouseout="this.style.borderColor='var(--cream-dark)'">
-        <div>
-          <div style="font-size:0.875rem;font-weight:500;color:var(--ink)">⏰ ${s.time}</div>
-          ${s.notes ? `<div style="font-size:0.72rem;color:var(--ink-light);margin-top:2px">${s.notes}</div>` : ''}
-        </div>
-        <span style="font-size:0.72rem;background:var(--green);color:white;padding:3px 10px;border-radius:100px;font-weight:500;flex-shrink:0">Select →</span>
+    <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+      <div style="flex:1;min-width:180px">
+        <label style="font-size:0.75rem;font-weight:600;color:var(--ink-mid);display:block;margin-bottom:5px">Select a time slot</label>
+        <select id="venue-slot-select" style="width:100%;padding:10px 12px;border-radius:12px;border:1.5px solid var(--cream-dark);font-family:var(--sans);font-size:0.9rem;background:white;color:var(--ink);cursor:pointer">
+          <option value="">— Choose a time —</option>
+          ${optionsHTML}
+        </select>
       </div>
-    `).join('')}
+      <button onclick="venueConfirmSlotSelection('${dateStr}')" style="background:var(--green);color:white;border:none;border-radius:100px;padding:10px 20px;font-family:var(--sans);font-size:0.88rem;font-weight:500;cursor:pointer;white-space:nowrap;transition:opacity 0.2s" onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">Confirm slot →</button>
+    </div>
+    <div id="venue-slot-confirm-msg" style="display:none;margin-top:10px;font-size:0.8rem;color:var(--green-mid);font-weight:500;background:white;border-radius:8px;border:1px solid #b2dfc9;padding:8px 12px;text-align:center"></div>
   `;
   picker.style.display = 'block';
   picker.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  // Store slots array on window for the confirm handler
+  window._venueCurrentSlots = slots;
+}
+
+function venueConfirmSlotSelection(dateStr) {
+  const sel = document.getElementById('venue-slot-select');
+  if (!sel || sel.value === '') {
+    alert('Please choose a time slot from the dropdown before confirming.');
+    return;
+  }
+  const slots = window._venueCurrentSlots || [];
+  const slot = slots[parseInt(sel.value)];
+  if (!slot) return;
+
+  selectArtistSlot(dateStr, slot.time, slot.key);
+
+  // Show inline confirmation
+  const msg = document.getElementById('venue-slot-confirm-msg');
+  if (msg) {
+    msg.textContent = `✓ Slot confirmed: ${slot.time} on ${formatDateDisplay(dateStr)}. Fill in your details below and submit.`;
+    msg.style.display = 'block';
+  }
+  // Disable the dropdown + button to lock selection
+  sel.disabled = true;
+  const btn = sel.parentElement?.parentElement?.querySelector('button');
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; }
 }
 
 function selectArtistSlot(date, time, slotKey) {
@@ -5670,7 +5704,7 @@ function renderArtistAvailability() {
             <input class="form-input" type="text" id="aa-notes" placeholder="e.g. Comfortable with overnight care · Prefer Mississauga area">
           </div>
           <div id="aa-add-error" style="display:none;background:#fde8e8;border-radius:12px;padding:10px 14px;font-size:0.85rem;color:#c0392b;margin-bottom:0.75rem"></div>
-          <div style="display:flex;gap:10px;margin-top:1.25rem">
+          <div class="aa-btn-row" style="display:flex;gap:10px;margin-top:1.25rem">
             <button onclick="addAvailabilitySlot('${artistId}')" style="flex:1;background:var(--green);color:white;border:none;border-radius:100px;padding:0.85rem;font-family:var(--sans);font-size:0.92rem;font-weight:500;cursor:pointer;transition:opacity 0.2s" onmouseover="this.style.opacity='0.92'" onmouseout="this.style.opacity='1'">+ Add availability</button>
             <button onclick="document.getElementById('aa-add-panel').style.display='none'" style="background:transparent;color:var(--ink-mid);border:1.5px solid var(--cream-dark);border-radius:100px;padding:0.85rem 1.4rem;font-family:var(--sans);font-size:0.92rem;cursor:pointer">Cancel</button>
           </div>
@@ -5880,7 +5914,10 @@ function aaSelectDay(dateStr, labelStr) {
             const dot = isBooked ? '&#128308;' : '&#129001;';
             const badge = isBooked
               ? `<span style="font-size:0.65rem;background:#c0392b;color:white;padding:2px 8px;border-radius:100px;font-weight:600;flex-shrink:0">BOOKED</span>`
-              : `<button onclick="removeSlot('${artistId}','${dateStr}','${time}')" style="background:transparent;border:1.5px solid var(--cream-dark);border-radius:100px;padding:4px 10px;font-size:0.7rem;color:var(--ink-mid);cursor:pointer;font-family:var(--sans);transition:all 0.2s;flex-shrink:0" onmouseover="this.style.borderColor='#c0392b';this.style.color='#c0392b';this.style.background='#fde8e8'" onmouseout="this.style.borderColor='var(--cream-dark)';this.style.color='var(--ink-mid)';this.style.background='transparent'">&#10005; Remove</button>`;
+              : `<div style="display:flex;gap:6px;flex-shrink:0">
+                  <button onclick="aaModifySlot('${artistId}','${dateStr}','${time}')" style="background:transparent;border:1.5px solid var(--green);border-radius:100px;padding:4px 10px;font-size:0.7rem;color:var(--green-mid);cursor:pointer;font-family:var(--sans);transition:all 0.2s" onmouseover="this.style.background='var(--green-light)'" onmouseout="this.style.background='transparent'">✏ Modify</button>
+                  <button onclick="removeSlot('${artistId}','${dateStr}','${time}')" style="background:transparent;border:1.5px solid var(--cream-dark);border-radius:100px;padding:4px 10px;font-size:0.7rem;color:var(--ink-mid);cursor:pointer;font-family:var(--sans);transition:all 0.2s" onmouseover="this.style.borderColor='#c0392b';this.style.color='#c0392b';this.style.background='#fde8e8'" onmouseout="this.style.borderColor='var(--cream-dark)';this.style.color='var(--ink-mid)';this.style.background='transparent'">&#10005; Remove</button>
+                </div>`;
             return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:${bg};border:${border};border-radius:10px;padding:10px 14px;margin-bottom:6px">
               <div style="font-size:0.85rem;font-weight:500;color:${timeColor}">${dot} ${time}${v.notes ? `<span style="font-size:0.72rem;color:var(--ink-light);font-weight:400"> &middot; ${v.notes}</span>` : ''}</div>
               ${badge}
@@ -5899,6 +5936,100 @@ function aaSelectDay(dateStr, labelStr) {
   const panel = document.getElementById('aa-add-panel');
   panel.style.display = 'block';
   panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  document.getElementById('aa-add-error').style.display = 'none';
+}
+
+// Opens the add panel pre-filled with the existing slot's times for modification
+function aaModifySlot(artistId, dateStr, existingTime) {
+  // existingTime format: "09:00-17:00"
+  const [existStart, existEnd] = existingTime.split('-');
+  const store = getAvailabilityStore();
+  const key = `${artistId}:${dateStr}:${existingTime}`;
+  const existingNotes = (store[key] && store[key].notes) || '';
+
+  // Pre-fill the form inputs
+  document.getElementById('aa-start').value = existStart || '09:00';
+  document.getElementById('aa-end').value = existEnd || '17:00';
+  document.getElementById('aa-notes').value = existingNotes;
+
+  // Swap the Add button to a Save Modification button
+  const addPanel = document.getElementById('aa-add-panel');
+  const btnRow = addPanel.querySelector('.aa-btn-row');
+  if (btnRow) {
+    btnRow.innerHTML = `
+      <button onclick="aaConfirmModifySlot('${artistId}','${dateStr}','${existingTime}')" style="flex:1;background:var(--green);color:white;border:none;border-radius:100px;padding:0.85rem;font-family:var(--sans);font-size:0.92rem;font-weight:500;cursor:pointer;transition:opacity 0.2s" onmouseover="this.style.opacity='0.92'" onmouseout="this.style.opacity='1'">✓ Save changes</button>
+      <button onclick="aaExitModifyMode()" style="background:transparent;color:var(--ink-mid);border:1.5px solid var(--cream-dark);border-radius:100px;padding:0.85rem 1.4rem;font-family:var(--sans);font-size:0.92rem;cursor:pointer">Cancel</button>`;
+  }
+
+  // Update heading to reflect modify mode
+  const heading = addPanel.querySelector('h3');
+  if (heading) heading.innerHTML = `Modify slot on <span style="color:var(--green)">${document.getElementById('aa-selected-date-label').textContent}</span>`;
+
+  document.getElementById('aa-add-error').style.display = 'none';
+  addPanel.style.display = 'block';
+  addPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function aaConfirmModifySlot(artistId, dateStr, oldTime) {
+  const start = document.getElementById('aa-start')?.value;
+  const end = document.getElementById('aa-end')?.value;
+  const notes = document.getElementById('aa-notes')?.value || '';
+  const errEl = document.getElementById('aa-add-error');
+
+  if (!start || !end) {
+    errEl.textContent = 'Please fill in start and end time.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (start >= end) {
+    errEl.textContent = 'End time must be after start time.';
+    errEl.style.display = 'block';
+    return;
+  }
+  const [sh, sm] = start.split(':').map(Number);
+  const [eh, em] = end.split(':').map(Number);
+  const durationMins = (eh * 60 + em) - (sh * 60 + sm);
+  if (durationMins < 120) {
+    errEl.textContent = 'Slots must be at least 2 hours long.';
+    errEl.style.display = 'block';
+    return;
+  }
+  errEl.style.display = 'none';
+
+  const store = getAvailabilityStore();
+  // Remove old slot
+  delete store[`${artistId}:${dateStr}:${oldTime}`];
+  // Add updated slot
+  const newTime = `${start}-${end}`;
+  store[`${artistId}:${dateStr}:${newTime}`] = { status: 'open', bookedBy: null, notes };
+  saveAvailabilityStore(store);
+
+  // Reset panel back to add mode and refresh
+  aaExitModifyMode();
+  document.getElementById('aa-add-panel').style.display = 'none';
+  renderAaCalendar(artistId);
+  renderAaSlotsList(artistId);
+  // Re-open the day panel so the updated list shows
+  const labelStr = document.getElementById('aa-selected-date-label').textContent;
+  aaSelectDay(dateStr, labelStr);
+}
+
+function aaExitModifyMode() {
+  const addPanel = document.getElementById('aa-add-panel');
+  // Restore heading
+  const heading = addPanel.querySelector('h3');
+  if (heading) heading.innerHTML = `I'm available on <span id="aa-selected-date-label" style="color:var(--green)">${document.getElementById('aa-selected-date-label')?.textContent || ''}</span>`;
+  // Restore button row
+  const btnRow = addPanel.querySelector('.aa-btn-row');
+  const artistId = currentUser ? (currentUser.artistId ? 'artist-' + currentUser.artistId : 'artist-' + currentUser.email.replace(/[^a-z0-9]/g,'')) : '';
+  if (btnRow) {
+    btnRow.innerHTML = `
+      <button onclick="addAvailabilitySlot('${artistId}')" style="flex:1;background:var(--green);color:white;border:none;border-radius:100px;padding:0.85rem;font-family:var(--sans);font-size:0.92rem;font-weight:500;cursor:pointer;transition:opacity 0.2s" onmouseover="this.style.opacity='0.92'" onmouseout="this.style.opacity='1'">+ Add availability</button>
+      <button onclick="document.getElementById('aa-add-panel').style.display='none'" style="background:transparent;color:var(--ink-mid);border:1.5px solid var(--cream-dark);border-radius:100px;padding:0.85rem 1.4rem;font-family:var(--sans);font-size:0.92rem;cursor:pointer">Cancel</button>`;
+  }
+  document.getElementById('aa-start').value = '09:00';
+  document.getElementById('aa-end').value = '17:00';
+  document.getElementById('aa-notes').value = '';
   document.getElementById('aa-add-error').style.display = 'none';
 }
 
@@ -6042,6 +6173,15 @@ function addAvailabilitySlot(artistId) {
   }
   if (start >= end) {
     errEl.textContent = 'End time must be after start time.';
+    errEl.style.display = 'block';
+    return;
+  }
+  // Enforce minimum 2-hour shift
+  const [sh, sm] = start.split(':').map(Number);
+  const [eh, em] = end.split(':').map(Number);
+  const durationMins = (eh * 60 + em) - (sh * 60 + sm);
+  if (durationMins < 120) {
+    errEl.textContent = 'Availability slots must be at least 2 hours long (minimum shift policy).';
     errEl.style.display = 'block';
     return;
   }
@@ -6359,8 +6499,8 @@ if (window._pendingAuthEmail) {
   window._pendingAuthEmail = null;
 }
 </script>
-<!-- Version timestamp -->
-<div style="position:fixed;bottom:12px;right:16px;z-index:9000;font-family:var(--sans);font-size:0.65rem;color:rgba(122,122,114,0.55);pointer-events:none;letter-spacing:0.3px;user-select:none">v · May 8, 2026 · 9:30 PM</div>
+<!-- Version timestamp — last updated: May 13, 2026 · 11:45 PM -->
+<div style="position:fixed;bottom:12px;right:16px;z-index:9000;font-family:var(--sans);font-size:0.65rem;color:rgba(122,122,114,0.55);pointer-events:none;letter-spacing:0.3px;user-select:none">v · May 13, 2026 · 11:45 PM</div>
 
 </body>
 </html>
