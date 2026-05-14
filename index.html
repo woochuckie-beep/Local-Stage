@@ -3962,13 +3962,14 @@ function renderGrid(containerId, artists, genreFilter, cityFilter) {
 
     // Parse years from certifications
     const yearsMatch = a.certifications ? a.certifications.match(/(\d+\+?)\s*[Yy]ear/) : null;
-    const yearsLabel = yearsMatch ? yearsMatch[1] + ' yrs exp.' : null;
+    const yearsLabel = yearsMatch ? yearsMatch[1] + '+ Years' : null;
 
-    // Build overlay badges: location, languages (max 2 shown + count), experience
+    // Build overlay badges: location, languages (exclude English, max 2 shown + count), experience
     const cityShort = a.city ? a.city.split(',')[0].trim() : null;
-    const langDisplay = langArr.length > 2
-      ? langArr.slice(0, 2).join(', ') + ` +${langArr.length - 2}`
-      : langArr.join(', ');
+    const langFiltered = langArr.filter(l => l.toLowerCase() !== 'english');
+    const langDisplay = langFiltered.length > 2
+      ? langFiltered.slice(0, 2).join(', ') + ` +${langFiltered.length - 2}`
+      : langFiltered.join(', ');
 
     const badgeStyle = `display:inline-flex;align-items:center;gap:4px;background:rgba(20,14,8,0.62);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,0.18);border-radius:6px;padding:3px 8px;font-size:0.67rem;font-weight:500;color:rgba(255,255,255,0.92);white-space:nowrap;line-height:1.3`;
 
@@ -5696,17 +5697,19 @@ function openArtistProfile(id) {
     }
   }
 
-  // Credentials from spreadsheet — use already-parsed cert names (years entry already excluded)
-  const credentials = [
-    {lbl:'Vulnerable-sector police check', val: 'Cleared (within 6 months)'},
-    {lbl:'Liability &amp; WSIB insurance',  val: 'Carried by Hearthlane'},
+  // Credentials — only from spreadsheet. Cert names come from the certifications column,
+  // PSW from the PSW Certified column, years of experience from the years entry.
+  // The two Hearthlane platform guarantees (police check, insurance) apply to all caregivers.
+  const sheetCredentials = [
     ...certNames.map(c => ({lbl: c, val: 'Verified'})),
-    ...(a.pswCertified === 'Yes' ? [{lbl:'Personal Support Worker (PSW)', val: 'Certified ✓'}] : []),
-    {lbl:'Personal references', val: 'Verified · Available on request'},
-    {lbl:'In-person interview &amp; trial', val: 'Completed'},
+    ...(a.pswCertified === 'Yes' ? [{lbl: 'Personal Support Worker (PSW)', val: 'Certified ✓'}] : []),
+    ...(yearsEntry ? [{lbl: 'Care experience', val: yearsEntry}] : []),
+    ...(a.languages ? [{lbl: 'Languages spoken', val: a.languages.replace(/\d+\.\s*/g, '').split(/[\n,]+/).map(s => s.trim()).filter(Boolean).join(', ')}] : []),
+    {lbl: 'Vulnerable-sector police check', val: 'Cleared (within 6 months)'},
+    {lbl: 'Liability &amp; WSIB insurance',  val: 'Carried by Hearthlane'},
   ];
   const checkSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d4a574" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px"><polyline points="20 6 9 17 4 12"/></svg>`;
-  document.getElementById('ap-score-bars').innerHTML = credentials.map(b => `
+  document.getElementById('ap-score-bars').innerHTML = sheetCredentials.map(b => `
     <div style="display:flex;align-items:flex-start;gap:10px;padding:0.65rem 0;border-bottom:1px solid #4a3a2c">
       ${checkSvg}
       <div style="flex:1;font-size:0.85rem;color:#e0cdac;line-height:1.4">
