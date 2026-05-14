@@ -3954,7 +3954,13 @@ function renderGrid(containerId, artists, genreFilter, cityFilter) {
       </div>`;
     return;
   }
-  c.innerHTML = filtered.map(a => `
+  c.innerHTML = filtered.map(a => {
+    // Parse languages cleanly — strip "1. ", "2. " list prefixes, join with · separator
+    const langClean = a.languages
+      ? a.languages.replace(/\d+\.\s*/g, '').split(/[\n,]+/).map(s => s.trim()).filter(Boolean).join(' · ')
+      : '';
+
+    return `
     <div class="artist-card">
       <div class="artist-card-img" style="background:linear-gradient(${a.gradient});display:flex;align-items:center;justify-content:center">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
@@ -3967,14 +3973,21 @@ function renderGrid(containerId, artists, genreFilter, cityFilter) {
           <span style="color:#f4b400;letter-spacing:1px;font-size:0.85rem">${makeStars(a.rating)}</span>
           <span style="font-size:0.72rem;color:var(--ink-light);margin-left:4px">${a.rating ? a.rating.toFixed(1) : ''}</span>
         </div>
-        <div class="artist-card-location"> ${a.city}</div>
+        ${a.city ? `<div class="artist-card-location" style="margin-top:6px;display:flex;align-items:center;gap:4px">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          ${a.city}
+        </div>` : ''}
+        ${langClean ? `<div style="margin-top:4px;font-size:0.72rem;color:var(--ink-light);display:flex;align-items:center;gap:4px">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          ${langClean}
+        </div>` : ''}
         <div style="margin-top:8px;display:flex;gap:6px">
           <button style="flex:1;padding:5px 8px;background:var(--cream);color:var(--ink-mid);border:1px solid var(--cream-dark);border-radius:100px;font-family:var(--sans);font-size:0.7rem;cursor:pointer" onclick="openArtistProfile(${a.id})">View profile</button>
         </div>
         <button style="margin-top:6px;width:100%;padding:8px;background:var(--ink);color:white;border:none;border-radius:100px;font-family:var(--sans);font-size:0.78rem;font-weight:500;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='var(--green)'" onmouseout="this.style.background='var(--ink)'" onclick="bookArtist(${a.id})">Request ${a.name.split(' ')[0]} →</button>
       </div>
     </div>
-  `).join('');
+  `;}).join('');
 }
 
 // ════════════════════════════════
@@ -5626,8 +5639,9 @@ function openArtistProfile(id) {
     statsItems.push({val: a.city.split(',')[0], lbl: 'Serves area'});
   }
   if (a.languages) {
-    const langList = a.languages.replace(/\d+\.\s*/g, '').replace(/\n/g, ', ').trim();
-    statsItems.push({val: langList, lbl: 'Languages'});
+    // Clean numbered list format: "1. Cantonese\n2. English" → "Cantonese, English, French"
+    const langClean = a.languages.replace(/\d+\.\s*/g, '').split(/[\n,]+/).map(s => s.trim()).filter(Boolean).join(', ');
+    statsItems.push({val: langClean, lbl: 'Languages'});
   }
 
   document.getElementById('ap-stats-row').innerHTML = statsItems.map(s => `
@@ -5661,12 +5675,15 @@ function openArtistProfile(id) {
     }
   }
 
-  // Credentials from spreadsheet — certifications, PSW, languages
-  const certLines = a.certifications ? a.certifications.split(',').map(s => s.trim()).filter(Boolean) : [];
+  // Credentials from spreadsheet — parse certifications column properly
+  // Certifications column may look like: "First Aid and CPR, 8 Years" — split on comma, filter year entries
+  const certItems = a.certifications
+    ? a.certifications.split(',').map(s => s.trim()).filter(s => s && !/^\d+\+?\s*[Yy]ear/.test(s))
+    : [];
   const credentials = [
     {lbl:'Vulnerable-sector police check', val: 'Cleared (within 6 months)'},
     {lbl:'Liability &amp; WSIB insurance',  val: 'Carried by Hearthlane'},
-    ...certLines.map(c => ({lbl: c, val: 'Verified'})),
+    ...certItems.map(c => ({lbl: c, val: 'Verified'})),
     ...(a.pswCertified === 'Yes' ? [{lbl:'Personal Support Worker (PSW)', val: 'Certified ✓'}] : []),
     {lbl:'Personal references', val: 'Verified · Available on request'},
     {lbl:'In-person interview &amp; trial', val: 'Completed'},
