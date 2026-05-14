@@ -3955,15 +3955,34 @@ function renderGrid(containerId, artists, genreFilter, cityFilter) {
     return;
   }
   c.innerHTML = filtered.map(a => {
-    // Parse languages cleanly — strip "1. ", "2. " list prefixes, join with · separator
-    const langClean = a.languages
-      ? a.languages.replace(/\d+\.\s*/g, '').split(/[\n,]+/).map(s => s.trim()).filter(Boolean).join(' · ')
-      : '';
+    // Parse languages cleanly
+    const langArr = a.languages
+      ? a.languages.replace(/\d+\.\s*/g, '').split(/[\n,]+/).map(s => s.trim()).filter(Boolean)
+      : [];
+
+    // Parse years from certifications
+    const yearsMatch = a.certifications ? a.certifications.match(/(\d+\+?)\s*[Yy]ear/) : null;
+    const yearsLabel = yearsMatch ? yearsMatch[1] + ' yrs exp.' : null;
+
+    // Build overlay badges: location, languages (max 2 shown + count), experience
+    const cityShort = a.city ? a.city.split(',')[0].trim() : null;
+    const langDisplay = langArr.length > 2
+      ? langArr.slice(0, 2).join(', ') + ` +${langArr.length - 2}`
+      : langArr.join(', ');
+
+    const badgeStyle = `display:inline-flex;align-items:center;gap:4px;background:rgba(20,14,8,0.62);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,0.18);border-radius:6px;padding:3px 8px;font-size:0.67rem;font-weight:500;color:rgba(255,255,255,0.92);white-space:nowrap;line-height:1.3`;
+
+    const overlayBadges = [
+      cityShort   ? `<span style="${badgeStyle}"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${cityShort}</span>` : '',
+      langDisplay ? `<span style="${badgeStyle}"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>${langDisplay}</span>` : '',
+      yearsLabel  ? `<span style="${badgeStyle}">${yearsLabel}</span>` : '',
+    ].filter(Boolean).join('');
 
     return `
     <div class="artist-card">
-      <div class="artist-card-img" style="background:linear-gradient(${a.gradient});display:flex;align-items:center;justify-content:center">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      <div class="artist-card-img" style="background:linear-gradient(${a.gradient});display:flex;align-items:center;justify-content:center;position:relative">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        ${overlayBadges ? `<div style="position:absolute;top:10px;left:10px;display:flex;flex-direction:column;gap:4px;align-items:flex-start">${overlayBadges}</div>` : ''}
         <div class="play-overlay" onclick="openArtistProfile(${a.id})"><div class="play-btn">▶</div></div>
       </div>
       <div class="artist-card-body">
@@ -3973,14 +3992,6 @@ function renderGrid(containerId, artists, genreFilter, cityFilter) {
           <span style="color:#f4b400;letter-spacing:1px;font-size:0.85rem">${makeStars(a.rating)}</span>
           <span style="font-size:0.72rem;color:var(--ink-light);margin-left:4px">${a.rating ? a.rating.toFixed(1) : ''}</span>
         </div>
-        ${a.city ? `<div class="artist-card-location" style="margin-top:6px;display:flex;align-items:center;gap:4px">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          ${a.city}
-        </div>` : ''}
-        ${langClean ? `<div style="margin-top:4px;font-size:0.72rem;color:var(--ink-light);display:flex;align-items:center;gap:4px">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          ${langClean}
-        </div>` : ''}
         <div style="margin-top:8px;display:flex;gap:6px">
           <button style="flex:1;padding:5px 8px;background:var(--cream);color:var(--ink-mid);border:1px solid var(--cream-dark);border-radius:100px;font-family:var(--sans);font-size:0.7rem;cursor:pointer" onclick="openArtistProfile(${a.id})">View profile</button>
         </div>
@@ -5623,10 +5634,20 @@ function openArtistProfile(id) {
   document.getElementById('ap-social-bar').innerHTML = '<div style="display:inline-flex;align-items:center;gap:7px;background:rgba(212,165,116,0.18);border:1px solid rgba(212,165,116,0.32);border-radius:100px;padding:6px 16px;font-size:0.75rem;color:#d4a574;font-weight:500">Background-checked &amp; insured &nbsp;·&nbsp; ✓ Reference verified</div>';
 
   // Build stats from spreadsheet fields — no rate, no cost/show
+  // Helper: parse certifications column which may be a numbered list like "1. First Aid and CPR 2. 10+ Years"
+  function parseCertifications(raw) {
+    if (!raw) return [];
+    // Split on numbered list markers: "1. ", "2. ", etc.
+    return raw.split(/\d+\.\s+/).map(s => s.trim()).filter(Boolean);
+  }
+  const certParts = parseCertifications(a.certifications);
+  // Separate year entries from actual cert names
+  const yearsEntry = certParts.find(s => /\d+\+?\s*[Yy]ear/.test(s));
+  const certNames  = certParts.filter(s => !/\d+\+?\s*[Yy]ear/.test(s));
+
   const statsItems = [];
-  if (a.certifications) {
-    // Parse years from certifications string e.g. "First Aid and CPR, 8 Years"
-    const yearsMatch = a.certifications.match(/(\d+\+?)\s*[Yy]ear/);
+  if (yearsEntry) {
+    const yearsMatch = yearsEntry.match(/(\d+\+?)\s*[Yy]ear/);
     if (yearsMatch) statsItems.push({val: yearsMatch[1] + ' yrs', lbl: 'Experience'});
   }
   if (a.pswCertified) {
@@ -5675,15 +5696,11 @@ function openArtistProfile(id) {
     }
   }
 
-  // Credentials from spreadsheet — parse certifications column properly
-  // Certifications column may look like: "First Aid and CPR, 8 Years" — split on comma, filter year entries
-  const certItems = a.certifications
-    ? a.certifications.split(',').map(s => s.trim()).filter(s => s && !/^\d+\+?\s*[Yy]ear/.test(s))
-    : [];
+  // Credentials from spreadsheet — use already-parsed cert names (years entry already excluded)
   const credentials = [
     {lbl:'Vulnerable-sector police check', val: 'Cleared (within 6 months)'},
     {lbl:'Liability &amp; WSIB insurance',  val: 'Carried by Hearthlane'},
-    ...certItems.map(c => ({lbl: c, val: 'Verified'})),
+    ...certNames.map(c => ({lbl: c, val: 'Verified'})),
     ...(a.pswCertified === 'Yes' ? [{lbl:'Personal Support Worker (PSW)', val: 'Certified ✓'}] : []),
     {lbl:'Personal references', val: 'Verified · Available on request'},
     {lbl:'In-person interview &amp; trial', val: 'Completed'},
