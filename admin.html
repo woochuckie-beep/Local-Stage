@@ -498,6 +498,11 @@
         </div>
       </div>
       <div class="form-group">
+        <label>Google Email (for caregiver portal login)</label>
+        <input class="fc" name="google_email" type="email" placeholder="their@gmail.com" />
+        <small style="color:var(--ink-light);font-size:0.78rem;margin-top:0.3rem;display:block">Caregiver uses this Google account to sign in to their portal.</small>
+      </div>
+      <div class="form-group">
         <label>Bio / Specialties</label>
         <textarea class="fc" name="bio" placeholder="Skills, certifications, experience…"></textarea>
       </div>
@@ -897,7 +902,7 @@ function openCgModal(id) {
   const form = document.getElementById('cg-form');
   form.reset();
   if (cg) {
-    fill(form, { name: cg.name, email: cg.email||'', phone: cg.phone||'', status: cg.status||'active', bio: cg.bio||'', avail_from: cg.avail_from||'', avail_to: cg.avail_to||'' });
+    fill(form, { name: cg.name, email: cg.email||'', phone: cg.phone||'', status: cg.status||'active', google_email: cg.google_email||'', bio: cg.bio||'', avail_from: cg.avail_from||'', avail_to: cg.avail_to||'' });
     const days = cg.avail_days || [];
     form.querySelectorAll('[name="avail_days"]').forEach(cb => { cb.checked = days.includes(cb.value); });
   }
@@ -913,10 +918,11 @@ async function saveCaregiver(e) {
     phone:      fd.get('phone')      || null,
     status:     fd.get('status'),
     bio:        fd.get('bio')        || null,
-    avail_days: fd.getAll('avail_days'),
-    avail_from: fd.get('avail_from') || null,
-    avail_to:   fd.get('avail_to')   || null,
-    updated_at: SV()
+    google_email: fd.get('google_email')?.toLowerCase().trim() || null,
+    avail_days:   fd.getAll('avail_days'),
+    avail_from:   fd.get('avail_from') || null,
+    avail_to:     fd.get('avail_to')   || null,
+    updated_at:   SV()
   };
   try {
     if (editingId) {

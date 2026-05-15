@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hearthlane · Caregiver Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <style>
+    :root {
+      --terra:      #c08568;
+      --terra-soft: #f0d8c8;
+      --terra-deep: #8a5a40;
+      --cream:      #f7efe2;
+      --cream-soft: #fbf6ec;
+      --cream-dark: #ede0c8;
+      --ink:        #3a2e22;
+      --ink-mid:    #6b5a48;
+      --ink-light:  #98876d;
+      --sage:       #7a8b6f;
+      --sage-soft:  #d5dcc9;
+      --white:      #ffffff;
+      --nav-h:      64px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; font-family: 'DM Sans', system-ui, sans-serif; background: var(--cream); color: var(--ink); font-size: 15px; -webkit-font-smoothing: antialiased; }
+    button { font-family: inherit; cursor: pointer; }
+    input, select, textarea { font-family: inherit; }
+
+    /* ── LOGIN ── */
+    #login-screen {
+      min-height: 100vh; display: flex; align-items: center;
+      justify-content: center; background: var(--cream);
+    }
+    .login-card {
+      background: var(--white); border-radius: 20px; padding: 3rem 2.5rem;
+      width: 100%; max-width: 420px; box-shadow: 0 8px 40px rgba(58,46,34,0.12);
+      text-align: center;
+    }
+    .login-logo { font-size: 1.7rem; font-weight: 700; color: var(--ink); margin-bottom: 0.2rem; }
+    .login-logo span { color: var(--terra); }
+    .login-sub { font-size: 0.9rem; color: var(--ink-light); margin-bottom: 2.5rem; }
+    .btn-google {
+      display: inline-flex; align-items: center; gap: 0.75rem;
+      padding: 0.85rem 2rem; border-radius: 100px;
+      background: var(--ink); color: var(--white);
+      border: none; font-size: 0.95rem; font-weight: 500;
+      transition: background 0.2s; width: 100%; justify-content: center;
+    }
+    .btn-google:hover { background: var(--terra); }
+    .btn-google:disabled { opacity: 0.6; cursor: not-allowed; }
+    .login-error {
+      color: #c44; font-size: 0.85rem; margin-top: 1rem;
+      display: none; line-height: 1.5;
+    }
+    .spinner {
+      width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: white; border-radius: 50%;
+      animation: spin 0.7s linear infinite; display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── APP SHELL ── */
+    #app { display: none; min-height: 100vh; flex-direction: column; }
+
+    /* ── TOP NAV ── */
+    .topnav {
+      height: var(--nav-h); background: var(--ink);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem; position: sticky; top: 0; z-index: 100;
+    }
+    .nav-logo { font-size: 1.2rem; font-weight: 700; color: var(--white); }
+    .nav-logo span { color: var(--terra); }
+    .nav-right { display: flex; align-items: center; gap: 1rem; }
+    .nav-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--terra); color: var(--white);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 600; font-size: 0.9rem; overflow: hidden;
+    }
+    .nav-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .nav-name { color: rgba(255,255,255,0.8); font-size: 0.9rem; }
+    .btn-signout {
+      background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7);
+      border: none; padding: 0.45rem 1rem; border-radius: 100px;
+      font-size: 0.82rem; transition: all 0.15s;
+    }
+    .btn-signout:hover { background: rgba(255,255,255,0.18); color: var(--white); }
+
+    /* ── TAB NAV ── */
+    .tabnav {
+      background: var(--white); border-bottom: 1.5px solid var(--cream-dark);
+      display: flex; padding: 0 2rem; gap: 0;
+    }
+    .tab-btn {
+      padding: 1rem 1.5rem; font-size: 0.9rem; font-weight: 500;
+      color: var(--ink-light); background: none; border: none;
+      border-bottom: 2.5px solid transparent; margin-bottom: -1.5px;
+      transition: all 0.15s;
+    }
+    .tab-btn:hover { color: var(--terra); }
+    .tab-btn.active { color: var(--terra); border-bottom-color: var(--terra); }
+
+    /* ── MAIN ── */
+    .main { flex: 1; padding: 2rem; max-width: 900px; width: 100%; margin: 0 auto; }
+    .view { display: none; }
+    .view.active { display: block; }
+    .view-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 0.3rem; }
+    .view-sub { font-size: 0.88rem; color: var(--ink-light); margin-bottom: 2rem; }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--white); border-radius: 14px;
+      padding: 1.5rem; box-shadow: 0 2px 8px rgba(58,46,34,0.06);
+      margin-bottom: 1.25rem;
+    }
+    .card-title { font-size: 0.95rem; font-weight: 600; margin-bottom: 1.25rem; }
+
+    /* ── SHIFT ITEM ── */
+    .shift-item {
+      display: flex; align-items: center; gap: 1.25rem;
+      padding: 1rem 1.25rem; border-radius: 10px;
+      background: var(--cream-soft); margin-bottom: 0.75rem;
+    }
+    .shift-item:last-child { margin-bottom: 0; }
+    .shift-date { text-align: center; min-width: 48px; }
+    .shift-day  { font-size: 1.5rem; font-weight: 700; color: var(--terra); line-height: 1; }
+    .shift-mon  { font-size: 0.7rem; text-transform: uppercase; color: var(--ink-light); margin-top: 0.1rem; }
+    .shift-info { flex: 1; }
+    .shift-client { font-weight: 600; font-size: 0.95rem; }
+    .shift-meta   { font-size: 0.82rem; color: var(--ink-light); margin-top: 0.2rem; }
+    .shift-badge {
+      padding: 0.3rem 0.8rem; border-radius: 100px; font-size: 0.78rem; font-weight: 500;
+      background: var(--terra-soft); color: var(--terra-deep);
+    }
+    .shift-badge.done { background: var(--sage-soft); color: var(--sage); }
+    .shift-badge.rec  { background: #e8e0f5; color: #6a5acd; }
+    .empty-state { color: var(--ink-light); font-size: 0.9rem; padding: 1.5rem 0; }
+
+    /* ── CLIENT CARD ── */
+    .client-item {
+      display: flex; align-items: flex-start; gap: 1rem;
+      padding: 1rem 1.25rem; border-radius: 10px;
+      background: var(--cream-soft); margin-bottom: 0.75rem;
+    }
+    .client-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--terra); color: var(--white);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 600; font-size: 1rem; flex-shrink: 0;
+    }
+    .client-info { flex: 1; }
+    .client-name { font-weight: 600; }
+    .client-meta { font-size: 0.82rem; color: var(--ink-light); margin-top: 0.2rem; }
+    .client-notes { font-size: 0.82rem; color: var(--ink-mid); margin-top: 0.4rem; font-style: italic; }
+    .plan-badge {
+      padding: 0.22rem 0.6rem; border-radius: 100px;
+      font-size: 0.75rem; font-weight: 500;
+      background: var(--terra-soft); color: var(--terra-deep);
+    }
+    .plan-badge.essential { background: var(--sage-soft); color: var(--sage); }
+    .plan-badge.premium   { background: #e8e0f5; color: #6a5acd; }
+
+    /* ── AVAILABILITY ── */
+    .avail-section { margin-bottom: 1.5rem; }
+    .avail-label { font-size: 0.85rem; font-weight: 600; color: var(--ink-mid); margin-bottom: 0.6rem; }
+    .day-toggles { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .day-toggle { display: flex; cursor: pointer; }
+    .day-toggle input { display: none; }
+    .day-toggle span {
+      padding: 0.4rem 0.75rem; border-radius: 100px; font-size: 0.82rem; font-weight: 500;
+      background: var(--cream-soft); color: var(--ink-light);
+      border: 1.5px solid var(--cream-dark); transition: all 0.15s; user-select: none;
+    }
+    .day-toggle input:checked + span { background: var(--terra); color: var(--white); border-color: var(--terra); }
+    .time-row { display: flex; gap: 1rem; margin-top: 1rem; align-items: flex-end; }
+    .time-group { flex: 1; }
+    .time-group label { display: block; font-size: 0.8rem; font-weight: 500; color: var(--ink-mid); margin-bottom: 0.35rem; }
+    .fc {
+      width: 100%; padding: 0.65rem 0.9rem;
+      border: 1.5px solid var(--cream-dark); border-radius: 9px;
+      font-size: 0.9rem; color: var(--ink); background: var(--cream-soft);
+      transition: border-color 0.2s;
+    }
+    .fc:focus { outline: none; border-color: var(--terra); background: var(--white); }
+    .btn-save {
+      padding: 0.75rem 2rem; background: var(--ink); color: var(--white);
+      border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 500;
+      transition: background 0.2s; margin-top: 1.5rem;
+    }
+    .btn-save:hover { background: var(--terra); }
+    .btn-save:disabled { opacity: 0.6; cursor: not-allowed; }
+    .save-note { font-size: 0.82rem; color: var(--sage); margin-top: 0.75rem; display: none; }
+
+    /* ── WEEK TABS ── */
+    .week-controls { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; }
+    .week-label { font-size: 0.95rem; font-weight: 600; min-width: 200px; text-align: center; color: var(--ink); }
+    .btn-week {
+      padding: 0.4rem 0.9rem; border-radius: 8px; font-size: 0.85rem;
+      background: var(--white); color: var(--ink-mid); border: 1.5px solid var(--cream-dark);
+      transition: all 0.15s;
+    }
+    .btn-week:hover { border-color: var(--terra); color: var(--terra); }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed; bottom: 2rem; right: 2rem;
+      background: var(--ink); color: var(--white);
+      padding: 0.8rem 1.4rem; border-radius: 10px; font-size: 0.88rem;
+      z-index: 9999; opacity: 0; transform: translateY(8px);
+      transition: all 0.25s; pointer-events: none;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast.err { background: #c44; }
+  </style>
+</head>
+<body>
+
+<!-- ── LOGIN ── -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">Hearthl<span>ane</span></div>
+    <div class="login-sub">Caregiver Portal</div>
+    <button class="btn-google" id="signin-btn" onclick="handleSignIn()">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <path d="M17.64 9.205c0-.639-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
+        <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
+        <path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+        <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+      </svg>
+      Sign in with Google
+    </button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- ── APP ── -->
+<div id="app">
+  <nav class="topnav">
+    <div class="nav-logo">Hearthl<span>ane</span></div>
+    <div class="nav-right">
+      <span class="nav-name" id="nav-name"></span>
+      <div class="nav-avatar" id="nav-avatar"></div>
+      <button class="btn-signout" onclick="handleSignOut()">Sign Out</button>
+    </div>
+  </nav>
+
+  <div class="tabnav">
+    <button class="tab-btn active" data-view="shifts" onclick="switchTab('shifts')">My Shifts</button>
+    <button class="tab-btn" data-view="availability" onclick="switchTab('availability')">My Availability</button>
+    <button class="tab-btn" data-view="clients" onclick="switchTab('clients')">My Clients</button>
+  </div>
+
+  <div class="main">
+
+    <!-- MY SHIFTS -->
+    <div class="view active" id="view-shifts">
+      <div class="view-title">My Shifts</div>
+      <div class="view-sub">Your upcoming and recent visits</div>
+
+      <div class="week-controls">
+        <button class="btn-week" onclick="shiftWeek(-1)">← Prev</button>
+        <div class="week-label" id="week-label">—</div>
+        <button class="btn-week" onclick="shiftWeek(1)">Next →</button>
+        <button class="btn-week" onclick="goToday()">Today</button>
+      </div>
+
+      <div id="shifts-list"><div class="empty-state">Loading…</div></div>
+    </div>
+
+    <!-- MY AVAILABILITY -->
+    <div class="view" id="view-availability">
+      <div class="view-title">My Availability</div>
+      <div class="view-sub">Set the days and hours you're generally available. Your coordinator will see this when scheduling.</div>
+
+      <div class="card">
+        <div class="avail-section">
+          <div class="avail-label">Available Days</div>
+          <div class="day-toggles">
+            <label class="day-toggle"><input type="checkbox" name="avail_days" value="Mon" /><span>Mon</span></label>
+            <label class="day-toggle"><input type="checkbox" name="avail_days" value="Tue" /><span>Tue</span></label>
+            <label class="day-toggle"><input type="checkbox" name="avail_days" value="Wed" /><span>Wed</span></label>
+            <label class="day-toggle"><input type="checkbox" name="avail_days" value="Thu" /><span>Thu</span></label>
+            <label class="day-toggle"><input type="checkbox" name="avail_days" value="Fri" /><span>Fri</span></label>
+            <label class="day-toggle"><input type="checkbox" name="avail_days" value="Sat" /><span>Sat</span></label>
+            <label class="day-toggle"><input type="checkbox" name="avail_days" value="Sun" /><span>Sun</span></label>
+          </div>
+        </div>
+
+        <div class="avail-section">
+          <div class="avail-label">Available Hours</div>
+          <div class="time-row">
+            <div class="time-group">
+              <label>From</label>
+              <input class="fc" type="time" id="avail-from" />
+            </div>
+            <div class="time-group">
+              <label>Until</label>
+              <input class="fc" type="time" id="avail-to" />
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-save" id="save-avail-btn" onclick="saveAvailability()">Save Availability</button>
+        <div class="save-note" id="save-note">✓ Availability saved — your coordinator can now see this.</div>
+      </div>
+    </div>
+
+    <!-- MY CLIENTS -->
+    <div class="view" id="view-clients">
+      <div class="view-title">My Clients</div>
+      <div class="view-sub">Clients currently assigned to you</div>
+      <div id="clients-list"><div class="empty-state">Loading…</div></div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── FIREBASE CONFIG ───────────────────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey:            "AIzaSyDIofGQftDq5E1uo0twpEf4Ss7t8WOXyc4",
+  authDomain:        "local-stage-94f88.firebaseapp.com",
+  projectId:         "local-stage-94f88",
+  storageBucket:     "local-stage-94f88.firebasestorage.app",
+  messagingSenderId: "177600603494",
+  appId:             "1:177600603494:web:1696f09bb3e51d075ad4a7"
+};
+// ─────────────────────────────────────────────────────────────────────────────
+
+firebase.initializeApp(firebaseConfig);
+const auth     = firebase.auth();
+const db       = firebase.firestore();
+const provider = new firebase.auth.GoogleAuthProvider();
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let caregiverDoc  = null; // Firestore caregiver record
+let caregiverId   = null;
+let weekStart     = mondayOf(new Date());
+
+// ── AUTH ──────────────────────────────────────────────────────────────────────
+auth.onAuthStateChanged(async user => {
+  if (user) {
+    await bootPortal(user);
+  } else {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+  }
+});
+
+async function handleSignIn() {
+  const btn = document.getElementById('signin-btn');
+  const err = document.getElementById('login-error');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div>&nbsp; Signing in…';
+  err.style.display = 'none';
+  try {
+    await auth.signInWithPopup(provider);
+  } catch(e) {
+    err.textContent = 'Sign-in failed — please try again.';
+    err.style.display = 'block';
+    btn.disabled = false;
+    btn.innerHTML = googleBtnHTML();
+  }
+}
+
+function googleBtnHTML() {
+  return `<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M17.64 9.205c0-.639-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg> Sign in with Google`;
+}
+
+async function handleSignOut() {
+  await auth.signOut();
+}
+
+async function bootPortal(user) {
+  // Look up caregiver by their Google email
+  const snap = await db.collection('caregivers')
+    .where('google_email', '==', user.email.toLowerCase().trim())
+    .limit(1)
+    .get();
+
+  if (snap.empty) {
+    await auth.signOut();
+    const err = document.getElementById('login-error');
+    err.textContent = 'This Google account isn\'t linked to a Hearthlane caregiver profile. Please contact your coordinator.';
+    err.style.display = 'block';
+    document.getElementById('signin-btn').disabled = false;
+    document.getElementById('signin-btn').innerHTML = googleBtnHTML();
+    return;
+  }
+
+  caregiverDoc = { id: snap.docs[0].id, ...snap.docs[0].data() };
+  caregiverId  = caregiverDoc.id;
+
+  // Show portal
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  document.getElementById('app').style.flexDirection = 'column';
+
+  const firstName = (user.displayName || user.email).split(' ')[0];
+  document.getElementById('nav-name').textContent = firstName;
+  const av = document.getElementById('nav-avatar');
+  if (user.photoURL) av.innerHTML = `<img src="${user.photoURL}" alt="">`;
+  else av.textContent = firstName[0].toUpperCase();
+
+  loadShifts();
+  loadAvailability();
+  loadClients();
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────────
+function switchTab(view) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + view).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-view="${view}"]`).classList.add('active');
+}
+
+// ── SHIFTS ────────────────────────────────────────────────────────────────────
+async function loadShifts() {
+  const wEnd = new Date(weekStart); wEnd.setDate(wEnd.getDate() + 7);
+
+  // Get one-time appointments this week + all recurring for this caregiver
+  const [oneSnap, recSnap] = await Promise.all([
+    db.collection('appointments').where('caregiver_id', '==', caregiverId).get(),
+    // recSnap handled within oneSnap — we filter below
+  ]);
+
+  // Build client name map
+  const clientIds = [...new Set(oneSnap.docs.map(d => d.data().client_id).filter(Boolean))];
+  const clientMap = {};
+  await Promise.all(clientIds.map(async id => {
+    const s = await db.collection('clients').doc(id).get();
+    if (s.exists) clientMap[id] = s.data();
+  }));
+
+  const now = new Date();
+  const shifts = [];
+
+  oneSnap.docs.forEach(d => {
+    const data = d.data();
+    if (data.status === 'cancelled') return;
+    const origin = data.scheduled_at?.toDate();
+    if (!origin) return;
+
+    if (!data.recurring) {
+      // Only show this week
+      if (origin >= weekStart && origin < wEnd) {
+        shifts.push(buildShift(origin, data, clientMap, false));
+      }
+    } else {
+      // Expand recurring into this week
+      const recEnd  = data.recurring_end?.toDate?.() ?? new Date(now.getFullYear() + 2, 0, 1);
+      const dayOfWeek = origin.getDay();
+      const step    = data.recurring === 'biweekly' ? 14 : 7;
+      const cursor  = new Date(weekStart);
+      while (cursor.getDay() !== dayOfWeek) cursor.setDate(cursor.getDate() + 1);
+      if (cursor < wEnd && cursor >= origin && cursor <= recEnd) {
+        const slot = new Date(cursor);
+        slot.setHours(origin.getHours(), origin.getMinutes(), 0, 0);
+        shifts.push(buildShift(slot, data, clientMap, true));
+      }
+    }
+  });
+
+  shifts.sort((a, b) => a.dt - b.dt);
+  renderShifts(shifts, weekStart, wEnd);
+}
+
+function buildShift(dt, data, clientMap, isRec) {
+  return {
+    dt,
+    client: clientMap[data.client_id]?.name || 'Client',
+    address: clientMap[data.client_id]?.address || '',
+    duration: (data.duration_minutes / 60) + ' hr' + (data.duration_minutes > 60 ? 's' : ''),
+    status: dt < new Date() ? 'completed' : 'upcoming',
+    recurring: isRec
+  };
+}
+
+function renderShifts(shifts, wStart, wEnd) {
+  const endDay = new Date(wEnd); endDay.setDate(endDay.getDate() - 1);
+  document.getElementById('week-label').textContent =
+    wStart.toLocaleDateString('en', { month: 'short', day: 'numeric' }) + ' – ' +
+    endDay.toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' });
+
+  const el = document.getElementById('shifts-list');
+  if (!shifts.length) {
+    el.innerHTML = '<div class="empty-state">No shifts scheduled this week.</div>';
+    return;
+  }
+  el.innerHTML = shifts.map(s => `
+    <div class="shift-item">
+      <div class="shift-date">
+        <div class="shift-day">${s.dt.getDate()}</div>
+        <div class="shift-mon">${s.dt.toLocaleDateString('en',{month:'short'})}</div>
+      </div>
+      <div class="shift-info">
+        <div class="shift-client">${esc(s.client)}</div>
+        <div class="shift-meta">
+          ${s.dt.toLocaleDateString('en',{weekday:'long'})} · ${fmt12(s.dt)} · ${s.duration}
+          ${s.address ? `<br>${esc(s.address)}` : ''}
+        </div>
+      </div>
+      <span class="shift-badge ${s.status === 'completed' ? 'done' : ''} ${s.recurring ? 'rec' : ''}">
+        ${s.recurring ? 'Recurring' : s.status === 'completed' ? 'Completed' : 'Confirmed'}
+      </span>
+    </div>
+  `).join('');
+}
+
+function shiftWeek(dir) { weekStart.setDate(weekStart.getDate() + dir * 7); loadShifts(); }
+function goToday()      { weekStart = mondayOf(new Date()); loadShifts(); }
+
+// ── AVAILABILITY ──────────────────────────────────────────────────────────────
+function loadAvailability() {
+  if (!caregiverDoc) return;
+  const days = caregiverDoc.avail_days || [];
+  document.querySelectorAll('[name="avail_days"]').forEach(cb => {
+    cb.checked = days.includes(cb.value);
+  });
+  document.getElementById('avail-from').value = caregiverDoc.avail_from || '';
+  document.getElementById('avail-to').value   = caregiverDoc.avail_to   || '';
+}
+
+async function saveAvailability() {
+  const btn  = document.getElementById('save-avail-btn');
+  const note = document.getElementById('save-note');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  const days = [...document.querySelectorAll('[name="avail_days"]:checked')].map(cb => cb.value);
+  const from = document.getElementById('avail-from').value;
+  const to   = document.getElementById('avail-to').value;
+
+  try {
+    await db.collection('caregivers').doc(caregiverId).update({
+      avail_days: days,
+      avail_from: from || null,
+      avail_to:   to   || null,
+      updated_at: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    caregiverDoc.avail_days = days;
+    caregiverDoc.avail_from = from;
+    caregiverDoc.avail_to   = to;
+    note.style.display = 'block';
+    toast('Availability saved');
+  } catch(e) {
+    toast(e.message, true);
+  }
+  btn.disabled = false; btn.textContent = 'Save Availability';
+}
+
+// ── CLIENTS ───────────────────────────────────────────────────────────────────
+async function loadClients() {
+  const snap = await db.collection('clients')
+    .where('caregiver_id', '==', caregiverId)
+    .get();
+
+  const el = document.getElementById('clients-list');
+  if (snap.empty) { el.innerHTML = '<div class="empty-state">No clients assigned yet.</div>'; return; }
+
+  el.innerHTML = snap.docs.map(d => {
+    const c = d.data();
+    const initials = (c.name || '?').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
+    const planClass = c.plan === 'essential' ? 'essential' : c.plan === 'premium' ? 'premium' : '';
+    return `
+      <div class="client-item">
+        <div class="client-avatar">${initials}</div>
+        <div class="client-info">
+          <div class="client-name">${esc(c.name)}</div>
+          <div class="client-meta">
+            ${c.address ? esc(c.address) + ' · ' : ''}
+            ${c.plan ? `<span class="plan-badge ${planClass}">${c.plan}</span>` : ''}
+          </div>
+          ${c.notes ? `<div class="client-notes">${esc(c.notes)}</div>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ── UTILITIES ─────────────────────────────────────────────────────────────────
+function mondayOf(date) {
+  const d = new Date(date);
+  const day = d.getDay();
+  d.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
+  d.setHours(0,0,0,0);
+  return d;
+}
+
+function fmt12(dt) {
+  let h = dt.getHours(), m = dt.getMinutes();
+  const ap = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  return `${h}:${String(m).padStart(2,'0')} ${ap}`;
+}
+
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+let _tt;
+function toast(msg, isErr = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show' + (isErr ? ' err' : '');
+  clearTimeout(_tt);
+  _tt = setTimeout(() => el.className = '', 3500);
+}
+</script>
+</body>
+</html>
