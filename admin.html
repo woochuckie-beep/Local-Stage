@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hearthlane — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+<style>
+  :root {
+    --terra:        #c08568;
+    --terra-soft:   #f0d8c8;
+    --terra-deep:   #8a5a40;
+    --cream:        #f7efe2;
+    --cream-soft:   #fbf6ec;
+    --cream-dark:   #ede0c8;
+    --ink:          #3a2e22;
+    --ink-mid:      #6b5a48;
+    --ink-light:    #98876d;
+    --sage:         #7a8b6f;
+    --sage-soft:    #d5dcc9;
+    --gold:         #d4a574;
+    --walnut:       #5c4a3a;
+    --white:        #ffffff;
+    --danger:       #c0392b;
+    --danger-soft:  #fdf0ee;
+    --success:      #2e7d5a;
+    --success-soft: #edf7f2;
+    --shadow-sm:    0 2px 12px rgba(58,46,34,.06);
+    --shadow-md:    0 8px 32px rgba(58,46,34,.10);
+    --shadow-lg:    0 16px 48px rgba(58,46,34,.14);
+    --serif:        'DM Serif Display', Georgia, serif;
+    --sans:         'DM Sans', system-ui, sans-serif;
+    --radius-sm:    10px;
+    --radius:       16px;
+    --radius-lg:    24px;
+    --sidebar:      260px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 16px; }
+  body {
+    font-family: var(--sans);
+    background: var(--cream);
+    color: var(--ink);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  button { font-family: inherit; cursor: pointer; }
+  input, select, textarea { font-family: inherit; }
+
+  /* ─── GATE ─── */
+  #gate {
+    position: fixed; inset: 0; z-index: 9999;
+    background: var(--cream);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .gate-card {
+    background: var(--white);
+    border: 1.5px solid var(--cream-dark);
+    border-radius: var(--radius-lg);
+    padding: 3rem 2.5rem;
+    width: 380px; max-width: calc(100vw - 2rem);
+    box-shadow: var(--shadow-lg);
+    text-align: center;
+  }
+  .gate-logo {
+    font-family: var(--serif); font-size: 1.8rem;
+    color: var(--ink); margin-bottom: 0.35rem;
+  }
+  .gate-logo em { color: var(--terra); font-style: italic; }
+  .gate-sub {
+    font-size: 0.78rem; letter-spacing: 1.4px; font-weight: 600;
+    text-transform: uppercase; color: var(--terra-deep);
+    margin-bottom: 2rem;
+  }
+  .gate-field {
+    width: 100%; padding: 0.85rem 1.1rem;
+    border: 1.5px solid var(--cream-dark);
+    border-radius: var(--radius-sm);
+    font-size: 1rem; background: var(--cream-soft);
+    color: var(--ink); outline: none;
+    transition: border-color .2s;
+    margin-bottom: 1rem;
+    letter-spacing: 2px;
+  }
+  .gate-field:focus { border-color: var(--terra); }
+  .gate-btn {
+    width: 100%; padding: 0.9rem;
+    background: var(--ink); color: var(--white);
+    border: none; border-radius: 100px;
+    font-size: 0.95rem; font-weight: 500;
+    transition: background .2s;
+  }
+  .gate-btn:hover { background: var(--terra); }
+  .gate-err {
+    color: var(--danger); font-size: 0.82rem;
+    margin-top: 0.65rem; display: none;
+  }
+
+  /* ─── LAYOUT ─── */
+  #app { display: none; min-height: 100vh; }
+
+  .sidebar {
+    position: fixed; top: 0; left: 0; bottom: 0;
+    width: var(--sidebar);
+    background: var(--ink);
+    display: flex; flex-direction: column;
+    z-index: 100; padding: 1.5rem 0;
+    overflow-y: auto;
+  }
+  .sb-logo {
+    font-family: var(--serif); font-size: 1.45rem;
+    color: var(--white); padding: 0 1.5rem;
+    margin-bottom: 0.3rem; text-decoration: none;
+    display: block;
+  }
+  .sb-logo em { color: var(--terra-soft); font-style: italic; }
+  .sb-badge {
+    font-size: 0.65rem; font-weight: 600; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--terra-soft);
+    opacity: 0.65; padding: 0 1.5rem;
+    margin-bottom: 2rem;
+  }
+  .sb-section-label {
+    font-size: 0.65rem; letter-spacing: 1.6px; font-weight: 600;
+    text-transform: uppercase; color: rgba(255,255,255,.3);
+    padding: 0 1.5rem; margin: 1.25rem 0 0.5rem;
+  }
+  .sb-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 0.65rem 1.5rem;
+    font-size: 0.88rem; font-weight: 400;
+    color: rgba(255,255,255,.65);
+    cursor: pointer; transition: all .15s;
+    border-left: 3px solid transparent;
+    text-decoration: none;
+  }
+  .sb-item svg { flex-shrink: 0; opacity: .7; }
+  .sb-item:hover { background: rgba(255,255,255,.07); color: var(--white); }
+  .sb-item.active {
+    background: rgba(192,133,104,.18);
+    color: var(--terra-soft);
+    border-left-color: var(--terra);
+    font-weight: 500;
+  }
+  .sb-item.active svg { opacity: 1; }
+  .sb-spacer { flex: 1; }
+  .sb-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid rgba(255,255,255,.08);
+    margin-top: 1rem;
+  }
+  .sb-user { font-size: 0.78rem; color: rgba(255,255,255,.4); margin-bottom: 0.5rem; }
+  .sb-signout {
+    font-size: 0.8rem; color: rgba(255,255,255,.45);
+    background: none; border: none; padding: 0;
+    cursor: pointer; transition: color .15s;
+  }
+  .sb-signout:hover { color: var(--terra-soft); }
+
+  .main {
+    margin-left: var(--sidebar);
+    padding: 2rem 2.5rem;
+    min-height: 100vh;
+  }
+
+  /* ─── PAGE HEADER ─── */
+  .page-header {
+    display: flex; align-items: flex-start;
+    justify-content: space-between; gap: 1rem;
+    margin-bottom: 2rem; flex-wrap: wrap;
+  }
+  .page-title {
+    font-family: var(--serif); font-weight: 400;
+    font-size: 1.9rem; color: var(--ink);
+    line-height: 1.15; letter-spacing: -0.4px;
+  }
+  .page-title em { color: var(--terra); font-style: italic; }
+
+  /* ─── VIEWS ─── */
+  .a-view { display: none; }
+  .a-view.active { display: block; }
+
+  /* ─── STATS ROW ─── */
+  .stats-row {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 1rem; margin-bottom: 2rem;
+  }
+  .stat-card {
+    background: var(--white); border-radius: var(--radius);
+    border: 1px solid var(--cream-dark);
+    padding: 1.4rem 1.5rem;
+    box-shadow: var(--shadow-sm);
+  }
+  .stat-label {
+    font-size: 0.72rem; letter-spacing: 1.3px; font-weight: 600;
+    text-transform: uppercase; color: var(--ink-light);
+    margin-bottom: 0.4rem;
+  }
+  .stat-val {
+    font-family: var(--serif); font-size: 2rem;
+    color: var(--ink); line-height: 1;
+  }
+  .stat-sub { font-size: 0.78rem; color: var(--ink-light); margin-top: 4px; }
+
+  /* ─── CARD ─── */
+  .card {
+    background: var(--white); border: 1px solid var(--cream-dark);
+    border-radius: var(--radius); box-shadow: var(--shadow-sm);
+    overflow: hidden;
+  }
+  .card-head {
+    display: flex; align-items: center;
+    justify-content: space-between; gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--cream-dark);
+    flex-wrap: wrap;
+  }
+  .card-title {
+    font-family: var(--serif); font-size: 1.2rem;
+    color: var(--ink); font-weight: 400;
+  }
+
+  /* ─── TABLE ─── */
+  .tbl-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    font-size: 0.7rem; font-weight: 600; letter-spacing: 1.3px;
+    text-transform: uppercase; color: var(--ink-light);
+    padding: 0.85rem 1.25rem; text-align: left;
+    border-bottom: 1px solid var(--cream-dark);
+    white-space: nowrap; background: var(--cream-soft);
+  }
+  td {
+    padding: 1rem 1.25rem; border-bottom: 1px solid var(--cream-dark);
+    font-size: 0.9rem; color: var(--ink-mid);
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--cream-soft); }
+  .td-name { font-weight: 500; color: var(--ink); }
+  .td-em { font-style: italic; color: var(--ink-light); }
+
+  /* ─── BADGE ─── */
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 100px;
+    font-size: 0.72rem; font-weight: 600; white-space: nowrap;
+  }
+  .badge-upcoming { background: var(--terra-soft); color: var(--terra-deep); }
+  .badge-completed { background: var(--sage-soft); color: var(--sage); }
+  .badge-active { background: var(--success-soft); color: var(--success); }
+  .badge-inactive { background: var(--cream-dark); color: var(--ink-light); }
+
+  /* ─── BUTTONS ─── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 0.6rem 1.2rem; border-radius: 100px;
+    font-size: 0.85rem; font-weight: 500; border: none;
+    cursor: pointer; transition: all .15s; text-decoration: none;
+    white-space: nowrap;
+  }
+  .btn-primary { background: var(--ink); color: var(--white); }
+  .btn-primary:hover { background: var(--terra); }
+  .btn-outline {
+    background: transparent; color: var(--ink);
+    border: 1.5px solid var(--cream-dark);
+  }
+  .btn-outline:hover { border-color: var(--terra); color: var(--terra); }
+  .btn-danger { background: transparent; color: var(--danger); border: 1.5px solid var(--danger); }
+  .btn-danger:hover { background: var(--danger); color: var(--white); }
+  .btn-sm { padding: 0.4rem 0.85rem; font-size: 0.78rem; }
+  .btn-icon {
+    background: none; border: none; padding: 6px;
+    color: var(--ink-light); cursor: pointer; border-radius: 6px;
+    transition: all .15s; display: inline-flex; align-items: center;
+  }
+  .btn-icon:hover { background: var(--cream-dark); color: var(--terra-deep); }
+
+  /* ─── FORM ─── */
+  .field-group { margin-bottom: 1.1rem; }
+  .field-label {
+    display: block; font-size: 0.8rem; font-weight: 500;
+    color: var(--ink-mid); margin-bottom: 0.4rem;
+  }
+  .field-input {
+    width: 100%; padding: 0.7rem 0.9rem;
+    border: 1.5px solid var(--cream-dark);
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem; color: var(--ink);
+    background: var(--cream-soft); outline: none;
+    transition: border-color .2s;
+  }
+  .field-input:focus { border-color: var(--terra); background: var(--white); }
+  select.field-input { cursor: pointer; }
+  textarea.field-input { resize: vertical; min-height: 80px; }
+  .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+  /* ─── MODAL ─── */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 500;
+    background: rgba(58,46,34,.45);
+    backdrop-filter: blur(4px);
+    display: none; align-items: center; justify-content: center;
+    padding: 1rem;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--white); border-radius: var(--radius-lg);
+    padding: 2rem; width: 520px; max-width: 100%;
+    box-shadow: var(--shadow-lg);
+    max-height: 90vh; overflow-y: auto;
+    position: relative;
+  }
+  .modal-title {
+    font-family: var(--serif); font-size: 1.35rem;
+    color: var(--ink); margin-bottom: 1.5rem;
+    padding-right: 2rem;
+  }
+  .modal-close {
+    position: absolute; top: 1.25rem; right: 1.25rem;
+    background: none; border: none; cursor: pointer;
+    color: var(--ink-light); padding: 4px;
+    transition: color .15s;
+  }
+  .modal-close:hover { color: var(--danger); }
+  .modal-footer {
+    display: flex; gap: 0.75rem; justify-content: flex-end;
+    margin-top: 1.5rem; padding-top: 1.25rem;
+    border-top: 1px solid var(--cream-dark);
+  }
+
+  /* ─── TOAST ─── */
+  #toast {
+    position: fixed; bottom: 1.5rem; right: 1.5rem;
+    background: var(--ink); color: var(--white);
+    padding: 0.75rem 1.25rem; border-radius: var(--radius-sm);
+    font-size: 0.88rem; z-index: 9000;
+    transform: translateY(80px); opacity: 0;
+    transition: all .3s cubic-bezier(.34,1.56,.64,1);
+    pointer-events: none; max-width: 300px;
+    box-shadow: var(--shadow-md);
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
+  #toast.success { background: var(--success); }
+  #toast.error { background: var(--danger); }
+
+  /* ─── DETAIL ROW ─── */
+  .detail-grid {
+    display: grid; grid-template-columns: 140px 1fr;
+    gap: 0.65rem 0; padding: 1.25rem 1.5rem;
+  }
+  .detail-key {
+    font-size: 0.78rem; font-weight: 600; letter-spacing: 0.4px;
+    color: var(--ink-light); text-transform: uppercase; font-size: 0.7rem;
+    letter-spacing: 1px; padding-top: 2px;
+  }
+  .detail-val { font-size: 0.9rem; color: var(--ink); }
+
+  /* ─── SCHEDULE TIMELINE ─── */
+  .visit-list { padding: 1rem 1.25rem; }
+  .visit-row {
+    display: flex; align-items: center; gap: 1rem;
+    padding: 0.85rem 0.5rem; border-bottom: 1px solid var(--cream-dark);
+  }
+  .visit-row:last-child { border-bottom: none; }
+  .visit-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .visit-dot.upcoming { background: var(--terra); }
+  .visit-dot.completed { background: var(--sage); }
+  .visit-info { flex: 1; }
+  .visit-title { font-size: 0.9rem; font-weight: 500; color: var(--ink); }
+  .visit-meta { font-size: 0.78rem; color: var(--ink-light); margin-top: 2px; }
+  .visit-actions { display: flex; gap: 4px; }
+
+  /* ─── EMPTY STATE ─── */
+  .empty-state {
+    text-align: center; padding: 3rem 2rem;
+    color: var(--ink-light); font-size: 0.92rem;
+  }
+  .empty-state-icon {
+    font-size: 2.5rem; margin-bottom: 0.75rem; opacity: .4;
+  }
+
+  /* ─── SEARCH BAR ─── */
+  .search-input {
+    padding: 0.55rem 1rem 0.55rem 2.4rem;
+    border: 1.5px solid var(--cream-dark);
+    border-radius: 100px;
+    font-size: 0.87rem; color: var(--ink);
+    background: var(--cream-soft); outline: none;
+    transition: border-color .2s; width: 220px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2398876d' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 10px center;
+  }
+  .search-input:focus { border-color: var(--terra); background-color: var(--white); }
+
+  /* ─── TWO-COL LAYOUT ─── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  .three-col { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem; }
+
+  /* ─── CONFIRM DIALOG ─── */
+  .confirm-overlay {
+    position: fixed; inset: 0; z-index: 600;
+    background: rgba(58,46,34,.5);
+    display: none; align-items: center; justify-content: center;
+  }
+  .confirm-overlay.open { display: flex; }
+  .confirm-box {
+    background: var(--white); border-radius: var(--radius);
+    padding: 1.75rem; width: 360px; max-width: 90%;
+    box-shadow: var(--shadow-lg); text-align: center;
+  }
+  .confirm-box h4 { font-family: var(--serif); font-size: 1.2rem; margin-bottom: 0.5rem; }
+  .confirm-box p { font-size: 0.88rem; color: var(--ink-mid); margin-bottom: 1.5rem; }
+  .confirm-btns { display: flex; gap: 0.75rem; justify-content: center; }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 1100px) {
+    .stats-row { grid-template-columns: repeat(2,1fr); }
+    .three-col { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 820px) {
+    :root { --sidebar: 0px; }
+    .sidebar { transform: translateX(-260px); width: 260px; transition: transform .25s; }
+    .sidebar.open { transform: translateX(0); }
+    .main { margin-left: 0; padding: 1.25rem; }
+    .mobile-sb-btn {
+      position: fixed; top: 1rem; left: 1rem; z-index: 110;
+      background: var(--ink); color: var(--white);
+      border: none; border-radius: 10px;
+      padding: 8px 12px; display: flex; cursor: pointer;
+    }
+    .stats-row { grid-template-columns: 1fr 1fr; }
+  }
+  @media (min-width: 821px) { .mobile-sb-btn { display: none; } }
+  @media (max-width: 560px) {
+    .stats-row { grid-template-columns: 1fr; }
+    .two-col, .three-col { grid-template-columns: 1fr; }
+    .form-row-2 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     GATE
+══════════════════════════════════════════ -->
+<div id="gate">
+  <div class="gate-card">
+    <div class="gate-logo">Hearth<em>lane</em></div>
+    <div class="gate-sub">Admin Portal</div>
+    <input type="password" id="gate-pw" class="gate-field" placeholder="Password" autocomplete="current-password" />
+    <button class="gate-btn" onclick="checkGate()">Sign in →</button>
+    <div class="gate-err" id="gate-err">Incorrect password. Try again.</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     APP SHELL
+══════════════════════════════════════════ -->
+<div id="app">
+
+  <!-- Mobile sidebar toggle -->
+  <button class="mobile-sb-btn" onclick="toggleSidebar()" id="mobile-sb-btn">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar" id="sidebar">
+    <a class="sb-logo" href="#">Hearth<em>lane</em></a>
+    <div class="sb-badge">Admin</div>
+
+    <div class="sb-section-label">Overview</div>
+    <div class="sb-item active" data-view="dashboard" onclick="goView('dashboard')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </div>
+
+    <div class="sb-section-label">Clients</div>
+    <div class="sb-item" data-view="clients" onclick="goView('clients')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      Clients
+    </div>
+    <div class="sb-item" data-view="schedule" onclick="goView('schedule')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Visit Schedule
+    </div>
+
+    <div class="sb-section-label">Team</div>
+    <div class="sb-item" data-view="caregivers" onclick="goView('caregivers')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Caregivers
+    </div>
+
+    <div class="sb-spacer"></div>
+    <div class="sb-footer">
+      <div class="sb-user">Signed in as Admin</div>
+      <button class="sb-signout" onclick="signOut()">← Sign out</button>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+
+    <!-- ── DASHBOARD ── -->
+    <div id="view-dashboard" class="a-view active">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Good <em id="greeting-time">morning</em>, Admin.</div>
+          <div style="font-size:.88rem;color:var(--ink-light);margin-top:4px" id="today-date"></div>
+        </div>
+      </div>
+
+      <div class="stats-row" id="stats-row">
+        <!-- Populated by JS -->
+      </div>
+
+      <div class="two-col" style="margin-top:1.5rem">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Upcoming Visits</div>
+            <button class="btn btn-sm btn-outline" onclick="goView('schedule')">View all</button>
+          </div>
+          <div id="dash-upcoming"></div>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Active Clients</div>
+            <button class="btn btn-sm btn-outline" onclick="goView('clients')">View all</button>
+          </div>
+          <div id="dash-clients"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CLIENTS ── -->
+    <div id="view-clients" class="a-view">
+      <div class="page-header">
+        <div class="page-title">Clients</div>
+        <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap">
+          <input type="text" class="search-input" placeholder="Search clients…" oninput="filterClients(this.value)" />
+          <button class="btn btn-primary" onclick="openClientModal()">+ Add client</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table id="clients-table">
+            <thead>
+              <tr>
+                <th>Client name</th>
+                <th>Plan</th>
+                <th>Caregiver</th>
+                <th>Location</th>
+                <th>Status</th>
+                <th>Portal email</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="clients-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SCHEDULE ── -->
+    <div id="view-schedule" class="a-view">
+      <div class="page-header">
+        <div class="page-title">Visit <em>Schedule</em></div>
+        <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap">
+          <select class="field-input" style="width:auto;padding:.5rem .85rem;border-radius:100px;font-size:.85rem" onchange="filterByClient(this.value)" id="sched-client-filter">
+            <option value="">All clients</option>
+          </select>
+          <button class="btn btn-primary" onclick="openVisitModal()">+ Add visit</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table id="schedule-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Client</th>
+                <th>Title</th>
+                <th>Caregiver</th>
+                <th>Duration</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="schedule-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CAREGIVERS ── -->
+    <div id="view-caregivers" class="a-view">
+      <div class="page-header">
+        <div class="page-title">Caregivers</div>
+        <button class="btn btn-primary" onclick="openCaregiverModal()">+ Add caregiver</button>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>Assigned clients</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="caregivers-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ══════════════════════════════════════════
+     MODALS
+══════════════════════════════════════════ -->
+
+<!-- Client modal -->
+<div class="modal-overlay" id="client-modal-overlay">
+  <div class="modal">
+    <div class="modal-title" id="client-modal-title">Add Client</div>
+    <button class="modal-close" onclick="closeModal('client-modal-overlay')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <input type="hidden" id="client-edit-id" />
+    <div class="form-row-2">
+      <div class="field-group">
+        <label class="field-label">Client name *</label>
+        <input type="text" class="field-input" id="c-name" placeholder="Full name" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Date of birth</label>
+        <input type="text" class="field-input" id="c-dob" placeholder="e.g. 1942-06-15" />
+      </div>
+    </div>
+    <div class="form-row-2">
+      <div class="field-group">
+        <label class="field-label">Plan</label>
+        <select class="field-input" id="c-plan">
+          <option value="">Select plan…</option>
+          <option>Essential (4 hrs/week)</option>
+          <option>Companion (8 hrs/week)</option>
+          <option>Daily (16+ hrs/week)</option>
+          <option>One-time</option>
+          <option>Custom</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Status</label>
+        <select class="field-input" id="c-status">
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+          <option value="pending">Pending</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row-2">
+      <div class="field-group">
+        <label class="field-label">Assigned caregiver</label>
+        <select class="field-input" id="c-caregiver">
+          <option value="">Unassigned</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Location</label>
+        <input type="text" class="field-input" id="c-location" placeholder="City or area" />
+      </div>
+    </div>
+    <div class="form-row-2">
+      <div class="field-group">
+        <label class="field-label">Family contact name</label>
+        <input type="text" class="field-input" id="c-contact-name" placeholder="Name" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Family contact phone</label>
+        <input type="text" class="field-input" id="c-contact-phone" placeholder="Phone" />
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Portal login email (client's Google account)</label>
+      <input type="email" class="field-input" id="c-portal-email" placeholder="client@gmail.com" />
+    </div>
+    <div class="field-group">
+      <label class="field-label">Notes</label>
+      <textarea class="field-input" id="c-notes" placeholder="Care preferences, medical notes, schedule preferences…"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('client-modal-overlay')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveClient()">Save client</button>
+    </div>
+  </div>
+</div>
+
+<!-- Visit modal -->
+<div class="modal-overlay" id="visit-modal-overlay">
+  <div class="modal">
+    <div class="modal-title" id="visit-modal-title">Add Visit</div>
+    <button class="modal-close" onclick="closeModal('visit-modal-overlay')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <input type="hidden" id="visit-edit-id" />
+    <div class="form-row-2">
+      <div class="field-group">
+        <label class="field-label">Client *</label>
+        <select class="field-input" id="v-client">
+          <option value="">Select client…</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Caregiver</label>
+        <select class="field-input" id="v-caregiver">
+          <option value="">Select caregiver…</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row-2">
+      <div class="field-group">
+        <label class="field-label">Date *</label>
+        <input type="date" class="field-input" id="v-date" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Time *</label>
+        <input type="time" class="field-input" id="v-time" />
+      </div>
+    </div>
+    <div class="form-row-2">
+      <div class="field-group">
+        <label class="field-label">Visit title</label>
+        <input type="text" class="field-input" id="v-title" placeholder="e.g. Morning Companion Visit" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Duration</label>
+        <select class="field-input" id="v-duration">
+          <option>1 hr</option>
+          <option>2 hrs</option>
+          <option selected>3 hrs</option>
+          <option>4 hrs</option>
+          <option>6 hrs</option>
+          <option>8 hrs</option>
+          <option>Custom</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Status</label>
+      <select class="field-input" id="v-status">
+        <option value="upcoming">Upcoming</option>
+        <option value="completed">Completed</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Notes</label>
+      <textarea class="field-input" id="v-notes" placeholder="Any special instructions or notes for this visit…"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('visit-modal-overlay')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveVisit()">Save visit</button>
+    </div>
+  </div>
+</div>
+
+<!-- Caregiver modal -->
+<div class="modal-overlay" id="caregiver-modal-overlay">
+  <div class="modal">
+    <div class="modal-title" id="caregiver-modal-title">Add Caregiver</div>
+    <button class="modal-close" onclick="closeModal('caregiver-modal-overlay')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <input type="hidden" id="caregiver-edit-id" />
+    <div class="form-row-2">
+      <div class="field-group">
+        <label class="field-label">Full name *</label>
+        <input type="text" class="field-input" id="cg-name" placeholder="First Last" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Status</label>
+        <select class="field-input" id="cg-status">
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row-2">
+      <div class="field-group">
+        <label class="field-label">Phone</label>
+        <input type="text" class="field-input" id="cg-phone" placeholder="(416) 555-0100" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Email</label>
+        <input type="email" class="field-input" id="cg-email" placeholder="caregiver@email.com" />
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Certifications / notes</label>
+      <textarea class="field-input" id="cg-notes" placeholder="PSW certified, background check date, specialties…"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('caregiver-modal-overlay')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCaregiver()">Save caregiver</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm dialog -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <h4 id="confirm-title">Are you sure?</h4>
+    <p id="confirm-msg">This action cannot be undone.</p>
+    <div class="confirm-btns">
+      <button class="btn btn-outline" onclick="closeConfirm()">Cancel</button>
+      <button class="btn btn-danger" id="confirm-ok-btn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════
+   GATE
+══════════════════════════════════════════ */
+const PASSWORD = '2xn5keyZ7D';
+
+document.getElementById('gate-pw').addEventListener('keydown', e => {
+  if (e.key === 'Enter') checkGate();
+});
+
+function checkGate() {
+  const val = document.getElementById('gate-pw').value;
+  if (val === PASSWORD) {
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    initApp();
+  } else {
+    const err = document.getElementById('gate-err');
+    err.style.display = 'block';
+    document.getElementById('gate-pw').value = '';
+    document.getElementById('gate-pw').focus();
+    setTimeout(() => err.style.display = 'none', 3000);
+  }
+}
+
+function signOut() {
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('gate').style.display = 'flex';
+  document.getElementById('gate-pw').value = '';
+}
+
+/* ══════════════════════════════════════════
+   DATA STORE  (localStorage-backed)
+══════════════════════════════════════════ */
+function load(key, fallback) {
+  try { const d = localStorage.getItem('hl_admin_' + key); return d ? JSON.parse(d) : fallback; } catch { return fallback; }
+}
+function save(key, val) {
+  try { localStorage.setItem('hl_admin_' + key, JSON.stringify(val)); } catch {}
+}
+
+let clients    = load('clients', [
+  { id: 'c1', name: 'Eleanor Marsh', dob: '1938-04-12', plan: 'Companion (8 hrs/week)', status: 'active', caregiver: 'Margaret H.', location: 'Oakville', contactName: 'Sarah Marsh', contactPhone: '(416) 555-0191', portalEmail: 'sarah.marsh@gmail.com', notes: 'Mild memory concerns, enjoys gardening and crosswords.' },
+  { id: 'c2', name: 'Robert Kowalski', dob: '1942-11-30', plan: 'Essential (4 hrs/week)', status: 'active', caregiver: 'James T.', location: 'Mississauga', contactName: 'Daniel Kowalski', contactPhone: '(905) 555-0284', portalEmail: 'daniel.kowalski@gmail.com', notes: 'Post-hospital recovery, mobility support required.' },
+  { id: 'c3', name: 'Margaret Liu', dob: '1935-07-22', plan: 'Daily (16+ hrs/week)', status: 'active', caregiver: 'Margaret H.', location: 'North York', contactName: 'Elaine Liu', contactPhone: '(778) 555-0312', portalEmail: 'elaine.liu@gmail.com', notes: 'Dementia support. Consistent routine is essential.' },
+]);
+
+let caregivers = load('caregivers', [
+  { id: 'cg1', name: 'Margaret H.', phone: '(416) 555-0144', email: 'margaret.h@hearthlane.ca', status: 'active', notes: 'PSW certified. Background check: 2024-01.' },
+  { id: 'cg2', name: 'James T.',    phone: '(905) 555-0177', email: 'james.t@hearthlane.ca',    status: 'active', notes: 'Background check: 2024-03. Specializes in post-hospital care.' },
+]);
+
+let visits = load('visits', [
+  { id: 'v1', clientId: 'c1', caregiver: 'Margaret H.', date: '2026-05-19', time: '10:00', title: 'Morning Companion Visit', duration: '2 hrs', status: 'upcoming', notes: '' },
+  { id: 'v2', clientId: 'c1', caregiver: 'Margaret H.', date: '2026-05-22', time: '14:00', title: 'Weekly Check-in & Errands', duration: '3 hrs', status: 'upcoming', notes: '' },
+  { id: 'v3', clientId: 'c2', caregiver: 'James T.',    date: '2026-05-20', time: '09:00', title: 'Morning Companion Visit', duration: '2 hrs', status: 'upcoming', notes: '' },
+  { id: 'v4', clientId: 'c3', caregiver: 'Margaret H.', date: '2026-05-21', time: '11:00', title: 'Daily Support Visit', duration: '4 hrs', status: 'upcoming', notes: '' },
+  { id: 'v5', clientId: 'c1', caregiver: 'Margaret H.', date: '2026-05-12', time: '14:00', title: 'Weekly Check-in & Errands', duration: '3 hrs', status: 'completed', notes: '' },
+  { id: 'v6', clientId: 'c2', caregiver: 'James T.',    date: '2026-05-13', time: '09:00', title: 'Morning Companion Visit', duration: '2 hrs', status: 'completed', notes: '' },
+]);
+
+function uid() { return Math.random().toString(36).slice(2, 10); }
+
+/* ══════════════════════════════════════════
+   INIT
+══════════════════════════════════════════ */
+function initApp() {
+  const h = new Date().getHours();
+  document.getElementById('greeting-time').textContent = h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
+  document.getElementById('today-date').textContent = new Date().toLocaleDateString('en-CA', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  renderDashboard();
+  renderClients();
+  renderSchedule();
+  renderCaregivers();
+}
+
+/* ══════════════════════════════════════════
+   NAV
+══════════════════════════════════════════ */
+function goView(name) {
+  document.querySelectorAll('.a-view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
+  document.querySelector(`.sb-item[data-view="${name}"]`)?.classList.add('active');
+  if (window.innerWidth <= 820) document.getElementById('sidebar').classList.remove('open');
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+/* ══════════════════════════════════════════
+   DASHBOARD
+══════════════════════════════════════════ */
+function renderDashboard() {
+  const now = new Date();
+  const upcoming = visits.filter(v => v.status === 'upcoming');
+  const completed = visits.filter(v => v.status === 'completed');
+  const activeClients = clients.filter(c => c.status === 'active');
+
+  document.getElementById('stats-row').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">Active clients</div>
+      <div class="stat-val">${activeClients.length}</div>
+      <div class="stat-sub">${clients.length} total</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Upcoming visits</div>
+      <div class="stat-val">${upcoming.length}</div>
+      <div class="stat-sub">next 30 days</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Completed visits</div>
+      <div class="stat-val">${completed.length}</div>
+      <div class="stat-sub">on record</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Caregivers</div>
+      <div class="stat-val">${caregivers.filter(c=>c.status==='active').length}</div>
+      <div class="stat-sub">${caregivers.length} total</div>
+    </div>
+  `;
+
+  // Upcoming visits
+  const upcomingEl = document.getElementById('dash-upcoming');
+  const sorted = [...upcoming].sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time)).slice(0, 6);
+  if (!sorted.length) {
+    upcomingEl.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📅</div>No upcoming visits.</div>';
+  } else {
+    upcomingEl.innerHTML = '<div class="visit-list">' + sorted.map(v => {
+      const client = clients.find(c => c.id === v.clientId);
+      const dateStr = formatDate(v.date);
+      return `<div class="visit-row">
+        <div class="visit-dot upcoming"></div>
+        <div class="visit-info">
+          <div class="visit-title">${esc(v.title)}</div>
+          <div class="visit-meta">${dateStr} · ${formatTime(v.time)} · ${esc(client?.name||'Unknown')} · ${esc(v.caregiver)}</div>
+        </div>
+      </div>`;
+    }).join('') + '</div>';
+  }
+
+  // Active clients
+  const clientsEl = document.getElementById('dash-clients');
+  if (!activeClients.length) {
+    clientsEl.innerHTML = '<div class="empty-state"><div class="empty-state-icon">👥</div>No active clients.</div>';
+  } else {
+    clientsEl.innerHTML = '<div class="visit-list">' + activeClients.slice(0,6).map(c => `
+      <div class="visit-row">
+        <div class="visit-dot" style="background:var(--terra)"></div>
+        <div class="visit-info">
+          <div class="visit-title">${esc(c.name)}</div>
+          <div class="visit-meta">${esc(c.plan||'—')} · ${esc(c.location||'—')} · ${esc(c.caregiver||'Unassigned')}</div>
+        </div>
+      </div>`).join('') + '</div>';
+  }
+}
+
+/* ══════════════════════════════════════════
+   CLIENTS
+══════════════════════════════════════════ */
+let clientFilter = '';
+
+function filterClients(q) { clientFilter = q.toLowerCase(); renderClients(); }
+
+function renderClients(list) {
+  const data = (list || clients).filter(c =>
+    !clientFilter ||
+    c.name.toLowerCase().includes(clientFilter) ||
+    (c.location||'').toLowerCase().includes(clientFilter) ||
+    (c.caregiver||'').toLowerCase().includes(clientFilter)
+  );
+  const tbody = document.getElementById('clients-tbody');
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state">No clients found.</div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = data.map(c => `
+    <tr>
+      <td class="td-name">${esc(c.name)}</td>
+      <td>${esc(c.plan||'—')}</td>
+      <td>${esc(c.caregiver||'Unassigned')}</td>
+      <td>${esc(c.location||'—')}</td>
+      <td><span class="badge badge-${c.status==='active'?'active':'inactive'}">${c.status}</span></td>
+      <td class="td-em">${esc(c.portalEmail||'—')}</td>
+      <td>
+        <div style="display:flex;gap:4px;justify-content:flex-end">
+          <button class="btn-icon" title="Edit" onclick="openClientModal('${c.id}')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="btn-icon" title="Delete" onclick="confirmDelete('client','${c.id}')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2.2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+function openClientModal(id) {
+  const modal = document.getElementById('client-modal-overlay');
+  populateCaregiverSelect('c-caregiver');
+  if (id) {
+    const c = clients.find(x => x.id === id);
+    if (!c) return;
+    document.getElementById('client-modal-title').textContent = 'Edit Client';
+    document.getElementById('client-edit-id').value = id;
+    document.getElementById('c-name').value = c.name || '';
+    document.getElementById('c-dob').value = c.dob || '';
+    document.getElementById('c-plan').value = c.plan || '';
+    document.getElementById('c-status').value = c.status || 'active';
+    document.getElementById('c-caregiver').value = c.caregiver || '';
+    document.getElementById('c-location').value = c.location || '';
+    document.getElementById('c-contact-name').value = c.contactName || '';
+    document.getElementById('c-contact-phone').value = c.contactPhone || '';
+    document.getElementById('c-portal-email').value = c.portalEmail || '';
+    document.getElementById('c-notes').value = c.notes || '';
+  } else {
+    document.getElementById('client-modal-title').textContent = 'Add Client';
+    document.getElementById('client-edit-id').value = '';
+    ['c-name','c-dob','c-plan','c-location','c-contact-name','c-contact-phone','c-portal-email','c-notes'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.value = '';
+    });
+    document.getElementById('c-status').value = 'active';
+    document.getElementById('c-caregiver').value = '';
+  }
+  modal.classList.add('open');
+}
+
+function saveClient() {
+  const name = document.getElementById('c-name').value.trim();
+  if (!name) { toast('Client name is required.', 'error'); return; }
+  const id = document.getElementById('client-edit-id').value;
+  const data = {
+    id: id || uid(),
+    name,
+    dob:          document.getElementById('c-dob').value.trim(),
+    plan:         document.getElementById('c-plan').value,
+    status:       document.getElementById('c-status').value,
+    caregiver:    document.getElementById('c-caregiver').value,
+    location:     document.getElementById('c-location').value.trim(),
+    contactName:  document.getElementById('c-contact-name').value.trim(),
+    contactPhone: document.getElementById('c-contact-phone').value.trim(),
+    portalEmail:  document.getElementById('c-portal-email').value.trim(),
+    notes:        document.getElementById('c-notes').value.trim(),
+  };
+  if (id) {
+    const idx = clients.findIndex(c => c.id === id);
+    if (idx !== -1) clients[idx] = data;
+  } else {
+    clients.unshift(data);
+  }
+  save('clients', clients);
+  closeModal('client-modal-overlay');
+  renderClients();
+  renderDashboard();
+  populateClientFilters();
+  toast(id ? 'Client updated.' : 'Client added.', 'success');
+}
+
+/* ══════════════════════════════════════════
+   SCHEDULE
+══════════════════════════════════════════ */
+let schedClientFilter = '';
+
+function filterByClient(id) { schedClientFilter = id; renderSchedule(); }
+
+function populateClientFilters() {
+  // Schedule filter dropdown
+  const sel = document.getElementById('sched-client-filter');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">All clients</option>' +
+    clients.map(c => `<option value="${c.id}"${c.id===cur?' selected':''}>${esc(c.name)}</option>`).join('');
+
+  // Visit modal client dropdown
+  const vsel = document.getElementById('v-client');
+  const vcur = vsel.value;
+  vsel.innerHTML = '<option value="">Select client…</option>' +
+    clients.map(c => `<option value="${c.id}"${c.id===vcur?' selected':''}>${esc(c.name)}</option>`).join('');
+}
+
+function renderSchedule() {
+  const data = visits.filter(v => !schedClientFilter || v.clientId === schedClientFilter)
+    .sort((a,b) => (b.date+b.time).localeCompare(a.date+a.time));
+  const tbody = document.getElementById('schedule-tbody');
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state">No visits found.</div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = data.map(v => {
+    const client = clients.find(c => c.id === v.clientId);
+    return `<tr>
+      <td>${formatDate(v.date)}</td>
+      <td>${formatTime(v.time)}</td>
+      <td class="td-name">${esc(client?.name || '—')}</td>
+      <td>${esc(v.title)}</td>
+      <td>${esc(v.caregiver)}</td>
+      <td>${esc(v.duration)}</td>
+      <td><span class="badge badge-${v.status}">${v.status}</span></td>
+      <td>
+        <div style="display:flex;gap:4px;justify-content:flex-end">
+          <button class="btn-icon" title="Edit" onclick="openVisitModal('${v.id}')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="btn-icon" title="Delete" onclick="confirmDelete('visit','${v.id}')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2.2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openVisitModal(id) {
+  populateClientFilters();
+  populateCaregiverSelect('v-caregiver');
+  document.getElementById('visit-modal-title').textContent = id ? 'Edit Visit' : 'Add Visit';
+  document.getElementById('visit-edit-id').value = id || '';
+  if (id) {
+    const v = visits.find(x => x.id === id);
+    if (!v) return;
+    document.getElementById('v-client').value    = v.clientId || '';
+    document.getElementById('v-caregiver').value = v.caregiver || '';
+    document.getElementById('v-date').value      = v.date || '';
+    document.getElementById('v-time').value      = v.time || '';
+    document.getElementById('v-title').value     = v.title || '';
+    document.getElementById('v-duration').value  = v.duration || '3 hrs';
+    document.getElementById('v-status').value    = v.status || 'upcoming';
+    document.getElementById('v-notes').value     = v.notes || '';
+  } else {
+    document.getElementById('v-client').value    = '';
+    document.getElementById('v-caregiver').value = '';
+    document.getElementById('v-date').value      = new Date().toISOString().slice(0,10);
+    document.getElementById('v-time').value      = '10:00';
+    document.getElementById('v-title').value     = '';
+    document.getElementById('v-duration').value  = '3 hrs';
+    document.getElementById('v-status').value    = 'upcoming';
+    document.getElementById('v-notes').value     = '';
+  }
+  document.getElementById('visit-modal-overlay').classList.add('open');
+}
+
+function saveVisit() {
+  const clientId = document.getElementById('v-client').value;
+  const date     = document.getElementById('v-date').value;
+  if (!clientId) { toast('Please select a client.', 'error'); return; }
+  if (!date)     { toast('Please select a date.', 'error'); return; }
+  const id = document.getElementById('visit-edit-id').value;
+  const data = {
+    id:        id || uid(),
+    clientId,
+    caregiver: document.getElementById('v-caregiver').value,
+    date,
+    time:      document.getElementById('v-time').value,
+    title:     document.getElementById('v-title').value.trim() || 'Visit',
+    duration:  document.getElementById('v-duration').value,
+    status:    document.getElementById('v-status').value,
+    notes:     document.getElementById('v-notes').value.trim(),
+  };
+  if (id) {
+    const idx = visits.findIndex(v => v.id === id);
+    if (idx !== -1) visits[idx] = data;
+  } else {
+    visits.unshift(data);
+  }
+  save('visits', visits);
+  closeModal('visit-modal-overlay');
+  renderSchedule();
+  renderDashboard();
+  toast(id ? 'Visit updated.' : 'Visit added.', 'success');
+}
+
+/* ══════════════════════════════════════════
+   CAREGIVERS
+══════════════════════════════════════════ */
+function renderCaregivers() {
+  const tbody = document.getElementById('caregivers-tbody');
+  if (!caregivers.length) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state">No caregivers yet.</div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = caregivers.map(cg => {
+    const assigned = clients.filter(c => c.caregiver === cg.name && c.status === 'active');
+    return `<tr>
+      <td class="td-name">${esc(cg.name)}</td>
+      <td>${esc(cg.phone||'—')}</td>
+      <td>${esc(cg.email||'—')}</td>
+      <td>${assigned.length ? assigned.map(c=>`<span style="font-size:.8rem;margin-right:4px">${esc(c.name)}</span>`).join('') : '<span style="color:var(--ink-light);font-size:.85rem">None</span>'}</td>
+      <td><span class="badge badge-${cg.status==='active'?'active':'inactive'}">${cg.status}</span></td>
+      <td>
+        <div style="display:flex;gap:4px;justify-content:flex-end">
+          <button class="btn-icon" title="Edit" onclick="openCaregiverModal('${cg.id}')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="btn-icon" title="Delete" onclick="confirmDelete('caregiver','${cg.id}')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2.2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function populateCaregiverSelect(selId) {
+  const sel = document.getElementById(selId);
+  const cur = sel.value;
+  sel.innerHTML = `<option value="">Unassigned</option>` +
+    caregivers.filter(c=>c.status==='active').map(c =>
+      `<option value="${esc(c.name)}"${c.name===cur?' selected':''}>${esc(c.name)}</option>`
+    ).join('');
+}
+
+function openCaregiverModal(id) {
+  document.getElementById('caregiver-modal-title').textContent = id ? 'Edit Caregiver' : 'Add Caregiver';
+  document.getElementById('caregiver-edit-id').value = id || '';
+  if (id) {
+    const cg = caregivers.find(x => x.id === id);
+    if (!cg) return;
+    document.getElementById('cg-name').value   = cg.name || '';
+    document.getElementById('cg-phone').value  = cg.phone || '';
+    document.getElementById('cg-email').value  = cg.email || '';
+    document.getElementById('cg-status').value = cg.status || 'active';
+    document.getElementById('cg-notes').value  = cg.notes || '';
+  } else {
+    ['cg-name','cg-phone','cg-email','cg-notes'].forEach(i => document.getElementById(i).value = '');
+    document.getElementById('cg-status').value = 'active';
+  }
+  document.getElementById('caregiver-modal-overlay').classList.add('open');
+}
+
+function saveCaregiver() {
+  const name = document.getElementById('cg-name').value.trim();
+  if (!name) { toast('Caregiver name is required.', 'error'); return; }
+  const id = document.getElementById('caregiver-edit-id').value;
+  const data = {
+    id:     id || uid(),
+    name,
+    phone:  document.getElementById('cg-phone').value.trim(),
+    email:  document.getElementById('cg-email').value.trim(),
+    status: document.getElementById('cg-status').value,
+    notes:  document.getElementById('cg-notes').value.trim(),
+  };
+  if (id) {
+    const idx = caregivers.findIndex(c => c.id === id);
+    if (idx !== -1) caregivers[idx] = data;
+  } else {
+    caregivers.unshift(data);
+  }
+  save('caregivers', caregivers);
+  closeModal('caregiver-modal-overlay');
+  renderCaregivers();
+  renderDashboard();
+  toast(id ? 'Caregiver updated.' : 'Caregiver added.', 'success');
+}
+
+/* ══════════════════════════════════════════
+   DELETE CONFIRM
+══════════════════════════════════════════ */
+function confirmDelete(type, id) {
+  const overlay = document.getElementById('confirm-overlay');
+  const names = { client: 'client', visit: 'visit', caregiver: 'caregiver' };
+  document.getElementById('confirm-title').textContent = `Delete this ${names[type]}?`;
+  document.getElementById('confirm-msg').textContent = 'This cannot be undone.';
+  const btn = document.getElementById('confirm-ok-btn');
+  btn.onclick = () => { doDelete(type, id); closeConfirm(); };
+  overlay.classList.add('open');
+}
+
+function doDelete(type, id) {
+  if (type === 'client') {
+    clients = clients.filter(c => c.id !== id);
+    save('clients', clients);
+    renderClients();
+  } else if (type === 'visit') {
+    visits = visits.filter(v => v.id !== id);
+    save('visits', visits);
+    renderSchedule();
+  } else if (type === 'caregiver') {
+    caregivers = caregivers.filter(c => c.id !== id);
+    save('caregivers', caregivers);
+    renderCaregivers();
+  }
+  renderDashboard();
+  populateClientFilters();
+  toast('Deleted.', 'success');
+}
+
+function closeConfirm() {
+  document.getElementById('confirm-overlay').classList.remove('open');
+}
+
+/* ══════════════════════════════════════════
+   MODAL HELPERS
+══════════════════════════════════════════ */
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('open');
+  });
+});
+
+/* ══════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════ */
+let toastTimer;
+function toast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show' + (type ? ' ' + type : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.className = '', 2800);
+}
+
+/* ══════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════ */
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function formatDate(d) {
+  if (!d) return '—';
+  try {
+    const [y,m,day] = d.split('-').map(Number);
+    const dt = new Date(y, m-1, day);
+    return dt.toLocaleDateString('en-CA', { month:'short', day:'numeric', year:'numeric' });
+  } catch { return d; }
+}
+function formatTime(t) {
+  if (!t) return '—';
+  try {
+    const [h, m] = t.split(':').map(Number);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 || 12;
+    return `${h12}:${String(m).padStart(2,'0')} ${ampm}`;
+  } catch { return t; }
+}
+
+// Populate filters on load (before gate cleared, but data is ready)
+populateClientFilters();
+</script>
+</body>
+</html>
