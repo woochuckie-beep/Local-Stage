@@ -3280,18 +3280,18 @@
         <div class="stats-row">
           <div class="stat-card fade-in">
             <div class="stat-label">Visits this month</div>
-            <div class="stat-value">8</div>
-            <div class="stat-note">4 remaining</div>
+            <div class="stat-value" id="stat-visits">—</div>
+            <div class="stat-note" id="stat-visits-note">loading…</div>
           </div>
           <div class="stat-card fade-in">
             <div class="stat-label">Next visit</div>
-            <div class="stat-value" style="font-size:1.25rem;padding-top:3px">Mon, May 19</div>
-            <div class="stat-note">10:00 AM · Margaret H.</div>
+            <div class="stat-value" id="stat-next" style="font-size:1.25rem;padding-top:3px">—</div>
+            <div class="stat-note" id="stat-next-note">loading…</div>
           </div>
           <div class="stat-card fade-in">
             <div class="stat-label">Current plan</div>
-            <div class="stat-value" style="font-size:1.25rem;padding-top:3px">Companion</div>
-            <div class="stat-note">Active · renews Jun 1</div>
+            <div class="stat-value" id="stat-plan" style="font-size:1.25rem;padding-top:3px">—</div>
+            <div class="stat-note" id="stat-plan-note">Active</div>
           </div>
         </div>
 
@@ -3299,43 +3299,7 @@
           <!-- Upcoming visits -->
           <div class="card fade-in">
             <div class="card-label">Upcoming Visits</div>
-
-            <div class="upcoming-visit">
-              <div class="visit-date-box">
-                <div class="visit-date-mon">May</div>
-                <div class="visit-date-day">19</div>
-              </div>
-              <div class="visit-info">
-                <div class="visit-title">Morning Companion Visit</div>
-                <div class="visit-meta">10:00 AM · 2 hrs · Margaret H.</div>
-              </div>
-              <div class="visit-badge">Confirmed</div>
-            </div>
-
-            <div class="upcoming-visit">
-              <div class="visit-date-box">
-                <div class="visit-date-mon">May</div>
-                <div class="visit-date-day">22</div>
-              </div>
-              <div class="visit-info">
-                <div class="visit-title">Weekly Check-in &amp; Errands</div>
-                <div class="visit-meta">2:00 PM · 3 hrs · Margaret H.</div>
-              </div>
-              <div class="visit-badge">Confirmed</div>
-            </div>
-
-            <div class="upcoming-visit">
-              <div class="visit-date-box">
-                <div class="visit-date-mon">May</div>
-                <div class="visit-date-day">26</div>
-              </div>
-              <div class="visit-info">
-                <div class="visit-title">Morning Companion Visit</div>
-                <div class="visit-meta">10:00 AM · 2 hrs · Margaret H.</div>
-              </div>
-              <div class="visit-badge pending">Pending</div>
-            </div>
-
+            <div id="upcoming-visits-list"><div style="color:#98876d;font-size:0.9rem;padding:0.5rem 0">Loading visits…</div></div>
             <div style="margin-top:1.1rem">
               <button class="btn-outline" onclick="switchView('calendar')">View full calendar &rarr;</button>
             </div>
@@ -3348,7 +3312,7 @@
               <svg width="7" height="7" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
               Active
             </div>
-            <div class="plan-name">Companion Plan</div>
+            <div class="plan-name" id="dash-plan-name">—</div>
             <div class="plan-price">$1,190 / month · renews June 1</div>
             <ul class="plan-features">
               <li>2 visits/week · 4 hrs each (8 hrs/week)</li>
@@ -3478,19 +3442,83 @@ const _origHandleSignOut = window.handleSignOut;
 
 <script>
 // ══════════════════════════
-// VISIT DATA (demo)
+// VISIT DATA (loaded from Firestore)
 // ══════════════════════════
-const VISITS = {
-  '2026-5-7':  [{ time:'10:00 AM', title:'Morning Companion Visit',    caregiver:'Margaret H.', duration:'2 hrs', status:'completed' }],
-  '2026-5-12': [{ time:'2:00 PM',  title:'Weekly Check-in & Errands', caregiver:'Margaret H.', duration:'3 hrs', status:'completed' }],
-  '2026-5-14': [{ time:'10:00 AM', title:'Morning Companion Visit',    caregiver:'Margaret H.', duration:'2 hrs', status:'completed' }],
-  '2026-5-19': [{ time:'10:00 AM', title:'Morning Companion Visit',    caregiver:'Margaret H.', duration:'2 hrs', status:'upcoming'  }],
-  '2026-5-22': [{ time:'2:00 PM',  title:'Weekly Check-in & Errands', caregiver:'Margaret H.', duration:'3 hrs', status:'upcoming'  }],
-  '2026-5-26': [{ time:'10:00 AM', title:'Morning Companion Visit',    caregiver:'Margaret H.', duration:'2 hrs', status:'upcoming'  }],
-  '2026-5-29': [{ time:'2:00 PM',  title:'Weekly Check-in & Errands', caregiver:'Margaret H.', duration:'3 hrs', status:'upcoming'  }],
-  '2026-6-2':  [{ time:'10:00 AM', title:'Morning Companion Visit',    caregiver:'Margaret H.', duration:'2 hrs', status:'upcoming'  }],
-  '2026-6-5':  [{ time:'2:00 PM',  title:'Monthly Care Review',        caregiver:'Margaret H.', duration:'1 hr',  status:'upcoming'  }],
-};
+let VISITS = {};
+let portalClientData = null;
+
+function fmtTime(dt) {
+  let h = dt.getHours(), m = dt.getMinutes();
+  const ap = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  return `${h}:${String(m).padStart(2,'0')} ${ap}`;
+}
+
+async function loadPortalData(clientId) {
+  const now = new Date();
+  const threeMonthsAgo = new Date(now); threeMonthsAgo.setMonth(now.getMonth() - 3);
+  const sixMonthsLater = new Date(now); sixMonthsLater.setMonth(now.getMonth() + 6);
+
+  // Single query — no composite index needed
+  const [clientSnap, apptSnap] = await Promise.all([
+    db.collection('clients').doc(clientId).get(),
+    db.collection('appointments').where('client_id', '==', clientId).get()
+  ]);
+
+  portalClientData = clientSnap.exists ? clientSnap.data() : null;
+
+  // Fetch caregiver names
+  const cgIds = [...new Set(apptSnap.docs.map(d => d.data().caregiver_id).filter(Boolean))];
+  const cgMap = {};
+  await Promise.all(cgIds.map(async id => {
+    const s = await db.collection('caregivers').doc(id).get();
+    if (s.exists) cgMap[id] = s.data();
+  }));
+
+  VISITS = {};
+
+  function addVisit(dt, data) {
+    if (data.status === 'cancelled') return;
+    if (dt < threeMonthsAgo || dt > sixMonthsLater) return;
+    const cgName = data.caregiver_id ? (cgMap[data.caregiver_id]?.name || 'Your Caregiver') : 'Your Caregiver';
+    const hrs = data.duration_minutes / 60;
+    const status = dt < now ? 'completed' : 'upcoming';
+    const key = vKey(dt.getFullYear(), dt.getMonth(), dt.getDate());
+    if (!VISITS[key]) VISITS[key] = [];
+    VISITS[key].push({
+      time: fmtTime(dt),
+      title: 'Companion Visit',
+      caregiver: cgName,
+      duration: hrs + ' hr' + (hrs !== 1 ? 's' : ''),
+      status
+    });
+  }
+
+  apptSnap.docs.forEach(d => {
+    const data = d.data();
+    const origin = data.scheduled_at?.toDate();
+    if (!origin) return;
+
+    if (!data.recurring) {
+      addVisit(origin, data);
+    } else {
+      // Expand recurring occurrences within display window
+      const recEnd = data.recurring_end?.toDate?.() ?? sixMonthsLater;
+      const dayOfWeek = origin.getDay();
+      const step = data.recurring === 'biweekly' ? 14 : 7;
+      const cursor = new Date(threeMonthsAgo);
+      while (cursor.getDay() !== dayOfWeek) cursor.setDate(cursor.getDate() + 1);
+      while (cursor <= sixMonthsLater) {
+        if (cursor >= origin && cursor <= recEnd) {
+          const slot = new Date(cursor);
+          slot.setHours(origin.getHours(), origin.getMinutes(), 0, 0);
+          addVisit(slot, data);
+        }
+        cursor.setDate(cursor.getDate() + step);
+      }
+    }
+  });
+}
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DAYS   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -3533,7 +3561,7 @@ function googleBtnHTML() {
   return `<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M17.64 9.205c0-.639-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg> Continue with Google`;
 }
 
-function showPortal(user) {
+async function showPortal(user) {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('portal').style.display = 'block';
 
@@ -3548,11 +3576,92 @@ function showPortal(user) {
   const greeting = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
   document.getElementById('welcome-heading').textContent = `${greeting}, ${firstName} 🌿`;
 
+  // Load real data from Firestore
+  try {
+    const authDoc = await db.collection('authorizedUsers').doc(user.email.toLowerCase().trim()).get();
+    if (authDoc.exists && authDoc.data().client_id) {
+      await loadPortalData(authDoc.data().client_id);
+    }
+  } catch(e) {
+    console.error('Failed to load portal data:', e);
+  }
+
+  const today = new Date();
+  calYear = today.getFullYear();
+  calMonth = today.getMonth();
   renderCalendar(calYear, calMonth, null);
+  updateDashboardStats();
+  updateUpcomingVisits();
+}
+
+function updateDashboardStats() {
+  const now = new Date();
+  const year = now.getFullYear(), month = now.getMonth();
+
+  let monthTotal = 0, monthRemaining = 0;
+  for (let d = 1; d <= 31; d++) {
+    const v = VISITS[vKey(year, month, d)];
+    if (v) { monthTotal += v.length; v.forEach(x => { if (x.status === 'upcoming') monthRemaining++; }); }
+  }
+
+  // Find next upcoming visit
+  const allUpcoming = [];
+  Object.entries(VISITS).forEach(([key, visits]) => {
+    const [y, m, d] = key.split('-').map(Number);
+    visits.forEach(v => { if (v.status === 'upcoming') allUpcoming.push({ date: new Date(y, m - 1, d), ...v }); });
+  });
+  allUpcoming.sort((a, b) => a.date - b.date);
+  const next = allUpcoming[0];
+
+  document.getElementById('stat-visits').textContent = monthTotal || '0';
+  document.getElementById('stat-visits-note').textContent = `${monthRemaining} remaining this month`;
+
+  if (next) {
+    document.getElementById('stat-next').textContent = next.date.toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' });
+    document.getElementById('stat-next-note').textContent = `${next.time} · ${next.caregiver}`;
+  } else {
+    document.getElementById('stat-next').textContent = 'None scheduled';
+    document.getElementById('stat-next-note').textContent = '—';
+  }
+
+  if (portalClientData?.plan) {
+    const names = { essential: 'Essential', companion: 'Companion', premium: 'Premium' };
+    const label = names[portalClientData.plan] || portalClientData.plan;
+    document.getElementById('stat-plan').textContent = label + ' Plan';
+    document.getElementById('dash-plan-name') && (document.getElementById('dash-plan-name').textContent = label + ' Plan');
+  }
+}
+
+function updateUpcomingVisits() {
+  const allUpcoming = [];
+  Object.entries(VISITS).forEach(([key, visits]) => {
+    const [y, m, d] = key.split('-').map(Number);
+    visits.forEach(v => { if (v.status === 'upcoming') allUpcoming.push({ date: new Date(y, m - 1, d), ...v }); });
+  });
+  allUpcoming.sort((a, b) => a.date - b.date);
+  const next3 = allUpcoming.slice(0, 3);
+
+  const container = document.getElementById('upcoming-visits-list');
+  if (!container) return;
+  if (!next3.length) { container.innerHTML = '<div style="color:#98876d;font-size:0.9rem;padding:0.5rem 0">No upcoming visits scheduled.</div>'; return; }
+
+  container.innerHTML = next3.map(v => `
+    <div class="upcoming-visit">
+      <div class="visit-date-box">
+        <div class="visit-date-mon">${v.date.toLocaleDateString('en',{month:'short'})}</div>
+        <div class="visit-date-day">${v.date.getDate()}</div>
+      </div>
+      <div class="visit-info">
+        <div class="visit-title">${v.title}</div>
+        <div class="visit-meta">${v.time} · ${v.duration} · ${v.caregiver}</div>
+      </div>
+      <div class="visit-badge">Confirmed</div>
+    </div>
+  `).join('');
 }
 
 // Pick up pending session restore
-if (window._pendingUser) { showPortal(window._pendingUser); window._pendingUser = null; }
+if (window._pendingUser) { const u = window._pendingUser; window._pendingUser = null; showPortal(u); }
 
 // ══════════════════════════
 // NAVIGATION

@@ -269,6 +269,9 @@
       <button class="nav-link" data-page="schedule" onclick="go('schedule')">
         <span class="nav-icon">📅</span>Schedule
       </button>
+      <button class="nav-link" data-page="access" onclick="go('access')">
+        <span class="nav-icon">🔑</span>Portal Access
+      </button>
     </nav>
     <div class="sidebar-footer">
       <button class="btn-logout" onclick="auth.signOut()">↪ Sign Out</button>
@@ -349,6 +352,25 @@
             </tr>
           </thead>
           <tbody id="cg-tbody"><tr class="empty-row"><td colspan="5">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ACCESS -->
+    <div id="page-access" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Portal Access</div>
+          <div class="page-sub">Control which clients can sign in to the client portal</div>
+        </div>
+        <button class="btn btn-add" onclick="openAccessModal()">+ Grant Access</button>
+      </div>
+      <div class="card">
+        <table>
+          <thead>
+            <tr><th>Client</th><th>Google Email</th><th>Granted</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="access-tbody"><tr class="empty-row"><td colspan="4">Loading…</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -555,6 +577,33 @@
   </div>
 </div>
 
+<!-- ══════════ ACCESS MODAL ══════════ -->
+<div class="modal-ov" id="access-ov">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="modal-ttl">Grant Portal Access</div>
+      <button class="modal-x" onclick="closeModal('access-ov')">✕</button>
+    </div>
+    <form id="access-form" onsubmit="saveAccess(event)">
+      <div class="form-group">
+        <label>Client *</label>
+        <select class="fc" name="client_id" id="access-client-sel" required>
+          <option value="">— Select Client —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Client's Google Account Email *</label>
+        <input class="fc" name="email" type="email" required placeholder="client@gmail.com" />
+        <small style="color:var(--ink-light);font-size:0.78rem;margin-top:0.3rem;display:block">Must match the Google account they use to sign in.</small>
+      </div>
+      <div class="modal-ft">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('access-ov')">Cancel</button>
+        <button type="submit" class="btn btn-add">Grant Access</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -637,6 +686,7 @@ function go(page) {
   if (page === 'clients')    loadClients();
   if (page === 'caregivers') loadCaregivers();
   if (page === 'schedule')   loadSchedule();
+  if (page === 'access')     loadAccess();
 }
 
 // ── DASHBOARD ────────────────────────────────────────────────────────────────
@@ -756,10 +806,14 @@ async function saveClient(e) {
 }
 
 async function deleteClient(id) {
-  if (!confirm('Delete this client? Their appointments will also be removed.')) return;
-  const appts = await db.collection('appointments').where('client_id', '==', id).get();
+  if (!confirm('Delete this client? Their appointments and portal access will also be removed.')) return;
+  const [appts, authUsers] = await Promise.all([
+    db.collection('appointments').where('client_id', '==', id).get(),
+    db.collection('authorizedUsers').where('client_id', '==', id).get()
+  ]);
   const batch = db.batch();
   appts.docs.forEach(d => batch.delete(d.ref));
+  authUsers.docs.forEach(d => batch.delete(d.ref));
   batch.delete(db.collection('clients').doc(id));
   try {
     await batch.commit();
@@ -851,6 +905,68 @@ async function deleteCaregiver(id) {
     await batch.commit();
     toast('Caregiver deleted');
     loadCaregivers();
+  } catch(ex) { toast(ex.message, true); }
+}
+
+// ── ACCESS ───────────────────────────────────────────────────────────────────
+let accessList = [];
+
+async function loadAccess() {
+  const snap = await db.collection('authorizedUsers').get();
+  accessList = snap.docs.map(d => ({ email: d.id, ...d.data() }));
+  renderAccess();
+}
+
+function renderAccess() {
+  document.getElementById('access-tbody').innerHTML = accessList.length ? accessList.map(a => {
+    const client = clientsMap[a.client_id];
+    const grantedAt = a.granted_at?.toDate
+      ? a.granted_at.toDate().toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })
+      : '—';
+    return `<tr>
+      <td><strong>${esc(client?.name || a.name || '?')}</strong></td>
+      <td>${esc(a.email)}</td>
+      <td>${grantedAt}</td>
+      <td class="td-act">
+        <button class="btn btn-sm btn-del" onclick="revokeAccess('${a.email}')">Revoke</button>
+      </td>
+    </tr>`;
+  }).join('') : '<tr class="empty-row"><td colspan="4">No portal access granted yet</td></tr>';
+}
+
+function openAccessModal() {
+  document.getElementById('access-form').reset();
+  document.getElementById('access-client-sel').innerHTML =
+    '<option value="">— Select Client —</option>' +
+    clientsList.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  document.getElementById('access-ov').classList.add('open');
+}
+
+async function saveAccess(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const email = fd.get('email').toLowerCase().trim();
+  const clientId = fd.get('client_id');
+  const client = clientsList.find(c => c.id === clientId);
+  try {
+    await db.collection('authorizedUsers').doc(email).set({
+      email,
+      client_id: clientId,
+      name: client?.name || '',
+      granted_at: SV()
+    });
+    closeModal('access-ov');
+    toast('Portal access granted');
+    loadAccess();
+  } catch(ex) { toast(ex.message, true); }
+}
+
+async function revokeAccess(email) {
+  if (!confirm(`Revoke portal access for ${email}?`)) return;
+  try {
+    await db.collection('authorizedUsers').doc(email).delete();
+    toast('Access revoked');
+    loadAccess();
   } catch(ex) { toast(ex.message, true); }
 }
 
