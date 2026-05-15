@@ -5,6 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Hearthlane — In-Home Companion Care for Older Adults · Ontario</title>
 <meta name="description" content="Hearthlane matches older adults with a vetted, experienced caregiver who visits on a consistent schedule. Companionship, meal prep, errands, light housekeeping, and family updates. Serving the GTA and surrounding areas." />
+
+<!-- Open Graph -->
+<meta property="og:type"        content="website" />
+<meta property="og:title"       content="Hearthlane — In-Home Companion Care for Older Adults · Ontario" />
+<meta property="og:description" content="The same trusted caregiver, every week. Vetted, background-checked companions for older adults across the GTA. Plans from $610/mo with a 14-day fit guarantee." />
+<meta property="og:image"       content="2.jpg" />
+<meta property="og:url"         content="https://hearthlane.ca" />
+<meta name="twitter:card"       content="summary_large_image" />
+<meta name="twitter:title"      content="Hearthlane — In-Home Companion Care · Ontario" />
+<meta name="twitter:description" content="Vetted, consistent in-home companion care for older adults across the GTA. Same caregiver, every week." />
+<meta name="twitter:image"      content="2.jpg" />
+
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
@@ -717,9 +729,14 @@
     display: grid; grid-template-columns: repeat(3, 1fr);
     gap: 1.5rem; margin-top: 3rem;
   }
+  .testimonial-row--two { grid-template-columns: repeat(2, 1fr); }
   .testimonial {
     background: var(--cream-soft); border-radius: var(--radius);
     padding: 2rem; border: 1px solid var(--cream-dark);
+  }
+  .testimonial--accent {
+    background: linear-gradient(135deg, var(--terra-soft) 0%, var(--cream-soft) 100%);
+    border-color: rgba(192,133,104,0.3);
   }
   .testimonial-stars { color: var(--gold); margin-bottom: 0.8rem; letter-spacing: 2px; }
   .testimonial-quote {
@@ -729,8 +746,23 @@
   }
   .testimonial-author { font-size: 0.85rem; color: var(--ink-mid); }
   .testimonial-author strong { color: var(--ink); font-weight: 600; }
+  .testimonial-cta-nudge {
+    margin-top: 2.5rem;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1.5rem; flex-wrap: wrap;
+    padding: 1.5rem 2rem;
+    background: var(--cream-soft);
+    border: 1px solid var(--cream-dark);
+    border-radius: var(--radius);
+  }
+  .testimonial-cta-nudge span {
+    font-family: var(--serif); font-style: italic;
+    font-size: 1.05rem; color: var(--ink); line-height: 1.4;
+  }
   @media (max-width: 880px) {
     .testimonial-row { grid-template-columns: 1fr; }
+    .testimonial-row--two { grid-template-columns: 1fr; }
+    .testimonial-cta-nudge { flex-direction: column; text-align: center; }
   }
 
   /* ─── FAQ ─── */
@@ -1243,10 +1275,10 @@
         </span>
         <div class="hero-photo-wrap">
           <img
-            src="https://images.unsplash.com/photo-1516307365547-8df5bb10b0d4?auto=format&fit=crop&w=900&q=85"
+            src="2.jpg"
             data-img-slot="hero"
-            alt="An older woman and her caregiver sharing tea together in a bright home"
-            onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=900&q=85';" />
+            alt="A Hearthlane caregiver smiling warmly with an elderly resident at home"
+            loading="eager" />
         </div>
         <div class="hero-float-card hero-float-quote">
           "She calls it her Tuesday. That&rsquo;s all I needed to hear."
@@ -1422,19 +1454,19 @@
     <div class="gallery-grid">
 
       <div class="g-card">
-        <img src="1778811946136_1.jpg" alt="Caregiver and senior sharing wildflowers — a moment of warmth and connection" loading="lazy">
+        <img src="1.jpg" alt="Caregiver and senior sharing wildflowers — a moment of warmth and connection" loading="lazy">
         <div class="g-overlay"></div>
         <div class="g-label"><small>Our promise</small><span>A touch of kindness</span></div>
       </div>
 
       <div class="g-card">
-        <img src="1778811946137_2.jpg" alt="Smiling nurse with elderly woman in wheelchair at home" loading="lazy">
+        <img src="2.jpg" alt="Smiling nurse with elderly woman in wheelchair at home" loading="lazy">
         <div class="g-overlay"></div>
         <div class="g-label"><small>Personal care</small><span>Always by your side</span></div>
       </div>
 
       <div class="g-card">
-        <img src="1778811946137_3.jpg" alt="Seniors enjoying a meal together with a caregiver at a care home" loading="lazy">
+        <img src="3.jpg" alt="Seniors enjoying a meal together with a caregiver at a care home" loading="lazy">
         <div class="g-overlay"></div>
         <div class="g-label"><small>Community</small><span>Sharing life together</span></div>
       </div>
@@ -1762,6 +1794,8 @@
     <div class="section-inner">
       <div class="section-label">Family voices</div>
       <h2 class="section-title">The families we serve<br>tell our story <em>best.</em></h2>
+
+      <!-- Row 1: 3 cards -->
       <div class="testimonial-row">
         <div class="testimonial">
           <div class="testimonial-stars">★★★★★</div>
@@ -1778,6 +1812,25 @@
           <div class="testimonial-quote">"I&rsquo;m in Vancouver and my mother is in Etobicoke. Every Wednesday I get a short message after the visit &mdash; what they did, how she seemed, if anything felt off. It&rsquo;s made being far away genuinely bearable."</div>
           <div class="testimonial-author"><strong>Elaine R.</strong> · Out-of-province daughter, Etobicoke client · Essential plan, 6 months</div>
         </div>
+      </div>
+
+      <!-- Row 2: 2 wider cards -->
+      <div class="testimonial-row testimonial-row--two" style="margin-top:1rem">
+        <div class="testimonial testimonial--accent">
+          <div class="testimonial-stars">★★★★★</div>
+          <div class="testimonial-quote">"We tried two other agencies first. Different person every week, no communication, my father couldn&rsquo;t remember who was coming. Hearthlane was genuinely different &mdash; same caregiver, update after every visit, and he actually brightened up on visit days."</div>
+          <div class="testimonial-author"><strong>Margaret L.</strong> · Daughter, Burlington · Daily plan, 11 months</div>
+        </div>
+        <div class="testimonial">
+          <div class="testimonial-stars">★★★★★</div>
+          <div class="testimonial-quote">"Honestly I was skeptical the price was worth it. Then my mother&rsquo;s caregiver noticed a change in how she was walking and flagged it to me. We caught something early that her doctor confirmed mattered. That one call was worth a year of fees."</div>
+          <div class="testimonial-author"><strong>James O.</strong> · Son, North York · Essential plan, 9 months</div>
+        </div>
+      </div>
+
+      <div class="testimonial-cta-nudge">
+        <span>Join 200+ Ontario families who made the switch to consistent care.</span>
+        <button class="btn-primary" onclick="startIntake('weekly')" style="flex-shrink:0">Check availability in your area <span class="arrow">→</span></button>
       </div>
     </div>
   </section>
@@ -1866,7 +1919,7 @@
     <p>Tell us a little about your family. We&rsquo;ll figure out together what kind of support makes sense &mdash; a caregiver who shows up consistently, or a single visit to start. From <strong>$610/month</strong> or $45/hr for a one-time visit, with a 14-day fit guarantee.</p>
     <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
       <button class="btn-primary" onclick="startIntake('weekly')">
-        Tell us about your family <span class="arrow">→</span>
+        See if we serve your area <span class="arrow">→</span>
       </button>
       <a class="btn-secondary" href="tel:+19055552273">Or call (905) 555-CARE</a>
     </div>
