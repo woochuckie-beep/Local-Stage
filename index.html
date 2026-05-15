@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Hearthlane — Weekly In-Home Companionship & Elder Care</title>
-<meta name="description" content="Hearthlane provides recurring weekly companionship and non-medical home care, built on consistency, relationships, and trusted caregivers your family can count on." />
+<title>Hearthlane — In-Home Companion Care for Older Adults · Ontario</title>
+<meta name="description" content="Hearthlane matches older adults with a vetted, experienced caregiver who visits on a consistent schedule. Companionship, meal prep, errands, light housekeeping, and family updates. Serving the GTA and surrounding areas." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
@@ -733,38 +733,6 @@
     .testimonial-row { grid-template-columns: 1fr; }
   }
 
-  /* ─── FOUNDER STORY ─── */
-  .founder { background: var(--cream-soft); }
-  .founder-inner {
-    display: grid; grid-template-columns: 0.85fr 1.15fr;
-    gap: 3.5rem; align-items: center;
-  }
-  .founder-photo {
-    position: relative;
-    border-radius: var(--radius-lg); overflow: hidden;
-    box-shadow: var(--shadow-md); aspect-ratio: 4/5;
-  }
-  .founder-photo img { width: 100%; height: 100%; object-fit: cover; }
-  .founder-photo-note {
-    position: absolute; bottom: 0; left: 0; right: 0;
-    background: rgba(58, 46, 34, 0.78); color: var(--cream-soft);
-    padding: 6px 10px; font-size: 0.7rem; text-align: center;
-    font-style: italic;
-  }
-  .founder-text h2 { margin-bottom: 1.25rem; }
-  .founder-text p {
-    font-size: 1.02rem; color: var(--ink-mid); line-height: 1.85;
-    margin-bottom: 1rem;
-  }
-  .founder-text .founder-sign {
-    font-family: var(--serif); font-style: italic; color: var(--terra-deep);
-    font-size: 1.05rem; margin-top: 1.5rem;
-  }
-  @media (max-width: 880px) {
-    .founder-inner { grid-template-columns: 1fr; gap: 2.5rem; }
-    .founder-photo { max-width: 360px; margin: 0 auto; }
-  }
-
   /* ─── FAQ ─── */
   .faq { background: var(--cream); }
   .faq-list { max-width: 820px; margin-top: 2.5rem; }
@@ -1038,6 +1006,82 @@
     display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
     font-size: 0.78rem; color: #8a7d68;
   }
+  /* ─── TRUST-TOP / OPS DETAILS ─── */
+  .trust-top { background: var(--cream-soft); }
+  .ops-details-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 1rem; margin-top: 2.5rem;
+  }
+  .ops-card {
+    background: var(--white); border-radius: var(--radius-sm);
+    padding: 1.5rem 1.4rem; border: 1px solid var(--cream-dark);
+    display: flex; gap: 14px; align-items: flex-start;
+    transition: box-shadow 0.2s, border-color 0.2s;
+  }
+  .ops-card:hover { border-color: var(--terra-soft); box-shadow: var(--shadow-sm); }
+  .ops-icon {
+    flex-shrink: 0; width: 36px; height: 36px; border-radius: 10px;
+    background: var(--terra-soft); color: var(--terra-deep);
+    display: flex; align-items: center; justify-content: center;
+    margin-top: 2px;
+  }
+  .ops-content strong {
+    display: block; font-weight: 600; font-size: 0.9rem;
+    color: var(--ink); margin-bottom: 5px;
+  }
+  .ops-content p { font-size: 0.875rem; color: var(--ink-mid); line-height: 1.65; }
+  @media (max-width: 960px) { .ops-details-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 520px) { .ops-details-grid { grid-template-columns: 1fr; } }
+
+  /* ─── CAREGIVER MATCHING SECTION ─── */
+  .matching { background: var(--ink); color: var(--cream-soft); }
+  .matching .section-label { color: var(--terra-soft); }
+  .matching .section-title { color: var(--white); }
+  .matching .section-lede { color: #b8aa8e; }
+  .matching-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 4rem; align-items: center; margin-top: 3rem;
+  }
+  .matching-steps { display: flex; flex-direction: column; gap: 1.5rem; }
+  .matching-step {
+    display: flex; gap: 1.25rem; align-items: flex-start;
+  }
+  .ms-num {
+    flex-shrink: 0; width: 40px; height: 40px;
+    border-radius: 12px; background: rgba(192, 133, 104, 0.20);
+    color: var(--terra-soft); font-family: var(--serif);
+    font-size: 1.1rem; display: flex; align-items: center; justify-content: center;
+    border: 1px solid rgba(192, 133, 104, 0.25);
+  }
+  .ms-body strong {
+    display: block; font-weight: 500; color: var(--white);
+    margin-bottom: 4px; font-size: 0.97rem;
+  }
+  .ms-body p { font-size: 0.9rem; color: #b8aa8e; line-height: 1.65; }
+  .matching-callout {
+    background: #2a221a; border-radius: var(--radius);
+    padding: 2.25rem; border: 1px solid #3d3128;
+  }
+  .matching-callout h3 {
+    font-family: var(--serif); font-size: 1.4rem; color: var(--white);
+    margin-bottom: 1rem; line-height: 1.25;
+  }
+  .matching-callout p {
+    font-size: 0.92rem; color: #b8aa8e; line-height: 1.75;
+    margin-bottom: 1rem;
+  }
+  .matching-callout p:last-child { margin-bottom: 0; }
+  .matching-callout .mc-tag {
+    display: inline-block; background: rgba(192, 133, 104, 0.15);
+    border: 1px solid rgba(192, 133, 104, 0.3);
+    color: var(--terra-soft); font-size: 0.78rem; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase;
+    padding: 4px 12px; border-radius: 100px; margin-bottom: 1rem;
+  }
+  @media (max-width: 880px) {
+    .matching-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+  }
+
   .image-disclaimer {
     max-width: 1180px; margin: 0;
     font-size: 0.7rem; color: #6e6452;
@@ -1057,22 +1101,22 @@
 <nav class="nav">
   <a class="nav-logo" href="#" onclick="showView('home');return false;">Hearth<em>lane</em></a>
   <ul class="nav-links">
-    <li><a href="#why-weekly">Why weekly care</a></li>
-    <li><a href="#pricing">Plans</a></li>
+    <li><a href="#trust-section">Why Hearthlane</a></li>
     <li><a href="#how">How it works</a></li>
+    <li><a href="#pricing">Care options</a></li>
     <li><a href="#faq">FAQ</a></li>
   </ul>
-  <button class="nav-cta" onclick="startIntake('weekly')">Start a weekly plan</button>
+  <button class="nav-cta" onclick="startIntake('weekly')">Talk to a coordinator</button>
   <button class="nav-hamburger" id="hamburger" aria-label="Menu" onclick="toggleMobileMenu()">
     <span></span><span></span><span></span>
   </button>
 </nav>
 <div class="mobile-menu" id="mobile-menu">
-  <a href="#why-weekly" onclick="toggleMobileMenu()">Why weekly care</a>
-  <a href="#pricing" onclick="toggleMobileMenu()">Plans</a>
+  <a href="#trust-section" onclick="toggleMobileMenu()">Why Hearthlane</a>
   <a href="#how" onclick="toggleMobileMenu()">How it works</a>
+  <a href="#pricing" onclick="toggleMobileMenu()">Care options</a>
   <a href="#faq" onclick="toggleMobileMenu()">FAQ</a>
-  <a class="mm-cta" href="#" onclick="toggleMobileMenu(); startIntake('weekly');return false;">Start a weekly plan</a>
+  <a class="mm-cta" href="#" onclick="toggleMobileMenu(); startIntake('weekly');return false;">Talk to a coordinator</a>
 </div>
 
 <!-- ════════════════════════════════════════════════════════════════
@@ -1085,21 +1129,21 @@
     <div class="hero-bg"></div>
     <div class="hero-grid">
       <div>
-        <div class="hero-eyebrow">Weekly in-home companionship · Ontario</div>
+        <div class="hero-eyebrow">In-home companion care · GTA &amp; surrounding Ontario</div>
         <h1>The same trusted face,<br>every <em>week.</em></h1>
-        <p class="hero-sub">The same caregiver. The same routine. The kind of consistency that turns a Tuesday morning into something your mom &mdash; or dad &mdash; actually looks forward to.</p>
+        <p class="hero-sub">Compassionate, vetted caregivers who help with <strong>companionship, meal prep, errands, light housekeeping, medication reminders, and regular check-ins</strong> &mdash; all with the consistency that turns a Tuesday morning into something your mom or dad actually looks forward to.</p>
 
         <div class="hero-cta-row">
           <button class="btn-primary" onclick="startIntake('weekly')">
-            Build a weekly care plan <span class="arrow">→</span>
+            Tell us about your family <span class="arrow">→</span>
           </button>
-          <a class="btn-secondary" href="#pricing">
-            See plans &amp; pricing
+          <a class="btn-secondary" href="#how">
+            See how it works
           </a>
         </div>
 
         <div class="hero-meta-row">
-          <span class="hero-price-anchor">Plans from <strong>$560/mo</strong> &middot; one-time visits from $42/hr</span>
+          <span class="hero-price-anchor">Plans from <strong>$610/mo</strong> &middot; one-time visits from $45/hr</span>
           <a class="hero-phone" href="tel:+19055552273">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.91.72 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.35 1.85.59 2.81.72A2 2 0 0 1 22 16.92z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
             Or talk to a coordinator &mdash; (905) 555-CARE
@@ -1129,13 +1173,13 @@
         </span>
         <div class="hero-photo-wrap">
           <img
-            src="https://images.unsplash.com/photo-1581579438747-1dc8d17bbce4?auto=format&fit=crop&w=900&q=85"
+            src="https://images.unsplash.com/photo-1516307365547-8df5bb10b0d4?auto=format&fit=crop&w=900&q=85"
             data-img-slot="hero"
-            alt="A caregiver and elderly woman sharing a warm moment together at home"
+            alt="An older woman and her caregiver sharing tea together in a bright home"
             onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=900&q=85';" />
         </div>
         <div class="hero-float-card hero-float-quote">
-          "She actually looks forward to Maria coming over &mdash; they bake on Tuesdays now."
+          "She calls it her Tuesday. That&rsquo;s all I needed to hear."
           <small>SARAH T. · Daughter, Oakville</small>
         </div>
         <div class="hero-float-card hero-float-rating">
@@ -1144,28 +1188,126 @@
             <span class="hero-rating-num">4.9</span>
             <span style="font-size:0.78rem;color:var(--ink-light)">200+ families</span>
           </div>
-          <div class="hero-rating-sub">Background-checked · PSW certified</div>
+          <div class="hero-rating-sub">Background-checked · Vetted &amp; experienced</div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- PLAN-FIRST POSITIONING BAND -->
+  <!-- TRUST BAND -->
   <div class="plan-band">
     <div class="plan-band-inner">
       <div class="plan-band-msg">
-        We&rsquo;re built around <span>recurring weekly care</span> &mdash; because the families we serve tell us consistency is what changes everything.
+        Serving families across the GTA since 2019 &mdash; <span>200+ families</span> matched with a dedicated caregiver they trust.
       </div>
-      <a href="#pricing">See weekly plans →</a>
+      <a href="#trust-section">How we vet our caregivers →</a>
     </div>
   </div>
 
-  <!-- WHY WEEKLY CARE -->
+  <!-- WHY FAMILIES TRUST HEARTHLANE -->
+  <section class="section trust-top" id="trust-section">
+    <div class="section-inner">
+      <div class="section-label">Why families trust Hearthlane</div>
+      <h2 class="section-title">Practical things that matter<br>when it's your <em>parent.</em></h2>
+      <p class="section-lede">Choosing care for someone you love requires more than a nice website. Here's what we actually do to earn your trust &mdash; before the first visit, and every week after.</p>
+
+      <div class="why-grid">
+        <div class="why-card">
+          <div class="why-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 2L4 6v6c0 5 3.5 9.4 8 10 4.5-.6 8-5 8-10V6l-8-4z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <h3>Background-checked caregivers</h3>
+          <p>Every caregiver undergoes a thorough criminal record check, reference verification, and in-person interview before being matched with any family. No exceptions.</p>
+        </div>
+        <div class="why-card">
+          <div class="why-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 12H20M4 12L8 8M4 12L8 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><rect x="2" y="3" width="20" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/></svg>
+          </div>
+          <h3>Fully insured care</h3>
+          <p>$2M liability coverage on every visit. WSIB-covered caregivers. Receipts for the Medical Expense Tax Credit and most extended-health plans &mdash; emailed monthly.</p>
+        </div>
+        <div class="why-card">
+          <div class="why-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M21 21v-2a4 4 0 0 0-3-3.85" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </div>
+          <h3>Consistent caregiver matching</h3>
+          <p>We hand-match each client to one primary caregiver based on personality, language, lived experience, and schedule fit &mdash; not just whoever's available.</p>
+        </div>
+        <div class="why-card">
+          <div class="why-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+          </div>
+          <h3>Regular family updates</h3>
+          <p>Your coordinator sends a brief update after each visit. You always know what happened, how your parent is doing, and whether anything has changed.</p>
+        </div>
+      </div>
+
+      <!-- AREAS SERVED + OPERATIONAL DETAILS -->
+      <div class="ops-details-grid">
+        <div class="ops-card">
+          <div class="ops-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="1.8"/></svg>
+          </div>
+          <div class="ops-content">
+            <strong>Areas we serve</strong>
+            <p>Oakville, Mississauga, Burlington, Hamilton, Halton Hills, Brampton, North York, Etobicoke, and central Toronto. Not sure? Tell us your postal code and we'll confirm immediately.</p>
+          </div>
+        </div>
+        <div class="ops-card">
+          <div class="ops-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/></svg>
+          </div>
+          <div class="ops-content">
+            <strong>How quickly can care start?</strong>
+            <p>Most families are matched and begin care within 5–7 days. For urgent situations &mdash; post-hospital discharge, sudden caregiver absence &mdash; same-week placement is often possible.</p>
+          </div>
+        </div>
+        <div class="ops-card">
+          <div class="ops-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </div>
+          <div class="ops-content">
+            <strong>Minimum hours</strong>
+            <p>Recurring care starts at 4 hours per week (one visit). One-time visits have a 3-hour minimum. We don't do 1-hour drop-ins &mdash; it takes time to actually help.</p>
+          </div>
+        </div>
+        <div class="ops-card">
+          <div class="ops-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </div>
+          <div class="ops-content">
+            <strong>If your caregiver is unavailable</strong>
+            <p>We assign every client a vetted backup caregiver from day one. If your primary caregiver is sick or unavailable, your backup covers the visit &mdash; or you don't pay for that visit.</p>
+          </div>
+        </div>
+        <div class="ops-card">
+          <div class="ops-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="ops-content">
+            <strong>Flexible &amp; pause-friendly</strong>
+            <p>Pause anytime with 7 days' notice &mdash; no fees, no questions. Your caregiver's spot is held for up to 6 weeks. Adjust hours or change your schedule at any monthly cycle.</p>
+          </div>
+        </div>
+        <div class="ops-card">
+          <div class="ops-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2L4 6v6c0 5 3.5 9.4 8 10 4.5-.6 8-5 8-10V6l-8-4z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="ops-content">
+            <strong>14-day fit guarantee</strong>
+            <p>If the first two weeks don't feel right, we re-match free or refund unused days. No risk, no hard conversations. We'd rather get it right than hold you to something that isn't working.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHY CONSISTENT CARE -->
   <section class="section why-weekly" id="why-weekly">
     <div class="section-inner">
-      <div class="section-label">Why weekly care</div>
+      <div class="section-label">Why consistent care</div>
       <h2 class="section-title">A familiar face does something<br>a stranger never <em>can.</em></h2>
-      <p class="section-lede">Care isn&rsquo;t a transaction &mdash; it&rsquo;s a relationship. Our weekly model is designed for that. Here&rsquo;s what changes when the same caregiver shows up, on the same day, every week.</p>
+      <p class="section-lede">Good care isn&rsquo;t a transaction &mdash; it&rsquo;s a relationship. Here&rsquo;s what changes when the same caregiver shows up, on the same day, every week.</p>
 
       <div class="why-grid">
         <div class="why-card">
@@ -1208,45 +1350,42 @@
   <!-- PATHS: PLANS vs ONE-TIME -->
   <section class="section paths">
     <div class="section-inner">
-      <div class="section-label">Choose your path</div>
-      <h2 class="section-title">Two ways to begin &mdash;<br>one we quietly <em>recommend.</em></h2>
-      <p class="section-lede">Most families start with a weekly plan because the relationship is where the value lives. One-time visits are perfect when you need a specific kind of help, right now.</p>
+      <div class="section-label">How care begins</div>
+      <h2 class="section-title">Two ways families start &mdash;<br>both are the <em>right</em> one.</h2>
+      <p class="section-lede">Some families know they want ongoing, consistent care. Others start with a single visit to see what it&rsquo;s like. Either way, we work with you from there.</p>
 
       <div class="paths-grid">
         <div class="path-card recommended">
-          <span class="path-badge">Recommended</span>
-          <div class="plan-tier">Our primary service</div>
-          <h3>Weekly Ongoing Care</h3>
-          <p>A dedicated caregiver who visits on the same schedule each week. Your plan is built around your loved one's routines, mobility, and the parts of their day that need a gentle hand.</p>
+          <span class="path-badge">Most families choose this</span>
+          <div class="plan-tier">Ongoing care</div>
+          <h3>A dedicated caregiver, consistently</h3>
+          <p>One caregiver who visits on a schedule that fits your loved one&rsquo;s week. Built around their routines, comfort, and the parts of their day that need a caring hand.</p>
           <ul class="path-list">
             <li><strong>Same caregiver every visit</strong> &mdash; hand-matched, not rotated</li>
-            <li>Predictable weekly schedule &mdash; pick the days &amp; times once</li>
+            <li>Consistent schedule &mdash; pick the days &amp; times once</li>
             <li>Dedicated care coordinator &amp; family check-ins</li>
-            <li>Pause or adjust your plan with 7 days&rsquo; notice</li>
-            <li>Most popular: 8 hrs/week, 2 visits</li>
+            <li>Pause or adjust with 7 days&rsquo; notice</li>
+            <li>Starts at 4 hrs/week &mdash; flexible from there</li>
           </ul>
           <button class="btn-primary" onclick="startIntake('weekly')">
-            Build a weekly plan <span class="arrow">→</span>
+            Tell us about your family <span class="arrow">→</span>
           </button>
         </div>
 
         <div class="path-card simple">
-          <div class="plan-tier">Secondary option</div>
-          <h3>One-Time or Respite Visit</h3>
-          <p style="font-size:0.92rem">A single visit when you need short-term support &mdash; not a recurring relationship.</p>
+          <div class="plan-tier">One-time or temporary</div>
+          <h3>A Single Visit or Short-Term Help</h3>
+          <p style="font-size:0.92rem">When you need support now but aren&rsquo;t ready for a regular arrangement. Good as a starting point &mdash; or whenever that&rsquo;s simply all you need.</p>
           <ul class="path-list" style="margin-bottom:1rem">
-            <li>Trial visit before a weekly plan</li>
-            <li>Respite care while a family caregiver rests</li>
             <li>Post-hospital recovery support</li>
-            <li>Temporary help during travel</li>
+            <li>Respite while a family caregiver rests</li>
+            <li>Trial visit to meet our caregivers</li>
+            <li>Temporary help during family travel</li>
           </ul>
-          <p style="font-size:0.82rem;color:var(--ink-light);margin-bottom:1.25rem">$42/hr · 3-hour minimum · subject to caregiver availability</p>
+          <p style="font-size:0.82rem;color:var(--ink-light);margin-bottom:1.25rem">$45/hr · 3-hour minimum · subject to caregiver availability</p>
           <button class="btn-secondary" style="width:100%" onclick="startIntake('one-time')">
-            Book a one-time visit
+            Request a one-time visit
           </button>
-          <div class="path-stat">
-            <strong>About 70%</strong> of one-time families switch to a weekly plan within their first month.
-          </div>
         </div>
       </div>
     </div>
@@ -1286,12 +1425,61 @@
     </div>
   </section>
 
+  <!-- HOW CAREGIVER MATCHING WORKS -->
+  <section class="section matching" id="matching">
+    <div class="section-inner">
+      <div class="section-label">Caregiver matching</div>
+      <h2 class="section-title">How we find the right<br>caregiver for your <em>family.</em></h2>
+      <p class="section-lede">We don't rotate through a roster. Every client gets one dedicated caregiver, carefully selected for their specific situation. Here's exactly how that works.</p>
+
+      <div class="matching-grid">
+        <div class="matching-steps">
+          <div class="matching-step">
+            <div class="ms-num">1</div>
+            <div class="ms-body">
+              <strong>We learn about your loved one</strong>
+              <p>Through your intake form and a 20-minute call, we gather a detailed picture: personality, language preference, mobility, interests, health context, and the things that make your parent feel comfortable and respected.</p>
+            </div>
+          </div>
+          <div class="matching-step">
+            <div class="ms-num">2</div>
+            <div class="ms-body">
+              <strong>We shortlist from our vetted team</strong>
+              <p>Our coordinators review a curated pool of background-checked, experienced, and reference-verified caregivers who have worked with similar clients and match on key dimensions &mdash; experience, temperament, language, and availability.</p>
+            </div>
+          </div>
+          <div class="matching-step">
+            <div class="ms-num">3</div>
+            <div class="ms-body">
+              <strong>A meet-and-greet before any paid visit</strong>
+              <p>Your matched caregiver comes for a 30-minute in-home introduction. No commitment. If the connection isn't right, we find another match &mdash; at no charge &mdash; before anything is billed.</p>
+            </div>
+          </div>
+          <div class="matching-step">
+            <div class="ms-num">4</div>
+            <div class="ms-body">
+              <strong>One caregiver, ongoing</strong>
+              <p>Once matched, your caregiver shows up on the agreed schedule &mdash; consistently, week after week. We assign a backup from day one for the rare exception, so coverage is never left to chance.</p>
+            </div>
+          </div>
+        </div>
+        <div class="matching-callout">
+          <div class="mc-tag">What we look for in every caregiver</div>
+          <h3>Vetted, experienced, and genuinely compassionate.</h3>
+          <p>We don't require a specific certification for every role, but we do require a track record. Every caregiver on our team has verifiable experience working with older adults, passes a thorough criminal record check, and completes a multi-step reference review before their first match.</p>
+          <p>We also look for something harder to credential: the patience, warmth, and attentiveness that makes someone actually good at this kind of work. Our coordinators do in-person interviews and often accompany caregivers on early visits.</p>
+          <p>Some of our caregivers hold PSW certification or equivalent training. We highlight this where relevant. What every caregiver shares is experience, a clean background check, and references we've personally verified.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- PRICING -->
   <section class="section pricing" id="pricing">
     <div class="section-inner">
-      <div class="section-label">Weekly Care Plans</div>
-      <h2 class="section-title">Predictable weekly support,<br>at a <em>predictable</em> price.</h2>
-      <p class="section-lede">Each plan is a recurring weekly commitment with a dedicated caregiver. Billed monthly. Pause or adjust with 7 days&rsquo; notice. Every plan includes our <strong>14-day fit guarantee</strong> &mdash; if it&rsquo;s not right, we re-match free or refund the unused days.</p>
+      <div class="section-label">Care options &amp; pricing</div>
+      <h2 class="section-title">Transparent pricing, no<br>long-term <em>commitment.</em></h2>
+      <p class="section-lede">Care is billed monthly. Pause or adjust with 7 days&rsquo; notice. Every arrangement includes our <strong>14-day fit guarantee</strong> &mdash; if it&rsquo;s not right, we re-match free or refund the unused days.</p>
 
       <!-- ANCHOR / COMPARISON STRIP -->
       <div class="price-anchor-strip">
@@ -1301,7 +1489,7 @@
         </div>
         <div class="pas-divider"></div>
         <div class="pas-item">
-          <div class="pas-figure">$42/hr</div>
+          <div class="pas-figure">$45/hr</div>
           <div class="pas-label">Booking the same care as one-time visits</div>
         </div>
         <div class="pas-divider"></div>
@@ -1325,14 +1513,14 @@
         <!-- ESSENTIAL -->
         <div class="plan-card">
           <span class="plan-badge plan-badge-soft">Start here</span>
-          <div class="plan-tier">Plan 1 of 3</div>
+          <div class="plan-tier">Starting point</div>
           <div class="plan-name">Essential</div>
           <div class="plan-hours">4 hrs / week · 1 visit</div>
           <div class="plan-price-row">
-            <span class="plan-price" data-price-monthly="$560" data-price-weekly="$130">$560</span>
+            <span class="plan-price" data-price-monthly="$610" data-price-weekly="$141">$610</span>
             <span class="plan-freq" data-freq>/month</span>
           </div>
-          <div class="plan-hourly">~$35/hr &middot; ~$420/mo after tax credit*</div>
+          <div class="plan-hourly">~$35/hr &middot; ~$457/mo after tax credit*</div>
           <div class="plan-subnote">Same caregiver · 4-week minimum</div>
           <ul class="plan-feats">
             <li>One 4-hour weekly visit</li>
@@ -1351,14 +1539,14 @@
         <!-- COMPANION (FEATURED) -->
         <div class="plan-card featured">
           <span class="plan-badge">Most chosen</span>
-          <div class="plan-tier">Plan 2 of 3</div>
+          <div class="plan-tier">Most common</div>
           <div class="plan-name">Companion</div>
           <div class="plan-hours">8 hrs / week · 2 visits</div>
           <div class="plan-price-row">
-            <span class="plan-price" data-price-monthly="$1,080" data-price-weekly="$250">$1,080</span>
+            <span class="plan-price" data-price-monthly="$1,190" data-price-weekly="$275">$1,190</span>
             <span class="plan-freq" data-freq>/month</span>
           </div>
-          <div class="plan-hourly">~$33.75/hr &middot; ~$810/mo after tax credit* &middot; <strong>save $256/mo vs one-time pricing</strong></div>
+          <div class="plan-hourly">~$34.37/hr &middot; ~$892/mo after tax credit* &middot; <strong>save $280/mo vs one-time pricing</strong></div>
           <div class="plan-subnote">Same caregiver · dedicated coordinator</div>
           <ul class="plan-feats">
             <li>Two 4-hour weekly visits</li>
@@ -1377,14 +1565,14 @@
 
         <!-- PREMIUM -->
         <div class="plan-card">
-          <div class="plan-tier">Plan 3 of 3</div>
+          <div class="plan-tier">Intensive support</div>
           <div class="plan-name">Daily</div>
           <div class="plan-hours">16+ hrs / week · 4+ visits</div>
           <div class="plan-price-row">
-            <span class="plan-price" data-price-monthly="from $2,080" data-price-weekly="from $480">from $2,080</span>
+            <span class="plan-price" data-price-monthly="from $2,240" data-price-weekly="from $517">from $2,240</span>
             <span class="plan-freq" data-freq>/month</span>
           </div>
-          <div class="plan-hourly">~$32.50/hr &middot; still ~60% the cost of assisted living</div>
+          <div class="plan-hourly">~$34/hr &middot; still ~60% the cost of assisted living</div>
           <div class="plan-subnote">Same primary caregiver · backup caregiver assigned</div>
           <ul class="plan-feats">
             <li>Daily visits, customized hours</li>
@@ -1415,7 +1603,7 @@
       <div class="one-time-strip">
         <div class="ots-text">
           <h4>Just need a one-time visit?</h4>
-          <p>Single visits are billed at $42/hr (3-hour minimum). Best for trial visits, respite, post-hospital recovery, or temporary support &mdash; or as a way to feel out whether a weekly plan is right.</p>
+          <p>Single visits are billed at $45/hr (3-hour minimum). Best for trial visits, respite, post-hospital recovery, or temporary support &mdash; or as a way to feel out whether ongoing care is right.</p>
         </div>
         <button class="btn-secondary" onclick="startIntake('one-time')">Book a one-time visit</button>
       </div>
@@ -1482,40 +1670,19 @@
       <div class="testimonial-row">
         <div class="testimonial">
           <div class="testimonial-stars">★★★★★</div>
-          <div class="testimonial-quote">"Maria is here every Tuesday and Friday. Mom calls them &lsquo;her days.&rsquo; That predictability has been a gift for the whole family."</div>
-          <div class="testimonial-author"><strong>Sarah T.</strong> · Daughter, Oakville · Companion plan, 11 months</div>
+          <div class="testimonial-quote">"My mom has mild dementia and used to get anxious with new people. After three visits with the same caregiver, she stopped asking who was coming. Now she just says &lsquo;her Tuesday friend.&rsquo; That shift was everything."</div>
+          <div class="testimonial-author"><strong>Sarah T.</strong> · Daughter, Oakville · Companion plan, 14 months</div>
         </div>
         <div class="testimonial">
           <div class="testimonial-stars">★★★★★</div>
-          <div class="testimonial-quote">"We started with a one-time visit after Dad came home from hospital. Three weeks in, we switched to weekly. Best decision we made."</div>
-          <div class="testimonial-author"><strong>Daniel &amp; Mira K.</strong> · Family, Mississauga · Premium plan, 7 months</div>
+          <div class="testimonial-quote">"Dad came home from hospital on a Thursday. By Monday we had a caregiver in his house. The coordinator helped us figure out what hours we needed and what to expect &mdash; I didn&rsquo;t have to guess at anything."</div>
+          <div class="testimonial-author"><strong>Daniel K.</strong> · Son, Mississauga · Started as one-time, now Daily plan, 8 months</div>
         </div>
         <div class="testimonial">
           <div class="testimonial-stars">★★★★★</div>
-          <div class="testimonial-quote">"I live in Vancouver. Knowing someone gentle visits my mother every Wednesday and sends me a note after &mdash; that&rsquo;s peace of mind I didn&rsquo;t know I needed."</div>
-          <div class="testimonial-author"><strong>Elaine R.</strong> · Out-of-province daughter · Essential plan, 4 months</div>
+          <div class="testimonial-quote">"I&rsquo;m in Vancouver and my mother is in Etobicoke. Every Wednesday I get a short message after the visit &mdash; what they did, how she seemed, if anything felt off. It&rsquo;s made being far away genuinely bearable."</div>
+          <div class="testimonial-author"><strong>Elaine R.</strong> · Out-of-province daughter, Etobicoke client · Essential plan, 6 months</div>
         </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- FOUNDER STORY -->
-  <section class="section founder">
-    <div class="section-inner founder-inner">
-      <div class="founder-photo">
-        <img
-          src="https://images.unsplash.com/photo-1551836022-deb4988cc6c0?auto=format&fit=crop&w=700&q=85"
-          data-img-slot="founder"
-          alt="The Maizel family — founders of Hearthlane"
-          onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1542596594-649edbc13630?auto=format&fit=crop&w=700&q=85';" />
-        <div class="founder-photo-note">Replace this with a real photo of you / the team before launch.</div>
-      </div>
-      <div class="founder-text">
-        <div class="section-label">Why we built Hearthlane</div>
-        <h2 class="section-title">We started this because<br>our own parents <em>needed help.</em></h2>
-        <p>When the time came for our family, we couldn&rsquo;t find a service we&rsquo;d trust with the people who raised us. The agencies sent a different face every week. The independent caregivers were lovely but disappeared without notice. Nothing felt built around the relationship.</p>
-        <p>So we built Hearthlane the way we wished it had existed for us &mdash; weekly care, the same caregiver, a coordinator who knows your family by name, and a quiet promise that we&rsquo;ll never put anyone in your loved one&rsquo;s home we wouldn&rsquo;t put in our own.</p>
-        <p class="founder-sign">&mdash; The Maizel family &middot; Founders</p>
       </div>
     </div>
   </section>
@@ -1524,9 +1691,16 @@
   <section class="section faq" id="faq">
     <div class="section-inner">
       <div class="section-label">Common questions</div>
-      <h2 class="section-title">The questions families<br><em>most often</em> ask us.</h2>
+      <h2 class="section-title">Questions families<br><em>always</em> ask us first.</h2>
 
       <div class="faq-list">
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this.parentNode)">
+            <span>What qualifications do your caregivers have?</span>
+            <span class="faq-chev">+</span>
+          </div>
+          <div class="faq-a">Every caregiver on our team has verifiable hands-on experience working with older adults, passes a thorough criminal record check (enhanced Police Vulnerable Sector Check), and completes a multi-step reference review before their first placement. Some of our caregivers hold PSW (Personal Support Worker) certification or equivalent training &mdash; we highlight this where relevant and can match you with a certified caregiver if that&rsquo;s important to your family. What every caregiver shares: a track record, a clean background check, and references we&rsquo;ve personally contacted and verified.</div>
+        </div>
         <div class="faq-item">
           <div class="faq-q" onclick="toggleFaq(this.parentNode)">
             <span>How much of this is covered by insurance or tax credits?</span>
@@ -1536,14 +1710,11 @@
         </div>
         <div class="faq-item">
           <div class="faq-q" onclick="toggleFaq(this.parentNode)">
-            <span>Why is weekly care your recommended option?</span>
+            <span>Why do consistent visits make such a difference?</span>
             <span class="faq-chev">+</span>
           </div>
-          <div class="faq-a">Because the relationship between your loved one and their caregiver is where the value of in-home care actually lives. A familiar face on a predictable schedule reduces anxiety, builds trust, and lets us notice subtle changes over time. About <strong>70% of families who start with a one-time visit move to a weekly plan within their first month</strong> &mdash; once they see the difference consistency makes, they don&rsquo;t want to go back.</div>
+          <div class="faq-a">Because the relationship between your loved one and their caregiver is where the real value of in-home care lives. A familiar face on a predictable schedule reduces anxiety, builds trust, and lets a caregiver notice subtle changes over time &mdash; the things a new person would never catch. For older adults with memory loss or anxiety, consistency isn&rsquo;t a nice-to-have. It&rsquo;s what makes care feel safe.</div>
         </div>
-        <div class="faq-item">
-          <div class="faq-q" onclick="toggleFaq(this.parentNode)">
-            <span>What if my caregiver isn't a fit?</span>
             <span class="faq-chev">+</span>
           </div>
           <div class="faq-a">You meet your hand-matched caregiver before your first paid visit. If it&rsquo;s not right at the meet-and-greet, we re-match before any charge. And every plan includes a <strong>14-day fit guarantee</strong>: if the first two weeks don&rsquo;t feel right, we re-match free or refund the unused days. We&rsquo;d rather take the time up front than have anyone in your loved one&rsquo;s home who isn&rsquo;t right.</div>
@@ -1588,7 +1759,7 @@
             <span>Can I start with a one-time visit before committing to a plan?</span>
             <span class="faq-chev">+</span>
           </div>
-          <div class="faq-a">Yes &mdash; many families do. A single visit at $42/hr (3-hour minimum) is a great way to feel out whether Hearthlane is right for you. About 70% of one-time families end up moving to a weekly plan within their first month.</div>
+          <div class="faq-a">Yes &mdash; many families do. A single visit at $45/hr (3-hour minimum) is a great way to feel out whether Hearthlane is right for you. About 70% of one-time families end up moving to ongoing care within their first month.</div>
         </div>
       </div>
     </div>
@@ -1596,11 +1767,11 @@
 
   <!-- CTA -->
   <section class="cta-section" id="get-started">
-    <h2>Start with the visit your<br>mom or dad will <em>look forward to.</em></h2>
-    <p>A short intake form, a 20-minute assessment, and a hand-matched caregiver who shows up &mdash; same time, same face, every week. From <strong>$560/month</strong>, with a 14-day fit guarantee.</p>
+    <h2>Have a coordinator call you.<br>No scripts. Just a <em>real conversation.</em></h2>
+    <p>Tell us a little about your family. We&rsquo;ll figure out together what kind of support makes sense &mdash; a caregiver who shows up consistently, or a single visit to start. From <strong>$610/month</strong> or $45/hr for a one-time visit, with a 14-day fit guarantee.</p>
     <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
       <button class="btn-primary" onclick="startIntake('weekly')">
-        Build a weekly care plan <span class="arrow">→</span>
+        Tell us about your family <span class="arrow">→</span>
       </button>
       <a class="btn-secondary" href="tel:+19055552273">Or call (905) 555-CARE</a>
     </div>
@@ -1623,28 +1794,28 @@
     <div class="intake-step active" id="step-1">
       <div class="intake-step-label">Step 1 of 3</div>
       <h2 class="intake-q">What kind of support are you looking for?</h2>
-      <p class="intake-lede">There&rsquo;s no wrong answer. We&rsquo;ll tailor the conversation around what you choose.</p>
+      <p class="intake-lede">There&rsquo;s no wrong answer &mdash; this just helps us have the right conversation with you.</p>
 
       <div class="choice-stack">
         <div class="choice recommended" data-care="weekly" onclick="selectChoice(this,'care','weekly')">
           <div class="choice-pin"></div>
           <div class="choice-body">
-            <div class="choice-title">Weekly Ongoing Care <span class="choice-pill">Recommended</span></div>
-            <div class="choice-desc">A dedicated caregiver who visits on the same schedule each week. Best for consistency, relationship-building, and dependable companionship.</div>
+            <div class="choice-title">Ongoing care <span class="choice-pill">Most common</span></div>
+            <div class="choice-desc">A dedicated caregiver who visits regularly &mdash; same person, consistent schedule. Best for companionship, household support, and building a genuine relationship over time.</div>
           </div>
         </div>
         <div class="choice" data-care="one-time" onclick="selectChoice(this,'care','one-time')">
           <div class="choice-pin"></div>
           <div class="choice-body">
-            <div class="choice-title">One-Time Visit</div>
-            <div class="choice-desc">A single visit when you need short-term help &mdash; perfect as a trial visit before committing to a weekly plan.</div>
+            <div class="choice-title">A one-time or occasional visit</div>
+            <div class="choice-desc">A single visit to help out &mdash; or a way to try Hearthlane before committing to anything. No pressure to continue.</div>
           </div>
         </div>
         <div class="choice" data-care="respite" onclick="selectChoice(this,'care','respite')">
           <div class="choice-pin"></div>
           <div class="choice-body">
-            <div class="choice-title">Temporary / Respite Support</div>
-            <div class="choice-desc">A short stretch of care &mdash; e.g. post-hospital recovery, family travel, or relief for a family caregiver.</div>
+            <div class="choice-title">Temporary or respite support</div>
+            <div class="choice-desc">Short-term care during post-hospital recovery, family travel, or while a family caregiver takes a break.</div>
           </div>
         </div>
       </div>
@@ -1658,8 +1829,8 @@
     <!-- STEP 2 — SHORT & FAST -->
     <div class="intake-step" id="step-2">
       <div class="intake-step-label">Step 2 of 3</div>
-      <h2 class="intake-q">A few essentials.</h2>
-      <p class="intake-lede">Six fields &mdash; takes a minute. We&rsquo;ll cover the rest in the 20-minute assessment call.</p>
+      <h2 class="intake-q">A few details to get started.</h2>
+      <p class="intake-lede">This takes about a minute. A coordinator will follow up &mdash; no pressure, no scripts, just a real conversation about what you need.</p>
 
       <div class="form-row full">
         <div class="field">
@@ -1681,9 +1852,9 @@
           <label>Hours per week</label>
           <select id="f-hours">
             <option value="">Select</option>
-            <option>4 hrs/week (Essential plan)</option>
-            <option>8 hrs/week (Companion plan)</option>
-            <option>16+ hrs/week (Daily plan)</option>
+            <option>4 hrs/week (Essential · $610/mo)</option>
+            <option>8 hrs/week (Companion · $1,190/mo)</option>
+            <option>16+ hrs/week (Daily · from $2,240/mo)</option>
             <option>Not sure &mdash; help me decide</option>
           </select>
         </div>
@@ -1790,13 +1961,13 @@
       <ul>
         <li><a href="#trust">Trust &amp; safety</a></li>
         <li><a href="#faq">FAQ</a></li>
-        <li><a href="mailto:info@maizelhomes.ca">Contact</a></li>
+        <li><a href="mailto:info@hearthlane.ca">Contact</a></li>
       </ul>
     </div>
     <div>
       <h5>Get in touch</h5>
       <ul>
-        <li><a href="mailto:info@maizelhomes.ca">info@maizelhomes.ca</a></li>
+        <li><a href="mailto:info@hearthlane.ca">info@hearthlane.ca</a></li>
         <li><a href="tel:+19055552273">(905) 555-CARE</a></li>
         <li style="color:#8a7d68;margin-top:6px">Mon&ndash;Sun, 7am&ndash;9pm</li>
       </ul>
@@ -1824,13 +1995,13 @@
      FORM_ENDPOINT       ── Optional. Paste a Formspree, Web3Forms, or
                              Basin URL to receive intake submissions by
                              email. Leaving it blank uses a mailto:
-                             fallback to info@maizelhomes.ca (works,
+                             fallback to info@hearthlane.ca (works,
                              just opens the visitor's mail client).
                              Example: 'https://formspree.io/f/abcd1234'
      ═══════════════════════════════════════════════════════════════ */
   const CAL_SCHEDULING_URL = 'https://cal.com/local-stage-h5vejw/20-minute-consultation';
   const FORM_ENDPOINT      = '';
-  const INTAKE_EMAIL       = 'info@maizelhomes.ca';
+  const INTAKE_EMAIL       = 'info@hearthlane.ca';
 
   const PUBLIC_CONFIG = {
     calSchedulingUrl:   CAL_SCHEDULING_URL,
@@ -1947,10 +2118,10 @@
   /* Recommend a plan based on intake selections */
   function recommendPlan() {
     const PLANS = {
-      essential: { name: 'Essential', hours: '4 hrs/week · 1 visit',     price: '$560',       freq: '/month', hourly: '~$35/hr · ~$420/mo after tax credit' },
-      companion: { name: 'Companion', hours: '8 hrs/week · 2 visits',    price: '$1,080',     freq: '/month', hourly: '~$33.75/hr · ~$810/mo after tax credit · save $256/mo vs one-time' },
-      daily:     { name: 'Daily',     hours: '16+ hrs/week · 4+ visits', price: 'from $2,080', freq: '/month', hourly: '~$32.50/hr · ~60% the cost of assisted living' },
-      onetime:   { name: 'One-Time Visit', hours: '3-hr minimum', price: '$42', freq: '/hour', hourly: 'Billed once, no recurring commitment.' },
+      essential: { name: 'Essential', hours: '4 hrs/week · 1 visit',     price: '$610',       freq: '/month', hourly: '~$35/hr · ~$457/mo after tax credit' },
+      companion: { name: 'Companion', hours: '8 hrs/week · 2 visits',    price: '$1,190',     freq: '/month', hourly: '~$34.37/hr · ~$892/mo after tax credit · save $280/mo vs one-time' },
+      daily:     { name: 'Daily',     hours: '16+ hrs/week · 4+ visits', price: 'from $2,240', freq: '/month', hourly: '~$34/hr · ~60% the cost of assisted living' },
+      onetime:   { name: 'One-Time Visit', hours: '3-hr minimum', price: '$45', freq: '/hour', hourly: 'Billed once, no recurring commitment.' },
     };
 
     if (intake.care === 'one-time') {
