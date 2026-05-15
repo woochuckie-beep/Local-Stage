@@ -224,6 +224,18 @@
     #toast.show { opacity: 1; transform: translateY(0); }
     #toast.err { background: #c44; }
     .loading-msg { color: var(--ink-light); padding: 2rem; text-align: center; }
+
+    /* ── DAY TOGGLES ── */
+    .day-toggles { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .day-toggle { display: flex; cursor: pointer; }
+    .day-toggle input { display: none; }
+    .day-toggle span {
+      padding: 0.35rem 0.65rem; border-radius: 100px; font-size: 0.8rem; font-weight: 500;
+      background: var(--cream-soft); color: var(--ink-light);
+      border: 1.5px solid var(--cream-dark); transition: all 0.15s; user-select: none;
+    }
+    .day-toggle input:checked + span { background: var(--terra); color: var(--white); border-color: var(--terra); }
+    .avail-tag { font-size: 0.8rem; color: var(--ink-mid); }
   </style>
 </head>
 <body>
@@ -348,7 +360,7 @@
         <table>
           <thead>
             <tr>
-              <th>Name</th><th>Contact</th><th>Clients</th><th>Status</th><th>Actions</th>
+              <th>Name</th><th>Contact</th><th>Availability</th><th>Clients</th><th>Status</th><th>Actions</th>
             </tr>
           </thead>
           <tbody id="cg-tbody"><tr class="empty-row"><td colspan="5">Loading…</td></tr></tbody>
@@ -488,6 +500,28 @@
       <div class="form-group">
         <label>Bio / Specialties</label>
         <textarea class="fc" name="bio" placeholder="Skills, certifications, experience…"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Available Days</label>
+        <div class="day-toggles">
+          <label class="day-toggle"><input type="checkbox" name="avail_days" value="Mon" /><span>Mon</span></label>
+          <label class="day-toggle"><input type="checkbox" name="avail_days" value="Tue" /><span>Tue</span></label>
+          <label class="day-toggle"><input type="checkbox" name="avail_days" value="Wed" /><span>Wed</span></label>
+          <label class="day-toggle"><input type="checkbox" name="avail_days" value="Thu" /><span>Thu</span></label>
+          <label class="day-toggle"><input type="checkbox" name="avail_days" value="Fri" /><span>Fri</span></label>
+          <label class="day-toggle"><input type="checkbox" name="avail_days" value="Sat" /><span>Sat</span></label>
+          <label class="day-toggle"><input type="checkbox" name="avail_days" value="Sun" /><span>Sun</span></label>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Available From</label>
+          <input class="fc" name="avail_from" type="time" />
+        </div>
+        <div class="form-group">
+          <label>Available Until</label>
+          <input class="fc" name="avail_to" type="time" />
+        </div>
       </div>
       <div class="modal-ft">
         <button type="button" class="btn btn-ghost" onclick="closeModal('cg-ov')">Cancel</button>
@@ -845,6 +879,7 @@ function renderCaregivers() {
     <tr>
       <td><strong>${esc(cg.name)}</strong></td>
       <td>${cg.email ? `<a href="mailto:${esc(cg.email)}" style="color:var(--terra)">${esc(cg.email)}</a>` : '—'}${cg.phone ? `<br><small>${esc(cg.phone)}</small>` : ''}</td>
+      <td><span class="avail-tag">${formatAvail(cg)}</span></td>
       <td>${cg._cnt} client${cg._cnt !== 1 ? 's' : ''}</td>
       <td><span class="badge badge-${cg.status}">${cg.status}</span></td>
       <td class="td-act">
@@ -861,7 +896,11 @@ function openCgModal(id) {
   document.getElementById('cg-ttl').textContent = cg ? 'Edit Caregiver' : 'Add Caregiver';
   const form = document.getElementById('cg-form');
   form.reset();
-  if (cg) fill(form, { name: cg.name, email: cg.email||'', phone: cg.phone||'', status: cg.status||'active', bio: cg.bio||'' });
+  if (cg) {
+    fill(form, { name: cg.name, email: cg.email||'', phone: cg.phone||'', status: cg.status||'active', bio: cg.bio||'', avail_from: cg.avail_from||'', avail_to: cg.avail_to||'' });
+    const days = cg.avail_days || [];
+    form.querySelectorAll('[name="avail_days"]').forEach(cb => { cb.checked = days.includes(cb.value); });
+  }
   document.getElementById('cg-ov').classList.add('open');
 }
 
@@ -869,11 +908,14 @@ async function saveCaregiver(e) {
   e.preventDefault();
   const fd = new FormData(e.target);
   const data = {
-    name:  fd.get('name'),
-    email: fd.get('email') || null,
-    phone: fd.get('phone') || null,
-    status:fd.get('status'),
-    bio:   fd.get('bio')   || null,
+    name:       fd.get('name'),
+    email:      fd.get('email')      || null,
+    phone:      fd.get('phone')      || null,
+    status:     fd.get('status'),
+    bio:        fd.get('bio')        || null,
+    avail_days: fd.getAll('avail_days'),
+    avail_from: fd.get('avail_from') || null,
+    avail_to:   fd.get('avail_to')   || null,
     updated_at: SV()
   };
   try {
@@ -1195,6 +1237,19 @@ function fill(form, vals) {
     const el = form.querySelector('[name="' + k + '"]');
     if (el) el.value = v ?? '';
   });
+}
+
+function formatAvail(cg) {
+  const days = (cg.avail_days || []).join(', ');
+  const time = cg.avail_from && cg.avail_to ? ` · ${fmtT(cg.avail_from)}–${fmtT(cg.avail_to)}` : '';
+  return days ? days + time : '<span style="color:var(--ink-light)">Not set</span>';
+}
+
+function fmtT(t) {
+  if (!t) return '';
+  const [h, m] = t.split(':').map(Number);
+  const ap = h >= 12 ? 'pm' : 'am';
+  return `${h % 12 || 12}:${String(m).padStart(2,'0')}${ap}`;
 }
 
 let _toastTimer;
