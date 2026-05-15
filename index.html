@@ -1148,7 +1148,9 @@
   }
   .g-card:nth-child(1) { grid-column: 1 / -1; aspect-ratio: 16 / 6.5; animation-delay: 0.05s; }
   .g-card:nth-child(2) { aspect-ratio: 4 / 3; animation-delay: 0.18s; }
-  .g-card:nth-child(3) { aspect-ratio: 4 / 3; animation-delay: 0.3s; }
+  .g-card:nth-child(3) { aspect-ratio: 4 / 3; animation-delay: 0.28s; }
+  .g-card:nth-child(4) { aspect-ratio: 4 / 3; animation-delay: 0.38s; }
+  .g-card:nth-child(5) { aspect-ratio: 4 / 3; animation-delay: 0.48s; }
 
   @keyframes gFadeUp { to { opacity: 1; transform: translateY(0); } }
 
@@ -1195,7 +1197,620 @@
     .gallery-grid { grid-template-columns: 1fr; }
     .g-card:nth-child(1) { aspect-ratio: 4 / 3; }
   }
+
+  /* ──────────────────────────────────────────
+     PORTAL OVERLAY — login + family dashboard
+     ────────────────────────────────────────── */
+
+  /* Portal overlay wrapper */
+  #portal-overlay {
+    display: none;
+    position: fixed; inset: 0; z-index: 5000;
+    background: var(--cream);
+    overflow-y: auto;
+  }
+  #portal-overlay.open { display: block; }
+
+  /* Back button */
+  .portal-back-btn {
+    position: fixed;
+    top: 1.2rem; left: 1.5rem; z-index: 5100;
+    background: rgba(247,239,226,0.95); border: 1.5px solid var(--cream-dark);
+    border-radius: 100px; padding: 0.38rem 0.9rem;
+    font-family: var(--sans); font-size: 0.82rem;
+    color: var(--ink-mid); cursor: pointer;
+    transition: all 0.2s; display: flex; align-items: center; gap: 0.4rem;
+    backdrop-filter: blur(8px);
+  }
+  .portal-back-btn:hover { border-color: var(--terra); color: var(--terra); }
+
+
+#login-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cream);
+  padding: 2rem;
+}
+.login-card {
+  background: var(--white);
+  border-radius: 24px;
+  padding: 3.5rem 3rem;
+  max-width: 460px;
+  width: 100%;
+  text-align: center;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--cream-dark);
+  animation: fadeUp 0.45s ease forwards;
+}
+.login-logo {
+  font-family: var(--serif);
+  font-size: 2rem;
+  color: var(--ink);
+  margin-bottom: 0.2rem;
+  letter-spacing: -0.5px;
+}
+.login-logo span { color: var(--green); font-style: italic; }
+.login-tagline {
+  font-size: 0.82rem;
+  color: var(--ink-light);
+  margin-bottom: 2.5rem;
+  font-style: italic;
+  font-family: var(--serif);
+  letter-spacing: 0.2px;
+}
+.login-heading {
+  font-family: var(--serif);
+  font-size: 1.55rem;
+  color: var(--ink);
+  margin-bottom: 0.5rem;
+  line-height: 1.3;
+}
+.login-sub {
+  font-size: 0.88rem;
+  color: var(--ink-mid);
+  margin-bottom: 2rem;
+  line-height: 1.7;
+}
+.btn-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.9rem 1.5rem;
+  border-radius: 100px;
+  border: 1.5px solid var(--cream-dark);
+  background: var(--white);
+  font-family: var(--sans);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-google:hover {
+  border-color: var(--green);
+  box-shadow: 0 2px 14px rgba(192,133,104,0.2);
+  transform: translateY(-1px);
+}
+.btn-google:disabled { opacity: 0.6; pointer-events: none; }
+.login-error {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background: #fdf2f0;
+  border: 1px solid #f5c6bb;
+  border-radius: 10px;
+  font-size: 0.84rem;
+  color: #c0392b;
+  display: none;
+  text-align: left;
+}
+.login-note {
+  font-size: 0.76rem;
+  color: var(--ink-light);
+  margin-top: 1.5rem;
+  line-height: 1.65;
+}
+
+/* ── PORTAL SHELL ── */
+#portal { display: none; min-height: 100vh; }
+
+/* ── NAV ── */
+.p-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1rem 2.5rem;
+  background: rgba(247,239,226,0.96);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--cream-dark);
+}
+.p-nav-logo {
+  font-family: var(--serif);
+  font-size: 1.3rem;
+  color: var(--ink);
+  text-decoration: none;
+  letter-spacing: -0.3px;
+}
+.p-nav-logo span { color: var(--green); font-style: italic; }
+.p-nav-badge {
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--ink-light);
+  background: var(--cream-dark);
+  padding: 0.18rem 0.6rem;
+  border-radius: 100px;
+  margin-left: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.p-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+.p-nav-user {
+  font-size: 0.85rem;
+  color: var(--ink-mid);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.p-nav-avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--green-light);
+  border: 2px solid var(--green);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--serif);
+  font-size: 0.85rem;
+  color: var(--green-mid);
+  font-weight: 600;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.p-nav-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.btn-signout {
+  background: transparent;
+  border: 1.5px solid var(--cream-dark);
+  border-radius: 100px;
+  padding: 0.38rem 0.9rem;
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  color: var(--ink-mid);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-signout:hover { border-color: #c0392b; color: #c0392b; }
+
+/* ── SIDEBAR ── */
+.portal-layout {
+  display: flex;
+  padding-top: 62px;
+  min-height: 100vh;
+}
+.p-sidebar {
+  width: 224px;
+  flex-shrink: 0;
+  position: fixed;
+  top: 62px; bottom: 0; left: 0;
+  background: var(--white);
+  border-right: 1px solid var(--cream-dark);
+  padding: 1.5rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.p-sidebar-label {
+  font-size: 0.67rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--ink-light);
+  padding: 0 0.7rem;
+  margin: 1rem 0 0.4rem;
+}
+.p-sidebar-label:first-child { margin-top: 0; }
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.7rem;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 400;
+  color: var(--ink-mid);
+  cursor: pointer;
+  transition: all 0.15s;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+.nav-item svg { flex-shrink: 0; opacity: 0.65; }
+.nav-item:hover { background: var(--cream); color: var(--ink); }
+.nav-item.active {
+  background: var(--green-light);
+  color: var(--green-mid);
+  font-weight: 500;
+}
+.nav-item.active svg { opacity: 1; }
+
+/* ── MAIN ── */
+.p-main {
+  flex: 1;
+  margin-left: 224px;
+  padding: 2.25rem 2.75rem;
+  max-width: 1080px;
+}
+
+/* ── SECTION HEADING ── */
+.section-title {
+  font-family: var(--serif);
+  font-size: 1.7rem;
+  color: var(--ink);
+  letter-spacing: -0.4px;
+  margin-bottom: 0.35rem;
+}
+.section-sub {
+  font-size: 0.88rem;
+  color: var(--ink-light);
+  margin-bottom: 2rem;
+  font-style: italic;
+  font-family: var(--serif);
+}
+
+/* ── CARD ── */
+.card {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 1.65rem;
+  border: 1px solid var(--cream-dark);
+  box-shadow: var(--shadow);
+}
+.card-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--ink-light);
+  margin-bottom: 1rem;
+}
+
+/* ── VIEWS ── */
+.view { display: none; }
+.view.active { display: block; }
+
+/* ════════════════════
+   DASHBOARD
+════════════════════ */
+.welcome-banner {
+  background: linear-gradient(130deg, var(--green-light) 0%, #faebd7 100%);
+  border-radius: var(--radius);
+  padding: 1.85rem 2.25rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(192,133,104,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.welcome-banner-text h2 {
+  font-family: var(--serif);
+  font-size: 1.45rem;
+  color: var(--ink);
+  margin-bottom: 0.3rem;
+  line-height: 1.3;
+}
+.welcome-banner-text p { font-size: 0.87rem; color: var(--ink-mid); }
+.welcome-icon { font-size: 2.5rem; opacity: 0.55; }
+
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.stat-card {
+  background: var(--white);
+  border: 1px solid var(--cream-dark);
+  border-radius: var(--radius);
+  padding: 1.2rem 1.4rem;
+  box-shadow: var(--shadow);
+}
+.stat-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--ink-light);
+  margin-bottom: 0.4rem;
+}
+.stat-value {
+  font-family: var(--serif);
+  font-size: 1.85rem;
+  color: var(--ink);
+  line-height: 1.1;
+  margin-bottom: 0.2rem;
+}
+.stat-note { font-size: 0.77rem; color: var(--ink-light); }
+
+.dash-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+/* visit rows */
+.upcoming-visit {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  padding: 0.8rem 0;
+  border-bottom: 1px solid var(--cream-dark);
+}
+.upcoming-visit:last-of-type { border-bottom: none; }
+.visit-date-box {
+  flex-shrink: 0;
+  width: 46px; height: 50px;
+  background: var(--green-light);
+  border-radius: 10px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  border: 1px solid rgba(192,133,104,0.3);
+}
+.visit-date-mon {
+  font-size: 0.6rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  color: var(--green-mid);
+}
+.visit-date-day {
+  font-family: var(--serif);
+  font-size: 1.25rem; color: var(--ink); line-height: 1;
+}
+.visit-info { flex: 1; }
+.visit-title { font-size: 0.88rem; font-weight: 500; color: var(--ink); margin-bottom: 0.12rem; }
+.visit-meta  { font-size: 0.77rem; color: var(--ink-light); }
+.visit-badge {
+  flex-shrink: 0;
+  font-size: 0.69rem; font-weight: 500;
+  padding: 0.18rem 0.55rem;
+  border-radius: 100px;
+  background: #e6f4ec; color: #2d7a4f;
+  white-space: nowrap; align-self: flex-start; margin-top: 2px;
+}
+.visit-badge.pending { background: #fef3e2; color: #b06a00; }
+
+/* plan snippet */
+.plan-pill {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  background: var(--green-light); color: var(--green-mid);
+  font-size: 0.75rem; font-weight: 600;
+  padding: 0.25rem 0.7rem; border-radius: 100px;
+  margin-bottom: 0.9rem;
+  border: 1px solid rgba(192,133,104,0.3);
+}
+.plan-name { font-family: var(--serif); font-size: 1.2rem; color: var(--ink); margin-bottom: 0.2rem; }
+.plan-price { font-size: 0.85rem; color: var(--ink-mid); margin-bottom: 0.9rem; }
+.plan-features { list-style: none; }
+.plan-features li {
+  font-size: 0.84rem; color: var(--ink-mid); padding: 0.28rem 0;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.plan-features li::before {
+  content: ''; width: 5px; height: 5px; border-radius: 50%;
+  background: var(--green); flex-shrink: 0;
+}
+.btn-outline {
+  display: inline-flex; align-items: center;
+  padding: 0.5rem 1.1rem; border-radius: 100px;
+  border: 1.5px solid var(--cream-dark);
+  background: var(--white); font-family: var(--sans);
+  font-size: 0.83rem; font-weight: 500; color: var(--ink-mid);
+  cursor: pointer; transition: all 0.18s; text-decoration: none;
+}
+.btn-outline:hover { border-color: var(--green); color: var(--green-mid); }
+
+/* ════════════════════
+   CALENDAR
+════════════════════ */
+.cal-shell {
+  display: grid;
+  grid-template-columns: 1fr 310px;
+  gap: 1.25rem;
+  align-items: start;
+}
+.cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.1rem;
+}
+.cal-month-name { font-family: var(--serif); font-size: 1.15rem; color: var(--ink); }
+.cal-nav-btns { display: flex; gap: 0.35rem; }
+.cal-nav-btn {
+  width: 32px; height: 32px; border-radius: 8px;
+  border: 1.5px solid var(--cream-dark); background: var(--white);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: var(--ink-mid); font-size: 0.9rem; transition: all 0.15s;
+}
+.cal-nav-btn:hover { border-color: var(--green); color: var(--green); }
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+.cal-weekday {
+  text-align: center; font-size: 0.7rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  color: var(--ink-light); padding: 0.35rem 0;
+}
+.cal-day {
+  aspect-ratio: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-start;
+  padding-top: 5px; border-radius: 9px;
+  cursor: pointer; transition: background 0.13s;
+  font-size: 0.86rem; color: var(--ink-mid);
+  gap: 2px; min-height: 42px;
+}
+.cal-day:hover:not(.empty) { background: var(--cream); }
+.cal-day.today  { background: var(--green-light); color: var(--ink); font-weight: 600; }
+.cal-day.has-visit .cal-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); }
+.cal-day.selected { background: var(--green-light); outline: 2px solid var(--green); outline-offset: -2px; color: var(--ink); }
+.cal-day.other-month { color: var(--cream-dark); pointer-events: none; }
+.cal-day.empty { cursor: default; }
+
+.cal-side-card {
+  background: var(--white);
+  border: 1px solid var(--cream-dark);
+  border-radius: var(--radius);
+  padding: 1.4rem;
+  box-shadow: var(--shadow);
+  position: sticky; top: 80px;
+}
+.cal-side-heading {
+  font-family: var(--serif); font-size: 1.05rem; color: var(--ink); margin-bottom: 1rem;
+}
+.visit-detail-card {
+  border: 1px solid var(--cream-dark); border-radius: 12px;
+  padding: 0.9rem 1rem; margin-bottom: 0.65rem;
+  background: var(--cream-soft); transition: box-shadow 0.15s;
+}
+.visit-detail-card:hover { box-shadow: 0 2px 10px rgba(192,133,104,0.15); }
+.vd-time {
+  font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.5px; color: var(--green-mid); margin-bottom: 0.22rem;
+}
+.vd-title { font-size: 0.92rem; font-weight: 500; color: var(--ink); margin-bottom: 0.15rem; }
+.vd-caregiver { font-size: 0.8rem; color: var(--ink-mid); }
+.vd-badge {
+  display: inline-flex; align-items: center; margin-top: 0.45rem;
+  font-size: 0.68rem; font-weight: 500; padding: 0.17rem 0.5rem;
+  border-radius: 100px; background: #e6f4ec; color: #2d7a4f;
+}
+.vd-badge.upcoming { background: #fef3e2; color: #b06a00; }
+.cal-empty-state {
+  text-align: center; padding: 2rem 1rem;
+  color: var(--ink-light); font-size: 0.86rem;
+  font-style: italic; font-family: var(--serif);
+}
+
+/* ════════════════════
+   PLAN VIEW
+════════════════════ */
+.plan-view-card { max-width: 640px; }
+.plan-badge-large {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  background: var(--green-light); color: var(--green-mid);
+  font-size: 0.73rem; font-weight: 600;
+  padding: 0.28rem 0.75rem; border-radius: 100px;
+  border: 1px solid rgba(192,133,104,0.35); margin-bottom: 0.6rem;
+}
+.plan-view-name { font-family: var(--serif); font-size: 1.75rem; color: var(--ink); margin-bottom: 0.3rem; }
+.plan-view-price { font-size: 0.95rem; color: var(--ink-mid); }
+.plan-view-price strong { color: var(--ink); font-size: 1.35rem; font-family: var(--serif); }
+.plan-renews { font-size: 0.78rem; color: var(--ink-light); margin-top: 0.2rem; }
+.plan-divider { height: 1px; background: var(--cream-dark); margin: 1.4rem 0; }
+.plan-feature-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; margin-bottom: 1.4rem;
+}
+.plan-feature-item {
+  display: flex; align-items: flex-start; gap: 0.55rem;
+  font-size: 0.86rem; color: var(--ink-mid); line-height: 1.45;
+}
+.plan-feature-icon {
+  width: 19px; height: 19px; border-radius: 50%;
+  background: var(--green-light); display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px;
+}
+.plan-feature-icon svg { width: 10px; height: 10px; color: var(--green-mid); }
+.plan-contact-box {
+  background: var(--cream-soft); border: 1px solid var(--cream-dark);
+  border-radius: 12px; padding: 1.2rem 1.4rem;
+  display: flex; align-items: center; gap: 1rem;
+}
+.plan-contact-icon { font-size: 1.5rem; opacity: 0.55; }
+.plan-contact-text { flex: 1; }
+.plan-contact-text strong { display: block; font-size: 0.88rem; color: var(--ink); margin-bottom: 0.12rem; }
+.plan-contact-text span  { font-size: 0.8rem; color: var(--ink-mid); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .p-sidebar { display: none; }
+  .p-main { margin-left: 0; padding: 1.5rem; }
+  .stats-row { grid-template-columns: 1fr 1fr; }
+  .dash-grid { grid-template-columns: 1fr; }
+  .cal-shell { grid-template-columns: 1fr; }
+  .plan-feature-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .stats-row { grid-template-columns: 1fr; }
+  .welcome-icon { display: none; }
+  .p-nav { padding: 0.9rem 1.2rem; }
+}
+
+/* ── SPINNER ── */
+.spinner {
+  width: 20px; height: 20px;
+  border: 2.5px solid var(--cream-dark);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── FADE UP ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-in { animation: fadeUp 0.4s ease forwards; }
+
 </style>
+
+<!-- ── Firebase (Family Portal) ── -->
+<script>
+  const FIREBASE_CONFIG = {
+    apiKey:            "AIzaSyDIofGQftDq5E1uo0twpEf4Ss7t8WOXyc4",
+    authDomain:        "local-stage-94f88.firebaseapp.com",
+    projectId:         "local-stage-94f88",
+    storageBucket:     "local-stage-94f88.firebasestorage.app",
+    messagingSenderId: "177600603494",
+    appId:             "1:177600603494:web:1696f09bb3e51d075ad4a7"
+  };
+</script>
+
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+  import { getAuth, GoogleAuthProvider, signInWithPopup,
+           signOut as fbSignOut, onAuthStateChanged,
+           browserLocalPersistence, setPersistence }
+    from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+
+  const app      = initializeApp(FIREBASE_CONFIG);
+  const auth     = getAuth(app);
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+  setPersistence(auth, browserLocalPersistence).catch(() => {});
+
+  window._fbSignOut      = () => fbSignOut(auth);
+  window._fbGoogleSignIn = async () => {
+    const r = await signInWithPopup(auth, provider);
+    return r.user;
+  };
+
+  onAuthStateChanged(auth, user => {
+    if (user) {
+      if (typeof window.handleSignIn === 'function') window.handleSignIn(user);
+      else window._pendingUser = user;
+    } else {
+      if (typeof window.handleSignOut === 'function') window.handleSignOut();
+    }
+  });
+</script>
+
 </head>
 <body>
 
@@ -1207,6 +1822,7 @@
     <li><a href="#how">How it works</a></li>
     <li><a href="#pricing">Care options</a></li>
     <li><a href="#faq">FAQ</a></li>
+    <li><a href="#" onclick="openPortal();return false;" style="color:var(--terra-deep);font-weight:500;">Family Portal</a></li>
   </ul>
   <button class="nav-cta" onclick="startIntake('weekly')">Talk to a coordinator</button>
   <button class="nav-hamburger" id="hamburger" aria-label="Menu" onclick="toggleMobileMenu()">
@@ -1218,6 +1834,7 @@
   <a href="#how" onclick="toggleMobileMenu()">How it works</a>
   <a href="#pricing" onclick="toggleMobileMenu()">Care options</a>
   <a href="#faq" onclick="toggleMobileMenu()">FAQ</a>
+  <a href="#" onclick="toggleMobileMenu(); openPortal(); return false;" style="color:var(--terra-deep);font-weight:500;padding:1.1rem 0;border-bottom:1px solid var(--cream-dark);text-decoration:none;">Family Portal</a>
   <a class="mm-cta" href="#" onclick="toggleMobileMenu(); startIntake('weekly');return false;">Talk to a coordinator</a>
 </div>
 
@@ -1275,9 +1892,9 @@
         </span>
         <div class="hero-photo-wrap">
           <img
-            src="2.jpg"
+            src="6.jpg"
             data-img-slot="hero"
-            alt="A Hearthlane caregiver smiling warmly with an elderly resident at home"
+            alt="A Hearthlane caregiver wrapping a warm blanket around an elderly woman by the window"
             loading="eager" />
         </div>
         <div class="hero-float-card hero-float-quote">
@@ -1454,6 +2071,18 @@
     <div class="gallery-grid">
 
       <div class="g-card">
+        <img src="2.jpg" alt="Smiling nurse with elderly woman in wheelchair at home" loading="lazy">
+        <div class="g-overlay"></div>
+        <div class="g-label"><small>Our caregivers</small><span>Familiar, trusted faces</span></div>
+      </div>
+
+      <div class="g-card">
+        <img src="3.jpg" alt="Seniors enjoying a meal together with a caregiver" loading="lazy">
+        <div class="g-overlay"></div>
+        <div class="g-label"><small>Community</small><span>Sharing life together</span></div>
+      </div>
+
+      <div class="g-card">
         <img src="4.jpg" alt="Caregiver smiling warmly with elderly woman in wheelchair at home" loading="lazy">
         <div class="g-overlay"></div>
         <div class="g-label"><small>Personal care</small><span>Always by your side</span></div>
@@ -1463,12 +2092,6 @@
         <img src="5.jpg" alt="Caregiver helping elderly woman stand with a walker in her living room" loading="lazy">
         <div class="g-overlay"></div>
         <div class="g-label"><small>Daily support</small><span>There when it matters</span></div>
-      </div>
-
-      <div class="g-card">
-        <img src="6.jpg" alt="Caregiver wrapping a warm blanket around an elderly woman by the window" loading="lazy">
-        <div class="g-overlay"></div>
-        <div class="g-label"><small>Comfort &amp; dignity</small><span>Small moments, big difference</span></div>
       </div>
 
     </div>
@@ -1524,10 +2147,10 @@
       <div class="rel-grid">
         <div class="rel-image">
           <img
-            src="https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=1100&q=85"
+            src="1.jpg"
             data-img-slot="relationship"
-            alt="A younger caregiver hugging an elderly woman in a wheelchair"
-            onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1559131397-f94da358f7ca?auto=format&fit=crop&w=1100&q=85';" />
+            alt="Caregiver and senior sharing a warm moment together, holding wildflowers"
+            loading="lazy" />
         </div>
         <div class="rel-text">
           <div class="section-label">The relationship that changes everything</div>
@@ -2522,6 +3145,464 @@
 
   /* ─── Init ────────────────────────────────────────────────────── */
   // No init needed — PUBLIC_CONFIG is set at the top of this script.
+</script>
+
+<!-- ════════════════════════════════════════════════════════════════
+     PORTAL OVERLAY (login + family dashboard)
+     ════════════════════════════════════════════════════════════════ -->
+<div id="portal-overlay">
+  <button class="portal-back-btn" onclick="closePortal()">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Back to site
+  </button>
+
+<!-- ══════════════════════════════
+     LOGIN
+══════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">Hearth<span>lane</span></div>
+    <div class="login-tagline">Compassionate elder home care</div>
+    <div class="login-heading">Welcome to your<br>Family Portal</div>
+    <div class="login-sub">Sign in to see upcoming visits, manage your care schedule, and stay connected with your loved one's care team.</div>
+
+    <button class="btn-google" id="google-signin-btn">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <path d="M17.64 9.205c0-.639-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
+        <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
+        <path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+        <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+      </svg>
+      Continue with Google
+    </button>
+
+    <div id="login-error" class="login-error"></div>
+    <div class="login-note">Your information is private and secure. Only authorised family members and care coordinators have access to this portal.</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     PORTAL
+══════════════════════════════ -->
+<div id="portal">
+  <!-- NAV -->
+  <nav class="p-nav">
+    <div>
+      <span class="p-nav-logo">Hearth<span>lane</span></span>
+      <span class="p-nav-badge">Family Portal</span>
+    </div>
+    <div class="p-nav-right">
+      <div class="p-nav-user">
+        <div class="p-nav-avatar" id="nav-avatar">J</div>
+        <span id="nav-name">Jane</span>
+      </div>
+      <button class="btn-signout" id="signout-btn">Sign out</button>
+    </div>
+  </nav>
+
+  <div class="portal-layout">
+    <!-- SIDEBAR -->
+    <aside class="p-sidebar">
+      <div class="p-sidebar-label">Overview</div>
+      <button class="nav-item active" data-view="dashboard">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        Dashboard
+      </button>
+      <button class="nav-item" data-view="calendar">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        Visit Calendar
+      </button>
+      <div class="p-sidebar-label">Account</div>
+      <button class="nav-item" data-view="plan">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        My Plan
+      </button>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="p-main">
+
+      <!-- DASHBOARD -->
+      <div class="view active" id="view-dashboard">
+        <div class="welcome-banner fade-in">
+          <div class="welcome-banner-text">
+            <h2 id="welcome-heading">Good morning 🌿</h2>
+            <p>Here's a calm overview of your loved one's care — everything is on track for this week.</p>
+          </div>
+          <div class="welcome-icon">🏡</div>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat-card fade-in">
+            <div class="stat-label">Visits this month</div>
+            <div class="stat-value">8</div>
+            <div class="stat-note">4 remaining</div>
+          </div>
+          <div class="stat-card fade-in">
+            <div class="stat-label">Next visit</div>
+            <div class="stat-value" style="font-size:1.25rem;padding-top:3px">Mon, May 19</div>
+            <div class="stat-note">10:00 AM · Margaret H.</div>
+          </div>
+          <div class="stat-card fade-in">
+            <div class="stat-label">Current plan</div>
+            <div class="stat-value" style="font-size:1.25rem;padding-top:3px">Companion+</div>
+            <div class="stat-note">Active · renews Jun 1</div>
+          </div>
+        </div>
+
+        <div class="dash-grid">
+          <!-- Upcoming visits -->
+          <div class="card fade-in">
+            <div class="card-label">Upcoming Visits</div>
+
+            <div class="upcoming-visit">
+              <div class="visit-date-box">
+                <div class="visit-date-mon">May</div>
+                <div class="visit-date-day">19</div>
+              </div>
+              <div class="visit-info">
+                <div class="visit-title">Morning Companion Visit</div>
+                <div class="visit-meta">10:00 AM · 2 hrs · Margaret H.</div>
+              </div>
+              <div class="visit-badge">Confirmed</div>
+            </div>
+
+            <div class="upcoming-visit">
+              <div class="visit-date-box">
+                <div class="visit-date-mon">May</div>
+                <div class="visit-date-day">22</div>
+              </div>
+              <div class="visit-info">
+                <div class="visit-title">Weekly Check-in &amp; Errands</div>
+                <div class="visit-meta">2:00 PM · 3 hrs · Margaret H.</div>
+              </div>
+              <div class="visit-badge">Confirmed</div>
+            </div>
+
+            <div class="upcoming-visit">
+              <div class="visit-date-box">
+                <div class="visit-date-mon">May</div>
+                <div class="visit-date-day">26</div>
+              </div>
+              <div class="visit-info">
+                <div class="visit-title">Morning Companion Visit</div>
+                <div class="visit-meta">10:00 AM · 2 hrs · Margaret H.</div>
+              </div>
+              <div class="visit-badge pending">Pending</div>
+            </div>
+
+            <div style="margin-top:1.1rem">
+              <button class="btn-outline" onclick="switchView('calendar')">View full calendar &rarr;</button>
+            </div>
+          </div>
+
+          <!-- Plan summary -->
+          <div class="card fade-in">
+            <div class="card-label">Your Plan</div>
+            <div class="plan-pill">
+              <svg width="7" height="7" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+              Active
+            </div>
+            <div class="plan-name">Companion+ Plan</div>
+            <div class="plan-price">$249 / month · renews June 1</div>
+            <ul class="plan-features">
+              <li>8 visits per month</li>
+              <li>Dedicated caregiver — Margaret H.</li>
+              <li>Visit summaries after each appointment</li>
+              <li>Care coordinator support</li>
+              <li>Flexible rescheduling</li>
+            </ul>
+            <div style="margin-top:1.1rem">
+              <button class="btn-outline" onclick="switchView('plan')">Manage plan &rarr;</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CALENDAR -->
+      <div class="view" id="view-calendar">
+        <div class="section-title">Visit Calendar</div>
+        <div class="section-sub">Your upcoming and past visits at a glance.</div>
+        <div class="cal-shell">
+          <div class="card fade-in">
+            <div class="cal-header">
+              <div class="cal-month-name" id="cal-month-label">May 2026</div>
+              <div class="cal-nav-btns">
+                <button class="cal-nav-btn" id="cal-prev">&#8592;</button>
+                <button class="cal-nav-btn" id="cal-next">&#8594;</button>
+              </div>
+            </div>
+            <div class="cal-grid" id="cal-grid"></div>
+          </div>
+          <div class="cal-side-card fade-in">
+            <div class="cal-side-heading" id="cal-side-heading">May 2026</div>
+            <div id="cal-side-content"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PLAN -->
+      <div class="view" id="view-plan">
+        <div class="section-title">My Plan</div>
+        <div class="section-sub">Your current care subscription details.</div>
+
+        <div class="card plan-view-card fade-in">
+          <div class="plan-badge-large">
+            <svg width="7" height="7" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+            Active Plan
+          </div>
+          <div class="plan-view-name">Companion+ Plan</div>
+          <div class="plan-view-price"><strong>$249</strong> / month</div>
+          <div class="plan-renews">Renews automatically on June 1, 2026</div>
+
+          <div class="plan-divider"></div>
+
+          <div class="card-label">What's included</div>
+          <div class="plan-feature-grid">
+            <div class="plan-feature-item">
+              <div class="plan-feature-icon">
+                <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+              </div>
+              8 caregiver visits per month
+            </div>
+            <div class="plan-feature-item">
+              <div class="plan-feature-icon">
+                <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+              </div>
+              Dedicated caregiver — Margaret H.
+            </div>
+            <div class="plan-feature-item">
+              <div class="plan-feature-icon">
+                <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+              </div>
+              Visit summaries after each session
+            </div>
+            <div class="plan-feature-item">
+              <div class="plan-feature-icon">
+                <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+              </div>
+              Care coordinator on call
+            </div>
+            <div class="plan-feature-item">
+              <div class="plan-feature-icon">
+                <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+              </div>
+              Flexible rescheduling (48 hr notice)
+            </div>
+            <div class="plan-feature-item">
+              <div class="plan-feature-icon">
+                <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+              </div>
+              Family portal access
+            </div>
+          </div>
+
+          <div class="plan-divider"></div>
+
+          <div class="plan-contact-box">
+            <div class="plan-contact-icon">📞</div>
+            <div class="plan-contact-text">
+              <strong>Need to make changes to your plan?</strong>
+              <span>Contact your care coordinator — we're happy to adjust visits, pause service, or explore other options.</span>
+            </div>
+            <a href="tel:+1-800-000-0000" class="btn-outline">Call us</a>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+</div>
+
+
+<script>
+/* ── Portal overlay helpers ── */
+function openPortal() {
+  document.getElementById('portal-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closePortal() {
+  document.getElementById('portal-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+/* Override sign-out to also close overlay */
+const _origHandleSignOut = window.handleSignOut;
+</script>
+
+<script>
+// ══════════════════════════
+// VISIT DATA (demo)
+// ══════════════════════════
+const VISITS = {
+  '2026-5-7':  [{ time:'10:00 AM', title:'Morning Companion Visit',    caregiver:'Margaret H.', duration:'2 hrs', status:'completed' }],
+  '2026-5-12': [{ time:'2:00 PM',  title:'Weekly Check-in & Errands', caregiver:'Margaret H.', duration:'3 hrs', status:'completed' }],
+  '2026-5-14': [{ time:'10:00 AM', title:'Morning Companion Visit',    caregiver:'Margaret H.', duration:'2 hrs', status:'completed' }],
+  '2026-5-19': [{ time:'10:00 AM', title:'Morning Companion Visit',    caregiver:'Margaret H.', duration:'2 hrs', status:'upcoming'  }],
+  '2026-5-22': [{ time:'2:00 PM',  title:'Weekly Check-in & Errands', caregiver:'Margaret H.', duration:'3 hrs', status:'upcoming'  }],
+  '2026-5-26': [{ time:'10:00 AM', title:'Morning Companion Visit',    caregiver:'Margaret H.', duration:'2 hrs', status:'upcoming'  }],
+  '2026-5-29': [{ time:'2:00 PM',  title:'Weekly Check-in & Errands', caregiver:'Margaret H.', duration:'3 hrs', status:'upcoming'  }],
+  '2026-6-2':  [{ time:'10:00 AM', title:'Morning Companion Visit',    caregiver:'Margaret H.', duration:'2 hrs', status:'upcoming'  }],
+  '2026-6-5':  [{ time:'2:00 PM',  title:'Monthly Care Review',        caregiver:'Margaret H.', duration:'1 hr',  status:'upcoming'  }],
+};
+
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DAYS   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+let calYear = 2026, calMonth = 4, calSelected = null;
+
+// ══════════════════════════
+// AUTH HANDLERS
+// ══════════════════════════
+window.handleSignIn  = user => showPortal(user);
+window.handleSignOut = () => { document.getElementById('portal').style.display='none'; document.getElementById('login-screen').style.display='flex'; closePortal && closePortal(); };
+
+document.getElementById('google-signin-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('google-signin-btn');
+  const err = document.getElementById('login-error');
+  err.style.display = 'none';
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div>&nbsp; Signing in…';
+  try {
+    const user = await window._fbGoogleSignIn();
+    showPortal(user);
+  } catch(e) {
+    err.textContent = 'Sign-in failed — please try again.';
+    err.style.display = 'block';
+    btn.disabled = false;
+    btn.innerHTML = googleBtnHTML();
+  }
+});
+
+document.getElementById('signout-btn').addEventListener('click', async () => {
+  await window._fbSignOut();
+  window.handleSignOut();
+});
+
+function googleBtnHTML() {
+  return `<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M17.64 9.205c0-.639-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg> Continue with Google`;
+}
+
+function showPortal(user) {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('portal').style.display = 'block';
+
+  const firstName = (user.displayName || user.email || 'Friend').split(' ')[0];
+  document.getElementById('nav-name').textContent = firstName;
+
+  const avatar = document.getElementById('nav-avatar');
+  if (user.photoURL) avatar.innerHTML = `<img src="${user.photoURL}" alt="">`;
+  else avatar.textContent = firstName[0].toUpperCase();
+
+  const h = new Date().getHours();
+  const greeting = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('welcome-heading').textContent = `${greeting}, ${firstName} 🌿`;
+
+  renderCalendar(calYear, calMonth, null);
+}
+
+// Pick up pending session restore
+if (window._pendingUser) { showPortal(window._pendingUser); window._pendingUser = null; }
+
+// ══════════════════════════
+// NAVIGATION
+// ══════════════════════════
+function switchView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('view-' + id).classList.add('active');
+  document.querySelector(`.nav-item[data-view="${id}"]`)?.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('click', () => switchView(btn.dataset.view)));
+
+// ══════════════════════════
+// CALENDAR
+// ══════════════════════════
+function vKey(y, m, d) { return `${y}-${m+1}-${d}`; }
+
+function renderCalendar(year, month, selDay) {
+  calYear = year; calMonth = month;
+  document.getElementById('cal-month-label').textContent = `${MONTHS[month]} ${year}`;
+
+  const grid = document.getElementById('cal-grid');
+  grid.innerHTML = '';
+
+  DAYS.forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'cal-weekday'; el.textContent = d; grid.appendChild(el);
+  });
+
+  const firstDay    = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today       = new Date();
+
+  for (let i = 0; i < firstDay; i++) {
+    const el = document.createElement('div'); el.className = 'cal-day empty'; grid.appendChild(el);
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const el = document.createElement('div');
+    el.className = 'cal-day';
+    if (year === today.getFullYear() && month === today.getMonth() && d === today.getDate()) el.classList.add('today');
+    if (VISITS[vKey(year, month, d)]) el.classList.add('has-visit');
+    if (selDay === d) el.classList.add('selected');
+
+    const num = document.createElement('span'); num.textContent = d; el.appendChild(num);
+    if (VISITS[vKey(year, month, d)]) { const dot = document.createElement('div'); dot.className = 'cal-dot'; el.appendChild(dot); }
+
+    el.addEventListener('click', () => { calSelected = d; renderCalendar(year, month, d); renderCalSideDay(year, month, d); });
+    grid.appendChild(el);
+  }
+
+  if (selDay) renderCalSideDay(year, month, selDay);
+  else        renderCalSideMonth(year, month);
+}
+
+function renderCalSideMonth(year, month) {
+  document.getElementById('cal-side-heading').textContent = `${MONTHS[month]} ${year}`;
+  const content = document.getElementById('cal-side-content');
+  const monthVisits = [];
+  for (let d = 1; d <= 31; d++) {
+    const key = vKey(year, month, d);
+    if (VISITS[key]) VISITS[key].forEach(v => monthVisits.push({ day: d, ...v }));
+  }
+  if (!monthVisits.length) { content.innerHTML = `<div class="cal-empty-state">No visits scheduled this month.</div>`; return; }
+  content.innerHTML = monthVisits.map(v => `
+    <div class="visit-detail-card">
+      <div class="vd-time">${MONTHS[month].slice(0,3)} ${v.day} · ${v.time}</div>
+      <div class="vd-title">${v.title}</div>
+      <div class="vd-caregiver">with ${v.caregiver} · ${v.duration}</div>
+      <div class="vd-badge ${v.status==='upcoming'?'upcoming':''}">${v.status==='upcoming'?'Upcoming':'Completed'}</div>
+    </div>`).join('');
+}
+
+function renderCalSideDay(year, month, day) {
+  const key = vKey(year, month, day);
+  const visits = VISITS[key];
+  document.getElementById('cal-side-heading').textContent = `${MONTHS[month]} ${day}, ${year}`;
+  const content = document.getElementById('cal-side-content');
+  if (!visits || !visits.length) { content.innerHTML = `<div class="cal-empty-state">No visits on this day.</div>`; return; }
+  content.innerHTML = visits.map(v => `
+    <div class="visit-detail-card">
+      <div class="vd-time">${v.time} · ${v.duration}</div>
+      <div class="vd-title">${v.title}</div>
+      <div class="vd-caregiver">with ${v.caregiver}</div>
+      <div class="vd-badge ${v.status==='upcoming'?'upcoming':''}">${v.status==='upcoming'?'Upcoming':'Completed'}</div>
+    </div>`).join('');
+}
+
+document.getElementById('cal-prev').addEventListener('click', () => {
+  calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; }
+  calSelected = null; renderCalendar(calYear, calMonth, null);
+});
+document.getElementById('cal-next').addEventListener('click', () => {
+  calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; }
+  calSelected = null; renderCalendar(calYear, calMonth, null);
+});
+
+renderCalendar(calYear, calMonth, null);
 </script>
 </body>
 </html>
