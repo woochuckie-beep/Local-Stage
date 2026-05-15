@@ -1790,21 +1790,55 @@
            signOut as fbSignOut, onAuthStateChanged,
            browserLocalPersistence, setPersistence }
     from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+  import { getFirestore, doc, getDoc }
+    from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
   const app      = initializeApp(FIREBASE_CONFIG);
   const auth     = getAuth(app);
+  const db       = getFirestore(app);
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
   setPersistence(auth, browserLocalPersistence).catch(() => {});
 
+  /* ── Whitelist check ──────────────────────────────────────────────
+     Looks up the signed-in email in Firestore: authorizedUsers/{email}
+     Returns true if the document exists, false otherwise.
+     To add a client: Firebase Console → Firestore → authorizedUsers
+     → Add document → Document ID = client's email address.
+  ─────────────────────────────────────────────────────────────────── */
+  async function isAuthorized(email) {
+    if (!email) return false;
+    try {
+      const ref  = doc(db, 'authorizedUsers', email.toLowerCase().trim());
+      const snap = await getDoc(ref);
+      return snap.exists();
+    } catch (e) {
+      console.error('Whitelist check failed:', e);
+      return false;
+    }
+  }
+
   window._fbSignOut      = () => fbSignOut(auth);
   window._fbGoogleSignIn = async () => {
-    const r = await signInWithPopup(auth, provider);
-    return r.user;
+    const r    = await signInWithPopup(auth, provider);
+    const user = r.user;
+    const ok   = await isAuthorized(user.email);
+    if (!ok) {
+      await fbSignOut(auth);
+      const err = new Error('NOT_AUTHORIZED');
+      err.code  = 'NOT_AUTHORIZED';
+      throw err;
+    }
+    return user;
   };
 
-  onAuthStateChanged(auth, user => {
+  onAuthStateChanged(auth, async user => {
     if (user) {
+      const ok = await isAuthorized(user.email);
+      if (!ok) {
+        await fbSignOut(auth);
+        return;
+      }
       if (typeof window.handleSignIn === 'function') window.handleSignIn(user);
       else window._pendingUser = user;
     } else {
@@ -3479,7 +3513,11 @@ document.getElementById('google-signin-btn').addEventListener('click', async () 
     const user = await window._fbGoogleSignIn();
     showPortal(user);
   } catch(e) {
-    err.textContent = 'Sign-in failed — please try again.';
+    if (e.code === 'NOT_AUTHORIZED') {
+      err.textContent = 'This Google account isn\'t registered with Hearthlane. Please contact us at info@hearthlane.ca to set up portal access.';
+    } else {
+      err.textContent = 'Sign-in failed — please try again.';
+    }
     err.style.display = 'block';
     btn.disabled = false;
     btn.innerHTML = googleBtnHTML();
