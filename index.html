@@ -1093,6 +1093,76 @@
     .footer-inner { grid-template-columns: 1fr 1fr; gap: 2rem; }
     .footer-brand { grid-column: 1 / -1; }
   }
+
+  /* ─── PHOTO GALLERY ─── */
+  .gallery-section { background: var(--cream); padding: 0 3rem 6rem; }
+  @media (max-width: 640px) { .gallery-section { padding: 0 1.25rem 4.5rem; } }
+
+  .gallery-grid {
+    max-width: 1180px; margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto;
+    gap: 0.85rem;
+  }
+
+  .g-card {
+    position: relative; overflow: hidden;
+    border-radius: var(--radius);
+    background: var(--cream-dark);
+    opacity: 0;
+    transform: translateY(18px);
+    animation: gFadeUp 0.65s ease forwards;
+  }
+  .g-card:nth-child(1) { grid-column: 1 / -1; aspect-ratio: 16 / 6.5; animation-delay: 0.05s; }
+  .g-card:nth-child(2) { aspect-ratio: 4 / 3; animation-delay: 0.18s; }
+  .g-card:nth-child(3) { aspect-ratio: 4 / 3; animation-delay: 0.3s; }
+
+  @keyframes gFadeUp { to { opacity: 1; transform: translateY(0); } }
+
+  .g-card img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+    transition: transform 0.6s cubic-bezier(0.25,0.46,0.45,0.94), filter 0.5s ease;
+    filter: saturate(0.88) brightness(1.01);
+  }
+  .g-card:hover img { transform: scale(1.04); filter: saturate(1.05) brightness(1.03); }
+
+  .g-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(58,46,34,0.58) 0%, transparent 55%);
+    opacity: 0; transition: opacity 0.38s ease;
+  }
+  .g-card:hover .g-overlay { opacity: 1; }
+
+  .g-label {
+    position: absolute; bottom: 1.25rem; left: 1.4rem;
+    color: #fff; transform: translateY(6px);
+    opacity: 0; transition: opacity 0.38s ease, transform 0.38s ease;
+    pointer-events: none;
+  }
+  .g-card:hover .g-label { opacity: 1; transform: translateY(0); }
+  .g-label small {
+    display: block; font-size: 0.66rem; letter-spacing: 0.18em;
+    text-transform: uppercase; color: rgba(255,255,255,0.62);
+    margin-bottom: 3px;
+  }
+  .g-label span {
+    font-family: var(--serif); font-style: italic;
+    font-size: 1.1rem; line-height: 1.2;
+  }
+
+  /* Warm terra accent line on hover */
+  .g-card::after {
+    content: ''; position: absolute; bottom: 0; left: 0;
+    width: 0; height: 3px; background: var(--terra);
+    transition: width 0.4s ease; border-radius: 0 2px 0 0;
+  }
+  .g-card:hover::after { width: 100%; }
+
+  @media (max-width: 640px) {
+    .gallery-grid { grid-template-columns: 1fr; }
+    .g-card:nth-child(1) { aspect-ratio: 4 / 3; }
+  }
 </style>
 </head>
 <body>
@@ -1346,6 +1416,31 @@
       </div>
     </div>
   </section>
+
+  <!-- PHOTO GALLERY -->
+  <div class="gallery-section">
+    <div class="gallery-grid">
+
+      <div class="g-card">
+        <img src="1778811946136_1.jpg" alt="Caregiver and senior sharing wildflowers — a moment of warmth and connection" loading="lazy">
+        <div class="g-overlay"></div>
+        <div class="g-label"><small>Our promise</small><span>A touch of kindness</span></div>
+      </div>
+
+      <div class="g-card">
+        <img src="1778811946137_2.jpg" alt="Smiling nurse with elderly woman in wheelchair at home" loading="lazy">
+        <div class="g-overlay"></div>
+        <div class="g-label"><small>Personal care</small><span>Always by your side</span></div>
+      </div>
+
+      <div class="g-card">
+        <img src="1778811946137_3.jpg" alt="Seniors enjoying a meal together with a caregiver at a care home" loading="lazy">
+        <div class="g-overlay"></div>
+        <div class="g-label"><small>Community</small><span>Sharing life together</span></div>
+      </div>
+
+    </div>
+  </div>
 
   <!-- PATHS: PLANS vs ONE-TIME -->
   <section class="section paths">
