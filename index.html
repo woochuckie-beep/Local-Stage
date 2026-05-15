@@ -10,12 +10,12 @@
 <meta property="og:type"        content="website" />
 <meta property="og:title"       content="Hearthlane — In-Home Companion Care for Older Adults · Ontario" />
 <meta property="og:description" content="The same trusted caregiver, every week. Vetted, background-checked companions for older adults across the GTA. Plans from $610/mo with a 14-day fit guarantee." />
-<meta property="og:image"       content="2.jpg" />
+<meta property="og:image"       content="4.jpg" />
 <meta property="og:url"         content="https://hearthlane.ca" />
 <meta name="twitter:card"       content="summary_large_image" />
 <meta name="twitter:title"      content="Hearthlane — In-Home Companion Care · Ontario" />
 <meta name="twitter:description" content="Vetted, consistent in-home companion care for older adults across the GTA. Same caregiver, every week." />
-<meta name="twitter:image"      content="2.jpg" />
+<meta name="twitter:image"      content="4.jpg" />
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
@@ -1454,21 +1454,21 @@
     <div class="gallery-grid">
 
       <div class="g-card">
-        <img src="1.jpg" alt="Caregiver and senior sharing wildflowers — a moment of warmth and connection" loading="lazy">
-        <div class="g-overlay"></div>
-        <div class="g-label"><small>Our promise</small><span>A touch of kindness</span></div>
-      </div>
-
-      <div class="g-card">
-        <img src="2.jpg" alt="Smiling nurse with elderly woman in wheelchair at home" loading="lazy">
+        <img src="4.jpg" alt="Caregiver smiling warmly with elderly woman in wheelchair at home" loading="lazy">
         <div class="g-overlay"></div>
         <div class="g-label"><small>Personal care</small><span>Always by your side</span></div>
       </div>
 
       <div class="g-card">
-        <img src="3.jpg" alt="Seniors enjoying a meal together with a caregiver at a care home" loading="lazy">
+        <img src="5.jpg" alt="Caregiver helping elderly woman stand with a walker in her living room" loading="lazy">
         <div class="g-overlay"></div>
-        <div class="g-label"><small>Community</small><span>Sharing life together</span></div>
+        <div class="g-label"><small>Daily support</small><span>There when it matters</span></div>
+      </div>
+
+      <div class="g-card">
+        <img src="6.jpg" alt="Caregiver wrapping a warm blanket around an elderly woman by the window" loading="lazy">
+        <div class="g-overlay"></div>
+        <div class="g-label"><small>Comfort &amp; dignity</small><span>Small moments, big difference</span></div>
       </div>
 
     </div>
@@ -2225,7 +2225,10 @@
   }
 
   function gotoStep(n) {
-    if (n === 3) collectStep2();
+    // Validate before advancing to step 3
+    if (n === 3) {
+      if (!validateAndCollect()) return; // stop if fields are invalid
+    }
 
     document.querySelectorAll('.intake-step').forEach(s => s.classList.remove('active'));
     if (n === 1) document.getElementById('step-1').classList.add('active');
@@ -2249,18 +2252,130 @@
     }
   });
 
+  /* ─── Input sanitization ──────────────────────────────────────────
+     Runs on every field before data enters the intake object or is
+     ever rendered / submitted. Defends against XSS, oversized input,
+     and malformed contact details.
+  ─────────────────────────────────────────────────────────────────── */
+
+  /**
+   * Strip every HTML tag and dangerous character sequence from a string,
+   * then trim whitespace and enforce a character limit.
+   */
+  function sanitizeText(raw, maxLen = 200) {
+    if (typeof raw !== 'string') return '';
+    return raw
+      .replace(/<[^>]*>/g, '')           // strip HTML tags
+      .replace(/javascript\s*:/gi, '')   // kill JS URI schemes
+      .replace(/on\w+\s*=/gi, '')        // strip inline event attrs
+      .replace(/[<>"'`]/g, '')           // remove remaining dangerous chars
+      .trim()
+      .slice(0, maxLen);
+  }
+
+  /** Validate and normalise an email address. Returns '' if invalid. */
+  function sanitizeEmail(raw) {
+    const cleaned = sanitizeText(raw, 254);
+    // RFC-5322 simplified — must have local@domain.tld
+    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(cleaned) ? cleaned : '';
+  }
+
+  /** Strip everything except digits, spaces, +, -, (, ) and limit length. */
+  function sanitizePhone(raw) {
+    return sanitizeText(raw, 30).replace(/[^\d\s\+\-\(\)]/g, '');
+  }
+
+  /** Show an inline error beneath a field and return false; clear on valid. */
+  function fieldError(id, msg) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    let err = el.parentElement.querySelector('.field-error');
+    if (!err) {
+      err = document.createElement('span');
+      err.className = 'field-error';
+      err.style.cssText = 'display:block;font-size:0.78rem;color:#c0392b;margin-top:4px';
+      el.parentElement.appendChild(err);
+    }
+    err.textContent = msg;
+    el.style.borderColor = '#c0392b';
+  }
+
+  function fieldOk(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const err = el.parentElement.querySelector('.field-error');
+    if (err) err.textContent = '';
+    el.style.borderColor = '';
+  }
+
+  /** Validate & sanitize all step-2 fields. Returns true if clean. */
+  function validateAndCollect() {
+    let valid = true;
+
+    const rawName     = document.getElementById('f-name').value;
+    const rawEmail    = document.getElementById('f-email').value;
+    const rawPhone    = document.getElementById('f-phone').value;
+    const rawLocation = document.getElementById('f-location').value;
+
+    const cleanName  = sanitizeText(rawName, 100);
+    const cleanEmail = sanitizeEmail(rawEmail);
+    const cleanPhone = sanitizePhone(rawPhone);
+    const cleanLoc   = sanitizeText(rawLocation, 100);
+
+    // Name — required, letters/spaces/hyphens/apostrophes only
+    if (!cleanName) {
+      fieldError('f-name', 'Please enter your name.'); valid = false;
+    } else if (!/^[\p{L}\s'\-\.]{2,100}$/u.test(cleanName)) {
+      fieldError('f-name', 'Name contains invalid characters.'); valid = false;
+    } else { fieldOk('f-name'); }
+
+    // Email — required and must be valid
+    if (!rawEmail.trim()) {
+      fieldError('f-email', 'Please enter your email.'); valid = false;
+    } else if (!cleanEmail) {
+      fieldError('f-email', 'Please enter a valid email address.'); valid = false;
+    } else { fieldOk('f-email'); }
+
+    // Phone — optional but must look like a number if provided
+    if (rawPhone.trim() && cleanPhone.replace(/\D/g,'').length < 7) {
+      fieldError('f-phone', 'Please enter a valid phone number.'); valid = false;
+    } else { fieldOk('f-phone'); }
+
+    // Location — optional, just sanitized
+    if (rawLocation.trim() && !cleanLoc) {
+      fieldError('f-location', 'Location contains invalid characters.'); valid = false;
+    } else { fieldOk('f-location'); }
+
+    if (!valid) return false;
+
+    // All clean — write sanitized values into intake object
+    intake.needs    = [...document.querySelectorAll('#needs-row input:checked')].map(i => sanitizeText(i.value, 80));
+    intake.hours    = sanitizeText(document.getElementById('f-hours').value, 80);
+    intake.timeline = sanitizeText(document.getElementById('f-timeline').value, 80);
+    intake.location = cleanLoc;
+    intake.name     = cleanName;
+    intake.email    = cleanEmail;
+    intake.phone    = cleanPhone;
+    intake.days     = sanitizeText((document.getElementById('f-days')||{value:''}).value, 80);
+    intake.rel      = sanitizeText((document.getElementById('f-rel')||{value:''}).value, 80);
+    intake.notes    = sanitizeText((document.getElementById('f-notes')||{value:''}).value, 1000);
+
+    return true;
+  }
+
   function collectStep2() {
-    intake.needs = [...document.querySelectorAll('#needs-row input:checked')].map(i => i.value);
-    intake.hours = document.getElementById('f-hours').value;
-    intake.location = document.getElementById('f-location').value.trim();
-    intake.timeline = document.getElementById('f-timeline').value;
-    intake.name = document.getElementById('f-name').value.trim();
-    intake.email = document.getElementById('f-email').value.trim();
-    intake.phone = document.getElementById('f-phone').value.trim();
-    // hidden fields (kept for backend compatibility)
-    intake.days = (document.getElementById('f-days')||{value:''}).value;
-    intake.rel = (document.getElementById('f-rel')||{value:''}).value;
-    intake.notes = (document.getElementById('f-notes')||{value:''}).value;
+    // Called without validation when just moving between steps internally;
+    // full validation runs in gotoStep(3) and submitIntake().
+    intake.needs    = [...document.querySelectorAll('#needs-row input:checked')].map(i => sanitizeText(i.value, 80));
+    intake.hours    = sanitizeText(document.getElementById('f-hours').value, 80);
+    intake.location = sanitizeText(document.getElementById('f-location').value, 100);
+    intake.timeline = sanitizeText(document.getElementById('f-timeline').value, 80);
+    intake.name     = sanitizeText(document.getElementById('f-name').value, 100);
+    intake.email    = sanitizeEmail(document.getElementById('f-email').value);
+    intake.phone    = sanitizePhone(document.getElementById('f-phone').value);
+    intake.days     = sanitizeText((document.getElementById('f-days')||{value:''}).value, 80);
+    intake.rel      = sanitizeText((document.getElementById('f-rel')||{value:''}).value, 80);
+    intake.notes    = sanitizeText((document.getElementById('f-notes')||{value:''}).value, 1000);
   }
 
   /* Recommend a plan based on intake selections */
@@ -2370,7 +2485,10 @@
 
   /* ─── Submit ─────────────────────────────────────────────────── */
   async function submitIntake() {
-    collectStep2();
+    if (!validateAndCollect()) {
+      gotoStep(2);
+      return;
+    }
     if (!intake.email || !intake.name) {
       alert('Please add your name and email so a coordinator can reach you.');
       gotoStep(2);
