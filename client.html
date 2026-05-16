@@ -243,73 +243,89 @@
   // ── BOOT ────────────────────────────────────────────────────────────────────
   async function bootPortal(user) {
     const email = user.email?.toLowerCase();
+    const errEl = document.getElementById('login-error');
 
-    // Check authorization
-    const authSnap = await db.collection('authorizedUsers').doc(email).get();
-    if (!authSnap.exists) {
-      document.getElementById('login-screen').style.display = 'flex';
-      document.getElementById('app').style.display = 'none';
-      const err = document.getElementById('login-error');
-      err.textContent = 'Access not granted. Please contact your care coordinator.';
-      err.style.display = 'block';
-      await auth.signOut();
-      return;
-    }
+    try {
+      // 1. Check authorization
+      const authSnap = await db.collection('authorizedUsers').doc(email).get();
+      if (!authSnap.exists) {
+        errEl.textContent = 'Access not granted. Please contact your care coordinator.';
+        errEl.style.display = 'block';
+        document.getElementById('login-screen').style.display = 'flex';
+        document.getElementById('app').style.display = 'none';
+        await auth.signOut();
+        return;
+      }
 
-    const clientId = authSnap.data().client_id;
-    const clientSnap = await db.collection('clients').doc(clientId).get();
-    if (!clientSnap.exists) {
-      document.getElementById('login-error').textContent = 'Client record not found.';
-      document.getElementById('login-error').style.display = 'block';
-      await auth.signOut(); return;
-    }
+      // 2. Load client record
+      const clientId   = authSnap.data().client_id;
+      const clientSnap = await db.collection('clients').doc(clientId).get();
+      if (!clientSnap.exists) {
+        errEl.textContent = 'Client record not found. Contact your coordinator.';
+        errEl.style.display = 'block';
+        await auth.signOut();
+        return;
+      }
+      clientDoc = { id: clientSnap.id, ...clientSnap.data() };
 
-    clientDoc = { id: clientSnap.id, ...clientSnap.data() };
+      // 3. Load caregiver (optional — don't fail if missing)
+      if (clientDoc.caregiver_id) {
+        try {
+          const cgSnap = await db.collection('caregivers').doc(clientDoc.caregiver_id).get();
+          if (cgSnap.exists) caregiverDoc = { id: cgSnap.id, ...cgSnap.data() };
+        } catch(e) { console.warn('Could not load caregiver:', e); }
+      }
 
-    // Load caregiver if assigned
-    if (clientDoc.caregiver_id) {
-      const cgSnap = await db.collection('caregivers').doc(clientDoc.caregiver_id).get();
-      if (cgSnap.exists) caregiverDoc = { id: cgSnap.id, ...cgSnap.data() };
-    }
+      // 4. Load Stripe plan links (optional — don't fail if missing)
+      try {
+        const stripeSnap = await db.collection('settings').doc('stripe').get();
+        if (stripeSnap.exists) stripeLinks = stripeSnap.data();
+      } catch(e) { console.warn('Could not load Stripe settings:', e); }
 
-    // Load global Stripe plan links (set once in admin Settings)
-    const stripeSnap = await db.collection('settings').doc('stripe').get();
-    if (stripeSnap.exists) stripeLinks = stripeSnap.data();
+      // 5. Show app
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app').style.display         = 'flex';
+      document.getElementById('app').style.flexDirection   = 'column';
+      document.getElementById('nav-name').textContent      = (clientDoc.name || 'Client').split(' ')[0];
+      document.getElementById('dash-greeting').textContent = 'Welcome, ' + (clientDoc.name?.split(' ')[0] || 'there') + ' 👋';
 
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app').style.display = 'flex';
-    document.getElementById('app').style.flexDirection = 'column';
-    document.getElementById('nav-name').textContent = (clientDoc.name || 'Client').split(' ')[0];
-    document.getElementById('dash-greeting').textContent = 'Welcome, ' + (clientDoc.name?.split(' ')[0] || 'there') + ' 👋';
+      // 6. Real-time appointments listener
+      _unsubAppts = db.collection('appointments')
+        .where('client_id', '==', clientDoc.id)
+        .onSnapshot(snap => {
+          allAppointments = snap.docs.map(d => ({
+            id: d.id, ...d.data(), scheduled_at: d.data().scheduled_at?.toDate()
+          })).filter(a => a.status !== 'cancelled' && a.scheduled_at)
+            .sort((a, b) => a.scheduled_at - b.scheduled_at);
+          if (activeTab() === 'dashboard') renderDashboard();
+        }, err => console.warn('Appointments listener error:', err));
 
-    // Real-time listener for appointments
-    _unsubAppts = db.collection('appointments')
-      .where('client_id', '==', clientDoc.id)
-      .onSnapshot(snap => {
-        allAppointments = snap.docs.map(d => ({
-          id: d.id, ...d.data(), scheduled_at: d.data().scheduled_at?.toDate()
-        })).filter(a => a.status !== 'cancelled' && a.scheduled_at)
-          .sort((a, b) => a.scheduled_at - b.scheduled_at);
-        const v = activeTab();
-        if (v === 'dashboard') renderDashboard();
-      });
-
-    // Real-time listener for client doc (plan changes from admin)
-    _unsubClient = db.collection('clients').doc(clientDoc.id)
-      .onSnapshot(snap => {
-        if (snap.exists) {
+      // 7. Real-time client doc listener (plan / stripe / caregiver updates from admin)
+      _unsubClient = db.collection('clients').doc(clientDoc.id)
+        .onSnapshot(snap => {
+          if (!snap.exists) return;
           clientDoc = { id: snap.id, ...snap.data() };
           if (activeTab() === 'plan')      renderPlan();
           if (activeTab() === 'dashboard') renderDashboard();
-          // Always refresh caregiver if assignment changed
+          // Reload caregiver if it changed
           if (clientDoc.caregiver_id && clientDoc.caregiver_id !== caregiverDoc?.id) {
             db.collection('caregivers').doc(clientDoc.caregiver_id).get()
-              .then(s => { if (s.exists) { caregiverDoc = { id: s.id, ...s.data() }; renderDashboard(); }});
+              .then(s => { if (s.exists) { caregiverDoc = { id: s.id, ...s.data() }; renderDashboard(); renderPlan(); }})
+              .catch(() => {});
           }
-        }
-      });
+          // Reload stripe links if plan changed
+          db.collection('settings').doc('stripe').get()
+            .then(s => { if (s.exists) { stripeLinks = s.data(); if (activeTab() === 'plan') renderPlan(); if (activeTab() === 'dashboard') renderDashboard(); }})
+            .catch(() => {});
+        }, err => console.warn('Client listener error:', err));
 
-    switchTab('dashboard');
+      switchTab('dashboard');
+
+    } catch(ex) {
+      errEl.textContent = 'Error loading portal: ' + ex.message;
+      errEl.style.display = 'block';
+      console.error('bootPortal error:', ex);
+    }
   }
 
   // ── TAB SWITCHING ───────────────────────────────────────────────────────────
@@ -398,47 +414,80 @@
   };
 
   function renderPlan() {
-    const el = document.getElementById('plan-content');
+    const el   = document.getElementById('plan-content');
     const plan = clientDoc?.plan;
+
     if (!plan) {
-      el.innerHTML = `<div class="card"><p class="plan-no">No plan assigned yet. Contact your coordinator to get started.</p></div>`;
+      el.innerHTML = `<div class="card" style="text-align:center;padding:2.5rem">
+        <div style="font-size:2.5rem;margin-bottom:0.75rem">📋</div>
+        <p style="font-weight:600;margin-bottom:0.4rem">No plan assigned yet</p>
+        <p class="plan-no">Your coordinator will assign your care plan shortly.</p>
+      </div>`;
       return;
     }
-    const feats  = (PLAN_FEATURES[plan] || []).map(f => `<div class="plan-feat">${f}</div>`).join('');
-    const payUrl = (stripeLinks[plan]) || clientDoc?.stripe_link || null;
-    const payBtn = payUrl
-      ? `<a class="btn-pay" href="${esc(payUrl)}" target="_blank">💳 Pay Now</a>`
-      : '';
-    el.innerHTML = `<div class="plan-card">
-      <div class="plan-label">Current Plan</div>
-      <div class="plan-name">${plan}</div>
-      <div class="plan-features">${feats}</div>
-      ${payBtn}
-    </div>
-    ${caregiverDoc ? `<div class="card">
-      <div class="card-title">Your Caregiver</div>
-      <strong>${esc(caregiverDoc.name)}</strong>
-      ${caregiverDoc.languages ? `<p style="font-size:0.85rem;color:var(--ink-mid);margin-top:0.3rem">Languages: ${esc(caregiverDoc.languages)}</p>` : ''}
-      ${caregiverDoc.bio ? `<p style="font-size:0.85rem;color:var(--ink-mid);margin-top:0.3rem;line-height:1.6">${esc(caregiverDoc.bio)}</p>` : ''}
-    </div>` : ''}`;
+
+    const planLabel = plan.charAt(0).toUpperCase() + plan.slice(1);
+    const feats     = (PLAN_FEATURES[plan] || []).map(f => `<div class="plan-feat">${f}</div>`).join('');
+    const payUrl    = stripeLinks[plan] || clientDoc?.stripe_link || null;
+
+    el.innerHTML = `
+      <div class="plan-card">
+        <div class="plan-label">Your Current Plan</div>
+        <div class="plan-name">${planLabel}</div>
+        <div class="plan-features">${feats}</div>
+        ${payUrl ? `<a class="btn-pay" href="${esc(payUrl)}" target="_blank">💳 Pay Now</a>` : ''}
+      </div>
+
+      ${caregiverDoc ? `
+      <div class="card">
+        <div class="card-title">Your Caregiver</div>
+        <div style="display:flex;align-items:center;gap:1rem">
+          <div style="width:48px;height:48px;border-radius:50%;background:var(--terra);color:var(--white);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;flex-shrink:0">
+            ${(caregiverDoc.name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}
+          </div>
+          <div>
+            <div style="font-weight:600;font-size:1rem">${esc(caregiverDoc.name)}</div>
+            ${caregiverDoc.languages ? `<div style="font-size:0.82rem;color:var(--ink-mid);margin-top:0.2rem">Speaks: ${esc(caregiverDoc.languages)}</div>` : ''}
+          </div>
+        </div>
+        ${caregiverDoc.bio ? `<p style="font-size:0.85rem;color:var(--ink-mid);margin-top:1rem;line-height:1.7">${esc(caregiverDoc.bio)}</p>` : ''}
+      </div>` : ''}
+
+      ${!payUrl ? `<div class="card" style="border:1.5px dashed var(--cream-dark)">
+        <p style="font-size:0.85rem;color:var(--ink-light);text-align:center">Payment link not set up yet — your coordinator will add it shortly.</p>
+      </div>` : ''}
+    `;
   }
 
   // ── NOTES FROM CAREGIVER ───────────────────────────────────────────────────
   async function loadNotes() {
-    const snap = await db.collection('visit_notes')
-      .where('client_id', '==', clientDoc.id).get();
-    const allNotes = snap.docs.map(d => d.data())
-      .sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0)).slice(0, 30);
     const el = document.getElementById('notes-list');
-    if (!allNotes.length) { el.innerHTML = '<div class="empty-state">No notes yet. Your caregiver will leave updates here after visits.</div>'; return; }
-    el.innerHTML = allNotes.map(n => {
-      const dt = n.created_at?.toDate?.();
-      return `<div class="note-item">
-        <div class="note-cg">${esc(caregiverDoc?.name || 'Your caregiver')}</div>
-        <div class="note-date">${dt ? dt.toLocaleDateString('en',{weekday:'short',month:'long',day:'numeric',year:'numeric'}) + ' at ' + dt.toLocaleTimeString('en',{hour:'numeric',minute:'2-digit'}) : '—'}</div>
-        <div class="note-body">${esc(n.text)}</div>
-      </div>`;
-    }).join('');
+    el.innerHTML = '<div class="empty-state">Loading…</div>';
+    try {
+      const snap = await db.collection('visit_notes')
+        .where('client_id', '==', clientDoc.id).get();
+      const allNotes = snap.docs.map(d => d.data())
+        .sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0)).slice(0, 30);
+      if (!allNotes.length) {
+        el.innerHTML = `<div style="text-align:center;padding:2.5rem">
+          <div style="font-size:2.5rem;margin-bottom:0.75rem">💬</div>
+          <p style="font-weight:600;margin-bottom:0.4rem">No notes yet</p>
+          <p class="plan-no">Your caregiver will leave visit updates here.</p>
+        </div>`;
+        return;
+      }
+      el.innerHTML = allNotes.map(n => {
+        const dt = n.created_at?.toDate?.();
+        return `<div class="note-item">
+          <div class="note-cg">${esc(caregiverDoc?.name || 'Your caregiver')}</div>
+          <div class="note-date">${dt ? dt.toLocaleDateString('en',{weekday:'short',month:'long',day:'numeric',year:'numeric'}) + ' at ' + dt.toLocaleTimeString('en',{hour:'numeric',minute:'2-digit'}) : '—'}</div>
+          <div class="note-body">${esc(n.text)}</div>
+        </div>`;
+      }).join('');
+    } catch(ex) {
+      el.innerHTML = '<div class="empty-state">Could not load notes. Please refresh the page.</div>';
+      console.error('loadNotes error:', ex);
+    }
   }
 
   // ── UTILITIES ───────────────────────────────────────────────────────────────
