@@ -124,6 +124,44 @@
     #toast { position: fixed; bottom: 1.75rem; right: 1.75rem; background: var(--ink); color: var(--white); padding: 0.75rem 1.25rem; border-radius: 10px; font-size: 0.86rem; z-index: 9999; opacity: 0; transform: translateY(8px); transition: all 0.25s; pointer-events: none; }
     #toast.show { opacity: 1; transform: translateY(0); }
     #toast.err { background: #c44; }
+
+    /* ── BILLING CARD ── */
+    .billing-card { border: 1.5px solid var(--cream-dark); border-radius: 14px; padding: 1.5rem; margin-bottom: 1.25rem; background: var(--white); }
+    .billing-head { display: flex; align-items: center; gap: 0.65rem; margin-bottom: 0.6rem; }
+    .billing-icon { width: 34px; height: 34px; background: var(--terra); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+    .billing-title { font-weight: 600; font-size: 0.95rem; }
+    .billing-desc { font-size: 0.84rem; color: var(--ink-mid); line-height: 1.65; margin-bottom: 1rem; }
+    .plan-tier { display: inline-block; padding: 0.18rem 0.55rem; border-radius: 100px; font-size: 0.8rem; font-weight: 600; text-transform: capitalize; }
+    .plan-tier.essential { background: #DBEAFE; color: #1E40AF; }
+    .plan-tier.companion  { background: #E0F2FE; color: #0C4A6E; }
+    .plan-tier.premium    { background: #F3E8FF; color: #6B21A8; }
+
+    /* ── REQUEST FORMS ── */
+    .req-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+    .req-tab { padding: 0.5rem 1.1rem; border-radius: 100px; font-size: 0.84rem; font-weight: 500; background: var(--cream-dark); color: var(--ink-mid); border: none; cursor: pointer; transition: all 0.15s; }
+    .req-tab.active { background: var(--terra); color: var(--white); }
+    .req-form { display: flex; flex-direction: column; gap: 1rem; }
+    .form-row { display: flex; flex-direction: column; gap: 0.3rem; }
+    .form-lbl { font-size: 0.82rem; font-weight: 600; color: var(--ink-mid); }
+    .form-sel, .form-inp, .form-area { width: 100%; padding: 0.65rem 0.85rem; border: 1.5px solid var(--cream-dark); border-radius: 10px; font-size: 0.9rem; font-family: inherit; color: var(--ink); background: var(--white); transition: border-color 0.15s; }
+    .form-sel:focus, .form-inp:focus, .form-area:focus { outline: none; border-color: var(--terra); }
+    .form-area { resize: vertical; min-height: 80px; line-height: 1.6; }
+    .btn-req-submit { padding: 0.72rem 1.5rem; background: var(--terra); color: var(--white); border: none; border-radius: 10px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    .btn-req-submit:hover { background: #a87050; }
+    .btn-req-submit:disabled { background: var(--ink-light); cursor: not-allowed; }
+
+    /* ── REQUEST LIST ── */
+    .req-item { background: var(--cream-soft); border-radius: 12px; padding: 1rem 1.2rem; margin-bottom: 0.65rem; display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+    .req-item:last-child { margin-bottom: 0; }
+    .req-info { flex: 1; min-width: 0; }
+    .req-type-label { font-weight: 600; font-size: 0.92rem; }
+    .req-detail { font-size: 0.82rem; color: var(--ink-mid); margin-top: 0.2rem; }
+    .req-date-lbl { font-size: 0.75rem; color: var(--ink-light); margin-top: 0.25rem; }
+    .req-admin-note { font-size: 0.82rem; color: var(--sage); margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--cream-dark); font-style: italic; }
+    .badge-status { padding: 0.22rem 0.65rem; border-radius: 100px; font-size: 0.71rem; font-weight: 600; flex-shrink: 0; }
+    .badge-pending  { background: #FEF3C7; color: #92400E; }
+    .badge-approved { background: #D1FAE5; color: #065F46; }
+    .badge-declined { background: #FEE2E2; color: #991B1B; }
   </style>
 </head>
 <body>
@@ -155,6 +193,7 @@
     <button class="tab-btn active" data-view="dashboard" onclick="switchTab('dashboard')">Dashboard</button>
     <button class="tab-btn" data-view="plan" onclick="switchTab('plan')">My Plan</button>
     <button class="tab-btn" data-view="notes" onclick="switchTab('notes')">Notes from Caregiver</button>
+    <button class="tab-btn" data-view="requests" onclick="switchTab('requests')">Requests</button>
   </div>
 
   <div class="main">
@@ -190,6 +229,75 @@
       <div class="view-title">Notes from Your Caregiver</div>
       <div class="view-sub">Updates and messages left after your visits</div>
       <div id="notes-list"><div class="empty-state">Loading…</div></div>
+    </div>
+
+    <!-- REQUESTS -->
+    <div class="view" id="view-requests">
+      <div class="view-title">Service Requests</div>
+      <div class="view-sub">Request a plan change or pause your service — your coordinator will respond shortly</div>
+
+      <div class="card">
+        <div class="card-title">New Request</div>
+        <div class="req-tabs">
+          <button class="req-tab active" id="rtab-change" onclick="switchReqTab('change')">Change Plan</button>
+          <button class="req-tab" id="rtab-pause" onclick="switchReqTab('pause')">Pause Service</button>
+        </div>
+
+        <!-- Change Plan panel -->
+        <div id="req-change-panel">
+          <div class="req-form">
+            <div class="form-row">
+              <label class="form-lbl">Current Plan</label>
+              <div id="req-current-plan" style="padding:0.6rem 0.85rem;background:var(--cream-soft);border:1.5px solid var(--cream-dark);border-radius:10px;font-size:0.9rem;color:var(--ink-mid);text-transform:capitalize">—</div>
+            </div>
+            <div class="form-row">
+              <label class="form-lbl">Plan You'd Like</label>
+              <select class="form-sel" id="req-plan-select">
+                <option value="">— Select a plan —</option>
+                <option value="essential">Essential</option>
+                <option value="companion">Companion</option>
+                <option value="premium">Premium</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label class="form-lbl">Message (optional)</label>
+              <textarea class="form-area" id="req-change-msg" placeholder="Tell us why you'd like to change your plan…"></textarea>
+            </div>
+            <button class="btn-req-submit" id="btn-submit-change" onclick="submitChangeRequest()">Submit Request</button>
+          </div>
+        </div>
+
+        <!-- Pause Service panel -->
+        <div id="req-pause-panel" style="display:none">
+          <div class="req-form">
+            <div class="form-row">
+              <label class="form-lbl">Pause Start Date</label>
+              <input class="form-inp" type="date" id="req-pause-start" />
+            </div>
+            <div class="form-row">
+              <label class="form-lbl">Pause Duration</label>
+              <select class="form-sel" id="req-pause-duration">
+                <option value="">— Select duration —</option>
+                <option value="1 week">1 Week</option>
+                <option value="2 weeks">2 Weeks</option>
+                <option value="1 month">1 Month</option>
+                <option value="2 months">2 Months</option>
+                <option value="3 months">3 Months</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label class="form-lbl">Reason (optional)</label>
+              <textarea class="form-area" id="req-pause-msg" placeholder="Let us know why you'd like to pause your service…"></textarea>
+            </div>
+            <button class="btn-req-submit" id="btn-submit-pause" onclick="submitPauseRequest()">Submit Request</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Your Requests</div>
+        <div id="requests-list"><div class="empty-state">Loading…</div></div>
+      </div>
     </div>
 
   </div>
@@ -349,6 +457,7 @@
     if (view === 'dashboard') renderDashboard();
     if (view === 'plan')      renderPlan();
     if (view === 'notes')     loadNotes();
+    if (view === 'requests')  loadRequests();
   }
 
   function activeTab() {
@@ -365,13 +474,15 @@
     if (bannerEl) {
       const plan = clientDoc?.plan;
       const link = (plan && stripeLinks[plan]) || clientDoc?.stripe_link || null;
-      if (plan || link) {
+      const safeLink = safeUrl(link);
+      if (plan || safeLink) {
+        const planLabel = plan ? plan.charAt(0).toUpperCase() + plan.slice(1) : '';
         bannerEl.innerHTML = `<div class="dash-plan-banner">
           <div class="dash-plan-left">
-            ${plan ? `<div class="dash-plan-tag">Current Plan</div><div class="dash-plan-name">${plan}</div>` : ''}
-            ${link ? `<div class="dash-plan-hint">Click Pay Now to manage your subscription</div>` : ''}
+            ${plan ? `<div class="dash-plan-tag">Current Plan</div><div class="dash-plan-name">${planLabel}</div>` : ''}
+            <div class="dash-plan-hint">${safeLink ? 'Manage billing or view invoices via Stripe' : 'Payment link not set up yet'}</div>
           </div>
-          ${safeUrl(link) ? `<a class="btn-pay" href="${esc(safeUrl(link))}" target="_blank" rel="noopener noreferrer">💳 Pay Now</a>` : ''}
+          ${safeLink ? `<a class="btn-pay" href="${esc(safeLink)}" target="_blank" rel="noopener noreferrer">💳 Manage Billing</a>` : ''}
         </div>`;
       } else {
         bannerEl.innerHTML = '';
@@ -438,16 +549,37 @@
       return;
     }
 
-    const planLabel = plan.charAt(0).toUpperCase() + plan.slice(1);
-    const feats     = (PLAN_FEATURES[plan] || []).map(f => `<div class="plan-feat">${f}</div>`).join('');
-    const payUrl    = stripeLinks[plan] || clientDoc?.stripe_link || null;
+    const planLabel  = plan.charAt(0).toUpperCase() + plan.slice(1);
+    const feats      = (PLAN_FEATURES[plan] || []).map(f => `<div class="plan-feat">${f}</div>`).join('');
+    const payUrl     = stripeLinks[plan] || clientDoc?.stripe_link || null;
+    const safePayUrl = safeUrl(payUrl);
 
     el.innerHTML = `
       <div class="plan-card">
         <div class="plan-label">Your Current Plan</div>
         <div class="plan-name">${planLabel}</div>
         <div class="plan-features">${feats}</div>
-        ${safeUrl(payUrl) ? `<a class="btn-pay" href="${esc(safeUrl(payUrl))}" target="_blank" rel="noopener noreferrer">💳 Pay Now</a>` : ''}
+      </div>
+
+      <div class="billing-card">
+        <div class="billing-head">
+          <div class="billing-icon">💳</div>
+          <div>
+            <div class="billing-title">Billing &amp; Payment</div>
+            <div style="font-size:0.78rem;color:var(--ink-light)">Managed via Stripe</div>
+          </div>
+        </div>
+        ${safePayUrl ? `
+          <p class="billing-desc">
+            Your <strong>${planLabel}</strong> plan is billed through Stripe.
+            Use the button below to view invoices, update your payment method, or manage your subscription.
+          </p>
+          <a class="btn-pay" href="${esc(safePayUrl)}" target="_blank" rel="noopener noreferrer">💳 Manage Billing</a>
+        ` : `
+          <p class="billing-desc" style="margin-bottom:0;color:var(--ink-light)">
+            Payment link not configured yet — your coordinator will set this up shortly.
+          </p>
+        `}
       </div>
 
       ${caregiverDoc ? `
@@ -463,10 +595,6 @@
           </div>
         </div>
         ${caregiverDoc.bio ? `<p style="font-size:0.85rem;color:var(--ink-mid);margin-top:1rem;line-height:1.7">${esc(caregiverDoc.bio)}</p>` : ''}
-      </div>` : ''}
-
-      ${!payUrl ? `<div class="card" style="border:1.5px dashed var(--cream-dark)">
-        <p style="font-size:0.85rem;color:var(--ink-light);text-align:center">Payment link not set up yet — your coordinator will add it shortly.</p>
       </div>` : ''}
     `;
   }
@@ -527,6 +655,143 @@
     const el = document.getElementById('toast'); el.textContent = msg;
     el.className = 'show' + (isErr ? ' err' : ''); clearTimeout(_tt);
     _tt = setTimeout(() => el.className = '', 3500);
+  }
+
+  // ── REQUESTS ────────────────────────────────────────────────────────────────
+  function switchReqTab(tab) {
+    document.getElementById('req-change-panel').style.display = tab === 'change' ? 'block' : 'none';
+    document.getElementById('req-pause-panel').style.display  = tab === 'pause'  ? 'block' : 'none';
+    document.getElementById('rtab-change').classList.toggle('active', tab === 'change');
+    document.getElementById('rtab-pause').classList.toggle('active',  tab === 'pause');
+  }
+
+  async function loadRequests() {
+    const planEl = document.getElementById('req-current-plan');
+    if (planEl) {
+      const p = clientDoc?.plan;
+      planEl.textContent = p ? (p.charAt(0).toUpperCase() + p.slice(1)) : 'None assigned';
+    }
+
+    const el = document.getElementById('requests-list');
+    el.innerHTML = '<div class="empty-state">Loading…</div>';
+    try {
+      const snap = await db.collection('plan_requests')
+        .where('client_id', '==', clientDoc.id)
+        .get();
+
+      const requests = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0))
+        .slice(0, 20);
+
+      if (!requests.length) {
+        el.innerHTML = `<div style="text-align:center;padding:2rem 1rem">
+          <div style="font-size:2rem;margin-bottom:0.5rem">📝</div>
+          <p style="font-weight:600;margin-bottom:0.3rem">No requests yet</p>
+          <p class="plan-no">Use the form above to submit a request.</p>
+        </div>`;
+        return;
+      }
+
+      el.innerHTML = requests.map(r => {
+        const dt = r.created_at?.toDate?.();
+        const statusCls = r.status === 'approved' ? 'badge-approved' : r.status === 'declined' ? 'badge-declined' : 'badge-pending';
+        const statusLbl = r.status === 'approved' ? 'Approved' : r.status === 'declined' ? 'Declined' : 'Pending';
+
+        let typeLabel = r.type === 'change_plan' ? 'Plan Change Request' : 'Pause Service Request';
+        let detail = '';
+        if (r.type === 'change_plan') {
+          const from = r.current_plan ? cap1(r.current_plan) : '—';
+          const to   = r.requested_plan ? cap1(r.requested_plan) : '—';
+          detail = `${from} → ${to}`;
+        } else {
+          detail = `Starting ${esc(r.pause_start || '—')} · ${esc(r.pause_duration || '—')}`;
+        }
+
+        return `<div class="req-item">
+          <div class="req-info">
+            <div class="req-type-label">${typeLabel}</div>
+            <div class="req-detail">${detail}</div>
+            ${r.message ? `<div class="req-detail" style="margin-top:0.3rem;font-style:italic">"${esc(r.message)}"</div>` : ''}
+            ${dt ? `<div class="req-date-lbl">Submitted ${dt.toLocaleDateString('en',{month:'long',day:'numeric',year:'numeric'})}</div>` : ''}
+            ${r.admin_note ? `<div class="req-admin-note">Coordinator: "${esc(r.admin_note)}"</div>` : ''}
+          </div>
+          <span class="badge-status ${statusCls}">${statusLbl}</span>
+        </div>`;
+      }).join('');
+    } catch(ex) {
+      el.innerHTML = '<div class="empty-state">Could not load requests. Please refresh the page.</div>';
+      console.error('loadRequests error:', ex);
+    }
+  }
+
+  function cap1(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
+
+  async function submitChangeRequest() {
+    const btn       = document.getElementById('btn-submit-change');
+    const requested = document.getElementById('req-plan-select').value;
+    const message   = document.getElementById('req-change-msg').value.trim().slice(0, 500);
+
+    if (!requested) { toast('Please select a plan.', true); return; }
+    if (requested === clientDoc?.plan) { toast('That is already your current plan.', true); return; }
+
+    btn.disabled = true; btn.textContent = 'Submitting…';
+    try {
+      await db.collection('plan_requests').add({
+        client_id:      clientDoc.id,
+        client_name:    clientDoc.name || '',
+        type:           'change_plan',
+        current_plan:   clientDoc.plan || null,
+        requested_plan: requested,
+        message:        message || null,
+        status:         'pending',
+        created_at:     firebase.firestore.FieldValue.serverTimestamp()
+      });
+      toast('Request submitted! Your coordinator will be in touch.');
+      document.getElementById('req-plan-select').value = '';
+      document.getElementById('req-change-msg').value  = '';
+      loadRequests();
+    } catch(ex) {
+      toast('Could not submit: ' + ex.message, true);
+      console.error(ex);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Submit Request';
+    }
+  }
+
+  async function submitPauseRequest() {
+    const btn      = document.getElementById('btn-submit-pause');
+    const startDate = document.getElementById('req-pause-start').value;
+    const duration  = document.getElementById('req-pause-duration').value;
+    const message   = document.getElementById('req-pause-msg').value.trim().slice(0, 500);
+
+    if (!startDate) { toast('Please select a start date.', true); return; }
+    if (!duration)  { toast('Please select a pause duration.', true); return; }
+
+    btn.disabled = true; btn.textContent = 'Submitting…';
+    try {
+      await db.collection('plan_requests').add({
+        client_id:      clientDoc.id,
+        client_name:    clientDoc.name || '',
+        type:           'pause',
+        current_plan:   clientDoc.plan || null,
+        pause_start:    startDate,
+        pause_duration: duration,
+        message:        message || null,
+        status:         'pending',
+        created_at:     firebase.firestore.FieldValue.serverTimestamp()
+      });
+      toast('Pause request submitted! Your coordinator will confirm shortly.');
+      document.getElementById('req-pause-start').value    = '';
+      document.getElementById('req-pause-duration').value = '';
+      document.getElementById('req-pause-msg').value      = '';
+      loadRequests();
+    } catch(ex) {
+      toast('Could not submit: ' + ex.message, true);
+      console.error(ex);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Submit Request';
+    }
   }
 </script>
 </body>

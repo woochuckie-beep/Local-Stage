@@ -144,6 +144,18 @@
 
     /* ── BADGES ── */
     .badge { display: inline-flex; align-items: center; padding: 0.22rem 0.6rem; border-radius: 100px; font-size: 0.75rem; font-weight: 500; }
+    /* ── REQUEST ITEMS ── */
+    .req-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding: 0.95rem 0; border-bottom: 1px solid var(--cream-dark); }
+    .req-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .req-row-info { flex: 1; min-width: 0; }
+    .req-row-client { font-weight: 600; font-size: 0.92rem; }
+    .req-row-detail { font-size: 0.82rem; color: var(--ink-mid); margin-top: 0.2rem; }
+    .req-row-date { font-size: 0.75rem; color: var(--ink-light); margin-top: 0.2rem; }
+    .req-row-msg { font-size: 0.82rem; color: var(--ink-mid); font-style: italic; margin-top: 0.25rem; }
+    .req-row-actions { display: flex; gap: 0.5rem; flex-shrink: 0; align-items: center; flex-wrap: wrap; }
+    .badge-req-pending  { background: #FEF3C7; color: #92400E; }
+    .badge-req-approved { background: #D1FAE5; color: #065F46; }
+    .badge-req-declined { background: #FEE2E2; color: #991B1B; }
     .badge-essential { background: var(--sage-soft); color: var(--sage); }
     .badge-companion  { background: var(--terra-soft); color: var(--terra-deep); }
     .badge-premium    { background: #e8e0f5; color: #6a5acd; }
@@ -361,6 +373,10 @@
       <button class="nav-link" data-page="cg-access" onclick="go('cg-access')">
         <span class="nav-icon">🔐</span>Caregiver Access
       </button>
+      <button class="nav-link" data-page="requests" onclick="go('requests')">
+        <span class="nav-icon">📬</span>Requests
+        <span id="req-pending-badge" style="display:none;margin-left:auto;background:#ef4444;color:#fff;font-size:0.68rem;font-weight:700;padding:0.1rem 0.45rem;border-radius:100px"></span>
+      </button>
       <button class="nav-link" data-page="settings" onclick="go('settings')">
         <span class="nav-icon">⚙️</span>Settings
       </button>
@@ -555,6 +571,51 @@
             <span id="stripe-saved" style="color:var(--sage);font-size:0.85rem;display:none">✓ Saved</span>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- REQUESTS -->
+    <div id="page-requests" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Service Requests</div>
+          <div class="page-sub">Plan change and pause requests submitted by clients</div>
+        </div>
+      </div>
+
+      <!-- Pending requests -->
+      <div class="card" id="admin-req-pending-card">
+        <div class="card-title" style="display:flex;align-items:center;gap:0.6rem">
+          Pending
+          <span id="admin-pending-count" style="background:#ef4444;color:#fff;font-size:0.72rem;font-weight:700;padding:0.12rem 0.5rem;border-radius:100px"></span>
+        </div>
+        <div id="admin-req-pending"><div class="loading-msg">Loading…</div></div>
+      </div>
+
+      <!-- All requests -->
+      <div class="card">
+        <div class="card-title">All Requests</div>
+        <div id="admin-req-all"><div class="loading-msg">Loading…</div></div>
+      </div>
+
+      <!-- Resolve modal -->
+      <div class="modal-ov" id="resolve-ov">
+        <div class="modal" style="max-width:440px">
+          <div class="modal-hd">
+            <div class="modal-title" id="resolve-title">Respond to Request</div>
+            <button class="modal-close" onclick="closeModal('resolve-ov')">✕</button>
+          </div>
+          <div id="resolve-summary" style="font-size:0.88rem;color:var(--ink-mid);margin-bottom:1rem;line-height:1.6"></div>
+          <div class="form-group">
+            <label>Note to client (optional)</label>
+            <textarea class="fc" id="resolve-note" rows="3" placeholder="Add a short message for the client…" style="resize:vertical"></textarea>
+          </div>
+          <div class="modal-ft">
+            <button type="button" class="btn btn-ghost" onclick="closeModal('resolve-ov')">Cancel</button>
+            <button type="button" class="btn" style="background:#ef4444;color:#fff" onclick="confirmResolve('declined')">Decline</button>
+            <button type="button" class="btn btn-add" onclick="confirmResolve('approved')">Approve</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -938,6 +999,12 @@ async function preload() {
   caregiversMap  = Object.fromEntries(caregiversList.map(c => [c.id, c]));
   clientsList    = cSnap.docs.map(d => ({ id: d.id, ...d.data() }));
   clientsMap     = Object.fromEntries(clientsList.map(c => [c.id, c]));
+  // Show pending request badge in sidebar
+  db.collection('plan_requests').where('status', '==', 'pending').get()
+    .then(snap => {
+      const badge = document.getElementById('req-pending-badge');
+      if (badge && snap.size > 0) { badge.textContent = snap.size; badge.style.display = 'inline'; }
+    }).catch(() => {});
 }
 
 // ── NAVIGATION ───────────────────────────────────────────────────────────────
@@ -953,6 +1020,7 @@ function go(page) {
   if (page === 'access')     loadAccess();
   if (page === 'cg-access')  loadCgAccess();
   if (page === 'settings')   loadStripeSettings();
+  if (page === 'requests')   loadAdminRequests();
 }
 
 // ── DASHBOARD ────────────────────────────────────────────────────────────────
@@ -1796,6 +1864,129 @@ function toast(msg, isErr = false) {
   el.className = 'show' + (isErr ? ' err' : '');
   clearTimeout(_toastTimer);
   _toastTimer = setTimeout(() => el.className = '', 3500);
+}
+
+// ── SERVICE REQUESTS ─────────────────────────────────────────────────────────
+let _resolveId = null;
+
+async function loadAdminRequests() {
+  const pendingEl = document.getElementById('admin-req-pending');
+  const allEl     = document.getElementById('admin-req-all');
+  pendingEl.innerHTML = '<div class="loading-msg">Loading…</div>';
+  allEl.innerHTML     = '<div class="loading-msg">Loading…</div>';
+
+  try {
+    const snap = await db.collection('plan_requests').get();
+    const all  = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0));
+
+    const pending  = all.filter(r => r.status === 'pending');
+    const resolved = all.filter(r => r.status !== 'pending');
+
+    // Update badge
+    const badge = document.getElementById('req-pending-badge');
+    if (pending.length) { badge.textContent = pending.length; badge.style.display = 'inline'; }
+    else badge.style.display = 'none';
+
+    const countEl = document.getElementById('admin-pending-count');
+    countEl.textContent = pending.length || '';
+    countEl.style.display = pending.length ? 'inline' : 'none';
+
+    // Render pending
+    if (!pending.length) {
+      pendingEl.innerHTML = '<div class="loading-msg" style="font-style:italic">No pending requests.</div>';
+    } else {
+      pendingEl.innerHTML = pending.map(r => reqRowHtml(r, true)).join('');
+    }
+
+    // Render all
+    if (!all.length) {
+      allEl.innerHTML = '<div class="loading-msg" style="font-style:italic">No requests yet.</div>';
+    } else {
+      allEl.innerHTML = all.map(r => reqRowHtml(r, false)).join('');
+    }
+  } catch(ex) {
+    pendingEl.innerHTML = '<div class="loading-msg">Error loading requests.</div>';
+    allEl.innerHTML     = '<div class="loading-msg">Error loading requests.</div>';
+    console.error('loadAdminRequests error:', ex);
+  }
+}
+
+function reqRowHtml(r, showActions) {
+  const dt = r.created_at?.toDate?.();
+  const client = clientsMap[r.client_id];
+  const clientName = client?.name || r.client_name || r.client_id;
+
+  let typeLabel = r.type === 'change_plan' ? 'Plan Change' : 'Pause Service';
+  let detail = '';
+  if (r.type === 'change_plan') {
+    const from = r.current_plan   ? r.current_plan.charAt(0).toUpperCase()   + r.current_plan.slice(1)   : '—';
+    const to   = r.requested_plan ? r.requested_plan.charAt(0).toUpperCase() + r.requested_plan.slice(1) : '—';
+    detail = `${from} → ${to}`;
+  } else {
+    detail = `Starting ${esc(r.pause_start || '—')} for ${esc(r.pause_duration || '—')}`;
+  }
+
+  const statusCls = r.status === 'approved' ? 'badge-req-approved' : r.status === 'declined' ? 'badge-req-declined' : 'badge-req-pending';
+  const statusLbl = r.status === 'approved' ? 'Approved' : r.status === 'declined' ? 'Declined' : 'Pending';
+
+  return `<div class="req-row">
+    <div class="req-row-info">
+      <div class="req-row-client">${esc(clientName)}</div>
+      <div class="req-row-detail"><strong>${typeLabel}:</strong> ${detail}</div>
+      ${r.message ? `<div class="req-row-msg">"${esc(r.message)}"</div>` : ''}
+      ${r.admin_note ? `<div class="req-row-detail" style="margin-top:0.3rem;color:var(--sage)">Note sent: "${esc(r.admin_note)}"</div>` : ''}
+      ${dt ? `<div class="req-row-date">${dt.toLocaleDateString('en',{month:'long',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'})}</div>` : ''}
+    </div>
+    <div class="req-row-actions">
+      <span class="badge ${statusCls}">${statusLbl}</span>
+      ${showActions && r.status === 'pending' ? `<button class="btn btn-sm btn-edit" onclick="openResolveModal('${r.id}')">Respond</button>` : ''}
+    </div>
+  </div>`;
+}
+
+function openResolveModal(reqId) {
+  _resolveId = reqId;
+  // Find the request to show a summary
+  db.collection('plan_requests').doc(reqId).get().then(snap => {
+    if (!snap.exists) return;
+    const r = snap.data();
+    const client = clientsMap[r.client_id];
+    const clientName = client?.name || r.client_name || r.client_id;
+    let summary = '';
+    if (r.type === 'change_plan') {
+      const from = r.current_plan   ? r.current_plan.charAt(0).toUpperCase()   + r.current_plan.slice(1)   : '—';
+      const to   = r.requested_plan ? r.requested_plan.charAt(0).toUpperCase() + r.requested_plan.slice(1) : '—';
+      summary = `<strong>${esc(clientName)}</strong> wants to change their plan from <strong>${from}</strong> to <strong>${to}</strong>.`;
+    } else {
+      summary = `<strong>${esc(clientName)}</strong> wants to pause service starting <strong>${esc(r.pause_start)}</strong> for <strong>${esc(r.pause_duration)}</strong>.`;
+    }
+    if (r.message) summary += `<br><em style="color:var(--ink-light)">"${esc(r.message)}"</em>`;
+    document.getElementById('resolve-summary').innerHTML = summary;
+    document.getElementById('resolve-note').value = '';
+    document.getElementById('resolve-title').textContent = 'Respond to Request';
+    document.getElementById('resolve-ov').classList.add('open');
+  }).catch(ex => toast(ex.message, true));
+}
+
+async function confirmResolve(status) {
+  if (!_resolveId) return;
+  const note = document.getElementById('resolve-note').value.trim().slice(0, 500);
+  try {
+    await db.collection('plan_requests').doc(_resolveId).update({
+      status,
+      admin_note:  note || null,
+      updated_at:  SV()
+    });
+    toast(status === 'approved' ? 'Request approved.' : 'Request declined.');
+    closeModal('resolve-ov');
+    _resolveId = null;
+    loadAdminRequests();
+  } catch(ex) {
+    toast('Could not update request: ' + ex.message, true);
+    console.error(ex);
+  }
 }
 </script>
 </body>
