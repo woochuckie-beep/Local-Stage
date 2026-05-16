@@ -179,6 +179,13 @@
     .appt-chip { border-radius: 6px; padding: 0.25rem 0.45rem; font-size: 0.73rem; margin-bottom: 3px; cursor: pointer; line-height: 1.4; background: var(--terra); color: var(--white); }
     .appt-chip:hover { opacity: 0.85; }
     .appt-chip.rec { background: var(--sage); }
+    .appt-chip.status-pending   { background: #F59E0B; }
+    .appt-chip.status-confirmed { background: #EF4444; }
+    .appt-chip.status-completed { background: var(--sage); opacity: 0.85; }
+    .appt-chip.status-cancelled { background: #9ca3af; opacity: 0.7; }
+    .cal-legend { display: flex; gap: 1rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
+    .cal-legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.76rem; color: var(--ink-mid); }
+    .cal-legend-swatch { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
     .chip-name { font-weight: 600; display: block; }
     .chip-cg   { display: block; font-size: 0.68rem; opacity: 0.85; }
     .chip-dur  { display: block; font-size: 0.65rem; opacity: 0.7; }
@@ -425,26 +432,6 @@
       <!-- FILTER BAR -->
       <div class="filter-bar">
         <div class="filter-group">
-          <label>Available Days</label>
-          <div class="filter-day-chips">
-            <label class="f-day"><input type="checkbox" name="f-avail-day" value="Mon"><span>Mon</span></label>
-            <label class="f-day"><input type="checkbox" name="f-avail-day" value="Tue"><span>Tue</span></label>
-            <label class="f-day"><input type="checkbox" name="f-avail-day" value="Wed"><span>Wed</span></label>
-            <label class="f-day"><input type="checkbox" name="f-avail-day" value="Thu"><span>Thu</span></label>
-            <label class="f-day"><input type="checkbox" name="f-avail-day" value="Fri"><span>Fri</span></label>
-            <label class="f-day"><input type="checkbox" name="f-avail-day" value="Sat"><span>Sat</span></label>
-            <label class="f-day"><input type="checkbox" name="f-avail-day" value="Sun"><span>Sun</span></label>
-          </div>
-        </div>
-        <div class="filter-group">
-          <label>Available From</label>
-          <input class="fc-sm" type="time" id="f-time-from" />
-        </div>
-        <div class="filter-group">
-          <label>Available Until</label>
-          <input class="fc-sm" type="time" id="f-time-to" />
-        </div>
-        <div class="filter-group">
           <label>Language</label>
           <input class="fc-sm" type="text" id="f-lang" placeholder="e.g. French" />
         </div>
@@ -466,7 +453,7 @@
         <table>
           <thead>
             <tr>
-              <th>Name</th><th>Contact</th><th>Languages</th><th>Background</th><th>Availability</th><th>Clients</th><th>Status</th><th>Actions</th>
+              <th>Name</th><th>Contact</th><th>Languages</th><th>Background</th><th>Clients</th><th>Status</th><th>Actions</th>
             </tr>
           </thead>
           <tbody id="cg-tbody"><tr class="empty-row"><td colspan="8">Loading…</td></tr></tbody>
@@ -525,6 +512,12 @@
         <div class="cal-week" id="week-label">—</div>
         <button class="btn btn-ghost btn-sm" onclick="shiftWeek(1)">Next →</button>
         <button class="btn btn-ghost btn-sm" onclick="jumpToday()">Today</button>
+      </div>
+      <div class="cal-legend">
+        <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#F59E0B"></div>Scheduled — awaiting confirmation</div>
+        <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#EF4444"></div>Confirmed</div>
+        <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:var(--sage)"></div>Completed</div>
+        <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#9ca3af"></div>Cancelled</div>
       </div>
       <div class="cal-wrap">
         <div class="cal-head" id="cal-head"></div>
@@ -641,25 +634,8 @@
         <textarea class="fc" name="bio" placeholder="Skills, certifications, experience…"></textarea>
       </div>
       <div class="form-group">
-        <label>Available Days</label>
-        <div class="day-toggles">
-          <label class="day-toggle"><input type="checkbox" name="avail_days" value="Mon" /><span>Mon</span></label>
-          <label class="day-toggle"><input type="checkbox" name="avail_days" value="Tue" /><span>Tue</span></label>
-          <label class="day-toggle"><input type="checkbox" name="avail_days" value="Wed" /><span>Wed</span></label>
-          <label class="day-toggle"><input type="checkbox" name="avail_days" value="Thu" /><span>Thu</span></label>
-          <label class="day-toggle"><input type="checkbox" name="avail_days" value="Fri" /><span>Fri</span></label>
-          <label class="day-toggle"><input type="checkbox" name="avail_days" value="Sat" /><span>Sat</span></label>
-          <label class="day-toggle"><input type="checkbox" name="avail_days" value="Sun" /><span>Sun</span></label>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Available From</label>
-          <input class="fc" name="avail_from" type="time" />
-        </div>
-        <div class="form-group">
-          <label>Available Until</label>
-          <input class="fc" name="avail_to" type="time" />
+        <div style="background:var(--cream-soft);border-radius:10px;padding:0.75rem 1rem;font-size:0.82rem;color:var(--ink-mid);line-height:1.6;border:1px solid var(--cream-dark)">
+          📅 <strong style="color:var(--ink)">Availability is managed by the caregiver</strong> in their portal under "Set Availability". View their live calendar from the Caregivers list.
         </div>
       </div>
       <div class="modal-ft">
@@ -734,7 +710,8 @@
         <div class="form-group">
           <label>Status</label>
           <select class="fc" name="status">
-            <option value="scheduled">Scheduled</option>
+            <option value="scheduled">Scheduled (awaiting confirmation)</option>
+            <option value="confirmed">Confirmed</option>
             <option value="completed">Completed</option>
             <option value="cancelled">Cancelled</option>
           </select>
@@ -1058,17 +1035,14 @@ async function loadCaregivers() {
   renderCaregivers();
 }
 
-let cgFilters = { days: [], fromTime: '', toTime: '', language: '', background: '' };
+let cgFilters = { language: '', background: '' };
 
 function applyCgFilters() {
   cgFilters = {
-    days:       [...document.querySelectorAll('[name="f-avail-day"]:checked')].map(c => c.value),
-    fromTime:   document.getElementById('f-time-from').value,
-    toTime:     document.getElementById('f-time-to').value,
     language:   document.getElementById('f-lang').value.toLowerCase().trim(),
     background: document.getElementById('f-background').value.toLowerCase().trim()
   };
-  const active = cgFilters.days.length + (cgFilters.fromTime?1:0) + (cgFilters.toTime?1:0) + (cgFilters.language?1:0) + (cgFilters.background?1:0);
+  const active = (cgFilters.language?1:0) + (cgFilters.background?1:0);
   const countEl = document.getElementById('filter-count');
   if (active) { countEl.style.display = 'inline'; countEl.textContent = active + ' filter' + (active>1?'s':'')+' active'; }
   else countEl.style.display = 'none';
@@ -1076,9 +1050,8 @@ function applyCgFilters() {
 }
 
 function clearCgFilters() {
-  cgFilters = { days: [], fromTime: '', toTime: '', language: '', background: '' };
-  document.querySelectorAll('[name="f-avail-day"]').forEach(c => c.checked = false);
-  ['f-time-from','f-time-to','f-lang','f-background'].forEach(id => document.getElementById(id).value = '');
+  cgFilters = { language: '', background: '' };
+  ['f-lang','f-background'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('filter-count').style.display = 'none';
   renderCaregivers();
 }
@@ -1088,22 +1061,18 @@ function renderCaregivers() {
   let list = caregiversList;
 
   if (q) list = list.filter(cg => cg.name.toLowerCase().includes(q) || (cg.email||'').toLowerCase().includes(q));
-  if (cgFilters.days.length)    list = list.filter(cg => cgFilters.days.every(d => (cg.avail_days||[]).includes(d)));
-  if (cgFilters.fromTime)       list = list.filter(cg => !cg.avail_from || cg.avail_from <= cgFilters.fromTime);
-  if (cgFilters.toTime)         list = list.filter(cg => !cg.avail_to   || cg.avail_to   >= cgFilters.toTime);
   if (cgFilters.language)       list = list.filter(cg => (cg.languages  ||'').toLowerCase().includes(cgFilters.language));
   if (cgFilters.background)     list = list.filter(cg => (cg.background ||'').toLowerCase().includes(cgFilters.background));
 
   document.getElementById('cg-tbody').innerHTML = list.length ? list.map(cg => `
     <tr>
       <td>
-        <button class="cg-name-btn" onclick="viewCgAvailability('${cg.id}')">${esc(cg.name)}</button>
+        <button class="cg-name-btn" onclick="openCgProfile('${cg.id}')">${esc(cg.name)}</button>
         <button class="cg-avail-link" onclick="viewCgAvailability('${cg.id}')">📅 View availability</button>
       </td>
       <td>${cg.email ? `<a href="mailto:${esc(cg.email)}" style="color:var(--terra)">${esc(cg.email)}</a>` : '—'}${cg.phone ? `<br><small>${esc(cg.phone)}</small>` : ''}</td>
       <td>${esc(cg.languages  || '—')}</td>
       <td>${esc(cg.background || '—')}</td>
-      <td><span class="avail-tag">${formatAvail(cg)}</span></td>
       <td>${cg._cnt} client${cg._cnt !== 1 ? 's' : ''}</td>
       <td><span class="badge badge-${cg.status}">${cg.status}</span></td>
       <td class="td-act">
@@ -1111,7 +1080,7 @@ function renderCaregivers() {
         <button class="btn btn-sm btn-del"  onclick="deleteCaregiver('${cg.id}')">Delete</button>
       </td>
     </tr>
-  `).join('') : '<tr class="empty-row"><td colspan="8">No caregivers found</td></tr>';
+  `).join('') : '<tr class="empty-row"><td colspan="7">No caregivers found</td></tr>';
 }
 
 function openCgModal(id) {
@@ -1121,9 +1090,7 @@ function openCgModal(id) {
   const form = document.getElementById('cg-form');
   form.reset();
   if (cg) {
-    fill(form, { name: cg.name, email: cg.email||'', phone: cg.phone||'', status: cg.status||'active', google_email: cg.google_email||'', bio: cg.bio||'', background: cg.background||'', languages: cg.languages||'', avail_from: cg.avail_from||'', avail_to: cg.avail_to||'' });
-    const days = cg.avail_days || [];
-    form.querySelectorAll('[name="avail_days"]').forEach(cb => { cb.checked = days.includes(cb.value); });
+    fill(form, { name: cg.name, email: cg.email||'', phone: cg.phone||'', status: cg.status||'active', google_email: cg.google_email||'', bio: cg.bio||'', background: cg.background||'', languages: cg.languages||'' });
   }
   document.getElementById('cg-ov').classList.add('open');
 }
@@ -1140,9 +1107,6 @@ async function saveCaregiver(e) {
     background:  fd.get('background')  || null,
     languages:   fd.get('languages')   || null,
     google_email:fd.get('google_email')?.toLowerCase().trim() || null,
-    avail_days:  fd.getAll('avail_days'),
-    avail_from:  fd.get('avail_from')  || null,
-    avail_to:    fd.get('avail_to')    || null,
     updated_at:  SV()
   };
   try {
@@ -1317,10 +1281,10 @@ function renderCalendar() {
         const chips   = appointments.filter(a => sameDay(a.scheduled_at, d) && a.scheduled_at.getHours() === h);
         return `<div class="cal-cell" onclick="openApptModal(null,'${dateStr}',${h})">
           ${chips.map(a => `
-            <div class="appt-chip${a._rec ? ' rec' : ''}" onclick="event.stopPropagation();openApptModal('${a.id}')">
+            <div class="appt-chip ${chipStatusClass(a)}" onclick="event.stopPropagation();openApptModal('${a.id}')">
               <span class="chip-name">${esc(clientsMap[a.client_id]?.name ?? '?')}</span>
               <span class="chip-cg">${esc(caregiversMap[a.caregiver_id]?.name ?? 'Unassigned')}</span>
-              <span class="chip-dur">${a.duration_minutes/60}h${a._rec ? ' · recurring' : ''}</span>
+              <span class="chip-dur">${a.duration_minutes/60}h${a._rec ? ' · rec' : ''}</span>
             </div>
           `).join('')}
         </div>`;
@@ -1486,10 +1450,15 @@ function fill(form, vals) {
   });
 }
 
-function formatAvail(cg) {
-  const days = (cg.avail_days || []).join(', ');
-  const time = cg.avail_from && cg.avail_to ? ` · ${fmtT(cg.avail_from)}–${fmtT(cg.avail_to)}` : '';
-  return days ? days + time : '<span style="color:var(--ink-light)">Not set</span>';
+function chipStatusClass(a) {
+  if (a.status === 'confirmed') return 'status-confirmed';
+  if (a.status === 'completed') return 'status-completed';
+  if (a.status === 'cancelled') return 'status-cancelled';
+  return 'status-pending';
+}
+
+function openCgProfile(cgId) {
+  window.open('caregiver-profile.html?id=' + encodeURIComponent(cgId), '_blank');
 }
 
 function fmtT(t) {
@@ -1607,8 +1576,13 @@ function cgDateStr(d) { return d.toISOString().split('T')[0]; }
 function onApptCgChange() {
   const cgId = document.getElementById('appt-cg-sel').value;
   const btn  = document.getElementById('appt-cg-avail-btn');
-  if (cgId) btn.classList.add('show');
-  else      btn.classList.remove('show');
+  if (cgId) {
+    const cg = caregiversMap[cgId];
+    btn.textContent = '📅 View ' + (cg?.name || 'caregiver') + "'s availability";
+    btn.classList.add('show');
+  } else {
+    btn.classList.remove('show');
+  }
 }
 
 function viewApptCgAvail() {

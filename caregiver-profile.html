@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Caregiver Profile · Hearthlane</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <style>
+    :root {
+      --terra:      #c08568;
+      --terra-soft: #f0d8c8;
+      --terra-deep: #8a5a40;
+      --cream:      #f7efe2;
+      --cream-soft: #fbf6ec;
+      --cream-dark: #ede0c8;
+      --ink:        #3a2e22;
+      --ink-mid:    #6b5a48;
+      --ink-light:  #98876d;
+      --sage:       #7a8b6f;
+      --sage-soft:  #d5dcc9;
+      --white:      #ffffff;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; font-family: 'DM Sans', system-ui, sans-serif; background: #f0ebe0; color: var(--ink); font-size: 15px; }
+
+    /* ── TOP BAR ── */
+    .topbar {
+      background: var(--ink); padding: 1rem 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .topbar-logo { font-size: 1.15rem; font-weight: 700; color: var(--white); }
+    .topbar-logo span { color: var(--terra); }
+    .btn-back {
+      background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.75);
+      border: none; padding: 0.4rem 1rem; border-radius: 100px;
+      font-size: 0.82rem; cursor: pointer; transition: all 0.15s; font-family: inherit;
+    }
+    .btn-back:hover { background: rgba(255,255,255,0.18); color: var(--white); }
+
+    /* ── MAIN ── */
+    .main { max-width: 940px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+    /* ── LOADING / ERROR ── */
+    #loading-state, #error-state { padding: 4rem 2rem; text-align: center; color: var(--ink-light); font-size: 1rem; }
+    #error-state { color: #c44; }
+
+    /* ── PROFILE HEADER ── */
+    .profile-header {
+      background: var(--white); border-radius: 18px;
+      padding: 2rem 2.5rem; margin-bottom: 1.5rem;
+      box-shadow: 0 2px 12px rgba(58,46,34,0.07);
+      display: flex; align-items: flex-start; gap: 1.75rem;
+    }
+    .profile-avatar {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: var(--terra); color: var(--white);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.8rem; font-weight: 700; flex-shrink: 0;
+    }
+    .profile-info { flex: 1; }
+    .profile-name { font-size: 1.6rem; font-weight: 700; color: var(--ink); }
+    .profile-status { display: inline-flex; align-items: center; padding: 0.2rem 0.65rem; border-radius: 100px; font-size: 0.78rem; font-weight: 600; margin-top: 0.4rem; }
+    .status-active   { background: #d8f0e8; color: #2a7a50; }
+    .status-inactive { background: #f0e8e8; color: #884; }
+    .profile-contact { margin-top: 0.75rem; display: flex; flex-direction: column; gap: 0.3rem; }
+    .profile-contact a { color: var(--terra); text-decoration: none; font-size: 0.9rem; }
+    .profile-contact a:hover { text-decoration: underline; }
+    .profile-contact span { font-size: 0.9rem; color: var(--ink-mid); }
+
+    /* ── CARDS ── */
+    .card { background: var(--white); border-radius: 14px; padding: 1.5rem 2rem; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(58,46,34,0.06); }
+    .card-title { font-size: 1rem; font-weight: 700; color: var(--ink); margin-bottom: 1.1rem; padding-bottom: 0.65rem; border-bottom: 1.5px solid var(--cream-dark); }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 600px) { .info-grid { grid-template-columns: 1fr; } }
+    .info-item label { display: block; font-size: 0.72rem; font-weight: 600; color: var(--ink-light); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; }
+    .info-item p { font-size: 0.92rem; color: var(--ink); line-height: 1.5; }
+    .info-item p.empty { color: var(--ink-light); font-style: italic; }
+    .bio-text { font-size: 0.92rem; color: var(--ink); line-height: 1.7; }
+    .bio-text.empty { color: var(--ink-light); font-style: italic; }
+
+    /* ── AVAILABILITY CALENDAR ── */
+    .avail-week-ctrl { display: flex; align-items: center; gap: 0.65rem; margin-bottom: 1rem; }
+    .avail-week-ctrl span { font-size: 0.9rem; font-weight: 600; min-width: 200px; text-align: center; }
+    .btn-week { padding: 0.38rem 0.85rem; border-radius: 8px; font-size: 0.82rem; background: var(--cream-soft); color: var(--ink-mid); border: 1.5px solid var(--cream-dark); cursor: pointer; transition: all 0.15s; font-family: inherit; }
+    .btn-week:hover { border-color: var(--terra); color: var(--terra); }
+
+    .avail-legend { display: flex; gap: 1rem; margin-bottom: 0.85rem; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 0.35rem; font-size: 0.76rem; color: var(--ink-mid); }
+    .legend-swatch { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+
+    .cal-wrap { border-radius: 12px; overflow: hidden; border: 1px solid var(--cream-dark); }
+    .cal-head { display: grid; grid-template-columns: 52px repeat(7,1fr); border-bottom: 1.5px solid var(--cream-dark); background: var(--cream-soft); }
+    .cal-hcell { padding: 0.65rem 0.4rem; text-align: center; }
+    .cal-hcell .dname { display: block; font-size: 0.67rem; font-weight: 600; color: var(--ink-light); text-transform: uppercase; letter-spacing: 0.04em; }
+    .cal-hcell .dnum  { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; font-size: 0.95rem; font-weight: 600; color: var(--ink); margin-top: 0.15rem; }
+    .cal-hcell.today .dnum { background: var(--terra); color: var(--white); }
+    .cal-body { max-height: 520px; overflow-y: auto; }
+    .cal-row { display: grid; grid-template-columns: 52px repeat(7,1fr); border-bottom: 1px solid #f0ebe0; }
+    .cal-row:last-child { border-bottom: none; }
+    .cal-time { padding: 0.45rem 0.35rem 0 0; font-size: 0.65rem; color: var(--ink-light); text-align: right; border-right: 1px solid var(--cream-dark); }
+    .cal-cell { min-height: 38px; border-right: 1px solid #f0ebe0; }
+    .cal-cell:last-child { border-right: none; }
+    .cal-cell.is-avail  { background: #d4f0de; }
+    .cal-cell.is-booked { background: var(--terra-soft); }
+    .cal-cell.is-confirmed { background: #fecaca; }
+
+    #cal-loading { padding: 2.5rem; text-align: center; color: var(--ink-light); font-size: 0.88rem; }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo">Hearthl<span>ane</span></div>
+  <button class="btn-back" onclick="window.close()">✕ Close</button>
+</div>
+
+<div class="main">
+  <div id="loading-state">Loading caregiver profile…</div>
+  <div id="error-state" style="display:none"></div>
+
+  <div id="profile-content" style="display:none">
+
+    <!-- HEADER -->
+    <div class="profile-header">
+      <div class="profile-avatar" id="p-avatar">?</div>
+      <div class="profile-info">
+        <div class="profile-name" id="p-name">—</div>
+        <div class="profile-status" id="p-status"></div>
+        <div class="profile-contact" id="p-contact"></div>
+      </div>
+    </div>
+
+    <!-- DETAILS -->
+    <div class="card">
+      <div class="card-title">Details</div>
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Background / Ethnicity</label>
+          <p id="p-background"></p>
+        </div>
+        <div class="info-item">
+          <label>Languages Spoken</label>
+          <p id="p-languages"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- BIO -->
+    <div class="card" id="bio-card">
+      <div class="card-title">Bio &amp; Specialties</div>
+      <p class="bio-text" id="p-bio"></p>
+    </div>
+
+    <!-- AVAILABILITY CALENDAR -->
+    <div class="card">
+      <div class="card-title">Availability Calendar</div>
+      <div class="avail-legend">
+        <div class="legend-item"><div class="legend-swatch" style="background:#d4f0de;border:1px solid #a8debb"></div>Available</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:var(--terra-soft);border:1px solid var(--terra)"></div>Booked (scheduled)</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:#fecaca;border:1px solid #EF4444"></div>Confirmed</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:#f5f0e8;border:1px solid var(--cream-dark)"></div>Not set</div>
+      </div>
+      <div class="avail-week-ctrl">
+        <button class="btn-week" onclick="shiftWeek(-1)">← Prev</button>
+        <span id="week-label">—</span>
+        <button class="btn-week" onclick="shiftWeek(1)">Next →</button>
+        <button class="btn-week" onclick="goToday()">This Week</button>
+      </div>
+      <div class="cal-wrap">
+        <div class="cal-head" id="cal-head"></div>
+        <div class="cal-body" id="cal-body"><div id="cal-loading">Loading…</div></div>
+      </div>
+    </div>
+
+  </div><!-- /profile-content -->
+</div><!-- /main -->
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDIofGQftDq5E1uo0twpEf4Ss7t8WOXyc4",
+    authDomain: "local-stage-94f88.firebaseapp.com",
+    projectId: "local-stage-94f88",
+    storageBucket: "local-stage-94f88.firebasestorage.app",
+    messagingSenderId: "177600603494",
+    appId: "1:177600603494:web:1696f09bb3e51d075ad4a7"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  const params   = new URLSearchParams(location.search);
+  const cgId     = params.get('id');
+  let weekStart  = mondayOf(new Date());
+
+  // ── BOOT ──────────────────────────────────────────────────────────────────
+  window.addEventListener('DOMContentLoaded', async () => {
+    if (!cgId) { showError('No caregiver ID provided.'); return; }
+    try {
+      const snap = await db.collection('caregivers').doc(cgId).get();
+      if (!snap.exists) { showError('Caregiver not found.'); return; }
+      const cg = { id: snap.id, ...snap.data() };
+      renderProfile(cg);
+      document.getElementById('loading-state').style.display = 'none';
+      document.getElementById('profile-content').style.display = 'block';
+      await loadAvailability();
+    } catch(ex) {
+      showError('Failed to load profile: ' + ex.message);
+    }
+  });
+
+  // ── RENDER PROFILE ────────────────────────────────────────────────────────
+  function renderProfile(cg) {
+    document.title = (cg.name || 'Caregiver') + ' · Hearthlane';
+
+    // Avatar initials
+    const initials = (cg.name || '?').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
+    document.getElementById('p-avatar').textContent = initials;
+    document.getElementById('p-name').textContent   = cg.name || '—';
+
+    // Status badge
+    const statusEl = document.getElementById('p-status');
+    statusEl.textContent = cg.status || 'active';
+    statusEl.className   = 'profile-status status-' + (cg.status || 'active');
+
+    // Contact
+    const contactEl = document.getElementById('p-contact');
+    const parts = [];
+    if (cg.email) parts.push(`<a href="mailto:${esc(cg.email)}">${esc(cg.email)}</a>`);
+    if (cg.phone) parts.push(`<span>${esc(cg.phone)}</span>`);
+    contactEl.innerHTML = parts.join('');
+
+    // Details
+    set('p-background', cg.background);
+    set('p-languages',  cg.languages);
+    set('p-bio',        cg.bio);
+
+    // Hide bio card if empty
+    if (!cg.bio) document.getElementById('bio-card').style.display = 'none';
+  }
+
+  function set(id, val) {
+    const el = document.getElementById(id);
+    if (val) { el.textContent = val; el.classList.remove('empty'); }
+    else     { el.textContent = 'Not provided'; el.classList.add('empty'); }
+  }
+
+  // ── AVAILABILITY ──────────────────────────────────────────────────────────
+  async function loadAvailability() {
+    document.getElementById('cal-body').innerHTML = '<div id="cal-loading">Loading…</div>';
+    const days = weekDays(weekStart);
+
+    const [availSnaps, apptSnap] = await Promise.all([
+      Promise.all(days.map(d =>
+        db.collection('caregivers').doc(cgId).collection('availability').doc(dateStr(d)).get()
+      )),
+      db.collection('appointments').where('caregiver_id', '==', cgId).get()
+    ]);
+
+    // Build availability map
+    const availSlots = {};
+    availSnaps.forEach((snap, i) => {
+      if (snap.exists) availSlots[dateStr(days[i])] = new Set(snap.data().slots || []);
+    });
+
+    // Build booked slots from appointments this week
+    const wEnd = new Date(weekStart); wEnd.setDate(wEnd.getDate() + 7);
+    const bookedSlots    = {};  // status = 'scheduled'
+    const confirmedSlots = {};  // status = 'confirmed'
+
+    apptSnap.docs.forEach(d => {
+      const x  = d.data();
+      if (x.status === 'cancelled' || x.status === 'completed') return;
+      const dt = x.scheduled_at?.toDate?.();
+      if (!dt || dt < weekStart || dt >= wEnd) return;
+      const ds  = dateStr(dt);
+      const dur = Math.ceil((x.duration_minutes || 60) / 60);
+      if (x.status === 'confirmed') {
+        if (!confirmedSlots[ds]) confirmedSlots[ds] = new Set();
+        for (let i = 0; i < dur; i++) confirmedSlots[ds].add(dt.getHours() + i);
+      } else {
+        if (!bookedSlots[ds]) bookedSlots[ds] = new Set();
+        for (let i = 0; i < dur; i++) bookedSlots[ds].add(dt.getHours() + i);
+      }
+    });
+
+    renderCal(days, availSlots, bookedSlots, confirmedSlots);
+  }
+
+  function renderCal(days, availSlots, bookedSlots, confirmedSlots) {
+    const today  = new Date();
+    const endDay = new Date(weekStart); endDay.setDate(endDay.getDate() + 6);
+    document.getElementById('week-label').textContent =
+      weekStart.toLocaleDateString('en', { month: 'short', day: 'numeric' }) + ' – ' +
+      endDay.toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' });
+
+    // Header
+    document.getElementById('cal-head').innerHTML =
+      '<div class="cal-hcell"></div>' +
+      days.map(d => `<div class="cal-hcell${sameDay(d, today) ? ' today' : ''}">
+        <span class="dname">${d.toLocaleDateString('en', { weekday: 'short' })}</span>
+        <span class="dnum">${d.getDate()}</span>
+      </div>`).join('');
+
+    // Body — 7am to 9pm
+    const hours = Array.from({ length: 15 }, (_, i) => i + 7);
+    document.getElementById('cal-body').innerHTML = hours.map(h => `
+      <div class="cal-row">
+        <div class="cal-time">${fmt12h(h)}</div>
+        ${days.map(d => {
+          const ds        = dateStr(d);
+          const avail     = availSlots[ds]?.has(h);
+          const booked    = bookedSlots[ds]?.has(h);
+          const confirmed = confirmedSlots[ds]?.has(h);
+          let cls = 'cal-cell';
+          if (confirmed)   cls += ' is-confirmed';
+          else if (booked) cls += ' is-booked';
+          else if (avail)  cls += ' is-avail';
+          return `<div class="${cls}"></div>`;
+        }).join('')}
+      </div>`).join('');
+  }
+
+  async function shiftWeek(dir) {
+    weekStart.setDate(weekStart.getDate() + dir * 7);
+    await loadAvailability();
+  }
+
+  async function goToday() {
+    weekStart = mondayOf(new Date());
+    await loadAvailability();
+  }
+
+  // ── HELPERS ───────────────────────────────────────────────────────────────
+  function mondayOf(date) {
+    const d = new Date(date);
+    const day = d.getDay();
+    d.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+
+  function weekDays(start) {
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(start); d.setDate(d.getDate() + i); return d;
+    });
+  }
+
+  function dateStr(d) { return d.toISOString().split('T')[0]; }
+
+  function sameDay(a, b) {
+    return a.getFullYear() === b.getFullYear() &&
+           a.getMonth()    === b.getMonth()    &&
+           a.getDate()     === b.getDate();
+  }
+
+  function fmt12h(h) { return `${h % 12 || 12}${h < 12 ? 'am' : 'pm'}`; }
+
+  function esc(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function showError(msg) {
+    document.getElementById('loading-state').style.display = 'none';
+    const el = document.getElementById('error-state');
+    el.style.display = 'block';
+    el.textContent = msg;
+  }
+</script>
+</body>
+</html>

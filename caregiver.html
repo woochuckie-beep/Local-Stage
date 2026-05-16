@@ -134,8 +134,17 @@
     .cal-cell-ro:last-child { border-right: none; }
     .appt-chip { border-radius: 6px; padding: 0.22rem 0.4rem; font-size: 0.7rem; margin-bottom: 2px; background: var(--terra); color: var(--white); line-height: 1.4; }
     .appt-chip.rec { background: var(--sage); }
+    .appt-chip.status-pending   { background: #F59E0B; color: var(--white); }
+    .appt-chip.status-confirmed { background: #EF4444; color: var(--white); }
+    .appt-chip.status-completed { background: var(--sage); opacity: 0.85; }
+    .appt-chip.status-cancelled { background: #9ca3af; opacity: 0.65; }
     .chip-name { font-weight: 600; display: block; }
     .chip-dur { display: block; font-size: 0.65rem; opacity: 0.8; }
+    .btn-confirm-chip { display: block; width: 100%; margin-top: 4px; padding: 2px 6px; font-size: 0.62rem; font-weight: 700; background: rgba(255,255,255,0.22); color: var(--white); border: 1px solid rgba(255,255,255,0.45); border-radius: 4px; cursor: pointer; text-align: center; transition: background 0.15s; letter-spacing: 0.03em; }
+    .btn-confirm-chip:hover { background: rgba(255,255,255,0.4); }
+    .sched-legend { display: flex; gap: 0.85rem; margin-bottom: 0.85rem; flex-wrap: wrap; }
+    .sched-legend-item { display: flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; color: var(--ink-mid); }
+    .sched-legend-swatch { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
 
     /* ── AVAILABILITY CALENDAR ── */
     .avail-wrap { background: var(--white); border-radius: 14px; overflow: hidden; box-shadow: 0 2px 8px rgba(58,46,34,0.06); margin-bottom: 1rem; }
@@ -258,7 +267,12 @@
     <!-- MY SCHEDULE -->
     <div class="view" id="view-schedule">
       <div class="view-title">My Schedule</div>
-      <div class="view-sub">Your confirmed upcoming and past appointments</div>
+      <div class="view-sub">Your scheduled and confirmed appointments</div>
+      <div class="sched-legend">
+        <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#F59E0B"></div>Scheduled — tap Confirm to accept</div>
+        <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#EF4444"></div>Confirmed</div>
+        <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:var(--sage)"></div>Completed</div>
+      </div>
       <div class="week-controls">
         <button class="btn-week" onclick="schedShiftWeek(-1)">← Prev</button>
         <div class="week-label" id="sched-week-label">—</div>
@@ -537,17 +551,37 @@ function renderScheduleCal() {
       <div class="cal-time">${fmt12h(h)}</div>
       ${days.map(d => {
         const chips = weekAppts.filter(a => sameDay(a.scheduled_at,d) && a.scheduled_at.getHours()===h);
-        return `<div class="cal-cell-ro">${chips.map(a => `
-          <div class="appt-chip${a.recurring?' rec':''}">
+        return `<div class="cal-cell-ro">${chips.map(a => {
+          const sc = a.status === 'confirmed' ? 'status-confirmed'
+                   : a.status === 'completed' ? 'status-completed'
+                   : a.status === 'cancelled' ? 'status-cancelled'
+                   : 'status-pending';
+          return `<div class="appt-chip ${sc}">
             <span class="chip-name">${esc(clientsMap[a.client_id]?.name||'Client')}</span>
             <span class="chip-dur">${a.duration_minutes/60}h${a.recurring?' · rec':''}</span>
-          </div>`).join('')}</div>`;
+            ${a.status === 'scheduled' ? `<button class="btn-confirm-chip" onclick="event.stopPropagation();confirmAppointment('${a.id}')">✓ Confirm</button>` : ''}
+          </div>`;
+        }).join('')}</div>`;
       }).join('')}
     </div>`).join('');
 }
 
 function schedShiftWeek(dir) { schedWeekStart.setDate(schedWeekStart.getDate()+dir*7); renderScheduleCal(); }
 function schedGoToday()      { schedWeekStart = mondayOf(new Date()); renderScheduleCal(); }
+
+async function confirmAppointment(apptId) {
+  try {
+    await db.collection('appointments').doc(apptId).update({
+      status: 'confirmed',
+      confirmed_at: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    const appt = allAppointments.find(a => a.id === apptId);
+    if (appt) appt.status = 'confirmed';
+    renderScheduleCal();
+    loadDashboard();
+    toast('Appointment confirmed');
+  } catch(ex) { toast('Error: ' + ex.message, true); }
+}
 
 // ── AVAILABILITY CALENDAR ─────────────────────────────────────────────────────
 async function loadAvailability() {
