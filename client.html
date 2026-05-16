@@ -125,6 +125,9 @@
     #toast.show { opacity: 1; transform: translateY(0); }
     #toast.err { background: #c44; }
 
+    /* ── LAST UPDATED ── */
+    #last-updated { position: fixed; bottom: 0.6rem; right: 1.1rem; font-size: 0.7rem; color: var(--ink-light); z-index: 100; pointer-events: none; letter-spacing: 0.01em; }
+
     /* ── BILLING CARD ── */
     .billing-card { border: 1.5px solid var(--cream-dark); border-radius: 14px; padding: 1.5rem; margin-bottom: 1.25rem; background: var(--white); }
     .billing-head { display: flex; align-items: center; gap: 0.65rem; margin-bottom: 0.6rem; }
@@ -304,6 +307,7 @@
 </div>
 
 <div id="toast"></div>
+<div id="last-updated"></div>
 
 <script>
   const firebaseConfig = {
@@ -417,6 +421,7 @@
             id: d.id, ...d.data(), scheduled_at: d.data().scheduled_at?.toDate()
           })).filter(a => a.status !== 'cancelled' && a.scheduled_at)
             .sort((a, b) => a.scheduled_at - b.scheduled_at);
+          stampUpdated();
           if (activeTab() === 'dashboard') renderDashboard();
         }, err => console.warn('Appointments listener error:', err));
 
@@ -425,6 +430,7 @@
         .onSnapshot(snap => {
           if (!snap.exists) return;
           clientDoc = { id: snap.id, ...snap.data() };
+          stampUpdated();
           if (activeTab() === 'plan')      renderPlan();
           if (activeTab() === 'dashboard') renderDashboard();
           // Reload caregiver if it changed
@@ -650,6 +656,11 @@
       return url;
     } catch { return null; }
   }
+  function stampUpdated() {
+    const el = document.getElementById('last-updated');
+    if (el) el.textContent = 'Updated ' + new Date().toLocaleTimeString('en', { hour: 'numeric', minute: '2-digit' });
+  }
+
   let _tt;
   function toast(msg, isErr = false) {
     const el = document.getElementById('toast'); el.textContent = msg;
