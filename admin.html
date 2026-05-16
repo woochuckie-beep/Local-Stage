@@ -236,6 +236,71 @@
     }
     .day-toggle input:checked + span { background: var(--terra); color: var(--white); border-color: var(--terra); }
     .avail-tag { font-size: 0.8rem; color: var(--ink-mid); }
+
+    /* ── CAREGIVER FILTERS ── */
+    .filter-bar {
+      background: var(--cream-soft); border-radius: 12px;
+      border: 1px solid var(--cream-dark); padding: 1rem 1.25rem;
+      margin-bottom: 1rem; display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;
+    }
+    .filter-group { display: flex; flex-direction: column; gap: 0.3rem; }
+    .filter-group label { font-size: 0.73rem; font-weight: 600; color: var(--ink-light); text-transform: uppercase; letter-spacing: 0.05em; }
+    .filter-group .fc-sm {
+      padding: 0.45rem 0.75rem; border: 1.5px solid var(--cream-dark); border-radius: 8px;
+      font-size: 0.85rem; color: var(--ink); background: var(--white);
+      font-family: inherit; min-width: 120px;
+    }
+    .filter-group .fc-sm:focus { outline: none; border-color: var(--terra); }
+    .filter-day-chips { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+    .f-day { display: flex; cursor: pointer; }
+    .f-day input { display: none; }
+    .f-day span { padding: 0.3rem 0.55rem; border-radius: 100px; font-size: 0.76rem; font-weight: 500; background: var(--white); color: var(--ink-light); border: 1.5px solid var(--cream-dark); transition: all 0.12s; user-select: none; }
+    .f-day input:checked + span { background: var(--terra); color: var(--white); border-color: var(--terra); }
+    .btn-filter { padding: 0.5rem 1.1rem; background: var(--ink); color: var(--white); border: none; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: background 0.15s; }
+    .btn-filter:hover { background: var(--terra); }
+    .btn-filter-clear { padding: 0.5rem 1rem; background: transparent; color: var(--ink-mid); border: 1.5px solid var(--cream-dark); border-radius: 8px; font-size: 0.85rem; cursor: pointer; transition: all 0.15s; }
+    .btn-filter-clear:hover { border-color: var(--terra); color: var(--terra); }
+    .filter-active-count { font-size: 0.78rem; color: var(--terra-deep); font-weight: 600; display: none; }
+
+    /* ── CLICKABLE NAME ── */
+    .cg-name-btn { background: none; border: none; color: var(--ink); font-weight: 600; font-size: 0.9rem; cursor: pointer; padding: 0; text-align: left; transition: color 0.15s; }
+    .cg-name-btn:hover { color: var(--terra); text-decoration: underline; text-underline-offset: 3px; }
+    .cg-avail-link { display: block; font-size: 0.75rem; color: var(--terra-deep); margin-top: 0.15rem; cursor: pointer; background: none; border: none; padding: 0; font-family: inherit; }
+    .cg-avail-link:hover { color: var(--terra); }
+
+    /* ── AVAILABILITY MODAL CALENDAR ── */
+    .avail-modal-head { display: grid; grid-template-columns: 52px repeat(7,1fr); border-bottom: 1.5px solid var(--cream-dark); }
+    .avail-modal-body { max-height: 480px; overflow-y: auto; }
+    .avail-modal-row { display: grid; grid-template-columns: 52px repeat(7,1fr); border-bottom: 1px solid #f0ebe0; }
+    .avail-modal-row:last-child { border-bottom: none; }
+    .avail-modal-time { padding: 0.4rem 0.35rem 0 0; font-size: 0.66rem; color: var(--ink-light); text-align: right; border-right: 1px solid var(--cream-dark); }
+    .avail-modal-cell { min-height: 40px; border-right: 1px solid #f0ebe0; transition: background 0.08s; }
+    .avail-modal-cell:last-child { border-right: none; }
+    .avail-modal-cell.is-avail { background: #d4f0de; }
+    .avail-modal-cell.is-booked { background: var(--terra-soft); }
+    .avail-modal-cell.is-avail.selectable { cursor: pointer; }
+    .avail-modal-cell.is-avail.selectable:hover { background: #a8debb; }
+    .avail-modal-hcell { padding: 0.6rem 0.4rem; text-align: center; }
+    .avail-modal-hcell .dmn { display: block; font-size: 0.66rem; font-weight: 600; color: var(--ink-light); text-transform: uppercase; letter-spacing: 0.04em; }
+    .avail-modal-hcell .dnum { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; font-size: 0.95rem; font-weight: 600; color: var(--ink); margin-top: 0.15rem; }
+    .avail-modal-hcell.today .dnum { background: var(--terra); color: var(--white); }
+    .avail-modal-legend { display: flex; gap: 1.25rem; margin: 0.75rem 0; flex-wrap: wrap; }
+    .avail-modal-legend span { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--ink-mid); }
+    .avail-modal-legend span::before { content: ''; display: inline-block; width: 12px; height: 12px; border-radius: 3px; }
+    .avail-modal-legend .leg-avail::before { background: #d4f0de; border: 1px solid #a8debb; }
+    .avail-modal-legend .leg-booked::before { background: var(--terra-soft); border: 1px solid var(--terra); }
+    .avail-modal-legend .leg-free::before { background: #f5f0e8; border: 1px solid var(--cream-dark); }
+    .avail-modal-hint { background: var(--cream-soft); border-radius: 8px; padding: 0.6rem 0.9rem; font-size: 0.82rem; color: var(--ink-mid); margin-bottom: 0.75rem; display: none; }
+    .avail-modal-hint.show { display: block; }
+    .avail-week-ctrl { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.75rem; }
+    .avail-week-ctrl span { font-size: 0.88rem; font-weight: 600; min-width: 190px; text-align: center; }
+    .btn-avail-week { padding: 0.3rem 0.75rem; border-radius: 7px; font-size: 0.8rem; background: var(--white); color: var(--ink-mid); border: 1.5px solid var(--cream-dark); cursor: pointer; transition: all 0.15s; }
+    .btn-avail-week:hover { border-color: var(--terra); color: var(--terra); }
+
+    /* ── APPT CAREGIVER LINK ── */
+    .appt-cg-avail-btn { display: none; margin-top: 0.4rem; background: none; border: none; color: var(--terra-deep); font-size: 0.8rem; font-weight: 500; cursor: pointer; font-family: inherit; text-decoration: underline; text-underline-offset: 3px; padding: 0; }
+    .appt-cg-avail-btn:hover { color: var(--terra); }
+    .appt-cg-avail-btn.show { display: inline-flex; align-items: center; gap: 0.3rem; }
   </style>
 </head>
 <body>
@@ -356,6 +421,44 @@
         </div>
         <button class="btn btn-add" onclick="openCgModal()">+ Add Caregiver</button>
       </div>
+
+      <!-- FILTER BAR -->
+      <div class="filter-bar">
+        <div class="filter-group">
+          <label>Available Days</label>
+          <div class="filter-day-chips">
+            <label class="f-day"><input type="checkbox" name="f-avail-day" value="Mon"><span>Mon</span></label>
+            <label class="f-day"><input type="checkbox" name="f-avail-day" value="Tue"><span>Tue</span></label>
+            <label class="f-day"><input type="checkbox" name="f-avail-day" value="Wed"><span>Wed</span></label>
+            <label class="f-day"><input type="checkbox" name="f-avail-day" value="Thu"><span>Thu</span></label>
+            <label class="f-day"><input type="checkbox" name="f-avail-day" value="Fri"><span>Fri</span></label>
+            <label class="f-day"><input type="checkbox" name="f-avail-day" value="Sat"><span>Sat</span></label>
+            <label class="f-day"><input type="checkbox" name="f-avail-day" value="Sun"><span>Sun</span></label>
+          </div>
+        </div>
+        <div class="filter-group">
+          <label>Available From</label>
+          <input class="fc-sm" type="time" id="f-time-from" />
+        </div>
+        <div class="filter-group">
+          <label>Available Until</label>
+          <input class="fc-sm" type="time" id="f-time-to" />
+        </div>
+        <div class="filter-group">
+          <label>Language</label>
+          <input class="fc-sm" type="text" id="f-lang" placeholder="e.g. French" />
+        </div>
+        <div class="filter-group">
+          <label>Background</label>
+          <input class="fc-sm" type="text" id="f-background" placeholder="e.g. Filipino" />
+        </div>
+        <div style="display:flex;gap:0.5rem;align-items:flex-end">
+          <button class="btn-filter" onclick="applyCgFilters()">Apply</button>
+          <button class="btn-filter-clear" onclick="clearCgFilters()">Clear</button>
+        </div>
+        <span class="filter-active-count" id="filter-count"></span>
+      </div>
+
       <div class="card">
         <div class="toolbar">
           <input class="search-in" id="cg-q" type="search" placeholder="Search caregivers…" oninput="renderCaregivers()" />
@@ -363,10 +466,10 @@
         <table>
           <thead>
             <tr>
-              <th>Name</th><th>Contact</th><th>Availability</th><th>Clients</th><th>Status</th><th>Actions</th>
+              <th>Name</th><th>Contact</th><th>Languages</th><th>Background</th><th>Availability</th><th>Clients</th><th>Status</th><th>Actions</th>
             </tr>
           </thead>
-          <tbody id="cg-tbody"><tr class="empty-row"><td colspan="5">Loading…</td></tr></tbody>
+          <tbody id="cg-tbody"><tr class="empty-row"><td colspan="8">Loading…</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -523,6 +626,16 @@
         <input class="fc" name="google_email" type="email" placeholder="their@gmail.com" />
         <small style="color:var(--ink-light);font-size:0.78rem;margin-top:0.3rem;display:block">Caregiver uses this Google account to sign in to their portal.</small>
       </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Background / Ethnicity</label>
+          <input class="fc" name="background" placeholder="e.g. Filipino, Caribbean, South Asian…" />
+        </div>
+        <div class="form-group">
+          <label>Languages Spoken</label>
+          <input class="fc" name="languages" placeholder="e.g. English, Tagalog, French…" />
+        </div>
+      </div>
       <div class="form-group">
         <label>Bio / Specialties</label>
         <textarea class="fc" name="bio" placeholder="Skills, certifications, experience…"></textarea>
@@ -574,9 +687,12 @@
         </div>
         <div class="form-group">
           <label>Caregiver *</label>
-          <select class="fc" name="caregiver_id" id="appt-cg-sel" required>
+          <select class="fc" name="caregiver_id" id="appt-cg-sel" required onchange="onApptCgChange()">
             <option value="">— Select Caregiver —</option>
           </select>
+          <button type="button" class="appt-cg-avail-btn" id="appt-cg-avail-btn" onclick="viewApptCgAvail()">
+            📅 View availability calendar
+          </button>
         </div>
       </div>
       <div class="form-row">
@@ -668,6 +784,34 @@
         <button type="submit" class="btn btn-add">Grant Access</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- ══════════ CAREGIVER AVAILABILITY MODAL ══════════ -->
+<div class="modal-ov" id="cg-avail-ov">
+  <div class="modal" style="max-width:880px;width:96%">
+    <div class="modal-hd">
+      <div class="modal-ttl" id="cg-avail-title">Availability</div>
+      <button class="modal-x" onclick="closeModal('cg-avail-ov')">✕</button>
+    </div>
+    <div class="avail-modal-hint" id="cg-avail-hint">
+      📅 Click a <strong>green available slot</strong> to use it as the appointment date and time.
+    </div>
+    <div class="avail-modal-legend">
+      <span class="leg-avail">Available</span>
+      <span class="leg-booked">Booked</span>
+      <span class="leg-free">Not set</span>
+    </div>
+    <div class="avail-week-ctrl">
+      <button class="btn-avail-week" onclick="cgAvailShiftWeek(-1)">← Prev</button>
+      <span id="cg-avail-week-label">—</span>
+      <button class="btn-avail-week" onclick="cgAvailShiftWeek(1)">Next →</button>
+      <button class="btn-avail-week" onclick="cgAvailGoToday()">This Week</button>
+    </div>
+    <div style="background:var(--white);border-radius:12px;overflow:hidden;border:1px solid var(--cream-dark)">
+      <div class="avail-modal-head" id="cg-avail-cal-head"></div>
+      <div class="avail-modal-body" id="cg-avail-cal-body"><div class="loading-msg">Loading…</div></div>
+    </div>
   </div>
 </div>
 
@@ -914,16 +1058,51 @@ async function loadCaregivers() {
   renderCaregivers();
 }
 
+let cgFilters = { days: [], fromTime: '', toTime: '', language: '', background: '' };
+
+function applyCgFilters() {
+  cgFilters = {
+    days:       [...document.querySelectorAll('[name="f-avail-day"]:checked')].map(c => c.value),
+    fromTime:   document.getElementById('f-time-from').value,
+    toTime:     document.getElementById('f-time-to').value,
+    language:   document.getElementById('f-lang').value.toLowerCase().trim(),
+    background: document.getElementById('f-background').value.toLowerCase().trim()
+  };
+  const active = cgFilters.days.length + (cgFilters.fromTime?1:0) + (cgFilters.toTime?1:0) + (cgFilters.language?1:0) + (cgFilters.background?1:0);
+  const countEl = document.getElementById('filter-count');
+  if (active) { countEl.style.display = 'inline'; countEl.textContent = active + ' filter' + (active>1?'s':'')+' active'; }
+  else countEl.style.display = 'none';
+  renderCaregivers();
+}
+
+function clearCgFilters() {
+  cgFilters = { days: [], fromTime: '', toTime: '', language: '', background: '' };
+  document.querySelectorAll('[name="f-avail-day"]').forEach(c => c.checked = false);
+  ['f-time-from','f-time-to','f-lang','f-background'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('filter-count').style.display = 'none';
+  renderCaregivers();
+}
+
 function renderCaregivers() {
   const q = (document.getElementById('cg-q')?.value || '').toLowerCase();
-  const list = q
-    ? caregiversList.filter(cg => cg.name.toLowerCase().includes(q) || (cg.email||'').toLowerCase().includes(q))
-    : caregiversList;
+  let list = caregiversList;
+
+  if (q) list = list.filter(cg => cg.name.toLowerCase().includes(q) || (cg.email||'').toLowerCase().includes(q));
+  if (cgFilters.days.length)    list = list.filter(cg => cgFilters.days.every(d => (cg.avail_days||[]).includes(d)));
+  if (cgFilters.fromTime)       list = list.filter(cg => !cg.avail_from || cg.avail_from <= cgFilters.fromTime);
+  if (cgFilters.toTime)         list = list.filter(cg => !cg.avail_to   || cg.avail_to   >= cgFilters.toTime);
+  if (cgFilters.language)       list = list.filter(cg => (cg.languages  ||'').toLowerCase().includes(cgFilters.language));
+  if (cgFilters.background)     list = list.filter(cg => (cg.background ||'').toLowerCase().includes(cgFilters.background));
 
   document.getElementById('cg-tbody').innerHTML = list.length ? list.map(cg => `
     <tr>
-      <td><strong>${esc(cg.name)}</strong></td>
+      <td>
+        <button class="cg-name-btn" onclick="viewCgAvailability('${cg.id}')">${esc(cg.name)}</button>
+        <button class="cg-avail-link" onclick="viewCgAvailability('${cg.id}')">📅 View availability</button>
+      </td>
       <td>${cg.email ? `<a href="mailto:${esc(cg.email)}" style="color:var(--terra)">${esc(cg.email)}</a>` : '—'}${cg.phone ? `<br><small>${esc(cg.phone)}</small>` : ''}</td>
+      <td>${esc(cg.languages  || '—')}</td>
+      <td>${esc(cg.background || '—')}</td>
       <td><span class="avail-tag">${formatAvail(cg)}</span></td>
       <td>${cg._cnt} client${cg._cnt !== 1 ? 's' : ''}</td>
       <td><span class="badge badge-${cg.status}">${cg.status}</span></td>
@@ -932,7 +1111,7 @@ function renderCaregivers() {
         <button class="btn btn-sm btn-del"  onclick="deleteCaregiver('${cg.id}')">Delete</button>
       </td>
     </tr>
-  `).join('') : '<tr class="empty-row"><td colspan="5">No caregivers found</td></tr>';
+  `).join('') : '<tr class="empty-row"><td colspan="8">No caregivers found</td></tr>';
 }
 
 function openCgModal(id) {
@@ -942,7 +1121,7 @@ function openCgModal(id) {
   const form = document.getElementById('cg-form');
   form.reset();
   if (cg) {
-    fill(form, { name: cg.name, email: cg.email||'', phone: cg.phone||'', status: cg.status||'active', google_email: cg.google_email||'', bio: cg.bio||'', avail_from: cg.avail_from||'', avail_to: cg.avail_to||'' });
+    fill(form, { name: cg.name, email: cg.email||'', phone: cg.phone||'', status: cg.status||'active', google_email: cg.google_email||'', bio: cg.bio||'', background: cg.background||'', languages: cg.languages||'', avail_from: cg.avail_from||'', avail_to: cg.avail_to||'' });
     const days = cg.avail_days || [];
     form.querySelectorAll('[name="avail_days"]').forEach(cb => { cb.checked = days.includes(cb.value); });
   }
@@ -953,16 +1132,18 @@ async function saveCaregiver(e) {
   e.preventDefault();
   const fd = new FormData(e.target);
   const data = {
-    name:       fd.get('name'),
-    email:      fd.get('email')      || null,
-    phone:      fd.get('phone')      || null,
-    status:     fd.get('status'),
-    bio:        fd.get('bio')        || null,
-    google_email: fd.get('google_email')?.toLowerCase().trim() || null,
-    avail_days:   fd.getAll('avail_days'),
-    avail_from:   fd.get('avail_from') || null,
-    avail_to:     fd.get('avail_to')   || null,
-    updated_at:   SV()
+    name:        fd.get('name'),
+    email:       fd.get('email')       || null,
+    phone:       fd.get('phone')       || null,
+    status:      fd.get('status'),
+    bio:         fd.get('bio')         || null,
+    background:  fd.get('background')  || null,
+    languages:   fd.get('languages')   || null,
+    google_email:fd.get('google_email')?.toLowerCase().trim() || null,
+    avail_days:  fd.getAll('avail_days'),
+    avail_from:  fd.get('avail_from')  || null,
+    avail_to:    fd.get('avail_to')    || null,
+    updated_at:  SV()
   };
   try {
     if (editingId) {
@@ -1261,7 +1442,11 @@ async function deleteAppt() {
 }
 
 // ── MODAL HELPERS ────────────────────────────────────────────────────────────
-function closeModal(id) { document.getElementById(id).classList.remove('open'); editingId = null; }
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  editingId = null;
+  if (id === 'appt-ov') document.getElementById('appt-cg-avail-btn')?.classList.remove('show');
+}
 
 document.querySelectorAll('.modal-ov').forEach(ov =>
   ov.addEventListener('click', e => { if (e.target === ov) closeModal(ov.id); })
@@ -1312,6 +1497,124 @@ function fmtT(t) {
   const [h, m] = t.split(':').map(Number);
   const ap = h >= 12 ? 'pm' : 'am';
   return `${h % 12 || 12}:${String(m).padStart(2,'0')}${ap}`;
+}
+
+// ── CAREGIVER AVAILABILITY VIEWER ────────────────────────────────────────────
+let cgAvailWeekStart = mondayOf(new Date());
+let cgAvailId        = null;
+let cgAvailSelectMode = false;
+
+async function viewCgAvailability(cgId, selectMode = false) {
+  cgAvailId         = cgId;
+  cgAvailSelectMode = selectMode;
+  cgAvailWeekStart  = mondayOf(new Date());
+  const cg = caregiversMap[cgId];
+  document.getElementById('cg-avail-title').textContent = (cg?.name || 'Caregiver') + ' — Availability';
+  const hint = document.getElementById('cg-avail-hint');
+  hint.classList.toggle('show', selectMode);
+  document.getElementById('cg-avail-ov').classList.add('open');
+  await loadAndRenderCgAvail();
+}
+
+async function loadAndRenderCgAvail() {
+  document.getElementById('cg-avail-cal-body').innerHTML = '<div class="loading-msg">Loading…</div>';
+  const days = cgWeekDays(cgAvailWeekStart);
+
+  const [availSnaps, apptSnap] = await Promise.all([
+    Promise.all(days.map(d =>
+      db.collection('caregivers').doc(cgAvailId).collection('availability').doc(cgDateStr(d)).get()
+    )),
+    db.collection('appointments').where('caregiver_id', '==', cgAvailId).get()
+  ]);
+
+  const availSlots = {};
+  availSnaps.forEach((snap, i) => {
+    if (snap.exists) availSlots[cgDateStr(days[i])] = new Set(snap.data().slots || []);
+  });
+
+  const wEnd = new Date(cgAvailWeekStart); wEnd.setDate(wEnd.getDate() + 7);
+  const bookedSlots = {};
+  apptSnap.docs.forEach(d => {
+    const x = d.data();
+    if (x.status === 'cancelled') return;
+    const dt = x.scheduled_at?.toDate?.();
+    if (!dt || dt < cgAvailWeekStart || dt >= wEnd) return;
+    const ds = cgDateStr(dt);
+    if (!bookedSlots[ds]) bookedSlots[ds] = new Set();
+    const dur = Math.ceil((x.duration_minutes || 60) / 60);
+    for (let i = 0; i < dur; i++) bookedSlots[ds].add(dt.getHours() + i);
+  });
+
+  renderCgAvailCal(days, availSlots, bookedSlots);
+}
+
+function renderCgAvailCal(days, availSlots, bookedSlots) {
+  const wEnd   = new Date(cgAvailWeekStart); wEnd.setDate(wEnd.getDate() + 7);
+  const endDay = new Date(wEnd); endDay.setDate(endDay.getDate() - 1);
+  document.getElementById('cg-avail-week-label').textContent =
+    cgAvailWeekStart.toLocaleDateString('en',{month:'short',day:'numeric'}) + ' – ' +
+    endDay.toLocaleDateString('en',{month:'short',day:'numeric',year:'numeric'});
+
+  const today = new Date();
+  document.getElementById('cg-avail-cal-head').innerHTML =
+    '<div class="avail-modal-hcell"></div>' +
+    days.map(d => `<div class="avail-modal-hcell${sameDay(d,today)?' today':''}">
+      <span class="dmn">${d.toLocaleDateString('en',{weekday:'short'})}</span>
+      <span class="dnum">${d.getDate()}</span>
+    </div>`).join('');
+
+  const hours = Array.from({length:15}, (_,i) => i + 7);
+  document.getElementById('cg-avail-cal-body').innerHTML = hours.map(h => `
+    <div class="avail-modal-row">
+      <div class="avail-modal-time">${fmt12h(h)}</div>
+      ${days.map(d => {
+        const ds     = cgDateStr(d);
+        const avail  = availSlots[ds]?.has(h);
+        const booked = bookedSlots[ds]?.has(h);
+        let cls = 'avail-modal-cell';
+        if (booked)      cls += ' is-booked';
+        else if (avail)  cls += ' is-avail' + (cgAvailSelectMode ? ' selectable' : '');
+        const click = (avail && !booked && cgAvailSelectMode)
+          ? `onclick="onCgAvailSlotClick('${ds}',${h})"` : '';
+        const title = booked ? 'Booked' : avail ? (cgAvailSelectMode ? 'Click to select this slot' : 'Available') : '';
+        return `<div class="${cls}" ${click} ${title?`title="${title}"`:''} ></div>`;
+      }).join('')}
+    </div>`).join('');
+}
+
+function onCgAvailSlotClick(dateStr, hour) {
+  document.getElementById('appt-date').value = dateStr;
+  document.getElementById('appt-time').value = String(hour).padStart(2,'0') + ':00';
+  closeModal('cg-avail-ov');
+  toast('Slot selected — finish filling in the appointment details.');
+}
+
+async function cgAvailShiftWeek(dir) {
+  cgAvailWeekStart.setDate(cgAvailWeekStart.getDate() + dir * 7);
+  await loadAndRenderCgAvail();
+}
+async function cgAvailGoToday() {
+  cgAvailWeekStart = mondayOf(new Date());
+  await loadAndRenderCgAvail();
+}
+
+function cgWeekDays(start) {
+  return Array.from({length:7}, (_,i) => { const d = new Date(start); d.setDate(d.getDate()+i); return d; });
+}
+function cgDateStr(d) { return d.toISOString().split('T')[0]; }
+
+// ── APPOINTMENT CAREGIVER AVAILABILITY LINK ───────────────────────────────────
+function onApptCgChange() {
+  const cgId = document.getElementById('appt-cg-sel').value;
+  const btn  = document.getElementById('appt-cg-avail-btn');
+  if (cgId) btn.classList.add('show');
+  else      btn.classList.remove('show');
+}
+
+function viewApptCgAvail() {
+  const cgId = document.getElementById('appt-cg-sel').value;
+  if (!cgId) return;
+  viewCgAvailability(cgId, true);
 }
 
 // ── CAREGIVER ACCESS ─────────────────────────────────────────────────────────
