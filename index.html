@@ -1854,10 +1854,10 @@
 <nav class="nav">
   <a class="nav-logo" href="#" onclick="showView('home');return false;">Hearth<em>lane</em></a>
   <ul class="nav-links">
-    <li><a href="#trust-section">Why Hearthlane</a></li>
-    <li><a href="#how">How it works</a></li>
-    <li><a href="#pricing">Care options</a></li>
-    <li><a href="#faq">FAQ</a></li>
+    <li><a href="#trust-section" onclick="navTo('trust-section');return false;">Why Hearthlane</a></li>
+    <li><a href="#how" onclick="navTo('how');return false;">How it works</a></li>
+    <li><a href="#pricing" onclick="navTo('pricing');return false;">Care options</a></li>
+    <li><a href="#faq" onclick="navTo('faq');return false;">FAQ</a></li>
     <li><a href="#" onclick="openPortal();return false;" style="color:var(--terra-deep);font-weight:500;">Family Portal</a></li>
   </ul>
   <button class="nav-cta" onclick="document.getElementById('portal-overlay').classList.remove('open');document.body.style.overflow='';startIntake('weekly')">Talk to a coordinator</button>
@@ -1866,10 +1866,10 @@
   </button>
 </nav>
 <div class="mobile-menu" id="mobile-menu">
-  <a href="#trust-section" onclick="toggleMobileMenu()">Why Hearthlane</a>
-  <a href="#how" onclick="toggleMobileMenu()">How it works</a>
-  <a href="#pricing" onclick="toggleMobileMenu()">Care options</a>
-  <a href="#faq" onclick="toggleMobileMenu()">FAQ</a>
+  <a href="#trust-section" onclick="toggleMobileMenu();navTo('trust-section');return false;">Why Hearthlane</a>
+  <a href="#how" onclick="toggleMobileMenu();navTo('how');return false;">How it works</a>
+  <a href="#pricing" onclick="toggleMobileMenu();navTo('pricing');return false;">Care options</a>
+  <a href="#faq" onclick="toggleMobileMenu();navTo('faq');return false;">FAQ</a>
   <a href="#" onclick="toggleMobileMenu(); openPortal(); return false;" style="color:var(--terra-deep);font-weight:500;padding:1.1rem 0;border-bottom:1px solid var(--cream-dark);text-decoration:none;">Family Portal</a>
   <a class="mm-cta" href="#" onclick="toggleMobileMenu();document.getElementById('portal-overlay').classList.remove('open');document.body.style.overflow='';startIntake('weekly');return false;">Talk to a coordinator</a>
 </div>
@@ -2580,12 +2580,33 @@
     <h2>Have a coordinator call you.<br>No scripts. Just a <em>real conversation.</em></h2>
     <p>Tell us a little about your family. We&rsquo;ll figure out together what kind of support makes sense &mdash; a caregiver who shows up consistently, or a single visit to start. From <strong>$610/month</strong> or $45/hr for a one-time visit, with a 14-day fit guarantee.</p>
     <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
-      <button class="btn-primary" onclick="startIntake('weekly')">
+      <button class="btn-primary" onclick="openAreaCheck()">
         See if we serve your area <span class="arrow">→</span>
       </button>
       <a class="btn-secondary" href="tel:+19055552273">Or call (905) 555-CARE</a>
     </div>
   </section>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     AREA CHECK MODAL
+     ════════════════════════════════════════════════════════════════ -->
+<div id="area-check-modal" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(58,46,34,0.5);align-items:center;justify-content:center;padding:1rem;">
+  <div style="background:var(--white);border-radius:24px;padding:2.5rem;max-width:440px;width:100%;box-shadow:0 24px 80px rgba(40,30,20,0.25);position:relative;">
+    <button onclick="closeAreaCheck()" style="position:absolute;top:1rem;right:1rem;background:var(--cream-soft);border:none;width:30px;height:30px;border-radius:50%;font-size:1rem;color:var(--ink-mid);cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+    <div style="font-size:0.72rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--terra-deep);margin-bottom:0.6rem;">Service Area Check</div>
+    <h3 style="font-family:var(--serif);font-size:1.55rem;color:var(--ink);margin-bottom:0.5rem;line-height:1.2;">Do we serve your area?</h3>
+    <p style="font-size:0.92rem;color:var(--ink-mid);margin-bottom:1.5rem;line-height:1.65;">Enter your postal code or city to check instantly. We currently serve the GTA and surrounding Ontario communities.</p>
+    <div style="display:flex;gap:0.6rem;margin-bottom:1rem;">
+      <input id="area-input" type="text" placeholder="e.g. Oakville or L6H 0G3"
+        style="flex:1;padding:0.75rem 1rem;border:1.5px solid var(--cream-dark);border-radius:100px;font-family:var(--sans);font-size:0.92rem;color:var(--ink);background:var(--cream-soft);outline:none;"
+        onfocus="this.style.borderColor='var(--terra)'" onblur="this.style.borderColor='var(--cream-dark)'"
+        onkeydown="if(event.key==='Enter')checkArea()" />
+      <button onclick="checkArea()" style="background:var(--ink);color:var(--white);border:none;padding:0.75rem 1.25rem;border-radius:100px;font-family:var(--sans);font-size:0.88rem;font-weight:500;cursor:pointer;transition:background 0.2s;white-space:nowrap;" onmouseover="this.style.background='var(--terra)'" onmouseout="this.style.background='var(--ink)'">Check →</button>
+    </div>
+    <div id="area-result" style="display:none;border-radius:14px;padding:1rem 1.25rem;font-size:0.92rem;line-height:1.6;"></div>
+    <div style="font-size:0.78rem;color:var(--ink-light);margin-top:1rem;">Currently serving: Toronto · Mississauga · Oakville · Burlington · Hamilton · Brampton · Etobicoke · North York · Halton Hills</div>
+  </div>
 </div>
 
 <!-- ════════════════════════════════════════════════════════════════
@@ -2837,6 +2858,70 @@
     const target = document.getElementById('view-' + name);
     if (target) target.classList.add('active');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ─── Nav helper: show home then scroll to anchor ────────────── */
+  function navTo(anchor) {
+    showView('home');
+    setTimeout(() => {
+      const el = document.getElementById(anchor);
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }, 60);
+  }
+
+  /* ─── Area check modal ────────────────────────────────────────── */
+  const SERVED_CITIES = ['toronto','mississauga','oakville','burlington','hamilton','brampton','etobicoke','north york','scarborough','halton hills','milton','halton','gta','markham','vaughan','richmond hill'];
+  const SERVED_FSA = ['m1','m2','m3','m4','m5','m6','m7','m8','m9','l4t','l4v','l4w','l4x','l4y','l4z','l5a','l5b','l5c','l5e','l5g','l5h','l5j','l5k','l5l','l5m','l5n','l5r','l5s','l5t','l5v','l5w','l6h','l6j','l6k','l6l','l6m','l6p','l6r','l6s','l6t','l6v','l6w','l6x','l6y','l6z','l7a','l7l','l7m','l7n','l7p','l7r','l7s','l7t','l8h','l8j','l8k','l8l','l8m','l8n','l8p','l8r','l8s','l8t','l8v','l8w','l9a','l9b','l9c','l9g','l9h','l9t','l9k'];
+  function openAreaCheck() {
+    const m = document.getElementById('area-check-modal');
+    m.style.display = 'flex';
+    document.getElementById('area-input').value = '';
+    document.getElementById('area-result').style.display = 'none';
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => document.getElementById('area-input').focus(), 100);
+  }
+  function closeAreaCheck() {
+    document.getElementById('area-check-modal').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+  document.getElementById('area-check-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeAreaCheck();
+  });
+  function checkArea() {
+    const raw = document.getElementById('area-input').value.trim();
+    if (!raw) return;
+    const lower = raw.toLowerCase().replace(/\s+/g,' ');
+    const resultEl = document.getElementById('area-result');
+    let served = false;
+    // City name match
+    if (SERVED_CITIES.some(c => lower.includes(c))) served = true;
+    // Postal code match — check first 3 chars (FSA)
+    const cleaned = lower.replace(/\s/g,'');
+    if (!served && cleaned.length >= 3) {
+      const fsa = cleaned.slice(0,3);
+      if (SERVED_FSA.includes(fsa)) served = true;
+    }
+    if (served) {
+      resultEl.style.display = 'block';
+      resultEl.style.background = '#d4f0de';
+      resultEl.style.color = '#2a6e45';
+      resultEl.innerHTML = `<strong>✓ Yes — we serve your area!</strong><br>We have caregivers available near <em>${raw}</em>. Book a free intro call and we'll match you with the right fit.
+        <br><br><button onclick="closeAreaCheck();startIntake('weekly')" style="background:#3a9e5f;color:white;border:none;padding:0.6rem 1.4rem;border-radius:100px;font-family:var(--sans);font-size:0.88rem;font-weight:500;cursor:pointer;margin-top:0.25rem;">Get started →</button>`;
+    } else {
+      resultEl.style.display = 'block';
+      resultEl.style.background = '#fde8e8';
+      resultEl.style.color = '#8a3030';
+      resultEl.innerHTML = `<strong>We don't cover that area yet.</strong><br>We're expanding — leave us your email and we'll reach out as soon as we're in <em>${raw}</em>.
+        <br><br><input type="email" placeholder="your@email.com" id="waitlist-email" style="padding:0.5rem 0.9rem;border-radius:8px;border:1px solid #e0c4c4;font-family:var(--sans);font-size:0.88rem;width:100%;margin-top:0.25rem;" />
+        <button onclick="submitWaitlist()" style="background:var(--ink);color:white;border:none;padding:0.5rem 1.2rem;border-radius:100px;font-family:var(--sans);font-size:0.85rem;font-weight:500;cursor:pointer;margin-top:0.5rem;">Notify me</button>`;
+    }
+  }
+  function submitWaitlist() {
+    const email = document.getElementById('waitlist-email')?.value?.trim();
+    if (!email) return;
+    document.getElementById('area-result').innerHTML = '<strong>✓ You\'re on the list!</strong><br>We\'ll email you as soon as we expand to your area.';
+    document.getElementById('area-result').style.background = '#d4f0de';
+    document.getElementById('area-result').style.color = '#2a6e45';
   }
 
   /* ─── Pricing billing toggle ──────────────────────────────────── */
@@ -3313,14 +3398,8 @@
               Active
             </div>
             <div class="plan-name" id="dash-plan-name">—</div>
-            <div class="plan-price">$1,190 / month · renews June 1</div>
-            <ul class="plan-features">
-              <li>2 visits/week · 4 hrs each (8 hrs/week)</li>
-              <li>Dedicated caregiver — Margaret H.</li>
-              <li>Visit summaries after each appointment</li>
-              <li>Care coordinator support</li>
-              <li>Pause or adjust with 7 days' notice</li>
-            </ul>
+            <div class="plan-price" id="dash-plan-price">—</div>
+            <ul class="plan-features" id="dash-plan-features"></ul>
             <div style="margin-top:1.1rem">
               <button class="btn-outline" onclick="switchView('plan')">Manage plan &rarr;</button>
             </div>
@@ -3360,51 +3439,14 @@
             <svg width="7" height="7" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
             Active Plan
           </div>
-          <div class="plan-view-name">Companion Plan</div>
-          <div class="plan-view-price"><strong>$1,190</strong> / month</div>
-          <div class="plan-renews">Renews automatically on June 1, 2026</div>
+          <div class="plan-view-name" id="plan-view-name">—</div>
+          <div class="plan-view-price" id="plan-view-price">—</div>
+          <div class="plan-renews" id="plan-view-caregiver" style="margin-top:0.25rem"></div>
 
           <div class="plan-divider"></div>
 
           <div class="card-label">What's included</div>
-          <div class="plan-feature-grid">
-            <div class="plan-feature-item">
-              <div class="plan-feature-icon">
-                <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
-              </div>
-              Two 4-hour visits per week (8 hrs/week)
-            </div>
-            <div class="plan-feature-item">
-              <div class="plan-feature-icon">
-                <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
-              </div>
-              Dedicated caregiver — Margaret H.
-            </div>
-            <div class="plan-feature-item">
-              <div class="plan-feature-icon">
-                <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
-              </div>
-              Visit summaries after each session
-            </div>
-            <div class="plan-feature-item">
-              <div class="plan-feature-icon">
-                <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
-              </div>
-              Care coordinator on call, 7 days
-            </div>
-            <div class="plan-feature-item">
-              <div class="plan-feature-icon">
-                <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
-              </div>
-              Pause or adjust with 7 days' notice
-            </div>
-            <div class="plan-feature-item">
-              <div class="plan-feature-icon">
-                <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
-              </div>
-              Family portal access
-            </div>
-          </div>
+          <div class="plan-feature-grid" id="plan-view-features"></div>
 
           <div class="plan-divider"></div>
 
@@ -3469,7 +3511,15 @@ async function loadPortalData(clientId) {
 
   portalClientData = clientSnap.exists ? clientSnap.data() : null;
 
-  // Fetch caregiver names
+  // Fetch assigned caregiver for this client (from client doc)
+  if (portalClientData?.caregiver_id) {
+    try {
+      const cgSnap = await db.collection('caregivers').doc(portalClientData.caregiver_id).get();
+      if (cgSnap.exists) portalClientData._caregiverName = cgSnap.data().name || null;
+    } catch(e) {}
+  }
+
+  // Fetch caregiver names for appointments
   const cgIds = [...new Set(apptSnap.docs.map(d => d.data().caregiver_id).filter(Boolean))];
   const cgMap = {};
   await Promise.all(cgIds.map(async id => {
@@ -3594,6 +3644,7 @@ async function showPortal(user) {
   renderCalendar(calYear, calMonth, null);
   updateDashboardStats();
   updateUpcomingVisits();
+  updatePlanDisplay();
 }
 
 function updateDashboardStats() {
@@ -3660,6 +3711,57 @@ function updateUpcomingVisits() {
       <div class="visit-badge">Confirmed</div>
     </div>
   `).join('');
+}
+
+const PLAN_CONFIG = {
+  essential: {
+    name: 'Essential Plan', price: '$610', period: '/month',
+    features: ['1 visit per week · 4 hours','Dedicated caregiver','Visit summaries after each appointment','Care coordinator support','Pause or adjust with 7 days\' notice','Family portal access']
+  },
+  companion: {
+    name: 'Companion Plan', price: '$1,190', period: '/month',
+    features: ['2 visits per week · 4 hours each','Dedicated caregiver','Visit summaries after each appointment','Care coordinator on call, 7 days','Pause or adjust with 7 days\' notice','Family portal access']
+  },
+  premium: {
+    name: 'Premium Plan', price: '$1,995', period: '/month',
+    features: ['5 visits per week · 4 hours each','Priority caregiver matching','Visit summaries after each appointment','Direct coordinator line, 24/7','Pause or adjust with 7 days\' notice','Family portal access']
+  }
+};
+
+function updatePlanDisplay() {
+  if (!portalClientData) return;
+  const planKey = portalClientData.plan;
+  const cfg = PLAN_CONFIG[planKey];
+  if (!cfg) return;
+
+  const cgName = portalClientData._caregiverName;
+  const checkSVG = `<svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="width:14px;height:14px;flex-shrink:0"><path d="M5 13l4 4L19 7"/></svg>`;
+
+  // Build features — inject real caregiver name if available
+  const features = cfg.features.map(f =>
+    cgName && f.startsWith('Dedicated caregiver') ? `Dedicated caregiver — ${cgName}` :
+    cgName && f.startsWith('Priority caregiver') ? `Priority caregiver — ${cgName}` : f
+  );
+
+  // Dashboard plan card
+  const dashName  = document.getElementById('dash-plan-name');
+  const dashPrice = document.getElementById('dash-plan-price');
+  const dashFeats = document.getElementById('dash-plan-features');
+  if (dashName)  dashName.textContent  = cfg.name;
+  if (dashPrice) dashPrice.textContent = cfg.price + ' ' + cfg.period;
+  if (dashFeats) dashFeats.innerHTML   = features.slice(0,4).map(f => `<li>${f}</li>`).join('');
+
+  // Plan view card
+  const viewName     = document.getElementById('plan-view-name');
+  const viewPrice    = document.getElementById('plan-view-price');
+  const viewCg       = document.getElementById('plan-view-caregiver');
+  const viewFeatures = document.getElementById('plan-view-features');
+  if (viewName)  viewName.textContent  = cfg.name;
+  if (viewPrice) viewPrice.innerHTML   = `<strong>${cfg.price}</strong>${cfg.period}`;
+  if (viewCg && cgName) viewCg.textContent = `Your caregiver: ${cgName}`;
+  if (viewFeatures) viewFeatures.innerHTML = features.map(f =>
+    `<div class="plan-feature-item"><div class="plan-feature-icon">${checkSVG}</div>${f}</div>`
+  ).join('');
 }
 
 // Pick up pending session restore
