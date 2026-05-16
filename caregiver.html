@@ -7,7 +7,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <style>
     :root {
@@ -22,8 +21,13 @@
       --ink-light:  #98876d;
       --sage:       #7a8b6f;
       --sage-soft:  #d5dcc9;
+      --avail:      #3a9e5f;
+      --avail-soft: #d4f0de;
+      --avail-mid:  #a8debb;
+      --req:        #6a5acd;
+      --req-soft:   #e8e0f5;
       --white:      #ffffff;
-      --nav-h:      64px;
+      --nav-h:      60px;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; font-family: 'DM Sans', system-ui, sans-serif; background: var(--cream); color: var(--ink); font-size: 15px; -webkit-font-smoothing: antialiased; }
@@ -31,188 +35,145 @@
     input, select, textarea { font-family: inherit; }
 
     /* ── LOGIN ── */
-    #login-screen {
-      min-height: 100vh; display: flex; align-items: center;
-      justify-content: center; background: var(--cream);
-    }
-    .login-card {
-      background: var(--white); border-radius: 20px; padding: 3rem 2.5rem;
-      width: 100%; max-width: 420px; box-shadow: 0 8px 40px rgba(58,46,34,0.12);
-      text-align: center;
-    }
-    .login-logo { font-size: 1.7rem; font-weight: 700; color: var(--ink); margin-bottom: 0.2rem; }
+    #login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--cream); }
+    .login-card { background: var(--white); border-radius: 20px; padding: 3rem 2.5rem; width: 100%; max-width: 400px; box-shadow: 0 8px 40px rgba(58,46,34,0.12); }
+    .login-logo { font-size: 1.7rem; font-weight: 700; color: var(--ink); margin-bottom: 0.15rem; }
     .login-logo span { color: var(--terra); }
-    .login-sub { font-size: 0.9rem; color: var(--ink-light); margin-bottom: 2.5rem; }
-    .btn-google {
-      display: inline-flex; align-items: center; gap: 0.75rem;
-      padding: 0.85rem 2rem; border-radius: 100px;
-      background: var(--ink); color: var(--white);
-      border: none; font-size: 0.95rem; font-weight: 500;
-      transition: background 0.2s; width: 100%; justify-content: center;
-    }
-    .btn-google:hover { background: var(--terra); }
-    .btn-google:disabled { opacity: 0.6; cursor: not-allowed; }
-    .login-error {
-      color: #c44; font-size: 0.85rem; margin-top: 1rem;
-      display: none; line-height: 1.5;
-    }
-    .spinner {
-      width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.4);
-      border-top-color: white; border-radius: 50%;
-      animation: spin 0.7s linear infinite; display: inline-block;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .login-sub { font-size: 0.88rem; color: var(--ink-light); margin-bottom: 2rem; }
+    .form-group { margin-bottom: 1rem; }
+    label { display: block; font-size: 0.8rem; font-weight: 500; color: var(--ink-mid); margin-bottom: 0.35rem; }
+    .fc { width: 100%; padding: 0.65rem 0.9rem; border: 1.5px solid var(--cream-dark); border-radius: 9px; font-size: 0.9rem; color: var(--ink); background: var(--cream-soft); transition: border-color 0.2s; }
+    .fc:focus { outline: none; border-color: var(--terra); background: var(--white); }
+    .btn-primary { width: 100%; padding: 0.85rem; background: var(--ink); color: var(--white); border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 500; transition: background 0.2s; margin-top: 0.5rem; }
+    .btn-primary:hover { background: var(--terra); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+    .login-error { color: #c44; font-size: 0.85rem; margin-top: 0.85rem; display: none; line-height: 1.5; }
 
-    /* ── APP SHELL ── */
+    /* ── APP ── */
     #app { display: none; min-height: 100vh; flex-direction: column; }
 
     /* ── TOP NAV ── */
-    .topnav {
-      height: var(--nav-h); background: var(--ink);
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 2rem; position: sticky; top: 0; z-index: 100;
-    }
-    .nav-logo { font-size: 1.2rem; font-weight: 700; color: var(--white); }
+    .topnav { height: var(--nav-h); background: var(--ink); display: flex; align-items: center; justify-content: space-between; padding: 0 1.75rem; position: sticky; top: 0; z-index: 100; }
+    .nav-logo { font-size: 1.15rem; font-weight: 700; color: var(--white); }
     .nav-logo span { color: var(--terra); }
-    .nav-right { display: flex; align-items: center; gap: 1rem; }
-    .nav-avatar {
-      width: 36px; height: 36px; border-radius: 50%;
-      background: var(--terra); color: var(--white);
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 600; font-size: 0.9rem; overflow: hidden;
-    }
-    .nav-avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .nav-name { color: rgba(255,255,255,0.8); font-size: 0.9rem; }
-    .btn-signout {
-      background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7);
-      border: none; padding: 0.45rem 1rem; border-radius: 100px;
-      font-size: 0.82rem; transition: all 0.15s;
-    }
+    .nav-right { display: flex; align-items: center; gap: 0.85rem; }
+    .nav-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--terra); color: var(--white); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.82rem; }
+    .nav-name { color: rgba(255,255,255,0.75); font-size: 0.88rem; }
+    .btn-signout { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.65); border: none; padding: 0.4rem 0.9rem; border-radius: 100px; font-size: 0.8rem; transition: all 0.15s; }
     .btn-signout:hover { background: rgba(255,255,255,0.18); color: var(--white); }
 
     /* ── TAB NAV ── */
-    .tabnav {
-      background: var(--white); border-bottom: 1.5px solid var(--cream-dark);
-      display: flex; padding: 0 2rem; gap: 0;
-    }
-    .tab-btn {
-      padding: 1rem 1.5rem; font-size: 0.9rem; font-weight: 500;
-      color: var(--ink-light); background: none; border: none;
-      border-bottom: 2.5px solid transparent; margin-bottom: -1.5px;
-      transition: all 0.15s;
-    }
+    .tabnav { background: var(--white); border-bottom: 1.5px solid var(--cream-dark); display: flex; padding: 0 1.75rem; gap: 0; overflow-x: auto; }
+    .tab-btn { padding: 0.9rem 1.25rem; font-size: 0.88rem; font-weight: 500; color: var(--ink-light); background: none; border: none; border-bottom: 2.5px solid transparent; margin-bottom: -1.5px; transition: all 0.15s; white-space: nowrap; display: flex; align-items: center; gap: 0.4rem; }
     .tab-btn:hover { color: var(--terra); }
     .tab-btn.active { color: var(--terra); border-bottom-color: var(--terra); }
+    .req-badge { background: var(--req); color: var(--white); border-radius: 100px; font-size: 0.7rem; font-weight: 700; padding: 0.1rem 0.45rem; display: none; }
 
     /* ── MAIN ── */
-    .main { flex: 1; padding: 2rem; max-width: 900px; width: 100%; margin: 0 auto; }
+    .main { flex: 1; padding: 1.75rem; max-width: 1000px; width: 100%; margin: 0 auto; }
     .view { display: none; }
     .view.active { display: block; }
-    .view-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 0.3rem; }
-    .view-sub { font-size: 0.88rem; color: var(--ink-light); margin-bottom: 2rem; }
+    .view-title { font-size: 1.35rem; font-weight: 700; margin-bottom: 0.25rem; }
+    .view-sub { font-size: 0.86rem; color: var(--ink-light); margin-bottom: 1.75rem; }
 
-    /* ── CARDS ── */
-    .card {
-      background: var(--white); border-radius: 14px;
-      padding: 1.5rem; box-shadow: 0 2px 8px rgba(58,46,34,0.06);
-      margin-bottom: 1.25rem;
-    }
-    .card-title { font-size: 0.95rem; font-weight: 600; margin-bottom: 1.25rem; }
+    /* ── STATS ── */
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+    @media (max-width: 700px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+    .stat-card { background: var(--white); border-radius: 14px; padding: 1.25rem 1.5rem; box-shadow: 0 2px 8px rgba(58,46,34,0.06); }
+    .stat-label { font-size: 0.73rem; font-weight: 600; color: var(--ink-light); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem; }
+    .stat-val { font-size: 2.2rem; font-weight: 700; color: var(--ink); line-height: 1; }
+    .stat-val.highlight { color: var(--terra); }
+
+    /* ── CARD ── */
+    .card { background: var(--white); border-radius: 14px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(58,46,34,0.06); margin-bottom: 1.25rem; }
+    .card-title { font-size: 0.95rem; font-weight: 600; margin-bottom: 1.1rem; }
 
     /* ── SHIFT ITEM ── */
-    .shift-item {
-      display: flex; align-items: center; gap: 1.25rem;
-      padding: 1rem 1.25rem; border-radius: 10px;
-      background: var(--cream-soft); margin-bottom: 0.75rem;
-    }
+    .shift-item { display: flex; align-items: flex-start; gap: 1.1rem; padding: 0.9rem 1.1rem; border-radius: 10px; background: var(--cream-soft); margin-bottom: 0.65rem; }
     .shift-item:last-child { margin-bottom: 0; }
-    .shift-date { text-align: center; min-width: 48px; }
-    .shift-day  { font-size: 1.5rem; font-weight: 700; color: var(--terra); line-height: 1; }
-    .shift-mon  { font-size: 0.7rem; text-transform: uppercase; color: var(--ink-light); margin-top: 0.1rem; }
+    .shift-date { text-align: center; min-width: 44px; }
+    .shift-day { font-size: 1.4rem; font-weight: 700; color: var(--terra); line-height: 1; }
+    .shift-mon { font-size: 0.68rem; text-transform: uppercase; color: var(--ink-light); margin-top: 0.1rem; }
     .shift-info { flex: 1; }
-    .shift-client { font-weight: 600; font-size: 0.95rem; }
-    .shift-meta   { font-size: 0.82rem; color: var(--ink-light); margin-top: 0.2rem; }
-    .shift-badge {
-      padding: 0.3rem 0.8rem; border-radius: 100px; font-size: 0.78rem; font-weight: 500;
-      background: var(--terra-soft); color: var(--terra-deep);
-    }
-    .shift-badge.done { background: var(--sage-soft); color: var(--sage); }
-    .shift-badge.rec  { background: #e8e0f5; color: #6a5acd; }
-    .empty-state { color: var(--ink-light); font-size: 0.9rem; padding: 1.5rem 0; }
+    .shift-client { font-weight: 600; font-size: 0.92rem; }
+    .shift-meta { font-size: 0.8rem; color: var(--ink-light); margin-top: 0.2rem; line-height: 1.5; }
+    .shift-badge { padding: 0.25rem 0.7rem; border-radius: 100px; font-size: 0.75rem; font-weight: 500; background: var(--terra-soft); color: var(--terra-deep); flex-shrink: 0; }
+    .shift-badge.rec { background: var(--req-soft); color: var(--req); }
 
-    /* ── CLIENT CARD ── */
-    .client-item {
-      display: flex; align-items: flex-start; gap: 1rem;
-      padding: 1rem 1.25rem; border-radius: 10px;
-      background: var(--cream-soft); margin-bottom: 0.75rem;
-    }
-    .client-avatar {
-      width: 40px; height: 40px; border-radius: 50%;
-      background: var(--terra); color: var(--white);
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 600; font-size: 1rem; flex-shrink: 0;
-    }
-    .client-info { flex: 1; }
-    .client-name { font-weight: 600; }
-    .client-meta { font-size: 0.82rem; color: var(--ink-light); margin-top: 0.2rem; }
-    .client-notes { font-size: 0.82rem; color: var(--ink-mid); margin-top: 0.4rem; font-style: italic; }
-    .plan-badge {
-      padding: 0.22rem 0.6rem; border-radius: 100px;
-      font-size: 0.75rem; font-weight: 500;
-      background: var(--terra-soft); color: var(--terra-deep);
-    }
-    .plan-badge.essential { background: var(--sage-soft); color: var(--sage); }
-    .plan-badge.premium   { background: #e8e0f5; color: #6a5acd; }
+    /* ── NEXT VISIT ── */
+    .next-visit-card { background: var(--ink); color: var(--white); border-radius: 12px; padding: 1.5rem; }
+    .nv-date { font-size: 0.82rem; color: rgba(255,255,255,0.6); margin-bottom: 0.25rem; }
+    .nv-time { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .nv-client { font-size: 1rem; font-weight: 600; color: var(--terra-soft); }
+    .nv-address { font-size: 0.82rem; color: rgba(255,255,255,0.55); margin-top: 0.35rem; }
+    .nv-notes { font-size: 0.82rem; color: rgba(255,255,255,0.5); margin-top: 0.5rem; font-style: italic; }
+    .empty-state { color: var(--ink-light); font-size: 0.9rem; padding: 1rem 0; }
 
-    /* ── AVAILABILITY ── */
-    .avail-section { margin-bottom: 1.5rem; }
-    .avail-label { font-size: 0.85rem; font-weight: 600; color: var(--ink-mid); margin-bottom: 0.6rem; }
-    .day-toggles { display: flex; gap: 0.4rem; flex-wrap: wrap; }
-    .day-toggle { display: flex; cursor: pointer; }
-    .day-toggle input { display: none; }
-    .day-toggle span {
-      padding: 0.4rem 0.75rem; border-radius: 100px; font-size: 0.82rem; font-weight: 500;
-      background: var(--cream-soft); color: var(--ink-light);
-      border: 1.5px solid var(--cream-dark); transition: all 0.15s; user-select: none;
-    }
-    .day-toggle input:checked + span { background: var(--terra); color: var(--white); border-color: var(--terra); }
-    .time-row { display: flex; gap: 1rem; margin-top: 1rem; align-items: flex-end; }
-    .time-group { flex: 1; }
-    .time-group label { display: block; font-size: 0.8rem; font-weight: 500; color: var(--ink-mid); margin-bottom: 0.35rem; }
-    .fc {
-      width: 100%; padding: 0.65rem 0.9rem;
-      border: 1.5px solid var(--cream-dark); border-radius: 9px;
-      font-size: 0.9rem; color: var(--ink); background: var(--cream-soft);
-      transition: border-color 0.2s;
-    }
-    .fc:focus { outline: none; border-color: var(--terra); background: var(--white); }
-    .btn-save {
-      padding: 0.75rem 2rem; background: var(--ink); color: var(--white);
-      border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 500;
-      transition: background 0.2s; margin-top: 1.5rem;
-    }
-    .btn-save:hover { background: var(--terra); }
-    .btn-save:disabled { opacity: 0.6; cursor: not-allowed; }
-    .save-note { font-size: 0.82rem; color: var(--sage); margin-top: 0.75rem; display: none; }
-
-    /* ── WEEK TABS ── */
-    .week-controls { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; }
-    .week-label { font-size: 0.95rem; font-weight: 600; min-width: 200px; text-align: center; color: var(--ink); }
-    .btn-week {
-      padding: 0.4rem 0.9rem; border-radius: 8px; font-size: 0.85rem;
-      background: var(--white); color: var(--ink-mid); border: 1.5px solid var(--cream-dark);
-      transition: all 0.15s;
-    }
+    /* ── WEEK CONTROLS ── */
+    .week-controls { display: flex; align-items: center; gap: 0.65rem; margin-bottom: 1.25rem; }
+    .week-label { font-size: 0.92rem; font-weight: 600; min-width: 210px; text-align: center; color: var(--ink); }
+    .btn-week { padding: 0.38rem 0.85rem; border-radius: 8px; font-size: 0.82rem; background: var(--white); color: var(--ink-mid); border: 1.5px solid var(--cream-dark); transition: all 0.15s; }
     .btn-week:hover { border-color: var(--terra); color: var(--terra); }
+    .btn-save-avail { padding: 0.55rem 1.5rem; background: var(--avail); color: var(--white); border: none; border-radius: 9px; font-size: 0.9rem; font-weight: 600; transition: background 0.2s; }
+    .btn-save-avail:hover { background: #2e8a50; }
+    .btn-save-avail:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    /* ── CALENDAR (read-only schedule) ── */
+    .cal-wrap { background: var(--white); border-radius: 14px; overflow: hidden; box-shadow: 0 2px 8px rgba(58,46,34,0.06); }
+    .cal-head, .avail-cal-head { display: grid; grid-template-columns: 56px repeat(7,1fr); border-bottom: 1.5px solid var(--cream-dark); }
+    .cal-hcell { padding: 0.65rem 0.5rem; text-align: center; }
+    .cal-hcell .dname { display: block; font-size: 0.68rem; font-weight: 600; color: var(--ink-light); text-transform: uppercase; letter-spacing: 0.05em; }
+    .cal-hcell .dnum { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; font-size: 1rem; font-weight: 600; color: var(--ink); margin-top: 0.2rem; }
+    .cal-hcell.today .dnum { background: var(--terra); color: var(--white); }
+    .cal-body, .avail-cal-body { max-height: 560px; overflow-y: auto; }
+    .cal-row, .avail-row { display: grid; grid-template-columns: 56px repeat(7,1fr); border-bottom: 1px solid #f0ebe0; }
+    .cal-row:last-child, .avail-row:last-child { border-bottom: none; }
+    .cal-time, .avail-time { padding: 0.5rem 0.4rem 0 0; font-size: 0.68rem; color: var(--ink-light); text-align: right; border-right: 1px solid var(--cream-dark); }
+    .cal-cell-ro { min-height: 48px; border-right: 1px solid #f0ebe0; padding: 3px; }
+    .cal-cell-ro:last-child { border-right: none; }
+    .appt-chip { border-radius: 6px; padding: 0.22rem 0.4rem; font-size: 0.7rem; margin-bottom: 2px; background: var(--terra); color: var(--white); line-height: 1.4; }
+    .appt-chip.rec { background: var(--sage); }
+    .chip-name { font-weight: 600; display: block; }
+    .chip-dur { display: block; font-size: 0.65rem; opacity: 0.8; }
+
+    /* ── AVAILABILITY CALENDAR ── */
+    .avail-wrap { background: var(--white); border-radius: 14px; overflow: hidden; box-shadow: 0 2px 8px rgba(58,46,34,0.06); margin-bottom: 1rem; }
+    .avail-cell { min-height: 44px; border-right: 1px solid #f0ebe0; cursor: pointer; transition: background 0.06s; position: relative; }
+    .avail-cell:last-child { border-right: none; }
+    .avail-cell:hover { background: var(--avail-soft); }
+    .avail-cell.selected { background: var(--avail-soft); }
+    .avail-cell.selected:hover { background: var(--avail-mid); }
+    .avail-cell.booked { background: var(--terra-soft); cursor: default; }
+    .avail-cell.booked:hover { background: var(--terra-soft); }
+    .avail-cell.pending-req { background: var(--req-soft); cursor: default; }
+    .avail-cell.error { background: #fde8e8 !important; }
+    .avail-legend { display: flex; gap: 1.25rem; margin-bottom: 1rem; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--ink-mid); }
+    .legend-swatch { width: 14px; height: 14px; border-radius: 3px; }
+    .avail-errors { background: #fde8e8; color: #c44; border-radius: 10px; padding: 0.75rem 1rem; font-size: 0.85rem; margin-bottom: 1rem; display: none; }
+    .avail-hint { font-size: 0.8rem; color: var(--ink-light); margin-bottom: 1.25rem; background: var(--cream-soft); border-radius: 10px; padding: 0.75rem 1rem; line-height: 1.6; }
+    .avail-hint strong { color: var(--ink-mid); }
+    .avail-actions { display: flex; align-items: center; gap: 0.75rem; margin-top: 1rem; }
+    .btn-clear-week { background: none; color: var(--ink-light); border: 1.5px solid var(--cream-dark); border-radius: 8px; padding: 0.5rem 1rem; font-size: 0.85rem; transition: all 0.15s; }
+    .btn-clear-week:hover { border-color: #c44; color: #c44; }
+    .save-note { font-size: 0.82rem; color: var(--avail); }
+
+    /* ── REQUESTS ── */
+    .req-item { background: var(--cream-soft); border-radius: 12px; padding: 1.1rem 1.25rem; margin-bottom: 0.85rem; }
+    .req-item:last-child { margin-bottom: 0; }
+    .req-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+    .req-who { font-weight: 600; font-size: 0.95rem; }
+    .req-when { font-size: 0.82rem; color: var(--ink-light); margin-top: 0.2rem; }
+    .req-notes { font-size: 0.82rem; color: var(--ink-mid); margin-top: 0.6rem; font-style: italic; }
+    .req-actions { display: flex; gap: 0.5rem; margin-top: 0.85rem; }
+    .btn-accept { background: var(--avail); color: var(--white); border: none; border-radius: 8px; padding: 0.45rem 1.1rem; font-size: 0.85rem; font-weight: 500; transition: background 0.15s; }
+    .btn-accept:hover { background: #2e8a50; }
+    .btn-decline { background: #fde8e8; color: #c44; border: none; border-radius: 8px; padding: 0.45rem 1.1rem; font-size: 0.85rem; font-weight: 500; transition: all 0.15s; }
+    .btn-decline:hover { background: #c44; color: var(--white); }
+    .badge-pending { background: var(--req-soft); color: var(--req); padding: 0.2rem 0.6rem; border-radius: 100px; font-size: 0.72rem; font-weight: 600; }
 
     /* ── TOAST ── */
-    #toast {
-      position: fixed; bottom: 2rem; right: 2rem;
-      background: var(--ink); color: var(--white);
-      padding: 0.8rem 1.4rem; border-radius: 10px; font-size: 0.88rem;
-      z-index: 9999; opacity: 0; transform: translateY(8px);
-      transition: all 0.25s; pointer-events: none;
-    }
+    #toast { position: fixed; bottom: 1.75rem; right: 1.75rem; background: var(--ink); color: var(--white); padding: 0.75rem 1.25rem; border-radius: 10px; font-size: 0.86rem; z-index: 9999; opacity: 0; transform: translateY(8px); transition: all 0.25s; pointer-events: none; }
     #toast.show { opacity: 1; transform: translateY(0); }
     #toast.err { background: #c44; }
   </style>
@@ -224,16 +185,18 @@
   <div class="login-card">
     <div class="login-logo">Hearthl<span>ane</span></div>
     <div class="login-sub">Caregiver Portal</div>
-    <button class="btn-google" id="signin-btn" onclick="handleSignIn()">
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <path d="M17.64 9.205c0-.639-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
-        <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
-        <path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
-        <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
-      </svg>
-      Sign in with Google
-    </button>
-    <div class="login-error" id="login-error"></div>
+    <form onsubmit="handleSignIn(event)">
+      <div class="form-group">
+        <label>Email</label>
+        <input class="fc" id="si-email" type="email" required autocomplete="email" placeholder="your@email.com" />
+      </div>
+      <div class="form-group" style="margin-bottom:1.25rem">
+        <label>PIN</label>
+        <input class="fc" id="si-pin" type="text" inputmode="numeric" maxlength="6" required placeholder="6-digit PIN" style="letter-spacing:0.15em;font-family:monospace" />
+      </div>
+      <button class="btn-primary" id="signin-btn" type="submit">Sign In</button>
+      <div class="login-error" id="login-error"></div>
+    </form>
   </div>
 </div>
 
@@ -249,71 +212,108 @@
   </nav>
 
   <div class="tabnav">
-    <button class="tab-btn active" data-view="shifts" onclick="switchTab('shifts')">My Shifts</button>
-    <button class="tab-btn" data-view="availability" onclick="switchTab('availability')">My Availability</button>
-    <button class="tab-btn" data-view="clients" onclick="switchTab('clients')">My Clients</button>
+    <button class="tab-btn active" data-view="dashboard" onclick="switchTab('dashboard')">Dashboard</button>
+    <button class="tab-btn" data-view="schedule" onclick="switchTab('schedule')">My Schedule</button>
+    <button class="tab-btn" data-view="availability" onclick="switchTab('availability')">Set Availability</button>
+    <button class="tab-btn" data-view="requests" onclick="switchTab('requests')">
+      Requests <span class="req-badge" id="req-badge"></span>
+    </button>
   </div>
 
   <div class="main">
 
-    <!-- MY SHIFTS -->
-    <div class="view active" id="view-shifts">
-      <div class="view-title">My Shifts</div>
-      <div class="view-sub">Your upcoming and recent visits</div>
-
-      <div class="week-controls">
-        <button class="btn-week" onclick="shiftWeek(-1)">← Prev</button>
-        <div class="week-label" id="week-label">—</div>
-        <button class="btn-week" onclick="shiftWeek(1)">Next →</button>
-        <button class="btn-week" onclick="goToday()">Today</button>
+    <!-- DASHBOARD -->
+    <div class="view active" id="view-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">This Week</div>
+          <div class="stat-val" id="s-week">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">This Month</div>
+          <div class="stat-val" id="s-month">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">My Clients</div>
+          <div class="stat-val" id="s-clients">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Pending Requests</div>
+          <div class="stat-val highlight" id="s-requests">—</div>
+        </div>
       </div>
-
-      <div id="shifts-list"><div class="empty-state">Loading…</div></div>
-    </div>
-
-    <!-- MY AVAILABILITY -->
-    <div class="view" id="view-availability">
-      <div class="view-title">My Availability</div>
-      <div class="view-sub">Set the days and hours you're generally available. Your coordinator will see this when scheduling.</div>
 
       <div class="card">
-        <div class="avail-section">
-          <div class="avail-label">Available Days</div>
-          <div class="day-toggles">
-            <label class="day-toggle"><input type="checkbox" name="avail_days" value="Mon" /><span>Mon</span></label>
-            <label class="day-toggle"><input type="checkbox" name="avail_days" value="Tue" /><span>Tue</span></label>
-            <label class="day-toggle"><input type="checkbox" name="avail_days" value="Wed" /><span>Wed</span></label>
-            <label class="day-toggle"><input type="checkbox" name="avail_days" value="Thu" /><span>Thu</span></label>
-            <label class="day-toggle"><input type="checkbox" name="avail_days" value="Fri" /><span>Fri</span></label>
-            <label class="day-toggle"><input type="checkbox" name="avail_days" value="Sat" /><span>Sat</span></label>
-            <label class="day-toggle"><input type="checkbox" name="avail_days" value="Sun" /><span>Sun</span></label>
-          </div>
-        </div>
+        <div class="card-title">Next Visit</div>
+        <div id="next-visit"><div class="empty-state">Loading…</div></div>
+      </div>
 
-        <div class="avail-section">
-          <div class="avail-label">Available Hours</div>
-          <div class="time-row">
-            <div class="time-group">
-              <label>From</label>
-              <input class="fc" type="time" id="avail-from" />
-            </div>
-            <div class="time-group">
-              <label>Until</label>
-              <input class="fc" type="time" id="avail-to" />
-            </div>
-          </div>
-        </div>
-
-        <button class="btn-save" id="save-avail-btn" onclick="saveAvailability()">Save Availability</button>
-        <div class="save-note" id="save-note">✓ Availability saved — your coordinator can now see this.</div>
+      <div class="card">
+        <div class="card-title">This Week's Visits</div>
+        <div id="week-visits"><div class="empty-state">Loading…</div></div>
       </div>
     </div>
 
-    <!-- MY CLIENTS -->
-    <div class="view" id="view-clients">
-      <div class="view-title">My Clients</div>
-      <div class="view-sub">Clients currently assigned to you</div>
-      <div id="clients-list"><div class="empty-state">Loading…</div></div>
+    <!-- MY SCHEDULE -->
+    <div class="view" id="view-schedule">
+      <div class="view-title">My Schedule</div>
+      <div class="view-sub">Your confirmed upcoming and past appointments</div>
+      <div class="week-controls">
+        <button class="btn-week" onclick="schedShiftWeek(-1)">← Prev</button>
+        <div class="week-label" id="sched-week-label">—</div>
+        <button class="btn-week" onclick="schedShiftWeek(1)">Next →</button>
+        <button class="btn-week" onclick="schedGoToday()">Today</button>
+      </div>
+      <div class="cal-wrap">
+        <div class="cal-head" id="sched-cal-head"></div>
+        <div class="cal-body" id="sched-cal-body"></div>
+      </div>
+    </div>
+
+    <!-- SET AVAILABILITY -->
+    <div class="view" id="view-availability">
+      <div class="view-title">Set My Availability</div>
+      <div class="view-sub">Click and drag to mark when you're free. Your coordinator will see this when scheduling visits.</div>
+
+      <div class="avail-hint">
+        <strong>How it works:</strong> Click a time slot to mark yourself available, or click &amp; drag to select a range.
+        Each availability block must be <strong>at least 2 hours</strong>.
+        Slots shown in orange are already booked — those can't be changed here.
+      </div>
+
+      <div class="week-controls">
+        <button class="btn-week" onclick="availShiftWeek(-1)">← Prev</button>
+        <div class="week-label" id="avail-week-label">—</div>
+        <button class="btn-week" onclick="availShiftWeek(1)">Next →</button>
+        <button class="btn-week" onclick="availGoToday()">This Week</button>
+      </div>
+
+      <div class="avail-legend">
+        <div class="legend-item"><div class="legend-swatch" style="background:var(--avail-soft);border:1.5px solid var(--avail-mid)"></div>Available</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:var(--terra-soft);border:1.5px solid var(--terra)"></div>Booked</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:var(--req-soft);border:1.5px solid var(--req)"></div>Pending Request</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:#fde8e8;border:1.5px solid #c44"></div>Block too short (&lt;2h)</div>
+      </div>
+
+      <div class="avail-errors" id="avail-errors"></div>
+
+      <div class="avail-wrap">
+        <div class="avail-cal-head" id="avail-cal-head"></div>
+        <div class="avail-cal-body" id="avail-cal-body"></div>
+      </div>
+
+      <div class="avail-actions">
+        <button class="btn-save-avail" id="save-avail-btn" onclick="saveAvailability()">Save Availability</button>
+        <button class="btn-clear-week" onclick="clearWeek()">Clear Week</button>
+        <span class="save-note" id="save-note" style="display:none">✓ Saved</span>
+      </div>
+    </div>
+
+    <!-- REQUESTS -->
+    <div class="view" id="view-requests">
+      <div class="view-title">Booking Requests</div>
+      <div class="view-sub">Your coordinator is asking if you're available for these visits</div>
+      <div id="requests-list"><div class="empty-state">Loading…</div></div>
     </div>
 
   </div>
@@ -331,288 +331,496 @@ const firebaseConfig = {
   messagingSenderId: "177600603494",
   appId:             "1:177600603494:web:1696f09bb3e51d075ad4a7"
 };
-// ─────────────────────────────────────────────────────────────────────────────
-
 firebase.initializeApp(firebaseConfig);
-const auth     = firebase.auth();
-const db       = firebase.firestore();
-const provider = new firebase.auth.GoogleAuthProvider();
+const db = firebase.firestore();
+const FSV = firebase.firestore.FieldValue;
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
-let caregiverDoc  = null; // Firestore caregiver record
+let caregiverDoc  = null;
 let caregiverId   = null;
-let weekStart     = mondayOf(new Date());
+let allAppointments = [];
+let clientsMap    = {};
+let pendingReqs   = [];
+let schedWeekStart = mondayOf(new Date());
+let availWeekStart = mondayOf(new Date());
+let availSlots    = {};   // { "YYYY-MM-DD": Set([8,9,10,...]) }
+let bookedSlots   = {};   // { "YYYY-MM-DD": Set([h,...]) }
+let reqSlots      = {};   // { "YYYY-MM-DD": Set([h,...]) }
+let isDragging    = false;
+let dragMode      = 'add';
 
 // ── AUTH ──────────────────────────────────────────────────────────────────────
-auth.onAuthStateChanged(async user => {
-  if (user) {
-    await bootPortal(user);
-  } else {
-    document.getElementById('login-screen').style.display = 'flex';
-    document.getElementById('app').style.display = 'none';
-  }
-});
-
-async function handleSignIn() {
-  const btn = document.getElementById('signin-btn');
-  const err = document.getElementById('login-error');
-  btn.disabled = true;
-  btn.innerHTML = '<div class="spinner"></div>&nbsp; Signing in…';
-  err.style.display = 'none';
+async function handleSignIn(e) {
+  e.preventDefault();
+  const email = document.getElementById('si-email').value.toLowerCase().trim();
+  const pin   = document.getElementById('si-pin').value.trim();
+  const btn   = document.getElementById('signin-btn');
+  const err   = document.getElementById('login-error');
+  btn.disabled = true; btn.textContent = 'Signing in…'; err.style.display = 'none';
   try {
-    await auth.signInWithPopup(provider);
-  } catch(e) {
-    err.textContent = 'Sign-in failed — please try again.';
-    err.style.display = 'block';
-    btn.disabled = false;
-    btn.innerHTML = googleBtnHTML();
+    const snap = await db.collection('caregivers')
+      .where('portal_email', '==', email)
+      .where('portal_pin',   '==', pin)
+      .limit(1).get();
+    if (snap.empty) throw new Error('Invalid email or PIN. Contact your coordinator.');
+    const doc = snap.docs[0];
+    if (doc.data().portal_active === false) throw new Error('Your portal access is inactive. Contact your coordinator.');
+    caregiverDoc = { id: doc.id, ...doc.data() };
+    caregiverId  = doc.id;
+    sessionStorage.setItem('cg_email', email);
+    sessionStorage.setItem('cg_pin',   pin);
+    await bootPortal();
+  } catch(ex) {
+    err.textContent = ex.message; err.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Sign In';
   }
 }
 
-function googleBtnHTML() {
-  return `<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M17.64 9.205c0-.639-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg> Sign in with Google`;
+async function tryResumeSession() {
+  const email = sessionStorage.getItem('cg_email');
+  const pin   = sessionStorage.getItem('cg_pin');
+  if (!email || !pin) return false;
+  try {
+    const snap = await db.collection('caregivers')
+      .where('portal_email', '==', email).where('portal_pin', '==', pin).limit(1).get();
+    if (snap.empty) return false;
+    caregiverDoc = { id: snap.docs[0].id, ...snap.docs[0].data() };
+    caregiverId  = snap.docs[0].id;
+    return true;
+  } catch { return false; }
 }
 
-async function handleSignOut() {
-  await auth.signOut();
+function handleSignOut() {
+  sessionStorage.clear();
+  caregiverDoc = null; caregiverId = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
 }
 
-async function bootPortal(user) {
-  // Look up caregiver by their Google email
-  const snap = await db.collection('caregivers')
-    .where('google_email', '==', user.email.toLowerCase().trim())
-    .limit(1)
-    .get();
-
-  if (snap.empty) {
-    await auth.signOut();
-    const err = document.getElementById('login-error');
-    err.textContent = 'This Google account isn\'t linked to a Hearthlane caregiver profile. Please contact your coordinator.';
-    err.style.display = 'block';
-    document.getElementById('signin-btn').disabled = false;
-    document.getElementById('signin-btn').innerHTML = googleBtnHTML();
-    return;
-  }
-
-  caregiverDoc = { id: snap.docs[0].id, ...snap.docs[0].data() };
-  caregiverId  = caregiverDoc.id;
-
-  // Show portal
+// ── BOOT ──────────────────────────────────────────────────────────────────────
+async function bootPortal() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   document.getElementById('app').style.flexDirection = 'column';
 
-  const firstName = (user.displayName || user.email).split(' ')[0];
-  document.getElementById('nav-name').textContent = firstName;
-  const av = document.getElementById('nav-avatar');
-  if (user.photoURL) av.innerHTML = `<img src="${user.photoURL}" alt="">`;
-  else av.textContent = firstName[0].toUpperCase();
+  const name = caregiverDoc.name || 'Caregiver';
+  document.getElementById('nav-name').textContent = name.split(' ')[0];
+  document.getElementById('nav-avatar').textContent =
+    name.split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
 
-  loadShifts();
-  loadAvailability();
-  loadClients();
+  await loadAllData();
+  switchTab('dashboard');
 }
 
-// ── NAVIGATION ────────────────────────────────────────────────────────────────
+async function loadAllData() {
+  const [apptSnap, clientSnap, reqSnap] = await Promise.all([
+    db.collection('appointments').where('caregiver_id', '==', caregiverId).get(),
+    db.collection('clients').where('caregiver_id',   '==', caregiverId).get(),
+    db.collection('booking_requests').where('caregiver_id', '==', caregiverId).where('status', '==', 'pending').get()
+  ]);
+
+  allAppointments = apptSnap.docs.map(d => ({
+    id: d.id, ...d.data(), scheduled_at: d.data().scheduled_at?.toDate()
+  })).filter(a => a.status !== 'cancelled' && a.scheduled_at);
+
+  clientsMap = {};
+  clientSnap.docs.forEach(d => { clientsMap[d.id] = { id: d.id, ...d.data() }; });
+
+  pendingReqs = reqSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  updateReqBadge();
+}
+
+function updateReqBadge() {
+  const badge = document.getElementById('req-badge');
+  badge.textContent = pendingReqs.length || '';
+  badge.style.display = pendingReqs.length > 0 ? 'inline-flex' : 'none';
+  document.getElementById('s-requests').textContent = pendingReqs.length;
+}
+
+// ── TAB SWITCHING ─────────────────────────────────────────────────────────────
 function switchTab(view) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-' + view).classList.add('active');
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelector(`[data-view="${view}"]`).classList.add('active');
+  if (view === 'dashboard')    loadDashboard();
+  if (view === 'schedule')     renderScheduleCal();
+  if (view === 'availability') loadAvailability();
+  if (view === 'requests')     renderRequests();
 }
 
-// ── SHIFTS ────────────────────────────────────────────────────────────────────
-async function loadShifts() {
-  const wEnd = new Date(weekStart); wEnd.setDate(wEnd.getDate() + 7);
+// ── DASHBOARD ─────────────────────────────────────────────────────────────────
+function loadDashboard() {
+  const now    = new Date();
+  const wStart = mondayOf(now);
+  const wEnd   = new Date(wStart); wEnd.setDate(wEnd.getDate() + 7);
+  const mStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const mEnd   = new Date(now.getFullYear(), now.getMonth() + 1, 1);
 
-  // Get one-time appointments this week + all recurring for this caregiver
-  const [oneSnap, recSnap] = await Promise.all([
-    db.collection('appointments').where('caregiver_id', '==', caregiverId).get(),
-    // recSnap handled within oneSnap — we filter below
-  ]);
+  const weekVisits  = allAppointments.filter(a => a.scheduled_at >= wStart && a.scheduled_at < wEnd);
+  const monthVisits = allAppointments.filter(a => a.scheduled_at >= mStart && a.scheduled_at < mEnd);
+  document.getElementById('s-week').textContent   = weekVisits.length;
+  document.getElementById('s-month').textContent  = monthVisits.length;
+  document.getElementById('s-clients').textContent = Object.keys(clientsMap).length;
 
-  // Build client name map
-  const clientIds = [...new Set(oneSnap.docs.map(d => d.data().client_id).filter(Boolean))];
-  const clientMap = {};
-  await Promise.all(clientIds.map(async id => {
-    const s = await db.collection('clients').doc(id).get();
-    if (s.exists) clientMap[id] = s.data();
-  }));
-
-  const now = new Date();
-  const shifts = [];
-
-  oneSnap.docs.forEach(d => {
-    const data = d.data();
-    if (data.status === 'cancelled') return;
-    const origin = data.scheduled_at?.toDate();
-    if (!origin) return;
-
-    if (!data.recurring) {
-      // Only show this week
-      if (origin >= weekStart && origin < wEnd) {
-        shifts.push(buildShift(origin, data, clientMap, false));
-      }
-    } else {
-      // Expand recurring into this week
-      const recEnd  = data.recurring_end?.toDate?.() ?? new Date(now.getFullYear() + 2, 0, 1);
-      const dayOfWeek = origin.getDay();
-      const step    = data.recurring === 'biweekly' ? 14 : 7;
-      const cursor  = new Date(weekStart);
-      while (cursor.getDay() !== dayOfWeek) cursor.setDate(cursor.getDate() + 1);
-      if (cursor < wEnd && cursor >= origin && cursor <= recEnd) {
-        const slot = new Date(cursor);
-        slot.setHours(origin.getHours(), origin.getMinutes(), 0, 0);
-        shifts.push(buildShift(slot, data, clientMap, true));
-      }
-    }
-  });
-
-  shifts.sort((a, b) => a.dt - b.dt);
-  renderShifts(shifts, weekStart, wEnd);
-}
-
-function buildShift(dt, data, clientMap, isRec) {
-  return {
-    dt,
-    client: clientMap[data.client_id]?.name || 'Client',
-    address: clientMap[data.client_id]?.address || '',
-    duration: (data.duration_minutes / 60) + ' hr' + (data.duration_minutes > 60 ? 's' : ''),
-    status: dt < new Date() ? 'completed' : 'upcoming',
-    recurring: isRec
-  };
-}
-
-function renderShifts(shifts, wStart, wEnd) {
-  const endDay = new Date(wEnd); endDay.setDate(endDay.getDate() - 1);
-  document.getElementById('week-label').textContent =
-    wStart.toLocaleDateString('en', { month: 'short', day: 'numeric' }) + ' – ' +
-    endDay.toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' });
-
-  const el = document.getElementById('shifts-list');
-  if (!shifts.length) {
-    el.innerHTML = '<div class="empty-state">No shifts scheduled this week.</div>';
-    return;
+  // Next visit
+  const upcoming = allAppointments.filter(a => a.scheduled_at >= now)
+    .sort((a,b) => a.scheduled_at - b.scheduled_at);
+  const nextEl = document.getElementById('next-visit');
+  if (!upcoming.length) {
+    nextEl.innerHTML = '<div class="empty-state">No upcoming visits scheduled.</div>';
+  } else {
+    const a = upcoming[0]; const c = clientsMap[a.client_id];
+    nextEl.innerHTML = `
+      <div class="next-visit-card">
+        <div class="nv-date">${a.scheduled_at.toLocaleDateString('en',{weekday:'long',month:'long',day:'numeric',year:'numeric'})}</div>
+        <div class="nv-time">${fmt12(a.scheduled_at)} · ${a.duration_minutes/60} hr${a.duration_minutes > 60 ? 's' : ''}</div>
+        <div class="nv-client">${esc(c?.name || 'Client')}</div>
+        ${c?.address ? `<div class="nv-address">${esc(c.address)}</div>` : ''}
+        ${c?.notes   ? `<div class="nv-notes">${esc(c.notes)}</div>` : ''}
+      </div>`;
   }
-  el.innerHTML = shifts.map(s => `
-    <div class="shift-item">
-      <div class="shift-date">
-        <div class="shift-day">${s.dt.getDate()}</div>
-        <div class="shift-mon">${s.dt.toLocaleDateString('en',{month:'short'})}</div>
-      </div>
-      <div class="shift-info">
-        <div class="shift-client">${esc(s.client)}</div>
-        <div class="shift-meta">
-          ${s.dt.toLocaleDateString('en',{weekday:'long'})} · ${fmt12(s.dt)} · ${s.duration}
-          ${s.address ? `<br>${esc(s.address)}` : ''}
+
+  // This week's visits
+  const weekEl = document.getElementById('week-visits');
+  if (!weekVisits.length) {
+    weekEl.innerHTML = '<div class="empty-state">No visits this week.</div>';
+  } else {
+    weekEl.innerHTML = weekVisits.sort((a,b) => a.scheduled_at - b.scheduled_at).map(a => {
+      const c = clientsMap[a.client_id];
+      return `<div class="shift-item">
+        <div class="shift-date">
+          <div class="shift-day">${a.scheduled_at.getDate()}</div>
+          <div class="shift-mon">${a.scheduled_at.toLocaleDateString('en',{month:'short'})}</div>
         </div>
-      </div>
-      <span class="shift-badge ${s.status === 'completed' ? 'done' : ''} ${s.recurring ? 'rec' : ''}">
-        ${s.recurring ? 'Recurring' : s.status === 'completed' ? 'Completed' : 'Confirmed'}
-      </span>
-    </div>
-  `).join('');
+        <div class="shift-info">
+          <div class="shift-client">${esc(c?.name || 'Client')}</div>
+          <div class="shift-meta">
+            ${a.scheduled_at.toLocaleDateString('en',{weekday:'long'})} · ${fmt12(a.scheduled_at)} · ${a.duration_minutes/60}h
+            ${c?.address ? '<br>' + esc(c.address) : ''}
+          </div>
+        </div>
+        ${a.recurring ? '<span class="shift-badge rec">Recurring</span>' : '<span class="shift-badge">Confirmed</span>'}
+      </div>`;
+    }).join('');
+  }
 }
 
-function shiftWeek(dir) { weekStart.setDate(weekStart.getDate() + dir * 7); loadShifts(); }
-function goToday()      { weekStart = mondayOf(new Date()); loadShifts(); }
+// ── SCHEDULE CALENDAR (read-only) ─────────────────────────────────────────────
+function renderScheduleCal() {
+  const days = weekDays(schedWeekStart);
+  const wEnd = new Date(schedWeekStart); wEnd.setDate(wEnd.getDate() + 7);
+  const endDay = new Date(wEnd); endDay.setDate(endDay.getDate() - 1);
+  document.getElementById('sched-week-label').textContent =
+    schedWeekStart.toLocaleDateString('en',{month:'short',day:'numeric'}) + ' – ' +
+    endDay.toLocaleDateString('en',{month:'short',day:'numeric',year:'numeric'});
 
-// ── AVAILABILITY ──────────────────────────────────────────────────────────────
-function loadAvailability() {
-  if (!caregiverDoc) return;
-  const days = caregiverDoc.avail_days || [];
-  document.querySelectorAll('[name="avail_days"]').forEach(cb => {
-    cb.checked = days.includes(cb.value);
+  const today = new Date();
+  const head  = document.getElementById('sched-cal-head');
+  head.innerHTML = '<div class="cal-hcell"></div>' + days.map(d => `
+    <div class="cal-hcell${sameDay(d,today)?' today':''}">
+      <span class="dname">${d.toLocaleDateString('en',{weekday:'short'})}</span>
+      <span class="dnum">${d.getDate()}</span>
+    </div>`).join('');
+
+  const weekAppts = allAppointments.filter(a => a.scheduled_at >= schedWeekStart && a.scheduled_at < wEnd);
+  const hours = Array.from({length:14},(_,i) => i+7);
+  document.getElementById('sched-cal-body').innerHTML = hours.map(h => `
+    <div class="cal-row">
+      <div class="cal-time">${fmt12h(h)}</div>
+      ${days.map(d => {
+        const chips = weekAppts.filter(a => sameDay(a.scheduled_at,d) && a.scheduled_at.getHours()===h);
+        return `<div class="cal-cell-ro">${chips.map(a => `
+          <div class="appt-chip${a.recurring?' rec':''}">
+            <span class="chip-name">${esc(clientsMap[a.client_id]?.name||'Client')}</span>
+            <span class="chip-dur">${a.duration_minutes/60}h${a.recurring?' · rec':''}</span>
+          </div>`).join('')}</div>`;
+      }).join('')}
+    </div>`).join('');
+}
+
+function schedShiftWeek(dir) { schedWeekStart.setDate(schedWeekStart.getDate()+dir*7); renderScheduleCal(); }
+function schedGoToday()      { schedWeekStart = mondayOf(new Date()); renderScheduleCal(); }
+
+// ── AVAILABILITY CALENDAR ─────────────────────────────────────────────────────
+async function loadAvailability() {
+  const days = weekDays(availWeekStart);
+  updateAvailWeekLabel();
+
+  // Load saved availability from Firestore
+  const snaps = await Promise.all(
+    days.map(d => db.collection('caregivers').doc(caregiverId)
+      .collection('availability').doc(toDateStr(d)).get())
+  );
+  availSlots = {};
+  snaps.forEach((snap, i) => {
+    if (snap.exists) availSlots[toDateStr(days[i])] = new Set(snap.data().slots || []);
   });
-  document.getElementById('avail-from').value = caregiverDoc.avail_from || '';
-  document.getElementById('avail-to').value   = caregiverDoc.avail_to   || '';
+
+  // Map booked slots from appointments
+  const wEnd = new Date(availWeekStart); wEnd.setDate(wEnd.getDate()+7);
+  bookedSlots = {};
+  allAppointments.filter(a => a.scheduled_at >= availWeekStart && a.scheduled_at < wEnd).forEach(a => {
+    const ds = toDateStr(a.scheduled_at);
+    if (!bookedSlots[ds]) bookedSlots[ds] = new Set();
+    const dur = Math.ceil(a.duration_minutes / 60);
+    for (let i = 0; i < dur; i++) bookedSlots[ds].add(a.scheduled_at.getHours() + i);
+  });
+
+  // Map pending request slots
+  reqSlots = {};
+  pendingReqs.forEach(r => {
+    if (!r.proposed_date || !r.proposed_time) return;
+    const ds  = r.proposed_date;
+    const h   = parseInt(r.proposed_time.split(':')[0]);
+    const dur = Math.ceil((r.duration_minutes||60) / 60);
+    if (!reqSlots[ds]) reqSlots[ds] = new Set();
+    for (let i = 0; i < dur; i++) reqSlots[ds].add(h + i);
+  });
+
+  renderAvailCal();
+  document.getElementById('save-note').style.display = 'none';
+}
+
+function renderAvailCal() {
+  updateAvailWeekLabel();
+  const days  = weekDays(availWeekStart);
+  const today = new Date();
+
+  document.getElementById('avail-cal-head').innerHTML =
+    '<div class="cal-hcell"></div>' + days.map(d => `
+      <div class="cal-hcell${sameDay(d,today)?' today':''}">
+        <span class="dname">${d.toLocaleDateString('en',{weekday:'short'})}</span>
+        <span class="dnum">${d.getDate()}</span>
+      </div>`).join('');
+
+  const hours = Array.from({length:15},(_,i) => i+7); // 7am–9pm
+  document.getElementById('avail-cal-body').innerHTML = hours.map(h => `
+    <div class="avail-row">
+      <div class="avail-time">${fmt12h(h)}</div>
+      ${days.map(d => {
+        const ds      = toDateStr(d);
+        const booked  = bookedSlots[ds]?.has(h);
+        const req     = reqSlots[ds]?.has(h);
+        const avail   = availSlots[ds]?.has(h);
+        let cls = 'avail-cell';
+        if (booked) cls += ' booked';
+        else if (req) cls += ' pending-req';
+        else if (avail) cls += ' selected';
+        const interactive = !booked && !req;
+        return `<div class="${cls}" data-date="${ds}" data-hour="${h}"
+          ${interactive ? `onmousedown="onCellDown(event,'${ds}',${h})" onmouseover="onCellOver('${ds}',${h})"` : ''}
+        ></div>`;
+      }).join('')}
+    </div>`).join('');
+}
+
+function updateAvailWeekLabel() {
+  const wEnd  = new Date(availWeekStart); wEnd.setDate(wEnd.getDate()+7);
+  const endDay = new Date(wEnd); endDay.setDate(endDay.getDate()-1);
+  document.getElementById('avail-week-label').textContent =
+    availWeekStart.toLocaleDateString('en',{month:'short',day:'numeric'}) + ' – ' +
+    endDay.toLocaleDateString('en',{month:'short',day:'numeric',year:'numeric'});
+}
+
+// drag interaction
+function onCellDown(e, date, hour) {
+  e.preventDefault();
+  isDragging = true;
+  dragMode   = availSlots[date]?.has(hour) ? 'remove' : 'add';
+  applyCell(date, hour);
+}
+
+function onCellOver(date, hour) {
+  if (!isDragging) return;
+  applyCell(date, hour);
+}
+
+document.addEventListener('mouseup', () => {
+  if (isDragging) { isDragging = false; validateAvail(false); }
+});
+
+function applyCell(date, hour) {
+  if (!availSlots[date]) availSlots[date] = new Set();
+  if (dragMode === 'add')    availSlots[date].add(hour);
+  else {
+    availSlots[date].delete(hour);
+    if (!availSlots[date].size) delete availSlots[date];
+  }
+  const cell = document.querySelector(`[data-date="${date}"][data-hour="${hour}"]`);
+  if (!cell) return;
+  cell.classList.remove('selected','error');
+  if (dragMode === 'add') cell.classList.add('selected');
+}
+
+function validateAvail(strict = true) {
+  document.querySelectorAll('.avail-cell.error').forEach(c => c.classList.remove('error'));
+  const errors = [];
+  for (const [date, slotsSet] of Object.entries(availSlots)) {
+    const hrs = [...slotsSet].sort((a,b)=>a-b);
+    const groups = [];
+    let group = [];
+    hrs.forEach((h,i) => {
+      if (i === 0 || h !== hrs[i-1]+1) { if (group.length) groups.push(group); group = [h]; }
+      else group.push(h);
+    });
+    if (group.length) groups.push(group);
+    groups.forEach(g => {
+      if (g.length < 2) {
+        errors.push({ date, hours: g });
+        g.forEach(h => {
+          const cell = document.querySelector(`[data-date="${date}"][data-hour="${h}"]`);
+          if (cell) cell.classList.add('error');
+        });
+      }
+    });
+  }
+  const errEl  = document.getElementById('avail-errors');
+  const saveBtn = document.getElementById('save-avail-btn');
+  if (errors.length) {
+    errEl.style.display = 'block';
+    errEl.textContent   = `${errors.length} block${errors.length>1?'s are':' is'} less than 2 hours (highlighted in red). Extend each block to at least 2 continuous hours before saving.`;
+    if (strict) saveBtn.disabled = true;
+    return false;
+  }
+  errEl.style.display = 'none';
+  saveBtn.disabled = false;
+  return true;
 }
 
 async function saveAvailability() {
+  if (!validateAvail(true)) return;
   const btn  = document.getElementById('save-avail-btn');
   const note = document.getElementById('save-note');
-  btn.disabled = true; btn.textContent = 'Saving…';
-
-  const days = [...document.querySelectorAll('[name="avail_days"]:checked')].map(cb => cb.value);
-  const from = document.getElementById('avail-from').value;
-  const to   = document.getElementById('avail-to').value;
-
+  btn.disabled = true; btn.textContent = 'Saving…'; note.style.display = 'none';
   try {
-    await db.collection('caregivers').doc(caregiverId).update({
-      avail_days: days,
-      avail_from: from || null,
-      avail_to:   to   || null,
-      updated_at: firebase.firestore.FieldValue.serverTimestamp()
+    const batch = db.batch();
+    weekDays(availWeekStart).forEach(d => {
+      const ds  = toDateStr(d);
+      const ref = db.collection('caregivers').doc(caregiverId).collection('availability').doc(ds);
+      const slots = availSlots[ds] ? [...availSlots[ds]].sort((a,b)=>a-b) : [];
+      if (slots.length) batch.set(ref, { slots, updated_at: FSV.serverTimestamp() });
+      else              batch.delete(ref);
     });
-    caregiverDoc.avail_days = days;
-    caregiverDoc.avail_from = from;
-    caregiverDoc.avail_to   = to;
-    note.style.display = 'block';
+    await batch.commit();
     toast('Availability saved');
-  } catch(e) {
-    toast(e.message, true);
-  }
+    note.style.display = 'inline';
+  } catch(ex) { toast(ex.message, true); }
   btn.disabled = false; btn.textContent = 'Save Availability';
 }
 
-// ── CLIENTS ───────────────────────────────────────────────────────────────────
-async function loadClients() {
-  const snap = await db.collection('clients')
-    .where('caregiver_id', '==', caregiverId)
-    .get();
+function clearWeek() {
+  weekDays(availWeekStart).forEach(d => {
+    const ds = toDateStr(d);
+    delete availSlots[ds];
+  });
+  renderAvailCal();
+  document.getElementById('avail-errors').style.display = 'none';
+  document.getElementById('save-avail-btn').disabled = false;
+}
 
-  const el = document.getElementById('clients-list');
-  if (snap.empty) { el.innerHTML = '<div class="empty-state">No clients assigned yet.</div>'; return; }
+function availShiftWeek(dir) {
+  availWeekStart.setDate(availWeekStart.getDate() + dir*7);
+  loadAvailability();
+}
+function availGoToday() { availWeekStart = mondayOf(new Date()); loadAvailability(); }
 
-  el.innerHTML = snap.docs.map(d => {
-    const c = d.data();
-    const initials = (c.name || '?').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
-    const planClass = c.plan === 'essential' ? 'essential' : c.plan === 'premium' ? 'premium' : '';
-    return `
-      <div class="client-item">
-        <div class="client-avatar">${initials}</div>
-        <div class="client-info">
-          <div class="client-name">${esc(c.name)}</div>
-          <div class="client-meta">
-            ${c.address ? esc(c.address) + ' · ' : ''}
-            ${c.plan ? `<span class="plan-badge ${planClass}">${c.plan}</span>` : ''}
+// ── REQUESTS ──────────────────────────────────────────────────────────────────
+function renderRequests() {
+  const el = document.getElementById('requests-list');
+  if (!pendingReqs.length) {
+    el.innerHTML = '<div class="empty-state">No pending booking requests.</div>';
+    return;
+  }
+  el.innerHTML = pendingReqs.map(r => {
+    const client = clientsMap[r.client_id];
+    const dt = r.proposed_date && r.proposed_time
+      ? new Date(r.proposed_date + 'T' + r.proposed_time)
+      : null;
+    return `<div class="req-item" id="req-${r.id}">
+      <div class="req-header">
+        <div>
+          <div class="req-who">${esc(client?.name || 'Client')}</div>
+          <div class="req-when">
+            ${dt ? dt.toLocaleDateString('en',{weekday:'long',month:'long',day:'numeric'}) + ' · ' + fmt12(dt) : 'Date TBD'}
+            · ${(r.duration_minutes||60)/60}h visit
           </div>
-          ${c.notes ? `<div class="client-notes">${esc(c.notes)}</div>` : ''}
         </div>
+        <span class="badge-pending">Pending</span>
       </div>
-    `;
+      ${r.notes ? `<div class="req-notes">${esc(r.notes)}</div>` : ''}
+      ${client?.address ? `<div class="req-when" style="margin-top:0.4rem">${esc(client.address)}</div>` : ''}
+      <div class="req-actions">
+        <button class="btn-accept" onclick="respondRequest('${r.id}','accepted')">Accept</button>
+        <button class="btn-decline" onclick="respondRequest('${r.id}','declined')">Decline</button>
+      </div>
+    </div>`;
   }).join('');
+}
+
+async function respondRequest(reqId, status) {
+  const req = pendingReqs.find(r => r.id === reqId);
+  if (!req) return;
+  try {
+    if (status === 'accepted') {
+      const dt = new Date(req.proposed_date + 'T' + req.proposed_time);
+      await db.collection('appointments').add({
+        caregiver_id:    caregiverId,
+        client_id:       req.client_id,
+        scheduled_at:    firebase.firestore.Timestamp.fromDate(dt),
+        duration_minutes:req.duration_minutes || 60,
+        status:          'scheduled',
+        notes:           req.notes || null,
+        created_at:      FSV.serverTimestamp()
+      });
+    }
+    await db.collection('booking_requests').doc(reqId).update({
+      status, responded_at: FSV.serverTimestamp()
+    });
+    pendingReqs = pendingReqs.filter(r => r.id !== reqId);
+    if (status === 'accepted') {
+      // Add to local appointments list
+      const dt = new Date(req.proposed_date + 'T' + req.proposed_time);
+      allAppointments.push({ id: reqId+'_acc', caregiver_id: caregiverId, client_id: req.client_id, scheduled_at: dt, duration_minutes: req.duration_minutes||60, status:'scheduled' });
+    }
+    updateReqBadge();
+    const item = document.getElementById('req-' + reqId);
+    if (item) item.remove();
+    if (!pendingReqs.length) document.getElementById('requests-list').innerHTML = '<div class="empty-state">No pending booking requests.</div>';
+    toast(status === 'accepted' ? 'Request accepted — visit added to your schedule' : 'Request declined');
+  } catch(ex) { toast(ex.message, true); }
 }
 
 // ── UTILITIES ─────────────────────────────────────────────────────────────────
 function mondayOf(date) {
-  const d = new Date(date);
-  const day = d.getDay();
-  d.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
-  d.setHours(0,0,0,0);
-  return d;
+  const d = new Date(date); const day = d.getDay();
+  d.setDate(d.getDate() - (day===0?6:day-1)); d.setHours(0,0,0,0); return d;
 }
-
+function weekDays(start) {
+  return Array.from({length:7},(_,i) => { const d = new Date(start); d.setDate(d.getDate()+i); return d; });
+}
+function toDateStr(d) { return d.toISOString().split('T')[0]; }
+function sameDay(a,b) { return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate(); }
 function fmt12(dt) {
-  let h = dt.getHours(), m = dt.getMinutes();
-  const ap = h >= 12 ? 'PM' : 'AM';
-  h = h % 12 || 12;
+  let h=dt.getHours(),m=dt.getMinutes(); const ap=h>=12?'PM':'AM'; h=h%12||12;
   return `${h}:${String(m).padStart(2,'0')} ${ap}`;
 }
-
+function fmt12h(h) { return `${h%12||12}${h<12?'am':'pm'}`; }
 function esc(s) {
   if (!s) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-
 let _tt;
-function toast(msg, isErr = false) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.className = 'show' + (isErr ? ' err' : '');
-  clearTimeout(_tt);
-  _tt = setTimeout(() => el.className = '', 3500);
+function toast(msg,isErr=false) {
+  const el=document.getElementById('toast'); el.textContent=msg;
+  el.className='show'+(isErr?' err':''); clearTimeout(_tt);
+  _tt=setTimeout(()=>el.className='',3500);
 }
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+(async () => {
+  if (await tryResumeSession()) await bootPortal();
+})();
 </script>
 </body>
 </html>

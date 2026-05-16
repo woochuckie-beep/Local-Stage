@@ -282,7 +282,10 @@
         <span class="nav-icon">📅</span>Schedule
       </button>
       <button class="nav-link" data-page="access" onclick="go('access')">
-        <span class="nav-icon">🔑</span>Portal Access
+        <span class="nav-icon">🔑</span>Client Access
+      </button>
+      <button class="nav-link" data-page="cg-access" onclick="go('cg-access')">
+        <span class="nav-icon">🔐</span>Caregiver Access
       </button>
     </nav>
     <div class="sidebar-footer">
@@ -383,6 +386,24 @@
             <tr><th>Client</th><th>Google Email</th><th>Granted</th><th>Actions</th></tr>
           </thead>
           <tbody id="access-tbody"><tr class="empty-row"><td colspan="4">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CAREGIVER ACCESS -->
+    <div id="page-cg-access" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Caregiver Access</div>
+          <div class="page-sub">Manage caregiver portal logins · caregivers sign in with their email and PIN</div>
+        </div>
+      </div>
+      <div class="card">
+        <table>
+          <thead>
+            <tr><th>Caregiver</th><th>Portal Email</th><th>PIN</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="cg-access-tbody"><tr class="empty-row"><td colspan="5">Loading…</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -607,6 +628,13 @@
         <label>Notes</label>
         <textarea class="fc" name="notes" placeholder="Visit notes…"></textarea>
       </div>
+      <div class="form-group" id="appt-req-grp" style="background:var(--cream-soft);border-radius:10px;padding:0.85rem 1rem;display:flex;align-items:flex-start;gap:0.75rem">
+        <input type="checkbox" name="send_as_request" id="appt-send-req" style="margin-top:0.2rem;accent-color:var(--terra);width:16px;height:16px;flex-shrink:0" />
+        <div>
+          <label for="appt-send-req" style="font-size:0.88rem;font-weight:600;color:var(--ink);margin:0;cursor:pointer">Send as booking request</label>
+          <div style="font-size:0.78rem;color:var(--ink-light);margin-top:0.15rem">Caregiver must confirm before it becomes a scheduled appointment.</div>
+        </div>
+      </div>
       <div class="modal-ft">
         <button type="button" class="btn btn-del btn-sm" id="appt-del-btn" style="display:none;margin-right:auto" onclick="deleteAppt()">Delete</button>
         <button type="button" class="btn btn-ghost" onclick="closeModal('appt-ov')">Cancel</button>
@@ -640,6 +668,17 @@
         <button type="submit" class="btn btn-add">Grant Access</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- ══════════ CAREGIVER ACCESS MODAL ══════════ -->
+<div class="modal-ov" id="cg-access-ov">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="modal-ttl" id="cg-access-ttl">Grant Caregiver Access</div>
+      <button class="modal-x" onclick="closeModal('cg-access-ov')">✕</button>
+    </div>
+    <div id="cg-access-body"></div>
   </div>
 </div>
 
@@ -726,6 +765,7 @@ function go(page) {
   if (page === 'caregivers') loadCaregivers();
   if (page === 'schedule')   loadSchedule();
   if (page === 'access')     loadAccess();
+  if (page === 'cg-access')  loadCgAccess();
 }
 
 // ── DASHBOARD ────────────────────────────────────────────────────────────────
@@ -1164,6 +1204,7 @@ async function saveAppt(e) {
   const dt  = new Date(fd.get('date') + 'T' + fd.get('time'));
   const rec = fd.get('recurring') || null;
   const recEnd = fd.get('recurring_end');
+  const sendAsRequest = fd.get('send_as_request') === 'on';
 
   const data = {
     client_id:     fd.get('client_id'),
@@ -1178,14 +1219,29 @@ async function saveAppt(e) {
   };
 
   try {
-    if (editingId) {
-      await db.collection('appointments').doc(editingId).update(data);
+    if (sendAsRequest && !editingId) {
+      await db.collection('booking_requests').add({
+        caregiver_id:    data.caregiver_id,
+        client_id:       data.client_id,
+        proposed_date:   fd.get('date'),
+        proposed_time:   fd.get('time'),
+        duration_minutes:data.duration_minutes,
+        notes:           data.notes,
+        status:          'pending',
+        created_at:      SV()
+      });
+      closeModal('appt-ov');
+      toast('Booking request sent to caregiver');
     } else {
-      await db.collection('appointments').add({ ...data, created_at: SV() });
+      if (editingId) {
+        await db.collection('appointments').doc(editingId).update(data);
+      } else {
+        await db.collection('appointments').add({ ...data, created_at: SV() });
+      }
+      closeModal('appt-ov');
+      toast('Appointment saved');
+      loadSchedule();
     }
-    closeModal('appt-ov');
-    toast('Appointment saved');
-    loadSchedule();
   } catch(ex) { toast(ex.message, true); }
 }
 
@@ -1256,6 +1312,82 @@ function fmtT(t) {
   const [h, m] = t.split(':').map(Number);
   const ap = h >= 12 ? 'pm' : 'am';
   return `${h % 12 || 12}:${String(m).padStart(2,'0')}${ap}`;
+}
+
+// ── CAREGIVER ACCESS ─────────────────────────────────────────────────────────
+async function loadCgAccess() {
+  const snap = await db.collection('caregivers').orderBy('name').get();
+  const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  document.getElementById('cg-access-tbody').innerHTML = list.length ? list.map(cg => {
+    const active = !!cg.portal_pin;
+    return `<tr>
+      <td><strong>${esc(cg.name)}</strong>${cg.email ? `<br><small style="color:var(--ink-light)">${esc(cg.email)}</small>` : ''}</td>
+      <td>${cg.portal_email ? esc(cg.portal_email) : '<em style="color:var(--ink-light)">—</em>'}</td>
+      <td>${active ? `<code style="background:var(--cream-dark);padding:0.2rem 0.55rem;border-radius:5px;font-family:monospace;letter-spacing:0.1em">${cg.portal_pin}</code>` : '—'}</td>
+      <td><span class="badge ${active ? 'badge-active' : 'badge-inactive'}">${active ? 'Active' : 'No Access'}</span></td>
+      <td class="td-act">
+        <button class="btn btn-sm btn-edit" onclick="openCgAccessModal('${cg.id}')">${active ? 'Update' : 'Grant Access'}</button>
+        ${active ? `<button class="btn btn-sm btn-del" onclick="revokeCgAccess('${cg.id}')">Revoke</button>` : ''}
+      </td>
+    </tr>`;
+  }).join('') : '<tr class="empty-row"><td colspan="5">No caregivers found</td></tr>';
+}
+
+function openCgAccessModal(cgId) {
+  const cg = caregiversList.find(c => c.id === cgId) || {};
+  const pin = cg.portal_pin || Math.floor(100000 + Math.random() * 900000).toString();
+  document.getElementById('cg-access-ttl').textContent = cg.portal_pin ? 'Update Caregiver Access' : 'Grant Caregiver Access';
+  document.getElementById('cg-access-body').innerHTML = `
+    <p style="font-size:0.88rem;color:var(--ink-mid);margin-bottom:1.5rem">
+      Share these credentials with <strong>${esc(cg.name)}</strong> so they can sign in to the Caregiver Portal.
+    </p>
+    <div class="form-group">
+      <label>Portal Email</label>
+      <input class="fc" id="cg-p-email" type="email" value="${esc(cg.portal_email || cg.email || '')}" placeholder="their@email.com" />
+    </div>
+    <div class="form-group">
+      <label>PIN</label>
+      <div style="display:flex;gap:0.5rem;align-items:center">
+        <input class="fc" id="cg-p-pin" type="text" inputmode="numeric" value="${pin}" maxlength="6"
+          style="font-family:monospace;letter-spacing:0.2em;font-size:1.1rem;max-width:160px" />
+        <button type="button" class="btn btn-ghost btn-sm"
+          onclick="document.getElementById('cg-p-pin').value=Math.floor(100000+Math.random()*900000).toString()">New PIN</button>
+      </div>
+      <small style="color:var(--ink-light);font-size:0.78rem;margin-top:0.3rem;display:block">6-digit PIN — share this with the caregiver along with their portal email.</small>
+    </div>
+    <div class="modal-ft">
+      <button type="button" class="btn btn-ghost" onclick="closeModal('cg-access-ov')">Cancel</button>
+      <button type="button" class="btn btn-add" onclick="saveCgAccess('${cgId}')">Save Access</button>
+    </div>
+  `;
+  document.getElementById('cg-access-ov').classList.add('open');
+}
+
+async function saveCgAccess(cgId) {
+  const email = document.getElementById('cg-p-email').value.toLowerCase().trim();
+  const pin   = document.getElementById('cg-p-pin').value.trim();
+  if (!email || pin.length !== 6 || isNaN(pin)) { toast('Enter a valid email and 6-digit numeric PIN', true); return; }
+  try {
+    await db.collection('caregivers').doc(cgId).update({ portal_email: email, portal_pin: pin, portal_active: true, updated_at: SV() });
+    closeModal('cg-access-ov');
+    toast('Caregiver access saved');
+    loadCgAccess();
+    caregiversList = caregiversList.map(c => c.id === cgId ? { ...c, portal_email: email, portal_pin: pin } : c);
+  } catch(ex) { toast(ex.message, true); }
+}
+
+async function revokeCgAccess(cgId) {
+  if (!confirm('Revoke portal access for this caregiver?')) return;
+  try {
+    await db.collection('caregivers').doc(cgId).update({
+      portal_pin: firebase.firestore.FieldValue.delete(),
+      portal_email: firebase.firestore.FieldValue.delete(),
+      portal_active: false,
+      updated_at: SV()
+    });
+    toast('Access revoked');
+    loadCgAccess();
+  } catch(ex) { toast(ex.message, true); }
 }
 
 let _toastTimer;
