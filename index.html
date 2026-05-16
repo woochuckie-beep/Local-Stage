@@ -1800,12 +1800,16 @@
            signOut as fbSignOut, onAuthStateChanged,
            browserLocalPersistence, setPersistence }
     from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-  import { getFirestore, doc, getDoc }
+  import { getFirestore, doc, getDoc, collection, getDocs, query, where, addDoc, serverTimestamp }
     from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
   const app      = initializeApp(FIREBASE_CONFIG);
   const auth     = getAuth(app);
   const db       = getFirestore(app);
+
+  // Expose to regular (non-module) scripts
+  window._db = db;
+  window._fs = { doc, getDoc, collection, getDocs, query, where, addDoc, serverTimestamp };
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
   setPersistence(auth, browserLocalPersistence).catch(() => {});
@@ -3460,14 +3464,62 @@
 
           <div class="plan-divider"></div>
 
-          <div class="plan-contact-box">
-            <div class="plan-contact-icon">📞</div>
-            <div class="plan-contact-text">
-              <strong>Need to make changes to your plan?</strong>
-              <span>Contact your care coordinator — we're happy to adjust visits, pause service, or explore other options.</span>
-            </div>
-            <a href="tel:+19055552273" class="btn-outline">Call us</a>
+          <div class="card-label">Billing</div>
+          <div id="plan-view-billing" style="margin-bottom:0.5rem">—</div>
+
+          <div class="plan-divider"></div>
+
+          <div class="card-label">Request a Change</div>
+          <div id="plan-request-tabs" style="display:flex;gap:0.5rem;margin:0.75rem 0 1rem">
+            <button id="prtab-change" onclick="switchPlanTab('change')" style="padding:0.45rem 1rem;border-radius:100px;font-size:0.83rem;font-weight:500;background:var(--ink);color:#fff;border:none;cursor:pointer">Change Plan</button>
+            <button id="prtab-pause" onclick="switchPlanTab('pause')" style="padding:0.45rem 1rem;border-radius:100px;font-size:0.83rem;font-weight:500;background:var(--cream-dark);color:var(--ink-mid);border:none;cursor:pointer">Pause Service</button>
           </div>
+
+          <div id="prtab-change-panel">
+            <div style="display:flex;flex-direction:column;gap:0.85rem">
+              <div>
+                <label style="font-size:0.8rem;font-weight:600;color:var(--ink-mid);display:block;margin-bottom:0.3rem">Plan You'd Like</label>
+                <select id="req-plan-select" style="width:100%;padding:0.6rem 0.85rem;border:1.5px solid var(--cream-dark);border-radius:10px;font-size:0.9rem;font-family:inherit;background:#fff">
+                  <option value="">— Select a plan —</option>
+                  <option value="essential">Essential</option>
+                  <option value="companion">Companion</option>
+                  <option value="premium">Premium</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:0.8rem;font-weight:600;color:var(--ink-mid);display:block;margin-bottom:0.3rem">Message (optional)</label>
+                <textarea id="req-change-msg" rows="2" placeholder="Tell us why you'd like to change…" style="width:100%;padding:0.6rem 0.85rem;border:1.5px solid var(--cream-dark);border-radius:10px;font-size:0.9rem;font-family:inherit;resize:vertical"></textarea>
+              </div>
+              <button onclick="submitPortalChangePlan()" style="padding:0.65rem 1.4rem;background:var(--terra);color:#fff;border:none;border-radius:10px;font-size:0.9rem;font-weight:600;cursor:pointer;align-self:flex-start">Submit Request</button>
+            </div>
+          </div>
+
+          <div id="prtab-pause-panel" style="display:none">
+            <div style="display:flex;flex-direction:column;gap:0.85rem">
+              <div>
+                <label style="font-size:0.8rem;font-weight:600;color:var(--ink-mid);display:block;margin-bottom:0.3rem">Pause Start Date</label>
+                <input type="date" id="req-pause-start" style="width:100%;padding:0.6rem 0.85rem;border:1.5px solid var(--cream-dark);border-radius:10px;font-size:0.9rem;font-family:inherit" />
+              </div>
+              <div>
+                <label style="font-size:0.8rem;font-weight:600;color:var(--ink-mid);display:block;margin-bottom:0.3rem">Duration</label>
+                <select id="req-pause-duration" style="width:100%;padding:0.6rem 0.85rem;border:1.5px solid var(--cream-dark);border-radius:10px;font-size:0.9rem;font-family:inherit;background:#fff">
+                  <option value="">— Select duration —</option>
+                  <option value="1 week">1 Week</option>
+                  <option value="2 weeks">2 Weeks</option>
+                  <option value="1 month">1 Month</option>
+                  <option value="2 months">2 Months</option>
+                  <option value="3 months">3 Months</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:0.8rem;font-weight:600;color:var(--ink-mid);display:block;margin-bottom:0.3rem">Reason (optional)</label>
+                <textarea id="req-pause-msg" rows="2" placeholder="Let us know why you'd like to pause…" style="width:100%;padding:0.6rem 0.85rem;border:1.5px solid var(--cream-dark);border-radius:10px;font-size:0.9rem;font-family:inherit;resize:vertical"></textarea>
+              </div>
+              <button onclick="submitPortalPause()" style="padding:0.65rem 1.4rem;background:var(--terra);color:#fff;border:none;border-radius:10px;font-size:0.9rem;font-weight:600;cursor:pointer;align-self:flex-start">Submit Request</button>
+            </div>
+          </div>
+
+          <div id="plan-req-status" style="margin-top:0.75rem;font-size:0.85rem"></div>
         </div>
       </div>
 
@@ -3498,8 +3550,13 @@ const _origHandleSignOut = window.handleSignOut;
 // ══════════════════════════
 // VISIT DATA (loaded from Firestore)
 // ══════════════════════════
+// db and Firestore helpers come from the module script via window._db / window._fs
+function getDb() { return window._db; }
+function fs()    { return window._fs || {}; }
+
 let VISITS = {};
 let portalClientData = null;
+let portalStripeLinks = {};
 
 function fmtTime(dt) {
   let h = dt.getHours(), m = dt.getMinutes();
@@ -3509,22 +3566,26 @@ function fmtTime(dt) {
 }
 
 async function loadPortalData(clientId) {
+  const db = getDb();
+  const { doc: fsDoc, getDoc, collection: fsCol, getDocs, query: fsQuery, where: fsWhere } = fs();
+
   const now = new Date();
   const threeMonthsAgo = new Date(now); threeMonthsAgo.setMonth(now.getMonth() - 3);
   const sixMonthsLater = new Date(now); sixMonthsLater.setMonth(now.getMonth() + 6);
 
-  // Single query — no composite index needed
-  const [clientSnap, apptSnap] = await Promise.all([
-    db.collection('clients').doc(clientId).get(),
-    db.collection('appointments').where('client_id', '==', clientId).get()
+  const [clientSnap, apptSnap, stripeSnap] = await Promise.all([
+    getDoc(fsDoc(db, 'clients', clientId)),
+    getDocs(fsQuery(fsCol(db, 'appointments'), fsWhere('client_id', '==', clientId))),
+    getDoc(fsDoc(db, 'settings', 'stripe'))
   ]);
 
-  portalClientData = clientSnap.exists ? clientSnap.data() : null;
+  portalClientData  = clientSnap.exists ? { ...clientSnap.data(), _clientId: clientId } : null;
+  portalStripeLinks = stripeSnap.exists ? stripeSnap.data() : {};
 
-  // Fetch assigned caregiver for this client (from client doc)
+  // Fetch assigned caregiver
   if (portalClientData?.caregiver_id) {
     try {
-      const cgSnap = await db.collection('caregivers').doc(portalClientData.caregiver_id).get();
+      const cgSnap = await getDoc(fsDoc(db, 'caregivers', portalClientData.caregiver_id));
       if (cgSnap.exists) portalClientData._caregiverName = cgSnap.data().name || null;
     } catch(e) {}
   }
@@ -3533,7 +3594,7 @@ async function loadPortalData(clientId) {
   const cgIds = [...new Set(apptSnap.docs.map(d => d.data().caregiver_id).filter(Boolean))];
   const cgMap = {};
   await Promise.all(cgIds.map(async id => {
-    const s = await db.collection('caregivers').doc(id).get();
+    const s = await getDoc(fsDoc(db, 'caregivers', id));
     if (s.exists) cgMap[id] = s.data();
   }));
 
@@ -3640,7 +3701,8 @@ async function showPortal(user) {
 
   // Load real data from Firestore
   try {
-    const authDoc = await db.collection('authorizedUsers').doc(user.email.toLowerCase().trim()).get();
+    const { doc: fsDoc, getDoc } = fs();
+    const authDoc = await getDoc(fsDoc(getDb(), 'authorizedUsers', user.email.toLowerCase().trim()));
     if (authDoc.exists && authDoc.data().client_id) {
       await loadPortalData(authDoc.data().client_id);
     }
@@ -3772,6 +3834,93 @@ function updatePlanDisplay() {
   if (viewFeatures) viewFeatures.innerHTML = features.map(f =>
     `<div class="plan-feature-item"><div class="plan-feature-icon">${checkSVG}</div>${f}</div>`
   ).join('');
+
+  // Billing button — use global link for this plan, fall back to per-client link
+  const payUrl = (portalStripeLinks[planKey]) || (portalClientData?.stripe_link) || null;
+  const billingEl = document.getElementById('plan-view-billing');
+  if (billingEl) {
+    if (payUrl && /^https:\/\/(buy|billing|checkout)\.stripe\.com\//.test(payUrl)) {
+      billingEl.innerHTML = `
+        <a href="${payUrl}" target="_blank" rel="noopener noreferrer" class="btn-primary" style="display:inline-flex;align-items:center;gap:0.5rem;text-decoration:none;margin-top:0.25rem">
+          💳 Manage Billing
+        </a>
+        <p style="font-size:0.78rem;color:var(--ink-light);margin-top:0.5rem">View invoices, update payment method, or manage your subscription via Stripe.</p>`;
+    } else {
+      billingEl.innerHTML = `<p style="font-size:0.85rem;color:var(--ink-light)">Payment link not configured yet — your coordinator will add it shortly.</p>`;
+    }
+  }
+}
+
+function switchPlanTab(tab) {
+  document.getElementById('prtab-change-panel').style.display = tab === 'change' ? 'block' : 'none';
+  document.getElementById('prtab-pause-panel').style.display  = tab === 'pause'  ? 'block' : 'none';
+  document.getElementById('prtab-change').style.background = tab === 'change' ? 'var(--ink)' : 'var(--cream-dark)';
+  document.getElementById('prtab-change').style.color      = tab === 'change' ? '#fff' : 'var(--ink-mid)';
+  document.getElementById('prtab-pause').style.background  = tab === 'pause'  ? 'var(--ink)' : 'var(--cream-dark)';
+  document.getElementById('prtab-pause').style.color       = tab === 'pause'  ? '#fff' : 'var(--ink-mid)';
+}
+
+async function submitPortalChangePlan() {
+  const { addDoc, collection: fsCol, serverTimestamp } = fs();
+  const db = getDb();
+  const plan = document.getElementById('req-plan-select').value;
+  const msg  = (document.getElementById('req-change-msg').value || '').trim().slice(0, 500);
+  const statusEl = document.getElementById('plan-req-status');
+  if (!plan) { statusEl.style.color = '#c44'; statusEl.textContent = 'Please select a plan.'; return; }
+  if (plan === portalClientData?.plan) { statusEl.style.color = '#c44'; statusEl.textContent = 'That is already your current plan.'; return; }
+  statusEl.style.color = 'var(--ink-mid)'; statusEl.textContent = 'Submitting…';
+  try {
+    await addDoc(fsCol(db, 'plan_requests'), {
+      client_id:      portalClientData?._clientId || null,
+      client_name:    portalClientData?.name || '',
+      type:           'change_plan',
+      current_plan:   portalClientData?.plan || null,
+      requested_plan: plan,
+      message:        msg || null,
+      status:         'pending',
+      created_at:     serverTimestamp()
+    });
+    statusEl.style.color = 'var(--sage)';
+    statusEl.textContent = 'Request submitted! Your coordinator will be in touch.';
+    document.getElementById('req-plan-select').value = '';
+    document.getElementById('req-change-msg').value  = '';
+  } catch(e) {
+    statusEl.style.color = '#c44';
+    statusEl.textContent = 'Could not submit: ' + e.message;
+  }
+}
+
+async function submitPortalPause() {
+  const { addDoc, collection: fsCol, serverTimestamp } = fs();
+  const db       = getDb();
+  const start    = document.getElementById('req-pause-start').value;
+  const duration = document.getElementById('req-pause-duration').value;
+  const msg      = (document.getElementById('req-pause-msg').value || '').trim().slice(0, 500);
+  const statusEl = document.getElementById('plan-req-status');
+  if (!start)    { statusEl.style.color = '#c44'; statusEl.textContent = 'Please select a start date.'; return; }
+  if (!duration) { statusEl.style.color = '#c44'; statusEl.textContent = 'Please select a duration.'; return; }
+  statusEl.style.color = 'var(--ink-mid)'; statusEl.textContent = 'Submitting…';
+  try {
+    await addDoc(fsCol(db, 'plan_requests'), {
+      client_id:      portalClientData?._clientId || null,
+      client_name:    portalClientData?.name || '',
+      type:           'pause',
+      current_plan:   portalClientData?.plan || null,
+      pause_start:    start,
+      pause_duration: duration,
+      message:        msg || null,
+      status:         'pending',
+      created_at:     serverTimestamp()
+    });
+    statusEl.style.color = 'var(--sage)';
+    statusEl.textContent = 'Pause request submitted! Your coordinator will confirm shortly.';
+    document.getElementById('req-pause-start').value    = '';
+    document.getElementById('req-pause-duration').value = '';
+    document.getElementById('req-pause-msg').value      = '';
+  } catch(e) {
+    statusEl.style.color = '#c44';
+    statusEl.textContent = 'Could not submit: ' + e.message;
+  }
 }
 
 // Pick up pending session restore
