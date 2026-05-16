@@ -598,25 +598,6 @@
         <div id="admin-req-all"><div class="loading-msg">Loading…</div></div>
       </div>
 
-      <!-- Resolve modal -->
-      <div class="modal-ov" id="resolve-ov">
-        <div class="modal" style="max-width:440px">
-          <div class="modal-hd">
-            <div class="modal-title" id="resolve-title">Respond to Request</div>
-            <button class="modal-close" onclick="closeModal('resolve-ov')">✕</button>
-          </div>
-          <div id="resolve-summary" style="font-size:0.88rem;color:var(--ink-mid);margin-bottom:1rem;line-height:1.6"></div>
-          <div class="form-group">
-            <label>Note to client (optional)</label>
-            <textarea class="fc" id="resolve-note" rows="3" placeholder="Add a short message for the client…" style="resize:vertical"></textarea>
-          </div>
-          <div class="modal-ft">
-            <button type="button" class="btn btn-ghost" onclick="closeModal('resolve-ov')">Cancel</button>
-            <button type="button" class="btn" style="background:#ef4444;color:#fff" onclick="confirmResolve('declined')">Decline</button>
-            <button type="button" class="btn btn-add" onclick="confirmResolve('approved')">Approve</button>
-          </div>
-        </div>
-      </div>
     </div>
 
     <!-- SCHEDULE -->
@@ -647,6 +628,26 @@
     </div>
 
   </main>
+</div>
+
+<!-- ══════════ RESOLVE REQUEST MODAL ══════════ -->
+<div class="modal-ov" id="resolve-ov">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-hd">
+      <div class="modal-title" id="resolve-title">Respond to Request</div>
+      <button class="modal-close" onclick="closeModal('resolve-ov')">✕</button>
+    </div>
+    <div id="resolve-summary" style="font-size:0.88rem;color:var(--ink-mid);margin-bottom:1rem;line-height:1.6"></div>
+    <div class="form-group">
+      <label>Note to client (optional)</label>
+      <textarea class="fc" id="resolve-note" rows="3" placeholder="Add a short message for the client…" style="resize:vertical"></textarea>
+    </div>
+    <div class="modal-ft">
+      <button type="button" class="btn btn-ghost" onclick="closeModal('resolve-ov')">Cancel</button>
+      <button type="button" class="btn" style="background:#ef4444;color:#fff" onclick="confirmResolve('declined')">Decline</button>
+      <button type="button" class="btn btn-add" onclick="confirmResolve('approved')">Approve</button>
+    </div>
+  </div>
 </div>
 
 <!-- ══════════ CLIENT MODAL ══════════ -->
@@ -966,7 +967,15 @@ auth.onAuthStateChanged(user => {
   if (user) {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
-    preload().then(() => go('dashboard'));
+    preload().then(() => go('dashboard')).catch(ex => {
+      console.error('Preload failed:', ex);
+      document.getElementById('login-screen').style.display = 'flex';
+      document.getElementById('app').style.display = 'none';
+      const err = document.createElement('div');
+      err.style.cssText = 'color:#c44;font-size:0.85rem;margin-top:0.75rem;text-align:center';
+      err.textContent = 'Error loading portal: ' + ex.message;
+      document.querySelector('.login-card').appendChild(err);
+    });
   } else {
     document.getElementById('login-screen').style.display = 'flex';
     document.getElementById('app').style.display = 'none';
@@ -1587,7 +1596,7 @@ function safeUrl(url) {
   try {
     const u = new URL(url);
     if (u.protocol !== 'https:') return null;
-    const allowed = ['buy.stripe.com','stripe.com','checkout.stripe.com'];
+    const allowed = ['buy.stripe.com','stripe.com','checkout.stripe.com','billing.stripe.com'];
     if (!allowed.some(d => u.hostname === d || u.hostname.endsWith('.' + d))) return null;
     return url;
   } catch { return null; }
@@ -1640,7 +1649,7 @@ async function saveStripeSettings(e) {
     updated_at: SV()
   };
   if (!data.essential && !data.companion && !data.premium) {
-    toast('No valid Stripe links — URLs must start with https://buy.stripe.com/', true); return;
+    toast('No valid Stripe links — must be https://buy.stripe.com/, billing.stripe.com/, or checkout.stripe.com/', true); return;
   }
   try {
     await db.collection('settings').doc('stripe').set(data);

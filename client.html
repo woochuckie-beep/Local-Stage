@@ -645,7 +645,7 @@
     try {
       const u = new URL(url);
       if (u.protocol !== 'https:') return null;
-      const allowed = ['buy.stripe.com','stripe.com','checkout.stripe.com'];
+      const allowed = ['buy.stripe.com','stripe.com','checkout.stripe.com','billing.stripe.com'];
       if (!allowed.some(d => u.hostname === d || u.hostname.endsWith('.' + d))) return null;
       return url;
     } catch { return null; }
