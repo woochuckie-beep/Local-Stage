@@ -358,6 +358,9 @@
       <button class="nav-link" data-page="cg-access" onclick="go('cg-access')">
         <span class="nav-icon">🔐</span>Caregiver Access
       </button>
+      <button class="nav-link" data-page="settings" onclick="go('settings')">
+        <span class="nav-icon">⚙️</span>Settings
+      </button>
     </nav>
     <div class="sidebar-footer">
       <button class="btn-logout" onclick="auth.signOut()">↪ Sign Out</button>
@@ -514,6 +517,41 @@
           </thead>
           <tbody id="cg-access-tbody"><tr class="empty-row"><td colspan="5">Loading…</td></tr></tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="page-settings" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Settings</div>
+          <div class="page-sub">Global configuration — set once, applies to all clients</div>
+        </div>
+      </div>
+      <div class="card" style="max-width:580px">
+        <div class="card-title">Stripe Payment Links</div>
+        <p style="font-size:0.84rem;color:var(--ink-mid);margin-bottom:1.25rem;line-height:1.6">
+          Create one Payment Link per plan in your <strong>Stripe Dashboard</strong>, then paste them below.
+          Every client on that plan will automatically see the correct Pay Now button — no per-client setup needed.
+        </p>
+        <form id="stripe-form" onsubmit="saveStripeSettings(event)">
+          <div class="form-group">
+            <label>Essential Plan Link</label>
+            <input class="fc" id="stripe-essential" type="url" placeholder="https://buy.stripe.com/…" />
+          </div>
+          <div class="form-group">
+            <label>Companion Plan Link</label>
+            <input class="fc" id="stripe-companion" type="url" placeholder="https://buy.stripe.com/…" />
+          </div>
+          <div class="form-group">
+            <label>Premium Plan Link</label>
+            <input class="fc" id="stripe-premium" type="url" placeholder="https://buy.stripe.com/…" />
+          </div>
+          <div style="display:flex;align-items:center;gap:1rem;margin-top:0.5rem">
+            <button type="submit" class="btn btn-add">Save Links</button>
+            <span id="stripe-saved" style="color:var(--sage);font-size:0.85rem;display:none">✓ Saved</span>
+          </div>
+        </form>
       </div>
     </div>
 
@@ -911,6 +949,7 @@ function go(page) {
   if (page === 'schedule')   loadSchedule();
   if (page === 'access')     loadAccess();
   if (page === 'cg-access')  loadCgAccess();
+  if (page === 'settings')   loadStripeSettings();
 }
 
 // ── DASHBOARD ────────────────────────────────────────────────────────────────
@@ -1488,6 +1527,36 @@ function chipStatusClass(a) {
 
 function openCgProfile(cgId) {
   window.open('caregiver-profile.html?id=' + encodeURIComponent(cgId), '_blank');
+}
+
+// ── STRIPE SETTINGS ──────────────────────────────────────────────────────────
+async function loadStripeSettings() {
+  try {
+    const snap = await db.collection('settings').doc('stripe').get();
+    if (snap.exists) {
+      const d = snap.data();
+      document.getElementById('stripe-essential').value = d.essential || '';
+      document.getElementById('stripe-companion').value = d.companion || '';
+      document.getElementById('stripe-premium').value   = d.premium   || '';
+    }
+  } catch(ex) { toast(ex.message, true); }
+}
+
+async function saveStripeSettings(e) {
+  e.preventDefault();
+  const data = {
+    essential: document.getElementById('stripe-essential').value.trim() || null,
+    companion: document.getElementById('stripe-companion').value.trim() || null,
+    premium:   document.getElementById('stripe-premium').value.trim()   || null,
+    updated_at: SV()
+  };
+  try {
+    await db.collection('settings').doc('stripe').set(data);
+    const saved = document.getElementById('stripe-saved');
+    saved.style.display = 'inline';
+    setTimeout(() => saved.style.display = 'none', 3000);
+    toast('Stripe links saved');
+  } catch(ex) { toast(ex.message, true); }
 }
 
 function fmtT(t) {

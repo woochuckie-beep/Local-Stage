@@ -207,11 +207,12 @@
   const db   = firebase.firestore();
   const auth = firebase.auth();
 
-  let clientDoc      = null;
-  let caregiverDoc   = null;
+  let clientDoc       = null;
+  let caregiverDoc    = null;
+  let stripeLinks     = {};   // { essential, companion, premium } — from settings/stripe
   let allAppointments = [];
-  let _unsubAppts    = null;
-  let _unsubClient   = null;
+  let _unsubAppts     = null;
+  let _unsubClient    = null;
 
   // ── AUTH ────────────────────────────────────────────────────────────────────
   auth.onAuthStateChanged(async user => {
@@ -270,6 +271,10 @@
       const cgSnap = await db.collection('caregivers').doc(clientDoc.caregiver_id).get();
       if (cgSnap.exists) caregiverDoc = { id: cgSnap.id, ...cgSnap.data() };
     }
+
+    // Load global Stripe plan links (set once in admin Settings)
+    const stripeSnap = await db.collection('settings').doc('stripe').get();
+    if (stripeSnap.exists) stripeLinks = stripeSnap.data();
 
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
@@ -331,13 +336,12 @@
     const bannerEl = document.getElementById('dash-plan-banner');
     if (bannerEl) {
       const plan = clientDoc?.plan;
-      const link = clientDoc?.stripe_link;
+      const link = (plan && stripeLinks[plan]) || clientDoc?.stripe_link || null;
       if (plan || link) {
         bannerEl.innerHTML = `<div class="dash-plan-banner">
           <div class="dash-plan-left">
             ${plan ? `<div class="dash-plan-tag">Current Plan</div><div class="dash-plan-name">${plan}</div>` : ''}
-            ${link && !plan ? `<div class="dash-plan-hint">You have a payment on file</div>` : ''}
-            ${link && plan ? `<div class="dash-plan-hint">Click Pay Now to manage your payment</div>` : ''}
+            ${link ? `<div class="dash-plan-hint">Click Pay Now to manage your subscription</div>` : ''}
           </div>
           ${link ? `<a class="btn-pay" href="${esc(link)}" target="_blank">💳 Pay Now</a>` : ''}
         </div>`;
@@ -400,9 +404,10 @@
       el.innerHTML = `<div class="card"><p class="plan-no">No plan assigned yet. Contact your coordinator to get started.</p></div>`;
       return;
     }
-    const feats = (PLAN_FEATURES[plan] || []).map(f => `<div class="plan-feat">${f}</div>`).join('');
-    const payBtn = clientDoc?.stripe_link
-      ? `<a class="btn-pay" href="${esc(clientDoc.stripe_link)}" target="_blank">💳 Pay Now</a>`
+    const feats  = (PLAN_FEATURES[plan] || []).map(f => `<div class="plan-feat">${f}</div>`).join('');
+    const payUrl = (stripeLinks[plan]) || clientDoc?.stripe_link || null;
+    const payBtn = payUrl
+      ? `<a class="btn-pay" href="${esc(payUrl)}" target="_blank">💳 Pay Now</a>`
       : '';
     el.innerHTML = `<div class="plan-card">
       <div class="plan-label">Current Plan</div>
