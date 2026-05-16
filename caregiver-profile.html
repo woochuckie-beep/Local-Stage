@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-Frame-Options" content="DENY" />
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://*.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; frame-ancestors 'none';" />
   <title>Caregiver Profile · Hearthlane</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -192,7 +195,8 @@
   const db = firebase.firestore();
 
   const params   = new URLSearchParams(location.search);
-  const cgId     = params.get('id');
+  const _rawId   = params.get('id') || '';
+  const cgId     = /^[a-zA-Z0-9]{1,128}$/.test(_rawId) ? _rawId : null;
   let weekStart  = mondayOf(new Date());
 
   // ── BOOT ──────────────────────────────────────────────────────────────────

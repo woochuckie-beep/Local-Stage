@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-Frame-Options" content="DENY" />
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://*.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; frame-ancestors 'none';" />
   <title>Hearthlane · Caregiver Portal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -445,8 +448,7 @@ async function handleSignIn(e) {
     if (doc.data().portal_active === false) throw new Error('Your portal access is inactive. Contact your coordinator.');
     caregiverDoc = { id: doc.id, ...doc.data() };
     caregiverId  = doc.id;
-    sessionStorage.setItem('cg_email', email);
-    sessionStorage.setItem('cg_pin',   pin);
+    sessionStorage.setItem('cg_id', doc.id);
     await bootPortal();
   } catch(ex) {
     err.textContent = ex.message; err.style.display = 'block';
@@ -455,16 +457,14 @@ async function handleSignIn(e) {
 }
 
 async function tryResumeSession() {
-  const email = sessionStorage.getItem('cg_email');
-  const pin   = sessionStorage.getItem('cg_pin');
-  if (!email || !pin) return false;
+  const id = sessionStorage.getItem('cg_id');
+  if (!id || !/^[a-zA-Z0-9]+$/.test(id)) return false;
   try {
     await _authReady;
-    const snap = await db.collection('caregivers')
-      .where('portal_email', '==', email).where('portal_pin', '==', pin).limit(1).get();
-    if (snap.empty) return false;
-    caregiverDoc = { id: snap.docs[0].id, ...snap.docs[0].data() };
-    caregiverId  = snap.docs[0].id;
+    const snap = await db.collection('caregivers').doc(id).get();
+    if (!snap.exists || snap.data().portal_active === false) return false;
+    caregiverDoc = { id: snap.id, ...snap.data() };
+    caregiverId  = snap.id;
     return true;
   } catch { return false; }
 }
@@ -473,7 +473,7 @@ function handleSignOut() {
   if (_unsubAppts)  { _unsubAppts();  _unsubAppts  = null; }
   if (_unsubClients){ _unsubClients(); _unsubClients = null; }
   if (_unsubReqs)   { _unsubReqs();   _unsubReqs   = null; }
-  sessionStorage.clear();
+  sessionStorage.removeItem('cg_id');
   caregiverDoc = null; caregiverId = null;
   document.getElementById('app').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
@@ -964,8 +964,8 @@ async function loadVisitNotes() {
 
 async function saveVisitNote() {
   const clientId = document.getElementById('note-client-sel').value;
-  const text     = document.getElementById('note-text').value.trim();
-  if (!clientId) { toast('Please select a client', true); return; }
+  const text     = document.getElementById('note-text').value.trim().slice(0, 5000);
+  if (!clientId || !/^[a-zA-Z0-9]+$/.test(clientId)) { toast('Please select a client', true); return; }
   if (!text)     { toast('Note cannot be empty', true); return; }
   try {
     await db.collection('visit_notes').add({

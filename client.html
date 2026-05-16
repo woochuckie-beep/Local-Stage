@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-Frame-Options" content="DENY" />
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://*.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; frame-src https://accounts.google.com; frame-ancestors 'none';" />
   <title>My Hearthlane Portal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -221,7 +224,16 @@
       document.getElementById('app').style.display = 'none';
       return;
     }
-    await bootPortal(user);
+    try {
+      await bootPortal(user);
+    } catch(ex) {
+      console.error('Auth state boot error:', ex);
+      document.getElementById('login-screen').style.display = 'flex';
+      document.getElementById('app').style.display = 'none';
+      const err = document.getElementById('login-error');
+      err.textContent = 'Something went wrong loading your portal. Please refresh.';
+      err.style.display = 'block';
+    }
   });
 
   async function signInWithGoogle() {
@@ -359,7 +371,7 @@
             ${plan ? `<div class="dash-plan-tag">Current Plan</div><div class="dash-plan-name">${plan}</div>` : ''}
             ${link ? `<div class="dash-plan-hint">Click Pay Now to manage your subscription</div>` : ''}
           </div>
-          ${link ? `<a class="btn-pay" href="${esc(link)}" target="_blank">💳 Pay Now</a>` : ''}
+          ${safeUrl(link) ? `<a class="btn-pay" href="${esc(safeUrl(link))}" target="_blank" rel="noopener noreferrer">💳 Pay Now</a>` : ''}
         </div>`;
       } else {
         bannerEl.innerHTML = '';
@@ -435,7 +447,7 @@
         <div class="plan-label">Your Current Plan</div>
         <div class="plan-name">${planLabel}</div>
         <div class="plan-features">${feats}</div>
-        ${payUrl ? `<a class="btn-pay" href="${esc(payUrl)}" target="_blank">💳 Pay Now</a>` : ''}
+        ${safeUrl(payUrl) ? `<a class="btn-pay" href="${esc(safeUrl(payUrl))}" target="_blank" rel="noopener noreferrer">💳 Pay Now</a>` : ''}
       </div>
 
       ${caregiverDoc ? `
@@ -499,6 +511,16 @@
   function esc(s) {
     if (!s) return '';
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function safeUrl(url) {
+    if (!url) return null;
+    try {
+      const u = new URL(url);
+      if (u.protocol !== 'https:') return null;
+      const allowed = ['buy.stripe.com','stripe.com','checkout.stripe.com'];
+      if (!allowed.some(d => u.hostname === d || u.hostname.endsWith('.' + d))) return null;
+      return url;
+    } catch { return null; }
   }
   let _tt;
   function toast(msg, isErr = false) {

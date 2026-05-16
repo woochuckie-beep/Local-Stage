@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-Frame-Options" content="DENY" />
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://*.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; frame-ancestors 'none';" />
   <title>Hearthlane · Admin</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -596,17 +599,17 @@
       <div class="form-row">
         <div class="form-group">
           <label>Full Name *</label>
-          <input class="fc" name="name" required />
+          <input class="fc" name="name" required maxlength="100" />
         </div>
         <div class="form-group">
           <label>Email</label>
-          <input class="fc" name="email" type="email" />
+          <input class="fc" name="email" type="email" maxlength="200" />
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
           <label>Phone</label>
-          <input class="fc" name="phone" type="tel" />
+          <input class="fc" name="phone" type="tel" maxlength="30" />
         </div>
         <div class="form-group">
           <label>Plan</label>
@@ -1047,14 +1050,14 @@ async function saveClient(e) {
   e.preventDefault();
   const fd = new FormData(e.target);
   const data = {
-    name:         fd.get('name'),
-    email:        fd.get('email')        || null,
-    phone:        fd.get('phone')        || null,
-    address:      fd.get('address')      || null,
-    plan:         fd.get('plan')         || null,
-    caregiver_id: fd.get('caregiver_id') || null,
-    notes:        fd.get('notes')        || null,
-    stripe_link:  fd.get('stripe_link')  || null,
+    name:         cap(fd.get('name'), 100),
+    email:        cap(fd.get('email'), 200),
+    phone:        cap(fd.get('phone'), 30),
+    address:      cap(fd.get('address'), 300),
+    plan:         ['essential','companion','premium'].includes(fd.get('plan')) ? fd.get('plan') : null,
+    caregiver_id: cap(fd.get('caregiver_id'), 128),
+    notes:        cap(fd.get('notes'), 2000),
+    stripe_link:  safeUrl(fd.get('stripe_link')) || null,
     updated_at:   SV()
   };
   try {
@@ -1170,14 +1173,14 @@ async function saveCaregiver(e) {
   e.preventDefault();
   const fd = new FormData(e.target);
   const data = {
-    name:        fd.get('name'),
-    email:       fd.get('email')       || null,
-    phone:       fd.get('phone')       || null,
-    status:      fd.get('status'),
-    bio:         fd.get('bio')         || null,
-    background:  fd.get('background')  || null,
-    languages:   fd.get('languages')   || null,
-    google_email:fd.get('google_email')?.toLowerCase().trim() || null,
+    name:        cap(fd.get('name'), 100),
+    email:       cap(fd.get('email'), 200),
+    phone:       cap(fd.get('phone'), 30),
+    status:      ['active','inactive'].includes(fd.get('status')) ? fd.get('status') : 'active',
+    bio:         cap(fd.get('bio'), 2000),
+    background:  cap(fd.get('background'), 200),
+    languages:   cap(fd.get('languages'), 200),
+    google_email:cap(fd.get('google_email')?.toLowerCase(), 200),
     updated_at:  SV()
   };
   try {
@@ -1511,11 +1514,28 @@ function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+function safeUrl(url) {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    if (u.protocol !== 'https:') return null;
+    const allowed = ['buy.stripe.com','stripe.com','checkout.stripe.com'];
+    if (!allowed.some(d => u.hostname === d || u.hostname.endsWith('.' + d))) return null;
+    return url;
+  } catch { return null; }
+}
+}
+
 function fill(form, vals) {
   Object.entries(vals).forEach(([k, v]) => {
     const el = form.querySelector('[name="' + k + '"]');
     if (el) el.value = v ?? '';
   });
+}
+
+function cap(str, max = 500) {
+  if (!str) return null;
+  return String(str).trim().slice(0, max) || null;
 }
 
 function chipStatusClass(a) {
@@ -1526,7 +1546,8 @@ function chipStatusClass(a) {
 }
 
 function openCgProfile(cgId) {
-  window.open('caregiver-profile.html?id=' + encodeURIComponent(cgId), '_blank');
+  if (!/^[a-zA-Z0-9]+$/.test(cgId)) return;
+  window.open('caregiver-profile.html?id=' + encodeURIComponent(cgId), '_blank', 'noopener,noreferrer');
 }
 
 // ── STRIPE SETTINGS ──────────────────────────────────────────────────────────
@@ -1545,11 +1566,14 @@ async function loadStripeSettings() {
 async function saveStripeSettings(e) {
   e.preventDefault();
   const data = {
-    essential: document.getElementById('stripe-essential').value.trim() || null,
-    companion: document.getElementById('stripe-companion').value.trim() || null,
-    premium:   document.getElementById('stripe-premium').value.trim()   || null,
+    essential: safeUrl(document.getElementById('stripe-essential').value.trim()) || null,
+    companion: safeUrl(document.getElementById('stripe-companion').value.trim()) || null,
+    premium:   safeUrl(document.getElementById('stripe-premium').value.trim())   || null,
     updated_at: SV()
   };
+  if (!data.essential && !data.companion && !data.premium) {
+    toast('No valid Stripe links — URLs must start with https://buy.stripe.com/', true); return;
+  }
   try {
     await db.collection('settings').doc('stripe').set(data);
     const saved = document.getElementById('stripe-saved');
