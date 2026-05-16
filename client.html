@@ -89,7 +89,14 @@
     .visit-badge.confirmed { background: #EF4444; }
     .visit-badge.completed { background: var(--sage); }
 
-    /* ── PLAN ── */
+    /* ── DASH PLAN BANNER ── */
+    .dash-plan-banner { border-radius: 14px; padding: 1.25rem 1.5rem; background: linear-gradient(135deg, var(--ink) 0%, #5a3e2b 100%); color: var(--white); margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+    .dash-plan-left { display: flex; flex-direction: column; gap: 0.2rem; }
+    .dash-plan-tag { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.5); }
+    .dash-plan-name { font-size: 1.2rem; font-weight: 700; color: var(--terra-soft); text-transform: capitalize; }
+    .dash-plan-hint { font-size: 0.78rem; color: rgba(255,255,255,0.55); }
+
+    /* ── PLAN PAGE ── */
     .plan-card { border-radius: 16px; padding: 2rem; background: linear-gradient(135deg, var(--ink) 0%, #5a3e2b 100%); color: var(--white); margin-bottom: 1.25rem; }
     .plan-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.55); margin-bottom: 0.4rem; }
     .plan-name { font-size: 2rem; font-weight: 700; color: var(--terra-soft); text-transform: capitalize; }
@@ -153,6 +160,9 @@
     <div class="view active" id="view-dashboard">
       <div class="view-title" id="dash-greeting">Welcome back</div>
       <div class="view-sub">Here's your care at a glance</div>
+
+      <!-- Plan + Payment banner — always visible on dashboard -->
+      <div id="dash-plan-banner"></div>
 
       <div class="card">
         <div class="card-title">Next Visit</div>
@@ -284,7 +294,13 @@
       .onSnapshot(snap => {
         if (snap.exists) {
           clientDoc = { id: snap.id, ...snap.data() };
-          if (activeTab() === 'plan') renderPlan();
+          if (activeTab() === 'plan')      renderPlan();
+          if (activeTab() === 'dashboard') renderDashboard();
+          // Always refresh caregiver if assignment changed
+          if (clientDoc.caregiver_id && clientDoc.caregiver_id !== caregiverDoc?.id) {
+            db.collection('caregivers').doc(clientDoc.caregiver_id).get()
+              .then(s => { if (s.exists) { caregiverDoc = { id: s.id, ...s.data() }; renderDashboard(); }});
+          }
         }
       });
 
@@ -310,6 +326,25 @@
   function renderDashboard() {
     const now = new Date();
     const upcoming = allAppointments.filter(a => a.scheduled_at >= now);
+
+    // Plan + payment banner
+    const bannerEl = document.getElementById('dash-plan-banner');
+    if (bannerEl) {
+      const plan = clientDoc?.plan;
+      const link = clientDoc?.stripe_link;
+      if (plan || link) {
+        bannerEl.innerHTML = `<div class="dash-plan-banner">
+          <div class="dash-plan-left">
+            ${plan ? `<div class="dash-plan-tag">Current Plan</div><div class="dash-plan-name">${plan}</div>` : ''}
+            ${link && !plan ? `<div class="dash-plan-hint">You have a payment on file</div>` : ''}
+            ${link && plan ? `<div class="dash-plan-hint">Click Pay Now to manage your payment</div>` : ''}
+          </div>
+          ${link ? `<a class="btn-pay" href="${esc(link)}" target="_blank">💳 Pay Now</a>` : ''}
+        </div>`;
+      } else {
+        bannerEl.innerHTML = '';
+      }
+    }
 
     // Next visit
     const nextEl = document.getElementById('next-visit');
