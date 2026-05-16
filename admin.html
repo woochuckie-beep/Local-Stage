@@ -967,15 +967,18 @@ auth.onAuthStateChanged(user => {
   if (user) {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
-    preload().then(() => go('dashboard')).catch(ex => {
-      console.error('Preload failed:', ex);
-      document.getElementById('login-screen').style.display = 'flex';
-      document.getElementById('app').style.display = 'none';
-      const err = document.createElement('div');
-      err.style.cssText = 'color:#c44;font-size:0.85rem;margin-top:0.75rem;text-align:center';
-      err.textContent = 'Error loading portal: ' + ex.message;
-      document.querySelector('.login-card').appendChild(err);
-    });
+    preload()
+      .then(() => go('dashboard'))
+      .catch(ex => {
+        console.error('Preload failed:', ex);
+        const errEl = document.getElementById('l-err');
+        const btn   = document.getElementById('l-btn');
+        errEl.textContent   = 'Portal error: ' + ex.message + ' — try refreshing.';
+        btn.textContent     = 'Sign In';
+        btn.disabled        = false;
+        document.getElementById('login-screen').style.display = 'flex';
+        document.getElementById('app').style.display = 'none';
+      });
   } else {
     document.getElementById('login-screen').style.display = 'flex';
     document.getElementById('app').style.display = 'none';
@@ -992,8 +995,11 @@ async function handleLogin(e) {
       document.getElementById('l-email').value,
       document.getElementById('l-pass').value
     );
+    // success — onAuthStateChanged takes over; reset button in case preload fails
+    btn.textContent = 'Sign In'; btn.disabled = false;
   } catch(ex) {
-    err.textContent = ex.message;
+    err.textContent = ex.code === 'auth/invalid-credential' || ex.code === 'auth/wrong-password' || ex.code === 'auth/user-not-found'
+      ? 'Incorrect email or password.' : ex.message;
     btn.textContent = 'Sign In'; btn.disabled = false;
   }
 }
@@ -1008,12 +1014,6 @@ async function preload() {
   caregiversMap  = Object.fromEntries(caregiversList.map(c => [c.id, c]));
   clientsList    = cSnap.docs.map(d => ({ id: d.id, ...d.data() }));
   clientsMap     = Object.fromEntries(clientsList.map(c => [c.id, c]));
-  // Show pending request badge in sidebar
-  db.collection('plan_requests').where('status', '==', 'pending').get()
-    .then(snap => {
-      const badge = document.getElementById('req-pending-badge');
-      if (badge && snap.size > 0) { badge.textContent = snap.size; badge.style.display = 'inline'; }
-    }).catch(() => {});
 }
 
 // ── NAVIGATION ───────────────────────────────────────────────────────────────
@@ -1891,12 +1891,13 @@ async function loadAdminRequests() {
       .sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0));
 
     const pending  = all.filter(r => r.status === 'pending');
-    const resolved = all.filter(r => r.status !== 'pending');
 
-    // Update badge
+    // Update sidebar badge
     const badge = document.getElementById('req-pending-badge');
-    if (pending.length) { badge.textContent = pending.length; badge.style.display = 'inline'; }
-    else badge.style.display = 'none';
+    if (badge) {
+      if (pending.length) { badge.textContent = pending.length; badge.style.display = 'inline'; }
+      else badge.style.display = 'none';
+    }
 
     const countEl = document.getElementById('admin-pending-count');
     countEl.textContent = pending.length || '';
