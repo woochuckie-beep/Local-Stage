@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <style>
     :root {
@@ -332,8 +333,12 @@ const firebaseConfig = {
   appId:             "1:177600603494:web:1696f09bb3e51d075ad4a7"
 };
 firebase.initializeApp(firebaseConfig);
-const db  = firebase.firestore();
-const FSV = firebase.firestore.FieldValue;
+const db   = firebase.firestore();
+const FSV  = firebase.firestore.FieldValue;
+
+// Anonymous auth gives a valid Firebase token so Firestore rules pass.
+// Caregiver identity is still verified by the email + PIN lookup — not by Firebase Auth.
+const _authReady = firebase.auth().signInAnonymously().catch(e => console.warn('anon auth:', e));
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
 let caregiverDoc  = null;
@@ -358,6 +363,7 @@ async function handleSignIn(e) {
   const err   = document.getElementById('login-error');
   btn.disabled = true; btn.textContent = 'Signing in…'; err.style.display = 'none';
   try {
+    await _authReady;
     const snap = await db.collection('caregivers')
       .where('portal_email', '==', email)
       .where('portal_pin',   '==', pin)
@@ -381,6 +387,7 @@ async function tryResumeSession() {
   const pin   = sessionStorage.getItem('cg_pin');
   if (!email || !pin) return false;
   try {
+    await _authReady;
     const snap = await db.collection('caregivers')
       .where('portal_email', '==', email).where('portal_pin', '==', pin).limit(1).get();
     if (snap.empty) return false;
