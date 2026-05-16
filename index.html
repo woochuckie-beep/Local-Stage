@@ -1860,7 +1860,7 @@
     <li><a href="#faq">FAQ</a></li>
     <li><a href="#" onclick="openPortal();return false;" style="color:var(--terra-deep);font-weight:500;">Family Portal</a></li>
   </ul>
-  <button class="nav-cta" onclick="closePortal();startIntake('weekly')">Talk to a coordinator</button>
+  <button class="nav-cta" onclick="document.getElementById('portal-overlay').classList.remove('open');document.body.style.overflow='';startIntake('weekly')">Talk to a coordinator</button>
   <button class="nav-hamburger" id="hamburger" aria-label="Menu" onclick="toggleMobileMenu()">
     <span></span><span></span><span></span>
   </button>
@@ -1871,7 +1871,7 @@
   <a href="#pricing" onclick="toggleMobileMenu()">Care options</a>
   <a href="#faq" onclick="toggleMobileMenu()">FAQ</a>
   <a href="#" onclick="toggleMobileMenu(); openPortal(); return false;" style="color:var(--terra-deep);font-weight:500;padding:1.1rem 0;border-bottom:1px solid var(--cream-dark);text-decoration:none;">Family Portal</a>
-  <a class="mm-cta" href="#" onclick="toggleMobileMenu(); closePortal(); startIntake('weekly');return false;">Talk to a coordinator</a>
+  <a class="mm-cta" href="#" onclick="toggleMobileMenu();document.getElementById('portal-overlay').classList.remove('open');document.body.style.overflow='';startIntake('weekly');return false;">Talk to a coordinator</a>
 </div>
 
 <!-- ════════════════════════════════════════════════════════════════
@@ -3433,8 +3433,10 @@ function openPortal() {
   document.body.style.overflow = 'hidden';
 }
 function closePortal() {
-  document.getElementById('portal-overlay').classList.remove('open');
+  var overlay = document.getElementById('portal-overlay');
+  if (overlay) overlay.classList.remove('open');
   document.body.style.overflow = '';
+  document.documentElement.style.overflow = '';
 }
 /* Override sign-out to also close overlay */
 const _origHandleSignOut = window.handleSignOut;
