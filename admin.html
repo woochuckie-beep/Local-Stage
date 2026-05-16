@@ -156,6 +156,12 @@
     .badge-req-pending  { background: #FEF3C7; color: #92400E; }
     .badge-req-approved { background: #D1FAE5; color: #065F46; }
     .badge-req-declined { background: #FEE2E2; color: #991B1B; }
+    .badge-status-active    { background: #D1FAE5; color: #065F46; }
+    .badge-status-paused    { background: #FEF3C7; color: #92400E; }
+    .badge-status-cancelled { background: #FEE2E2; color: #991B1B; }
+    .toggle-row { display: flex; align-items: center; gap: 0.6rem; }
+    .toggle-row input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--terra); cursor: pointer; }
+    .toggle-row label { font-size: 0.88rem; color: var(--ink-mid); cursor: pointer; user-select: none; }
     .badge-essential { background: var(--sage-soft); color: var(--sage); }
     .badge-companion  { background: var(--terra-soft); color: var(--terra-deep); }
     .badge-premium    { background: #e8e0f5; color: #6a5acd; }
@@ -644,8 +650,8 @@
     </div>
     <div class="modal-ft">
       <button type="button" class="btn btn-ghost" onclick="closeModal('resolve-ov')">Cancel</button>
-      <button type="button" class="btn" style="background:#ef4444;color:#fff" onclick="confirmResolve('declined')">Decline</button>
-      <button type="button" class="btn btn-add" onclick="confirmResolve('approved')">Approve</button>
+      <button type="button" class="btn" style="background:#6b5a48;color:#fff" onclick="confirmResolve('declined')">Decline</button>
+      <button type="button" class="btn btn-add" onclick="confirmResolve('approved')">Approve & Apply</button>
     </div>
   </div>
 </div>
@@ -701,6 +707,22 @@
         <label>Stripe Payment Link</label>
         <input class="fc" name="stripe_link" type="url" placeholder="https://buy.stripe.com/…" />
         <small style="color:var(--ink-light);font-size:0.78rem;margin-top:0.3rem;display:block">Paste the client's Stripe payment link — they'll see a Pay Now button in their portal.</small>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Subscription Status</label>
+          <select class="fc" name="subscription_status">
+            <option value="active">Active</option>
+            <option value="paused">Paused</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        <div class="form-group" style="display:flex;align-items:center;padding-top:1.6rem">
+          <div class="toggle-row">
+            <input type="checkbox" name="auto_renew" id="client-auto-renew" checked />
+            <label for="client-auto-renew">Auto-renew subscription</label>
+          </div>
+        </div>
       </div>
       <div class="modal-ft">
         <button type="button" class="btn btn-ghost" onclick="closeModal('client-ov')">Cancel</button>
@@ -968,7 +990,7 @@ auth.onAuthStateChanged(user => {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
     preload()
-      .then(() => go('dashboard'))
+      .then(() => { go('dashboard'); startRequestsListener(); })
       .catch(ex => {
         console.error('Preload failed:', ex);
         const errEl = document.getElementById('l-err');
@@ -1119,7 +1141,12 @@ function openClientModal(id) {
       `<option value="${cg.id}"${c?.caregiver_id === cg.id ? ' selected' : ''}>${esc(cg.name)}</option>`
     ).join('');
 
-  if (c) fill(form, { name: c.name, email: c.email||'', phone: c.phone||'', address: c.address||'', plan: c.plan||'', caregiver_id: c.caregiver_id||'', notes: c.notes||'', stripe_link: c.stripe_link||'' });
+  if (c) {
+    fill(form, { name: c.name, email: c.email||'', phone: c.phone||'', address: c.address||'', plan: c.plan||'', caregiver_id: c.caregiver_id||'', notes: c.notes||'', stripe_link: c.stripe_link||'', subscription_status: c.subscription_status||'active' });
+    form.querySelector('[name="auto_renew"]').checked = c.auto_renew !== false;
+  } else {
+    form.querySelector('[name="auto_renew"]').checked = true;
+  }
   document.getElementById('client-ov').classList.add('open');
 }
 
@@ -1131,11 +1158,13 @@ async function saveClient(e) {
     email:        cap(fd.get('email'), 200),
     phone:        cap(fd.get('phone'), 30),
     address:      cap(fd.get('address'), 300),
-    plan:         ['essential','companion','premium'].includes(fd.get('plan')) ? fd.get('plan') : null,
-    caregiver_id: cap(fd.get('caregiver_id'), 128),
-    notes:        cap(fd.get('notes'), 2000),
-    stripe_link:  safeUrl(fd.get('stripe_link')) || null,
-    updated_at:   SV()
+    plan:                ['essential','companion','premium'].includes(fd.get('plan')) ? fd.get('plan') : null,
+    caregiver_id:        cap(fd.get('caregiver_id'), 128),
+    notes:               cap(fd.get('notes'), 2000),
+    stripe_link:         safeUrl(fd.get('stripe_link')) || null,
+    subscription_status: ['active','paused','cancelled'].includes(fd.get('subscription_status')) ? fd.get('subscription_status') : 'active',
+    auto_renew:          fd.get('auto_renew') === 'on',
+    updated_at:          SV()
   };
   try {
     if (editingId) {
@@ -1874,6 +1903,26 @@ function toast(msg, isErr = false) {
   _toastTimer = setTimeout(() => el.className = '', 3500);
 }
 
+// ── LIVE REQUESTS NOTIFICATION ───────────────────────────────────────────────
+let _reqListener = null;
+let _lastPendingCount = 0;
+function startRequestsListener() {
+  if (_reqListener) return;
+  _reqListener = db.collection('plan_requests').where('status', '==', 'pending')
+    .onSnapshot(snap => {
+      const count = snap.size;
+      const badge = document.getElementById('req-pending-badge');
+      if (badge) {
+        if (count > 0) { badge.textContent = count; badge.style.display = 'inline'; }
+        else badge.style.display = 'none';
+      }
+      if (count > _lastPendingCount && _lastPendingCount !== -1) {
+        toast(`${count - _lastPendingCount} new service request${count - _lastPendingCount > 1 ? 's' : ''} received`);
+      }
+      _lastPendingCount = count;
+    }, () => {});
+}
+
 // ── SERVICE REQUESTS ─────────────────────────────────────────────────────────
 let _resolveId = null;
 
@@ -1983,17 +2032,34 @@ async function confirmResolve(status) {
   if (!_resolveId) return;
   const note = document.getElementById('resolve-note').value.trim().slice(0, 500);
   try {
+    const reqSnap = await db.collection('plan_requests').doc(_resolveId).get();
+    if (!reqSnap.exists) { toast('Request not found.', true); return; }
+    const req = reqSnap.data();
+
     await db.collection('plan_requests').doc(_resolveId).update({
-      status,
-      admin_note:  note || null,
-      updated_at:  SV()
+      status, admin_note: note || null, updated_at: SV()
     });
-    toast(status === 'approved' ? 'Request approved.' : 'Request declined.');
+
+    // Auto-apply on approval
+    if (status === 'approved' && req.client_id) {
+      const clientRef = db.collection('clients').doc(req.client_id);
+      if (req.type === 'change_plan' && req.requested_plan) {
+        await clientRef.update({ plan: req.requested_plan, subscription_status: 'active', updated_at: SV() });
+      } else if (req.type === 'pause') {
+        await clientRef.update({ subscription_status: 'paused', pause_start: req.pause_start || null, pause_duration: req.pause_duration || null, updated_at: SV() });
+      } else if (req.type === 'unsubscribe') {
+        await clientRef.update({ subscription_status: 'cancelled', auto_renew: false, updated_at: SV() });
+      }
+    }
+
+    const msg = status === 'approved' ? 'Approved & applied to client record.' : status === 'declined' ? 'Request declined.' : 'Subscription cancelled.';
+    toast(msg);
     closeModal('resolve-ov');
     _resolveId = null;
     loadAdminRequests();
+    if (status === 'approved') { clientsList = []; loadClients(); }
   } catch(ex) {
-    toast('Could not update request: ' + ex.message, true);
+    toast('Could not update: ' + ex.message, true);
     console.error(ex);
   }
 }

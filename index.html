@@ -1800,7 +1800,7 @@
            signOut as fbSignOut, onAuthStateChanged,
            browserLocalPersistence, setPersistence }
     from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-  import { getFirestore, doc, getDoc, collection, getDocs, query, where, addDoc, serverTimestamp }
+  import { getFirestore, doc, getDoc, collection, getDocs, query, where, addDoc, serverTimestamp, onSnapshot }
     from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
   const app      = initializeApp(FIREBASE_CONFIG);
@@ -1810,6 +1810,7 @@
   // Expose to regular (non-module) scripts
   window._db = db;
   window._fs = { doc, getDoc, collection, getDocs, query, where, addDoc, serverTimestamp };
+  window._fsListen = onSnapshot;
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
   setPersistence(auth, browserLocalPersistence).catch(() => {});
@@ -3361,6 +3362,11 @@
         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
         My Plan
       </button>
+      <button class="nav-item" data-view="notes" id="notes-nav-btn">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        Notes
+        <span id="notes-badge" style="display:none;margin-left:auto;background:#c08568;color:#fff;font-size:0.65rem;font-weight:700;padding:0.1rem 0.4rem;border-radius:100px"></span>
+      </button>
     </aside>
 
     <!-- MAIN -->
@@ -3449,13 +3455,16 @@
         <div class="section-sub">Your current care subscription details.</div>
 
         <div class="card plan-view-card fade-in">
-          <div class="plan-badge-large">
-            <svg width="7" height="7" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
-            Active Plan
+          <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.4rem">
+            <span id="plan-view-status-badge" class="plan-badge-large">
+              <svg width="7" height="7" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+              Active
+            </span>
           </div>
           <div class="plan-view-name" id="plan-view-name">—</div>
           <div class="plan-view-price" id="plan-view-price">—</div>
           <div class="plan-renews" id="plan-view-caregiver" style="margin-top:0.25rem"></div>
+          <div id="plan-view-renew" style="margin-top:0.4rem"></div>
 
           <div class="plan-divider"></div>
 
@@ -3470,9 +3479,10 @@
           <div class="plan-divider"></div>
 
           <div class="card-label">Request a Change</div>
-          <div id="plan-request-tabs" style="display:flex;gap:0.5rem;margin:0.75rem 0 1rem">
+          <div id="plan-request-tabs" style="display:flex;gap:0.5rem;margin:0.75rem 0 1rem;flex-wrap:wrap">
             <button id="prtab-change" onclick="switchPlanTab('change')" style="padding:0.45rem 1rem;border-radius:100px;font-size:0.83rem;font-weight:500;background:var(--ink);color:#fff;border:none;cursor:pointer">Change Plan</button>
             <button id="prtab-pause" onclick="switchPlanTab('pause')" style="padding:0.45rem 1rem;border-radius:100px;font-size:0.83rem;font-weight:500;background:var(--cream-dark);color:var(--ink-mid);border:none;cursor:pointer">Pause Service</button>
+            <button id="prtab-cancel" onclick="switchPlanTab('cancel')" style="padding:0.45rem 1rem;border-radius:100px;font-size:0.83rem;font-weight:500;background:var(--cream-dark);color:var(--ink-mid);border:none;cursor:pointer">Unsubscribe</button>
           </div>
 
           <div id="prtab-change-panel">
@@ -3519,7 +3529,28 @@
             </div>
           </div>
 
+          <div id="prtab-cancel-panel" style="display:none">
+            <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:1.25rem;margin-bottom:1rem">
+              <p style="font-weight:600;color:#991B1B;margin-bottom:0.4rem">Are you sure you want to unsubscribe?</p>
+              <p style="font-size:0.86rem;color:#7f1d1d;line-height:1.6">Your care plan will be cancelled. You can resubscribe at any time. Your coordinator will reach out to confirm.</p>
+            </div>
+            <div style="margin-bottom:0.85rem">
+              <label style="font-size:0.8rem;font-weight:600;color:var(--ink-mid);display:block;margin-bottom:0.3rem">Reason (optional)</label>
+              <textarea id="req-cancel-msg" rows="2" placeholder="Let us know why you're leaving…" style="width:100%;padding:0.6rem 0.85rem;border:1.5px solid var(--cream-dark);border-radius:10px;font-size:0.9rem;font-family:inherit;resize:vertical"></textarea>
+            </div>
+            <button onclick="submitPortalUnsubscribe()" style="padding:0.65rem 1.4rem;background:#EF4444;color:#fff;border:none;border-radius:10px;font-size:0.9rem;font-weight:600;cursor:pointer">Confirm Unsubscribe</button>
+          </div>
+
           <div id="plan-req-status" style="margin-top:0.75rem;font-size:0.85rem"></div>
+        </div>
+      </div>
+
+      <!-- NOTES VIEW -->
+      <div class="p-view" id="view-notes">
+        <div class="section-title">Notes from Your Caregiver</div>
+        <div class="section-sub">Updates and messages left after your visits.</div>
+        <div id="portal-notes-list">
+          <div class="card fade-in" style="text-align:center;padding:2.5rem 1.5rem;color:var(--ink-light)">Loading notes…</div>
         </div>
       </div>
 
@@ -3573,14 +3604,41 @@ async function loadPortalData(clientId) {
   const threeMonthsAgo = new Date(now); threeMonthsAgo.setMonth(now.getMonth() - 3);
   const sixMonthsLater = new Date(now); sixMonthsLater.setMonth(now.getMonth() + 6);
 
-  const [clientSnap, apptSnap, stripeSnap] = await Promise.all([
+  const [clientSnap, apptSnap, stripeSnap, notesSnap] = await Promise.all([
     getDoc(fsDoc(db, 'clients', clientId)),
     getDocs(fsQuery(fsCol(db, 'appointments'), fsWhere('client_id', '==', clientId))),
-    getDoc(fsDoc(db, 'settings', 'stripe'))
+    getDoc(fsDoc(db, 'settings', 'stripe')),
+    getDocs(fsQuery(fsCol(db, 'visit_notes'), fsWhere('client_id', '==', clientId)))
   ]);
 
   portalClientData  = clientSnap.exists ? { ...clientSnap.data(), _clientId: clientId } : null;
   portalStripeLinks = stripeSnap.exists ? stripeSnap.data() : {};
+
+  // Store notes sorted newest first + build per-caregiver name cache
+  if (portalClientData) {
+    const rawNotes = notesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const noteCgIds = [...new Set(rawNotes.map(n => n.caregiver_id).filter(Boolean))];
+    const cgNameCache = {};
+    await Promise.all(noteCgIds.map(async cgId => {
+      try {
+        const s = await getDoc(fsDoc(db, 'caregivers', cgId));
+        if (s.exists) cgNameCache[cgId] = s.data().name || 'Caregiver';
+      } catch(e) {}
+    }));
+    portalClientData._cgNameCache = cgNameCache;
+    portalClientData._notes = rawNotes
+      .sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0));
+
+    // Last completed visit date (for auto_renew=false display)
+    const completedAppts = apptSnap.docs
+      .map(d => d.data())
+      .filter(a => a.status === 'completed' && a.scheduled_at)
+      .sort((a, b) => (b.scheduled_at?.seconds || 0) - (a.scheduled_at?.seconds || 0));
+    if (completedAppts.length) {
+      const lastDt = completedAppts[0].scheduled_at?.toDate?.();
+      if (lastDt) portalClientData._lastVisitDate = lastDt.toLocaleDateString('en', { month: 'long', day: 'numeric', year: 'numeric' });
+    }
+  }
 
   // Fetch assigned caregiver
   if (portalClientData?.caregiver_id) {
@@ -3717,6 +3775,8 @@ async function showPortal(user) {
   updateDashboardStats();
   updateUpcomingVisits();
   updatePlanDisplay();
+  renderPortalNotes();
+  startClientRequestsListener(user);
 }
 
 function updateDashboardStats() {
@@ -3795,7 +3855,7 @@ const PLAN_CONFIG = {
     features: ['2 visits per week · 4 hours each','Dedicated caregiver','Visit summaries after each appointment','Care coordinator on call, 7 days','Pause or adjust with 7 days\' notice','Family portal access']
   },
   premium: {
-    name: 'Premium Plan', price: '$1,995', period: '/month',
+    name: 'Premium Plan', price: '$2,240', period: '/month',
     features: ['5 visits per week · 4 hours each','Priority caregiver matching','Visit summaries after each appointment','Direct coordinator line, 24/7','Pause or adjust with 7 days\' notice','Family portal access']
   }
 };
@@ -3814,6 +3874,23 @@ function updatePlanDisplay() {
     cgName && f.startsWith('Dedicated caregiver') ? `Dedicated caregiver — ${cgName}` :
     cgName && f.startsWith('Priority caregiver') ? `Priority caregiver — ${cgName}` : f
   );
+
+  const subStatus = portalClientData?.subscription_status || 'active';
+  const autoRenew = portalClientData?.auto_renew !== false;
+
+  // Dashboard status pill
+  const planPill = document.querySelector('.plan-pill');
+  const statNote = document.getElementById('stat-plan-note');
+  if (planPill) {
+    const statusLabel = subStatus === 'paused' ? 'Paused' : subStatus === 'cancelled' ? 'Cancelled' : 'Active';
+    const statusColor = subStatus === 'paused' ? '#92400E' : subStatus === 'cancelled' ? '#991B1B' : '#065F46';
+    const dotColor    = subStatus === 'paused' ? '#F59E0B' : subStatus === 'cancelled' ? '#EF4444' : '#10B981';
+    planPill.style.color = statusColor;
+    planPill.querySelector('svg')?.setAttribute('fill', dotColor);
+    planPill.textContent = '';
+    planPill.innerHTML = `<svg width="7" height="7" fill="${dotColor}" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg> ${statusLabel}`;
+  }
+  if (statNote) statNote.textContent = subStatus === 'paused' ? 'Service paused' : subStatus === 'cancelled' ? 'Cancelled' : autoRenew ? 'Auto-renew on' : 'Auto-renew off';
 
   // Dashboard plan card
   const dashName  = document.getElementById('dash-plan-name');
@@ -3835,13 +3912,38 @@ function updatePlanDisplay() {
     `<div class="plan-feature-item"><div class="plan-feature-icon">${checkSVG}</div>${f}</div>`
   ).join('');
 
+  // Plan view: status + auto-renew info
+  const viewBadge = document.getElementById('plan-view-status-badge');
+  if (viewBadge) {
+    const statusStyles = {
+      active:    { bg: '#D1FAE5', color: '#065F46', dot: '#10B981', label: 'Active' },
+      paused:    { bg: '#FEF3C7', color: '#92400E', dot: '#F59E0B', label: 'Paused' },
+      cancelled: { bg: '#FEE2E2', color: '#991B1B', dot: '#EF4444', label: 'Cancelled' }
+    };
+    const s = statusStyles[subStatus] || statusStyles.active;
+    viewBadge.style.cssText = `display:inline-flex;align-items:center;gap:0.4rem;padding:0.25rem 0.75rem;border-radius:100px;font-size:0.78rem;font-weight:600;background:${s.bg};color:${s.color}`;
+    viewBadge.innerHTML = `<svg width="7" height="7" fill="${s.dot}" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>${s.label}`;
+  }
+
+  const viewRenew = document.getElementById('plan-view-renew');
+  if (viewRenew) {
+    const lastVisitDate = portalClientData?._lastVisitDate;
+    if (autoRenew) {
+      viewRenew.innerHTML = `<span style="font-size:0.82rem;color:var(--ink-mid)">🔄 Auto-renew is <strong>on</strong> — your plan renews automatically each month.</span>`;
+    } else if (lastVisitDate) {
+      viewRenew.innerHTML = `<span style="font-size:0.82rem;color:var(--ink-mid)">⚠️ Auto-renew is <strong>off</strong>. Last visit: <strong>${lastVisitDate}</strong>.</span>`;
+    } else {
+      viewRenew.innerHTML = `<span style="font-size:0.82rem;color:var(--ink-mid)">⚠️ Auto-renew is <strong>off</strong>. Contact your coordinator to renew.</span>`;
+    }
+  }
+
   // Billing button — use global link for this plan, fall back to per-client link
   const payUrl = (portalStripeLinks[planKey]) || (portalClientData?.stripe_link) || null;
   const billingEl = document.getElementById('plan-view-billing');
   if (billingEl) {
     if (payUrl && /^https:\/\/(buy|billing|checkout)\.stripe\.com\//.test(payUrl)) {
       billingEl.innerHTML = `
-        <a href="${payUrl}" target="_blank" rel="noopener noreferrer" class="btn-primary" style="display:inline-flex;align-items:center;gap:0.5rem;text-decoration:none;margin-top:0.25rem">
+        <a href="${payUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.65rem 1.4rem;background:var(--terra);color:#fff;border-radius:10px;font-size:0.9rem;font-weight:600;text-decoration:none;transition:background 0.2s" onmouseover="this.style.background='#a87050'" onmouseout="this.style.background='var(--terra)'">
           💳 Manage Billing
         </a>
         <p style="font-size:0.78rem;color:var(--ink-light);margin-top:0.5rem">View invoices, update payment method, or manage your subscription via Stripe.</p>`;
@@ -3851,13 +3953,93 @@ function updatePlanDisplay() {
   }
 }
 
+function renderPortalNotes() {
+  const el = document.getElementById('portal-notes-list');
+  if (!el) return;
+  const notes = portalClientData?._notes || [];
+  const badge = document.getElementById('notes-badge');
+  if (badge) {
+    if (notes.length > 0) { badge.textContent = notes.length; badge.style.display = 'inline'; }
+    else badge.style.display = 'none';
+  }
+  if (!notes.length) {
+    el.innerHTML = `<div class="card fade-in" style="text-align:center;padding:2.5rem 1.5rem">
+      <div style="font-size:2.5rem;margin-bottom:0.75rem">💬</div>
+      <p style="font-weight:600;color:var(--ink);margin-bottom:0.3rem">No notes yet</p>
+      <p style="font-size:0.88rem;color:var(--ink-light)">Your caregiver will leave updates here after each visit.</p>
+    </div>`;
+    return;
+  }
+  const cgCache = portalClientData?._cgNameCache || {};
+  el.innerHTML = notes.map(n => {
+    const dt = n.created_at?.toDate?.();
+    const dateStr = dt ? dt.toLocaleDateString('en', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) + ' at ' + dt.toLocaleTimeString('en', { hour: 'numeric', minute: '2-digit' }) : '—';
+    const cgName = cgCache[n.caregiver_id] || portalClientData?._caregiverName || 'Your caregiver';
+    const initials = cgName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+    const safeText = (n.text || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return `<div class="card fade-in" style="margin-bottom:1rem;border-left:3px solid var(--terra)">
+      <div style="display:flex;align-items:center;gap:0.65rem;margin-bottom:0.6rem">
+        <div style="width:34px;height:34px;border-radius:50%;background:var(--terra);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;flex-shrink:0">${initials}</div>
+        <div>
+          <div style="font-weight:600;font-size:0.9rem;color:var(--ink)">${cgName}</div>
+          <div style="font-size:0.75rem;color:var(--ink-light)">${dateStr}</div>
+        </div>
+      </div>
+      <p style="font-size:0.9rem;color:var(--ink);line-height:1.7">${safeText}</p>
+    </div>`;
+  }).join('');
+}
+
+let _clientReqListener = null;
+let _seenReqStatuses = {};
+function startClientRequestsListener(user) {
+  if (_clientReqListener || !portalClientData?._clientId) return;
+  const { collection: fsCol, query: fsQuery, where: fsWhere } = fs();
+  const db = getDb();
+  _clientReqListener = window._fsOnSnapshot
+    ? null // fallback: no real-time for modular without extra import
+    : null;
+
+  // Poll via a one-time read to set initial state, then use onSnapshot via compat workaround
+  // Since we use modular SDK in the module block, we'll use the same modular functions
+  // Real-time listener for plan_requests via window._fsListen if available
+  if (window._fsListen) {
+    _clientReqListener = window._fsListen(
+      fsQuery(fsCol(db, 'plan_requests'), fsWhere('client_id', '==', portalClientData._clientId)),
+      snap => {
+        snap.docs.forEach(d => {
+          const r = d.data();
+          const prev = _seenReqStatuses[d.id];
+          if (prev && prev !== r.status && r.status !== 'pending') {
+            const msg = r.status === 'approved'
+              ? `Your ${r.type === 'change_plan' ? 'plan change' : 'pause'} request has been approved.`
+              : `Your request was declined. ${r.admin_note ? '"' + r.admin_note + '"' : ''}`;
+            showPortalToast(msg, r.status === 'approved' ? 'success' : 'info');
+          }
+          _seenReqStatuses[d.id] = r.status;
+        });
+      }
+    );
+  }
+}
+
+function showPortalToast(msg, type) {
+  const t = document.createElement('div');
+  t.style.cssText = `position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;padding:0.85rem 1.25rem;border-radius:12px;font-size:0.88rem;font-weight:500;max-width:320px;line-height:1.5;box-shadow:0 8px 32px rgba(58,46,34,0.18);animation:fadeInUp 0.3s ease;
+    background:${type==='success'?'#065F46':'var(--ink)'};color:#fff;`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 4500);
+}
+
 function switchPlanTab(tab) {
-  document.getElementById('prtab-change-panel').style.display = tab === 'change' ? 'block' : 'none';
-  document.getElementById('prtab-pause-panel').style.display  = tab === 'pause'  ? 'block' : 'none';
-  document.getElementById('prtab-change').style.background = tab === 'change' ? 'var(--ink)' : 'var(--cream-dark)';
-  document.getElementById('prtab-change').style.color      = tab === 'change' ? '#fff' : 'var(--ink-mid)';
-  document.getElementById('prtab-pause').style.background  = tab === 'pause'  ? 'var(--ink)' : 'var(--cream-dark)';
-  document.getElementById('prtab-pause').style.color       = tab === 'pause'  ? '#fff' : 'var(--ink-mid)';
+  ['change','pause','cancel'].forEach(t => {
+    const panel = document.getElementById('prtab-' + t + '-panel');
+    const btn   = document.getElementById('prtab-' + t);
+    if (panel) panel.style.display = tab === t ? 'block' : 'none';
+    if (btn) { btn.style.background = tab === t ? 'var(--ink)' : 'var(--cream-dark)'; btn.style.color = tab === t ? '#fff' : 'var(--ink-mid)'; }
+  });
+  document.getElementById('plan-req-status').textContent = '';
 }
 
 async function submitPortalChangePlan() {
@@ -3917,6 +4099,32 @@ async function submitPortalPause() {
     document.getElementById('req-pause-start').value    = '';
     document.getElementById('req-pause-duration').value = '';
     document.getElementById('req-pause-msg').value      = '';
+  } catch(e) {
+    statusEl.style.color = '#c44';
+    statusEl.textContent = 'Could not submit: ' + e.message;
+  }
+}
+
+async function submitPortalUnsubscribe() {
+  const { addDoc, collection: fsCol, serverTimestamp } = fs();
+  const db  = getDb();
+  const msg = (document.getElementById('req-cancel-msg').value || '').trim().slice(0, 500);
+  const statusEl = document.getElementById('plan-req-status');
+  statusEl.style.color = 'var(--ink-mid)'; statusEl.textContent = 'Submitting…';
+  try {
+    await addDoc(fsCol(db, 'plan_requests'), {
+      client_id:    portalClientData?._clientId || null,
+      client_name:  portalClientData?.name || '',
+      type:         'unsubscribe',
+      current_plan: portalClientData?.plan || null,
+      message:      msg || null,
+      status:       'pending',
+      created_at:   serverTimestamp()
+    });
+    statusEl.style.color = 'var(--sage)';
+    statusEl.textContent = 'Request submitted. Your coordinator will confirm the cancellation.';
+    document.getElementById('req-cancel-msg').value = '';
+    switchPlanTab('change');
   } catch(e) {
     statusEl.style.color = '#c44';
     statusEl.textContent = 'Could not submit: ' + e.message;
