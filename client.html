@@ -546,6 +546,8 @@
     const el   = document.getElementById('plan-content');
     const plan = clientDoc?.plan;
 
+    console.log('[Plan Debug] plan:', plan, '| stripeLinks:', stripeLinks, '| stripe_link:', clientDoc?.stripe_link);
+
     if (!plan) {
       el.innerHTML = `<div class="card" style="text-align:center;padding:2.5rem">
         <div style="font-size:2.5rem;margin-bottom:0.75rem">📋</div>
@@ -559,6 +561,8 @@
     const feats      = (PLAN_FEATURES[plan] || []).map(f => `<div class="plan-feat">${f}</div>`).join('');
     const payUrl     = stripeLinks[plan] || clientDoc?.stripe_link || null;
     const safePayUrl = safeUrl(payUrl);
+
+    console.log('[Plan Debug] payUrl:', payUrl, '| safePayUrl:', safePayUrl);
 
     el.innerHTML = `
       <div class="plan-card">
