@@ -269,9 +269,8 @@
     .btn-filter-clear:hover { border-color: var(--terra); color: var(--terra); }
     .filter-active-count { font-size: 0.78rem; color: var(--terra-deep); font-weight: 600; display: none; }
 
-    /* ── CLICKABLE NAME ── */
-    .cg-name-btn { background: none; border: none; color: var(--ink); font-weight: 600; font-size: 0.9rem; cursor: pointer; padding: 0; text-align: left; transition: color 0.15s; }
-    .cg-name-btn:hover { color: var(--terra); text-decoration: underline; text-underline-offset: 3px; }
+    /* ── CAREGIVER NAME ── */
+    .cg-name-text { font-weight: 600; font-size: 0.9rem; color: var(--ink); }
     .cg-avail-link { display: block; font-size: 0.75rem; color: var(--terra-deep); margin-top: 0.15rem; cursor: pointer; background: none; border: none; padding: 0; font-family: inherit; }
     .cg-avail-link:hover { color: var(--terra); }
 
@@ -432,6 +431,26 @@
       <!-- FILTER BAR -->
       <div class="filter-bar">
         <div class="filter-group">
+          <label>Available Days</label>
+          <div class="filter-day-chips">
+            <label class="f-day"><input type="checkbox" name="f-avail-day" value="Mon"><span>Mon</span></label>
+            <label class="f-day"><input type="checkbox" name="f-avail-day" value="Tue"><span>Tue</span></label>
+            <label class="f-day"><input type="checkbox" name="f-avail-day" value="Wed"><span>Wed</span></label>
+            <label class="f-day"><input type="checkbox" name="f-avail-day" value="Thu"><span>Thu</span></label>
+            <label class="f-day"><input type="checkbox" name="f-avail-day" value="Fri"><span>Fri</span></label>
+            <label class="f-day"><input type="checkbox" name="f-avail-day" value="Sat"><span>Sat</span></label>
+            <label class="f-day"><input type="checkbox" name="f-avail-day" value="Sun"><span>Sun</span></label>
+          </div>
+        </div>
+        <div class="filter-group">
+          <label>From (earliest)</label>
+          <input class="fc-sm" type="time" id="f-time-from" />
+        </div>
+        <div class="filter-group">
+          <label>Until (latest)</label>
+          <input class="fc-sm" type="time" id="f-time-to" />
+        </div>
+        <div class="filter-group">
           <label>Language</label>
           <input class="fc-sm" type="text" id="f-lang" placeholder="e.g. French" />
         </div>
@@ -574,6 +593,11 @@
       <div class="form-group">
         <label>Notes</label>
         <textarea class="fc" name="notes" placeholder="Care preferences, medical info…"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Stripe Payment Link</label>
+        <input class="fc" name="stripe_link" type="url" placeholder="https://buy.stripe.com/…" />
+        <small style="color:var(--ink-light);font-size:0.78rem;margin-top:0.3rem;display:block">Paste the client's Stripe payment link — they'll see a Pay Now button in their portal.</small>
       </div>
       <div class="modal-ft">
         <button type="button" class="btn btn-ghost" onclick="closeModal('client-ov')">Cancel</button>
@@ -976,7 +1000,7 @@ function openClientModal(id) {
       `<option value="${cg.id}"${c?.caregiver_id === cg.id ? ' selected' : ''}>${esc(cg.name)}</option>`
     ).join('');
 
-  if (c) fill(form, { name: c.name, email: c.email||'', phone: c.phone||'', address: c.address||'', plan: c.plan||'', caregiver_id: c.caregiver_id||'', notes: c.notes||'' });
+  if (c) fill(form, { name: c.name, email: c.email||'', phone: c.phone||'', address: c.address||'', plan: c.plan||'', caregiver_id: c.caregiver_id||'', notes: c.notes||'', stripe_link: c.stripe_link||'' });
   document.getElementById('client-ov').classList.add('open');
 }
 
@@ -984,14 +1008,15 @@ async function saveClient(e) {
   e.preventDefault();
   const fd = new FormData(e.target);
   const data = {
-    name:        fd.get('name'),
-    email:       fd.get('email')       || null,
-    phone:       fd.get('phone')       || null,
-    address:     fd.get('address')     || null,
-    plan:        fd.get('plan')        || null,
-    caregiver_id:fd.get('caregiver_id')|| null,
-    notes:       fd.get('notes')       || null,
-    updated_at:  SV()
+    name:         fd.get('name'),
+    email:        fd.get('email')        || null,
+    phone:        fd.get('phone')        || null,
+    address:      fd.get('address')      || null,
+    plan:         fd.get('plan')         || null,
+    caregiver_id: fd.get('caregiver_id') || null,
+    notes:        fd.get('notes')        || null,
+    stripe_link:  fd.get('stripe_link')  || null,
+    updated_at:   SV()
   };
   try {
     if (editingId) {
@@ -1035,14 +1060,17 @@ async function loadCaregivers() {
   renderCaregivers();
 }
 
-let cgFilters = { language: '', background: '' };
+let cgFilters = { days: [], fromTime: '', toTime: '', language: '', background: '' };
 
 function applyCgFilters() {
   cgFilters = {
+    days:       [...document.querySelectorAll('[name="f-avail-day"]:checked')].map(c => c.value),
+    fromTime:   document.getElementById('f-time-from').value,
+    toTime:     document.getElementById('f-time-to').value,
     language:   document.getElementById('f-lang').value.toLowerCase().trim(),
     background: document.getElementById('f-background').value.toLowerCase().trim()
   };
-  const active = (cgFilters.language?1:0) + (cgFilters.background?1:0);
+  const active = cgFilters.days.length + (cgFilters.fromTime?1:0) + (cgFilters.toTime?1:0) + (cgFilters.language?1:0) + (cgFilters.background?1:0);
   const countEl = document.getElementById('filter-count');
   if (active) { countEl.style.display = 'inline'; countEl.textContent = active + ' filter' + (active>1?'s':'')+' active'; }
   else countEl.style.display = 'none';
@@ -1050,8 +1078,9 @@ function applyCgFilters() {
 }
 
 function clearCgFilters() {
-  cgFilters = { language: '', background: '' };
-  ['f-lang','f-background'].forEach(id => document.getElementById(id).value = '');
+  cgFilters = { days: [], fromTime: '', toTime: '', language: '', background: '' };
+  document.querySelectorAll('[name="f-avail-day"]').forEach(c => c.checked = false);
+  ['f-time-from','f-time-to','f-lang','f-background'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('filter-count').style.display = 'none';
   renderCaregivers();
 }
@@ -1061,13 +1090,16 @@ function renderCaregivers() {
   let list = caregiversList;
 
   if (q) list = list.filter(cg => cg.name.toLowerCase().includes(q) || (cg.email||'').toLowerCase().includes(q));
+  if (cgFilters.days.length)    list = list.filter(cg => cgFilters.days.every(d => (cg.avail_days||[]).includes(d)));
+  if (cgFilters.fromTime)       list = list.filter(cg => !cg.avail_earliest || cg.avail_earliest <= cgFilters.fromTime);
+  if (cgFilters.toTime)         list = list.filter(cg => !cg.avail_latest   || cg.avail_latest   >= cgFilters.toTime);
   if (cgFilters.language)       list = list.filter(cg => (cg.languages  ||'').toLowerCase().includes(cgFilters.language));
   if (cgFilters.background)     list = list.filter(cg => (cg.background ||'').toLowerCase().includes(cgFilters.background));
 
   document.getElementById('cg-tbody').innerHTML = list.length ? list.map(cg => `
     <tr>
       <td>
-        <button class="cg-name-btn" onclick="openCgProfile('${cg.id}')">${esc(cg.name)}</button>
+        <span class="cg-name-text">${esc(cg.name)}</span>
         <button class="cg-avail-link" onclick="viewCgAvailability('${cg.id}')">📅 View availability</button>
       </td>
       <td>${cg.email ? `<a href="mailto:${esc(cg.email)}" style="color:var(--terra)">${esc(cg.email)}</a>` : '—'}${cg.phone ? `<br><small>${esc(cg.phone)}</small>` : ''}</td>
@@ -1203,39 +1235,39 @@ async function revokeAccess(email) {
   } catch(ex) { toast(ex.message, true); }
 }
 
-// ── SCHEDULE ─────────────────────────────────────────────────────────────────
-async function loadSchedule() {
-  const wEnd = new Date(weekStart); wEnd.setDate(wEnd.getDate() + 7);
+// ── SCHEDULE (real-time) ─────────────────────────────────────────────────────
+let _allRawAppts   = [];
+let _schedListener = null;
 
-  const [oneTimeSnap, recurSnap] = await Promise.all([
-    db.collection('appointments')
-      .where('scheduled_at', '>=', TS.fromDate(weekStart))
-      .where('scheduled_at', '<',  TS.fromDate(wEnd)).get(),
-    db.collection('appointments')
-      .where('recurring', 'in', ['weekly', 'biweekly']).get()
-  ]);
+function loadSchedule() {
+  if (!_schedListener) {
+    document.getElementById('cal-body').innerHTML = '<div class="loading-msg">Loading…</div>';
+    _schedListener = db.collection('appointments').onSnapshot(snap => {
+      _allRawAppts = snap.docs.map(d => {
+        const x = d.data();
+        return { id: d.id, ...x,
+          scheduled_at:  x.scheduled_at?.toDate?.()  ?? new Date(),
+          recurring_end: x.recurring_end?.toDate?.() ?? null };
+      });
+      processScheduleForWeek();
+      if (document.getElementById('page-dashboard')?.classList.contains('active')) loadDashboard();
+    });
+  } else {
+    processScheduleForWeek();
+  }
+}
 
-  const normalize = d => {
-    const x = d.data();
-    return {
-      id: d.id, ...x,
-      scheduled_at:  x.scheduled_at?.toDate?.()  ?? new Date(),
-      recurring_end: x.recurring_end?.toDate?.() ?? null
-    };
-  };
+function processScheduleForWeek() {
+  const wEnd    = new Date(weekStart); wEnd.setDate(wEnd.getDate() + 7);
+  const oneTime = _allRawAppts.filter(a => !a.recurring && a.status !== 'cancelled'
+    && a.scheduled_at >= weekStart && a.scheduled_at < wEnd);
+  const recurring = _allRawAppts.filter(a => a.recurring && a.status !== 'cancelled');
 
-  const oneTime = oneTimeSnap.docs.map(normalize).filter(a => !a.recurring && a.status !== 'cancelled');
-  const recurring = recurSnap.docs.map(normalize).filter(a => a.status !== 'cancelled');
-
-  // Expand recurring appointments into slots for this week
   const expanded = [];
   recurring.forEach(appt => {
-    const origin    = appt.scheduled_at;
-    const originDay = origin.getDay();
-
+    const origin = appt.scheduled_at, originDay = origin.getDay();
     for (let i = 0; i < 7; i++) {
-      const d = new Date(weekStart);
-      d.setDate(d.getDate() + i);
+      const d = new Date(weekStart); d.setDate(d.getDate() + i);
       if (d.getDay() !== originDay) continue;
       if (appt.recurring_end && d > appt.recurring_end) continue;
       if (d < origin && !sameDay(d, origin)) continue;
@@ -1243,12 +1275,10 @@ async function loadSchedule() {
         const diffDays = Math.round((d - origin) / 86400000);
         if (Math.round(diffDays / 7) % 2 !== 0) continue;
       }
-      const slot = new Date(d);
-      slot.setHours(origin.getHours(), origin.getMinutes(), 0, 0);
+      const slot = new Date(d); slot.setHours(origin.getHours(), origin.getMinutes(), 0, 0);
       expanded.push({ ...appt, scheduled_at: slot, _rec: true });
     }
   });
-
   appointments = [...oneTime, ...expanded];
   renderCalendar();
 }
@@ -1293,8 +1323,8 @@ function renderCalendar() {
   `).join('');
 }
 
-function shiftWeek(dir) { weekStart.setDate(weekStart.getDate() + dir * 7); loadSchedule(); }
-function jumpToday()    { weekStart = mondayOf(new Date()); loadSchedule(); }
+function shiftWeek(dir) { weekStart.setDate(weekStart.getDate() + dir * 7); processScheduleForWeek(); }
+function jumpToday()    { weekStart = mondayOf(new Date()); processScheduleForWeek(); }
 
 // ── APPOINTMENT MODAL ────────────────────────────────────────────────────────
 function openApptModal(id, dateStr, hour) {
@@ -1385,7 +1415,6 @@ async function saveAppt(e) {
       }
       closeModal('appt-ov');
       toast('Appointment saved');
-      loadSchedule();
     }
   } catch(ex) { toast(ex.message, true); }
 }

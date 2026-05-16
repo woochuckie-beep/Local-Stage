@@ -182,6 +182,31 @@
     .btn-decline:hover { background: #c44; color: var(--white); }
     .badge-pending { background: var(--req-soft); color: var(--req); padding: 0.2rem 0.6rem; border-radius: 100px; font-size: 0.72rem; font-weight: 600; }
 
+    /* ── FORM ── */
+    .form-group { margin-bottom: 1rem; }
+    label { display: block; font-size: 0.8rem; font-weight: 500; color: var(--ink-mid); margin-bottom: 0.35rem; }
+
+    /* ── NOTE CARD ── */
+    .note-item { background: var(--cream-soft); border-radius: 10px; padding: 1rem 1.1rem; margin-bottom: 0.75rem; }
+    .note-item:last-child { margin-bottom: 0; }
+    .note-client { font-weight: 600; font-size: 0.88rem; }
+    .note-date { font-size: 0.75rem; color: var(--ink-light); margin-top: 0.1rem; }
+    .note-body { font-size: 0.88rem; color: var(--ink); margin-top: 0.5rem; line-height: 1.6; }
+    .note-del { background: none; border: none; color: var(--ink-light); font-size: 0.75rem; cursor: pointer; margin-top: 0.4rem; padding: 0; }
+    .note-del:hover { color: #c44; }
+
+    /* ── CLIENT CARD ── */
+    .client-card { background: var(--white); border-radius: 12px; padding: 1.1rem 1.25rem; margin-bottom: 0.85rem; box-shadow: 0 2px 6px rgba(58,46,34,0.05); }
+    .client-card:last-child { margin-bottom: 0; }
+    .client-card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+    .client-card-name { font-weight: 600; font-size: 0.95rem; }
+    .client-card-meta { font-size: 0.8rem; color: var(--ink-light); margin-top: 0.15rem; }
+    .private-note-wrap textarea { width: 100%; min-height: 70px; resize: vertical; }
+    .btn-save-note { margin-top: 0.5rem; padding: 0.38rem 1rem; background: var(--ink); color: var(--white); border: none; border-radius: 7px; font-size: 0.8rem; font-weight: 500; cursor: pointer; font-family: inherit; transition: background 0.15s; }
+    .btn-save-note:hover { background: var(--terra); }
+    .private-note-label { font-size: 0.72rem; font-weight: 600; color: var(--ink-light); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.3rem; display: flex; align-items: center; gap: 0.35rem; }
+    .private-note-label span { background: var(--cream-dark); color: var(--ink-mid); padding: 0.1rem 0.45rem; border-radius: 100px; font-size: 0.67rem; }
+
     /* ── TOAST ── */
     #toast { position: fixed; bottom: 1.75rem; right: 1.75rem; background: var(--ink); color: var(--white); padding: 0.75rem 1.25rem; border-radius: 10px; font-size: 0.86rem; z-index: 9999; opacity: 0; transform: translateY(8px); transition: all 0.25s; pointer-events: none; }
     #toast.show { opacity: 1; transform: translateY(0); }
@@ -228,6 +253,8 @@
     <button class="tab-btn" data-view="requests" onclick="switchTab('requests')">
       Requests <span class="req-badge" id="req-badge"></span>
     </button>
+    <button class="tab-btn" data-view="notes" onclick="switchTab('notes')">Visit Notes</button>
+    <button class="tab-btn" data-view="clients" onclick="switchTab('clients')">My Clients</button>
   </div>
 
   <div class="main">
@@ -331,6 +358,37 @@
       <div id="requests-list"><div class="empty-state">Loading…</div></div>
     </div>
 
+    <!-- VISIT NOTES -->
+    <div class="view" id="view-notes">
+      <div class="view-title">Visit Notes</div>
+      <div class="view-sub">Leave notes for your client after each visit. They will see these in their portal.</div>
+      <div class="card" style="margin-bottom:1.25rem">
+        <div class="card-title">Add a Note</div>
+        <div class="form-group">
+          <label>Client</label>
+          <select class="fc" id="note-client-sel">
+            <option value="">— Select client —</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Note</label>
+          <textarea class="fc" id="note-text" rows="4" placeholder="How did the visit go? Any updates for the client…" style="min-height:100px"></textarea>
+        </div>
+        <button class="btn-save-avail" style="padding:0.5rem 1.4rem;font-size:0.88rem" onclick="saveVisitNote()">Send Note to Client</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Previous Notes</div>
+        <div id="notes-list"><div class="empty-state">No notes yet.</div></div>
+      </div>
+    </div>
+
+    <!-- MY CLIENTS -->
+    <div class="view" id="view-clients">
+      <div class="view-title">My Clients</div>
+      <div class="view-sub">All clients you have or have had visits with. Add private notes only you can see.</div>
+      <div id="clients-list"><div class="empty-state">Loading…</div></div>
+    </div>
+
   </div>
 </div>
 
@@ -412,6 +470,9 @@ async function tryResumeSession() {
 }
 
 function handleSignOut() {
+  if (_unsubAppts)  { _unsubAppts();  _unsubAppts  = null; }
+  if (_unsubClients){ _unsubClients(); _unsubClients = null; }
+  if (_unsubReqs)   { _unsubReqs();   _unsubReqs   = null; }
   sessionStorage.clear();
   caregiverDoc = null; caregiverId = null;
   document.getElementById('app').style.display = 'none';
@@ -419,6 +480,8 @@ function handleSignOut() {
 }
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
+let _unsubAppts = null, _unsubClients = null, _unsubReqs = null;
+
 async function bootPortal() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
@@ -429,26 +492,45 @@ async function bootPortal() {
   document.getElementById('nav-avatar').textContent =
     name.split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
 
-  await loadAllData();
+  startRealtimeListeners();
   switchTab('dashboard');
 }
 
-async function loadAllData() {
-  const [apptSnap, clientSnap, reqSnap] = await Promise.all([
-    db.collection('appointments').where('caregiver_id', '==', caregiverId).get(),
-    db.collection('clients').where('caregiver_id',   '==', caregiverId).get(),
-    db.collection('booking_requests').where('caregiver_id', '==', caregiverId).where('status', '==', 'pending').get()
-  ]);
+function startRealtimeListeners() {
+  _unsubAppts = db.collection('appointments')
+    .where('caregiver_id', '==', caregiverId)
+    .onSnapshot(snap => {
+      allAppointments = snap.docs.map(d => ({
+        id: d.id, ...d.data(), scheduled_at: d.data().scheduled_at?.toDate()
+      })).filter(a => a.status !== 'cancelled' && a.scheduled_at);
+      const v = activeTabView();
+      if (v === 'dashboard')    loadDashboard();
+      if (v === 'schedule')     renderScheduleCal();
+      if (v === 'availability') loadAvailability();
+    });
 
-  allAppointments = apptSnap.docs.map(d => ({
-    id: d.id, ...d.data(), scheduled_at: d.data().scheduled_at?.toDate()
-  })).filter(a => a.status !== 'cancelled' && a.scheduled_at);
+  _unsubClients = db.collection('clients')
+    .where('caregiver_id', '==', caregiverId)
+    .onSnapshot(snap => {
+      snap.docs.forEach(d => { clientsMap[d.id] = { id: d.id, ...d.data() }; });
+      const v = activeTabView();
+      if (v === 'dashboard') loadDashboard();
+      if (v === 'notes')     renderNotesClientSel();
+      if (v === 'clients')   renderMyClients();
+    });
 
-  clientsMap = {};
-  clientSnap.docs.forEach(d => { clientsMap[d.id] = { id: d.id, ...d.data() }; });
+  _unsubReqs = db.collection('booking_requests')
+    .where('caregiver_id', '==', caregiverId)
+    .where('status', '==', 'pending')
+    .onSnapshot(snap => {
+      pendingReqs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      updateReqBadge();
+      if (activeTabView() === 'requests') renderRequests();
+    });
+}
 
-  pendingReqs = reqSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-  updateReqBadge();
+function activeTabView() {
+  return document.querySelector('.tab-btn.active')?.dataset.view || 'dashboard';
 }
 
 function updateReqBadge() {
@@ -468,6 +550,8 @@ function switchTab(view) {
   if (view === 'schedule')     renderScheduleCal();
   if (view === 'availability') loadAvailability();
   if (view === 'requests')     renderRequests();
+  if (view === 'notes')        loadVisitNotes();
+  if (view === 'clients')      loadMyClients();
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────
@@ -744,6 +828,23 @@ async function saveAvailability() {
       else              batch.delete(ref);
     });
     await batch.commit();
+
+    // Write availability summary to parent caregiver doc for admin filtering
+    const activeDays = weekDays(availWeekStart)
+      .filter(d => (availSlots[toDateStr(d)]?.size || 0) > 0)
+      .map(d => d.toLocaleDateString('en', { weekday: 'short' }));
+    let earliest = 23, latest = 0;
+    Object.values(availSlots).forEach(s => s.forEach(h => {
+      if (h < earliest) earliest = h; if (h > latest) latest = h;
+    }));
+    if (activeDays.length) {
+      await db.collection('caregivers').doc(caregiverId).update({
+        avail_days:    activeDays,
+        avail_earliest: String(earliest).padStart(2,'0') + ':00',
+        avail_latest:   String(latest + 1).padStart(2,'0') + ':00',
+      });
+    }
+
     toast('Availability saved');
     note.style.display = 'inline';
   } catch(ex) { toast(ex.message, true); }
@@ -829,6 +930,131 @@ async function respondRequest(reqId, status) {
     if (item) item.remove();
     if (!pendingReqs.length) document.getElementById('requests-list').innerHTML = '<div class="empty-state">No pending booking requests.</div>';
     toast(status === 'accepted' ? 'Request accepted — visit added to your schedule' : 'Request declined');
+  } catch(ex) { toast(ex.message, true); }
+}
+
+// ── VISIT NOTES (caregiver → client) ─────────────────────────────────────────
+function renderNotesClientSel() {
+  const sel = document.getElementById('note-client-sel');
+  if (!sel) return;
+  const opts = Object.values(clientsMap).map(c =>
+    `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  sel.innerHTML = '<option value="">— Select client —</option>' + opts;
+}
+
+async function loadVisitNotes() {
+  renderNotesClientSel();
+  const snap = await db.collection('visit_notes')
+    .where('caregiver_id', '==', caregiverId).get();
+  const notes = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0)).slice(0, 50);
+  const el = document.getElementById('notes-list');
+  if (!notes.length) { el.innerHTML = '<div class="empty-state">No notes yet.</div>'; return; }
+  el.innerHTML = notes.map(n => {
+    const c = clientsMap[n.client_id];
+    const dt = n.created_at?.toDate?.();
+    return `<div class="note-item" id="vnote-${n.id}">
+      <div class="note-client">${esc(c?.name || 'Client')}</div>
+      <div class="note-date">${dt ? dt.toLocaleDateString('en',{weekday:'short',month:'short',day:'numeric',year:'numeric'}) + ' · ' + dt.toLocaleTimeString('en',{hour:'numeric',minute:'2-digit'}) : '—'}</div>
+      <div class="note-body">${esc(n.text)}</div>
+      <button class="note-del" onclick="deleteVisitNote('${n.id}')">Delete</button>
+    </div>`;
+  }).join('');
+}
+
+async function saveVisitNote() {
+  const clientId = document.getElementById('note-client-sel').value;
+  const text     = document.getElementById('note-text').value.trim();
+  if (!clientId) { toast('Please select a client', true); return; }
+  if (!text)     { toast('Note cannot be empty', true); return; }
+  try {
+    await db.collection('visit_notes').add({
+      caregiver_id: caregiverId,
+      client_id:    clientId,
+      text,
+      created_at:   FSV.serverTimestamp()
+    });
+    document.getElementById('note-text').value = '';
+    toast('Note sent to client');
+    loadVisitNotes();
+  } catch(ex) { toast(ex.message, true); }
+}
+
+async function deleteVisitNote(id) {
+  if (!confirm('Delete this note?')) return;
+  try {
+    await db.collection('visit_notes').doc(id).delete();
+    document.getElementById('vnote-' + id)?.remove();
+    toast('Note deleted');
+  } catch(ex) { toast(ex.message, true); }
+}
+
+// ── MY CLIENTS (with private notes) ──────────────────────────────────────────
+async function loadMyClients() {
+  // Gather all client IDs from appointments (current + past)
+  const clientIds = [...new Set(allAppointments.map(a => a.client_id).filter(Boolean))];
+  // Also include currently-assigned clients
+  Object.keys(clientsMap).forEach(id => { if (!clientIds.includes(id)) clientIds.push(id); });
+
+  if (!clientIds.length) {
+    document.getElementById('clients-list').innerHTML = '<div class="empty-state">No clients yet.</div>';
+    return;
+  }
+
+  // Load private notes for this caregiver
+  const notesSnap = await db.collection('caregivers').doc(caregiverId)
+    .collection('private_notes').get();
+  const privateNotes = {};
+  notesSnap.docs.forEach(d => { privateNotes[d.id] = d.data().text || ''; });
+
+  // Fetch any clients not yet in clientsMap (past clients)
+  const missing = clientIds.filter(id => !clientsMap[id]);
+  if (missing.length) {
+    const fetches = await Promise.all(missing.map(id => db.collection('clients').doc(id).get()));
+    fetches.forEach(d => { if (d.exists) clientsMap[d.id] = { id: d.id, ...d.data() }; });
+  }
+
+  renderMyClients(clientIds, privateNotes);
+}
+
+function renderMyClients(clientIds, privateNotes) {
+  if (!clientIds) {
+    document.getElementById('clients-list').innerHTML = '<div class="empty-state">Loading…</div>';
+    return;
+  }
+  const el = document.getElementById('clients-list');
+  el.innerHTML = clientIds.map(id => {
+    const c = clientsMap[id]; if (!c) return '';
+    const note = privateNotes?.[id] || '';
+    const visits = allAppointments.filter(a => a.client_id === id).length;
+    const last   = allAppointments.filter(a => a.client_id === id)
+      .sort((a,b) => b.scheduled_at - a.scheduled_at)[0];
+    return `<div class="client-card" id="cc-${id}">
+      <div class="client-card-hd">
+        <div>
+          <div class="client-card-name">${esc(c.name)}</div>
+          <div class="client-card-meta">${visits} visit${visits!==1?'s':''} total${last ? ' · Last: ' + last.scheduled_at.toLocaleDateString('en',{month:'short',day:'numeric',year:'numeric'}) : ''}</div>
+          ${c.address ? `<div class="client-card-meta">${esc(c.address)}</div>` : ''}
+        </div>
+        ${c.plan ? `<span style="background:var(--terra-soft);color:var(--terra-deep);padding:0.2rem 0.65rem;border-radius:100px;font-size:0.75rem;font-weight:600">${c.plan}</span>` : ''}
+      </div>
+      <div class="private-note-wrap">
+        <div class="private-note-label">Private Notes <span>Only you see this</span></div>
+        <textarea class="fc" id="pnote-${id}" placeholder="Personal reminders, preferences, things to remember for next visit…">${esc(note)}</textarea>
+        <button class="btn-save-note" onclick="savePrivateNote('${id}')">Save Note</button>
+      </div>
+    </div>`;
+  }).join('') || '<div class="empty-state">No clients found.</div>';
+}
+
+async function savePrivateNote(clientId) {
+  const text = document.getElementById('pnote-' + clientId)?.value || '';
+  try {
+    await db.collection('caregivers').doc(caregiverId)
+      .collection('private_notes').doc(clientId).set({
+        text, updated_at: FSV.serverTimestamp()
+      });
+    toast('Note saved');
   } catch(ex) { toast(ex.message, true); }
 }
 
