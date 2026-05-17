@@ -129,6 +129,33 @@
     .note-date { font-size: 0.75rem; color: var(--ink-light); margin-top: 0.1rem; }
     .note-body { font-size: 0.9rem; color: var(--ink); margin-top: 0.5rem; line-height: 1.7; }
 
+    /* ── SCHEDULE CALENDAR ── */
+    .cal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; }
+    .cal-month-label { font-size:1.05rem; font-weight:700; color:var(--ink); }
+    .cal-nav-btn { background:none; border:1.5px solid var(--cream-dark); border-radius:8px; width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:1rem; color:var(--ink-mid); transition: background 0.12s; }
+    .cal-nav-btn:hover { background:var(--cream-soft); }
+    .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+    .cal-dh { text-align:center; font-size:0.7rem; font-weight:600; color:var(--ink-light); padding:0.35rem 0; }
+    .cal-cell { min-height:56px; padding:4px 3px; border-radius:8px; background:var(--cream-soft); cursor:pointer; transition:background 0.12s; }
+    .cal-cell:hover:not(.other-month) { background:var(--cream-dark); }
+    .cal-cell.other-month { opacity:0.3; pointer-events:none; }
+    .cal-cell.today { background:var(--terra-soft); }
+    .cal-cell.selected { box-shadow:inset 0 0 0 2px var(--terra); }
+    .cal-num { font-size:0.75rem; font-weight:600; color:var(--ink); }
+    .cal-dots { display:flex; flex-wrap:wrap; gap:2px; margin-top:3px; }
+    .cal-dot { width:100%; height:5px; border-radius:2px; }
+    .cal-dot.confirmed   { background:#3B82F6; }
+    .cal-dot.scheduled   { background:#F59E0B; }
+    .cal-dot.pending-req { background:#9ca3af; }
+    .cal-dot.in_progress { background:#10b981; }
+    .cal-dot.completed   { background:var(--sage); }
+    .cal-detail { border-radius:12px; padding:1rem 1.1rem; margin-top:1rem; border:1.5px solid var(--cream-dark); }
+    .cal-detail-date { font-size:0.82rem; font-weight:700; color:var(--ink); margin-bottom:0.75rem; }
+    .cal-appt-row { display:flex; align-items:center; gap:0.75rem; padding:0.55rem 0; border-bottom:1px solid var(--cream-dark); }
+    .cal-appt-row:last-child { border-bottom:none; }
+    .cal-appt-time { font-size:0.8rem; font-weight:600; color:var(--ink); min-width:60px; }
+    .cal-appt-info { flex:1; font-size:0.82rem; color:var(--ink-mid); line-height:1.5; }
+
     /* ── EMPTY ── */
     .empty-state { color: var(--ink-light); font-size: 0.9rem; padding: 1rem 0; }
 
@@ -206,8 +233,9 @@
 
   <div class="tabnav">
     <button class="tab-btn active" data-view="dashboard" onclick="switchTab('dashboard')">Dashboard</button>
+    <button class="tab-btn" data-view="schedule" onclick="switchTab('schedule')">Schedule</button>
     <button class="tab-btn" data-view="plan" onclick="switchTab('plan')">My Plan</button>
-    <button class="tab-btn" data-view="notes" onclick="switchTab('notes')">Notes from Caregiver <span class="notif-dot" id="notes-badge" style="display:none;background:#ef4444;color:#fff;border-radius:100px;font-size:0.7rem;font-weight:700;padding:0.1rem 0.4rem;margin-left:0.25rem"></span></button>
+    <button class="tab-btn" data-view="notes" onclick="switchTab('notes')">Notes <span id="notes-badge" style="display:none;background:#ef4444;color:#fff;border-radius:100px;font-size:0.7rem;font-weight:700;padding:0.1rem 0.4rem;margin-left:0.2rem;vertical-align:middle">●</span></button>
     <button class="tab-btn" data-view="requests" onclick="switchTab('requests')">Requests</button>
   </div>
 
@@ -234,6 +262,31 @@
       <div class="card" id="recent-visits-card" style="display:none">
         <div class="card-title">Recent Visits</div>
         <div id="recent-visits"></div>
+      </div>
+    </div>
+
+    <!-- SCHEDULE CALENDAR -->
+    <div class="view" id="view-schedule">
+      <div class="view-title">My Schedule</div>
+      <div class="view-sub">All your upcoming and past visits</div>
+      <div class="card">
+        <div class="cal-header">
+          <button class="cal-nav-btn" onclick="shiftCalMonth(-1)">‹</button>
+          <div class="cal-month-label" id="cal-month-lbl">—</div>
+          <button class="cal-nav-btn" onclick="shiftCalMonth(1)">›</button>
+        </div>
+        <div class="cal-grid" id="client-cal-grid"></div>
+        <div id="cal-day-detail" style="display:none"></div>
+      </div>
+      <div class="card" style="margin-top:0">
+        <div class="card-title">Legend</div>
+        <div style="display:flex;flex-wrap:wrap;gap:0.75rem;font-size:0.8rem;color:var(--ink-mid)">
+          <span><span style="display:inline-block;width:12px;height:8px;border-radius:2px;background:#3B82F6;margin-right:4px;vertical-align:middle"></span>Confirmed</span>
+          <span><span style="display:inline-block;width:12px;height:8px;border-radius:2px;background:#F59E0B;margin-right:4px;vertical-align:middle"></span>Scheduled</span>
+          <span><span style="display:inline-block;width:12px;height:8px;border-radius:2px;background:#10b981;margin-right:4px;vertical-align:middle"></span>In Progress</span>
+          <span><span style="display:inline-block;width:12px;height:8px;border-radius:2px;background:var(--sage);margin-right:4px;vertical-align:middle"></span>Completed</span>
+          <span><span style="display:inline-block;width:12px;height:8px;border-radius:2px;background:#9ca3af;margin-right:4px;vertical-align:middle"></span>Awaiting Confirmation</span>
+        </div>
       </div>
     </div>
 
@@ -356,10 +409,13 @@
 
   let clientDoc       = null;
   let caregiverDoc    = null;
-  let stripeLinks     = {};   // { essential, companion, premium } — from settings/stripe
+  let stripeLinks     = {};
   let allAppointments = [];
+  let pendingBookings = [];   // booking_requests not yet confirmed by caregiver
+  let calMonthDate    = new Date();
   let _unsubAppts     = null;
   let _unsubClient    = null;
+  let _unsubPending   = null;
 
   // ── AUTH ────────────────────────────────────────────────────────────────────
   auth.onAuthStateChanged(async user => {
@@ -391,8 +447,9 @@
   }
 
   function handleSignOut() {
-    if (_unsubAppts)  { _unsubAppts();  _unsubAppts  = null; }
-    if (_unsubClient) { _unsubClient(); _unsubClient = null; }
+    if (_unsubAppts)   { _unsubAppts();   _unsubAppts   = null; }
+    if (_unsubClient)  { _unsubClient();  _unsubClient  = null; }
+    if (_unsubPending) { _unsubPending(); _unsubPending = null; }
     auth.signOut();
   }
 
@@ -457,7 +514,22 @@
           if (activeTab() === 'dashboard') renderDashboard();
         }, err => console.warn('Appointments listener error:', err));
 
-      // 7. Real-time client doc listener (plan / stripe / caregiver updates from admin)
+      // 7. Real-time pending booking requests (so client sees them before caregiver accepts)
+      _unsubPending = db.collection('booking_requests')
+        .where('client_id', '==', clientDoc.id)
+        .where('status', '==', 'pending')
+        .onSnapshot(snap => {
+          pendingBookings = snap.docs.map(d => {
+            const data = d.data();
+            const scheduled_at = (data.proposed_date && data.proposed_time)
+              ? new Date(data.proposed_date + 'T' + data.proposed_time) : null;
+            return { id: d.id, ...data, scheduled_at, _isPending: true };
+          }).filter(r => r.scheduled_at);
+          if (activeTab() === 'dashboard') renderDashboard();
+          if (activeTab() === 'schedule')  renderCalendar();
+        }, () => {});
+
+      // 8. Real-time client doc listener (plan / stripe / caregiver updates from admin)
       _unsubClient = db.collection('clients').doc(clientDoc.id)
         .onSnapshot(snap => {
           if (!snap.exists) return;
@@ -494,6 +566,7 @@
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelector(`[data-view="${view}"]`).classList.add('active');
     if (view === 'dashboard') renderDashboard();
+    if (view === 'schedule')  renderCalendar();
     if (view === 'plan')      renderPlan();
     if (view === 'notes')     loadNotes();
     if (view === 'requests')  loadRequests();
@@ -506,8 +579,11 @@
   // ── DASHBOARD ───────────────────────────────────────────────────────────────
   function renderDashboard() {
     const now = new Date();
-    // Include in_progress visits even if their scheduled_at is in the past
-    const upcoming = allAppointments.filter(a => a.scheduled_at >= now || a.status === 'in_progress');
+    // Include confirmed/scheduled appointments, in-progress visits, and pending booking requests
+    const upcoming = [
+      ...allAppointments.filter(a => a.scheduled_at >= now || a.status === 'in_progress'),
+      ...pendingBookings.filter(r => r.scheduled_at >= now)
+    ].sort((a, b) => a.scheduled_at - b.scheduled_at);
 
     // Plan + payment banner
     const bannerEl = document.getElementById('dash-plan-banner');
@@ -552,12 +628,17 @@
       upEl.innerHTML = '<div class="empty-state">No upcoming visits.</div>';
     } else {
       upEl.innerHTML = list.map(a => {
-        const badgeCls = a.status === 'confirmed'   ? 'confirmed'
+        const isPending = a._isPending;
+        const badgeCls = isPending                  ? ''
+                       : a.status === 'confirmed'   ? 'confirmed'
                        : a.status === 'completed'   ? 'completed'
                        : a.status === 'in_progress' ? 'in-progress' : '';
-        const badgeTxt = a.status === 'confirmed'   ? 'Confirmed'
+        const badgeTxt = isPending                  ? 'Awaiting Confirmation'
+                       : a.status === 'confirmed'   ? 'Confirmed'
                        : a.status === 'completed'   ? 'Completed'
                        : a.status === 'in_progress' ? 'In Progress' : 'Scheduled';
+        const duration = (a.duration_minutes || a.duration_minutes === 0)
+          ? a.duration_minutes / 60 : ((a.duration_minutes_proposed || 60) / 60);
         return `<div class="visit-item">
           <div class="visit-date">
             <div class="visit-day">${a.scheduled_at.getDate()}</div>
@@ -565,9 +646,9 @@
           </div>
           <div class="visit-info">
             <div class="visit-cg">${esc(caregiverDoc?.name || 'Caregiver')}</div>
-            <div class="visit-meta">${a.scheduled_at.toLocaleDateString('en',{weekday:'long'})} · ${fmt12(a.scheduled_at)} · ${a.duration_minutes/60}h</div>
+            <div class="visit-meta">${a.scheduled_at.toLocaleDateString('en',{weekday:'long'})} · ${fmt12(a.scheduled_at)} · ${duration}h</div>
           </div>
-          <span class="visit-badge ${badgeCls}">${badgeTxt}</span>
+          <span class="visit-badge ${badgeCls}" style="${isPending ? 'background:#9ca3af' : ''}">${badgeTxt}</span>
         </div>`;
       }).join('');
     }
@@ -689,15 +770,23 @@
   }
 
   // ── NOTES FROM CAREGIVER ───────────────────────────────────────────────────
-  function _notesSeenKey() { return 'hl_seen_notes_' + clientDoc.id; }
-  function _getSeenNotes() { try { return new Set(JSON.parse(localStorage.getItem(_notesSeenKey()) || '[]')); } catch { return new Set(); } }
-  function _saveSeenNotes(s) { try { localStorage.setItem(_notesSeenKey(), JSON.stringify([...s])); } catch {} }
+  // Track last time the user opened the notes tab — simpler than tracking individual note IDs
+  function _notesTimeKey() { return 'hl_notes_ts_' + clientDoc.id; }
+  function _getNotesLastChecked() { try { return parseInt(localStorage.getItem(_notesTimeKey()) || '0'); } catch { return 0; } }
+  function _saveNotesChecked()    { try { localStorage.setItem(_notesTimeKey(), Date.now().toString()); } catch {} }
 
-  function checkNotesBadge(notes) {
-    const seen = _getSeenNotes();
-    const unseen = notes.filter(n => n._id && !seen.has(n._id)).length;
-    const badge = document.getElementById('notes-badge');
-    if (badge) { badge.textContent = unseen || ''; badge.style.display = unseen > 0 ? 'inline' : 'none'; }
+  async function checkNotesOnLogin() {
+    if (!clientDoc) return;
+    try {
+      const snap = await db.collection('visit_notes').where('client_id', '==', clientDoc.id).get();
+      const lastChecked = _getNotesLastChecked();
+      const hasNew = snap.docs.some(d => {
+        const ts = d.data().created_at?.seconds;
+        return ts && (ts * 1000) > lastChecked;
+      });
+      const badge = document.getElementById('notes-badge');
+      if (badge) badge.style.display = hasNew ? 'inline' : 'none';
+    } catch {}
   }
 
   async function loadNotes() {
@@ -706,31 +795,35 @@
     try {
       const snap = await db.collection('visit_notes')
         .where('client_id', '==', clientDoc.id).get();
-      const allNotes = snap.docs.map(d => ({ _id: d.id, ...d.data() }))
-        .sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0)).slice(0, 30);
-      checkNotesBadge(allNotes);
+      const lastChecked = _getNotesLastChecked();
+      const allNotes = snap.docs.map(d => ({
+        _id: d.id, ...d.data(),
+        _isNew: (d.data().created_at?.seconds || 0) * 1000 > lastChecked
+      })).sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0)).slice(0, 30);
+
       if (!allNotes.length) {
         el.innerHTML = `<div style="text-align:center;padding:2.5rem">
           <div style="font-size:2.5rem;margin-bottom:0.75rem">💬</div>
           <p style="font-weight:600;margin-bottom:0.4rem">No notes yet</p>
           <p class="plan-no">Your caregiver will leave visit updates here.</p>
         </div>`;
+        // Still mark as checked so badge doesn't re-appear for empty state
+        _saveNotesChecked();
         return;
       }
-      const seen = _getSeenNotes();
+
       el.innerHTML = allNotes.map(n => {
         const dt = n.created_at?.toDate?.();
-        const isNew = n._id && !seen.has(n._id);
-        return `<div class="note-item${isNew ? ' note-unseen' : ''}" id="note-${n._id}" onclick="markNoteSeen('${n._id}')">
-          ${isNew ? '<span class="note-new-tag" style="display:inline-block;background:#ef4444;color:#fff;font-size:0.68rem;font-weight:700;padding:0.1rem 0.45rem;border-radius:100px;margin-bottom:0.35rem">New</span>' : ''}
+        return `<div class="note-item${n._isNew ? ' note-unseen' : ''}" id="note-${n._id}" onclick="markNoteSeen('${n._id}')">
+          ${n._isNew ? '<span class="note-new-tag" style="display:inline-block;background:#ef4444;color:#fff;font-size:0.68rem;font-weight:700;padding:0.1rem 0.45rem;border-radius:100px;margin-bottom:0.35rem">New</span>' : ''}
           <div class="note-cg">${esc(n.from_name || caregiverDoc?.name || 'Your caregiver')}</div>
           <div class="note-date">${dt ? dt.toLocaleDateString('en',{weekday:'short',month:'long',day:'numeric',year:'numeric'}) + ' at ' + dt.toLocaleTimeString('en',{hour:'numeric',minute:'2-digit'}) : '—'}</div>
           <div class="note-body">${esc(n.text)}</div>
         </div>`;
       }).join('');
-      // Mark all as seen when tab opens
-      const newSeenSet = new Set([...seen, ...allNotes.map(n => n._id).filter(Boolean)]);
-      _saveSeenNotes(newSeenSet);
+
+      // Save current time — next login, only notes NEWER than now will show badge
+      _saveNotesChecked();
       const badge = document.getElementById('notes-badge');
       if (badge) badge.style.display = 'none';
     } catch(ex) {
@@ -740,27 +833,122 @@
   }
 
   function markNoteSeen(noteId) {
-    const seen = _getSeenNotes();
-    seen.add(noteId);
-    _saveSeenNotes(seen);
     const el = document.getElementById('note-' + noteId);
     if (el) {
       el.classList.remove('note-unseen');
       el.querySelector('.note-new-tag')?.remove();
     }
-    // Count remaining unseen items in the DOM rather than re-fetching
     const remaining = document.querySelectorAll('.note-unseen').length;
     const badge = document.getElementById('notes-badge');
-    if (badge) { badge.textContent = remaining || ''; badge.style.display = remaining > 0 ? 'inline' : 'none'; }
+    if (badge) badge.style.display = remaining > 0 ? 'inline' : 'none';
   }
 
-  async function checkNotesOnLogin() {
-    if (!clientDoc) return;
-    try {
-      const snap = await db.collection('visit_notes').where('client_id', '==', clientDoc.id).get();
-      const notes = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
-      checkNotesBadge(notes);
-    } catch {}
+  // ── SCHEDULE CALENDAR ────────────────────────────────────────────────────────
+  function shiftCalMonth(dir) {
+    calMonthDate = new Date(calMonthDate.getFullYear(), calMonthDate.getMonth() + dir, 1);
+    renderCalendar();
+  }
+
+  function _dayKey(d) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  function renderCalendar() {
+    const yr = calMonthDate.getFullYear();
+    const mo = calMonthDate.getMonth();
+    const lbl = document.getElementById('cal-month-lbl');
+    if (lbl) lbl.textContent = new Date(yr, mo, 1).toLocaleDateString('en', {month:'long', year:'numeric'});
+
+    const firstWeekday = new Date(yr, mo, 1).getDay();
+    const daysInMonth  = new Date(yr, mo + 1, 0).getDate();
+    const today = new Date();
+
+    // Build event map: key → [{event}]
+    const allEvents = [
+      ...allAppointments,
+      ...pendingBookings
+    ];
+    const eventMap = {};
+    allEvents.forEach(a => {
+      if (!a.scheduled_at) return;
+      const k = _dayKey(a.scheduled_at);
+      (eventMap[k] = eventMap[k] || []).push(a);
+    });
+
+    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    let html = dayNames.map(d => `<div class="cal-dh">${d}</div>`).join('');
+
+    // Empty leading cells
+    for (let i = 0; i < firstWeekday; i++) html += `<div class="cal-cell other-month"></div>`;
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const k = `${yr}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const isToday = today.getFullYear()===yr && today.getMonth()===mo && today.getDate()===d;
+      const events  = eventMap[k] || [];
+      const dots = events.slice(0, 3).map(a => {
+        const cls = a._isPending ? 'pending-req'
+          : a.status === 'confirmed'   ? 'confirmed'
+          : a.status === 'in_progress' ? 'in_progress'
+          : a.status === 'completed'   ? 'completed'
+          : 'scheduled';
+        return `<div class="cal-dot ${cls}"></div>`;
+      }).join('');
+      html += `<div class="cal-cell${isToday ? ' today' : ''}" onclick="showCalDay('${k}')">
+        <div class="cal-num">${d}</div>
+        ${dots ? `<div class="cal-dots">${dots}</div>` : ''}
+      </div>`;
+    }
+
+    const grid = document.getElementById('client-cal-grid');
+    if (grid) grid.innerHTML = html;
+    const det = document.getElementById('cal-day-detail');
+    if (det) det.style.display = 'none';
+  }
+
+  function showCalDay(dateKey) {
+    // Highlight selected cell — find by matching onclick content
+    document.querySelectorAll('#client-cal-grid .cal-cell').forEach(c => {
+      c.classList.toggle('selected', c.getAttribute('onclick') === `showCalDay('${dateKey}')`);
+    });
+
+    const allEvents = [...allAppointments, ...pendingBookings];
+    const dayEvents = allEvents
+      .filter(a => a.scheduled_at && _dayKey(a.scheduled_at) === dateKey)
+      .sort((a, b) => a.scheduled_at - b.scheduled_at);
+
+    const det = document.getElementById('cal-day-detail');
+    if (!det) return;
+    if (!dayEvents.length) { det.style.display = 'none'; return; }
+
+    const [yr, mo, dy] = dateKey.split('-').map(Number);
+    const dateLabel = new Date(yr, mo - 1, dy).toLocaleDateString('en', {weekday:'long', month:'long', day:'numeric', year:'numeric'});
+    const cgName = caregiverDoc?.name || 'Your Caregiver';
+
+    det.style.display = 'block';
+    det.innerHTML = `<div class="cal-detail">
+      <div class="cal-detail-date">${dateLabel}</div>
+      ${dayEvents.map(a => {
+        const isPending = a._isPending;
+        const statusTxt = isPending              ? 'Awaiting Confirmation'
+          : a.status === 'confirmed'             ? 'Confirmed'
+          : a.status === 'in_progress'           ? 'In Progress'
+          : a.status === 'completed'             ? 'Completed'
+          : 'Scheduled';
+        const statusColor = isPending            ? '#9ca3af'
+          : a.status === 'confirmed'             ? '#3B82F6'
+          : a.status === 'in_progress'           ? '#10b981'
+          : a.status === 'completed'             ? '#7a8b6f'
+          : '#F59E0B';
+        const dur = (a.duration_minutes || 60) / 60;
+        return `<div class="cal-appt-row">
+          <div class="cal-appt-time">${fmt12(a.scheduled_at)}</div>
+          <div class="cal-appt-info">
+            ${esc(cgName)} &nbsp;·&nbsp; ${dur}h
+            <br><span style="color:${statusColor};font-weight:600;font-size:0.77rem">${statusTxt}</span>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
   }
 
   // ── UTILITIES ───────────────────────────────────────────────────────────────

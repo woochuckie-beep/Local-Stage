@@ -2136,28 +2136,61 @@ async function loadAdminRequests() {
     }
   }
 
-  // ── EVV Warnings (late arrivals / short visits) ───────────────────────────
-  const warningsCard = document.getElementById('req-warnings-card');
-  const warningsList = document.getElementById('req-warnings-list');
+  // ── EVV Warnings (late arrivals / short visits) — auto-create visit_issues ──
+  const warningsCard  = document.getElementById('req-warnings-card');
+  const warningsList  = document.getElementById('req-warnings-list');
   const warningsCount = document.getElementById('req-warnings-count');
   if (warningsCard && warningsList) {
     const warnings = [];
     recentApptSnap.docs.forEach(d => {
       const a = { id: d.id, ...d.data(), scheduled_at: d.data().scheduled_at?.toDate() };
-      if (a.status === 'cancelled') return;
-      const cgName = caregiversMap[a.caregiver_id]?.name || 'Caregiver';
-      const clientName = clientsMap[a.client_id]?.name || 'Client';
+      if (a.status === 'cancelled' || !a.scheduled_at) return;
+      const cgName     = caregiversMap[a.caregiver_id]?.name || 'Caregiver';
+      const clientName = clientsMap[a.client_id]?.name       || 'Client';
       if (a.clocked_in_at) {
-        const inTime = a.clocked_in_at.toDate();
+        const inTime  = a.clocked_in_at.toDate();
         const lateMin = Math.round((inTime - a.scheduled_at) / 60000);
-        if (lateMin > 15) warnings.push({ type: 'late', apptId: a.id, cgName, clientName, scheduled: a.scheduled_at, lateMin });
+        if (lateMin > 15) warnings.push({
+          type: 'late', apptId: a.id, cgId: a.caregiver_id, clientId: a.client_id,
+          cgName, clientName, scheduled: a.scheduled_at, lateMin
+        });
       }
       if (a.actual_duration_minutes && a.duration_minutes) {
         const shortMin = a.duration_minutes - a.actual_duration_minutes;
-        if (shortMin > 15) warnings.push({ type: 'short', apptId: a.id, cgName, clientName, scheduled: a.scheduled_at, shortMin });
+        if (shortMin > 15) warnings.push({
+          type: 'short', apptId: a.id, cgId: a.caregiver_id, clientId: a.client_id,
+          cgName, clientName, scheduled: a.scheduled_at, shortMin
+        });
       }
     });
+
+    // Auto-create visit_issues for new EVV warnings not already recorded
     if (warnings.length) {
+      try {
+        const existSnap = await db.collection('visit_issues').where('auto_evv', '==', true).get();
+        const existing  = new Set(existSnap.docs.map(d => d.data().evv_key).filter(Boolean));
+        const batch = db.batch();
+        warnings.forEach(w => {
+          const key = `${w.apptId}_${w.type}`;
+          if (!existing.has(key)) {
+            const text = w.type === 'late'
+              ? `EVV Alert: ${w.cgName} arrived ${w.lateMin} min late (scheduled ${w.scheduled?.toLocaleTimeString('en',{hour:'numeric',minute:'2-digit'})})`
+              : `EVV Alert: ${w.cgName} left ${w.shortMin} min early`;
+            batch.set(db.collection('visit_issues').doc(), {
+              client_id:    w.clientId || null,
+              client_name:  w.clientName,
+              caregiver_id: w.cgId || null,
+              issue_text:   text,
+              auto_evv:     true,
+              evv_key:      key,
+              status:       'open',
+              created_at:   SV()
+            });
+          }
+        });
+        await batch.commit();
+      } catch(e) { console.warn('Could not auto-create EVV issues:', e); }
+
       warningsCard.style.display = 'block';
       warningsCount.textContent = warnings.length;
       warningsList.innerHTML = warnings.map(w => {
