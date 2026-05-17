@@ -1905,7 +1905,7 @@ function toast(msg, isErr = false) {
 
 // ── LIVE REQUESTS NOTIFICATION ───────────────────────────────────────────────
 let _reqListener = null;
-let _lastPendingCount = 0;
+let _lastPendingCount = -1;
 function startRequestsListener() {
   if (_reqListener) return;
   _reqListener = db.collection('plan_requests').where('status', '==', 'pending')
@@ -2050,6 +2050,18 @@ async function confirmResolve(status) {
       } else if (req.type === 'unsubscribe') {
         await clientRef.update({ subscription_status: 'cancelled', auto_renew: false, updated_at: SV() });
       }
+    }
+
+    // Send admin note to client's Notes feed as "From Hearthlane Team"
+    if (note && req.client_id) {
+      await db.collection('visit_notes').add({
+        client_id:   req.client_id,
+        caregiver_id: null,
+        from_admin:   true,
+        from_name:    'Hearthlane Team',
+        text:         note,
+        created_at:   SV()
+      });
     }
 
     const msg = status === 'approved' ? 'Approved & applied to client record.' : status === 'declined' ? 'Request declined.' : 'Subscription cancelled.';
