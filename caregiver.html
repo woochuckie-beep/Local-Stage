@@ -139,8 +139,21 @@
     .appt-chip.rec { background: var(--sage); }
     .appt-chip.status-pending   { background: #F59E0B; color: var(--white); }
     .appt-chip.status-confirmed { background: #EF4444; color: var(--white); }
-    .appt-chip.status-completed { background: var(--sage); opacity: 0.85; }
-    .appt-chip.status-cancelled { background: #9ca3af; opacity: 0.65; }
+    .appt-chip.status-completed   { background: var(--sage); opacity: 0.85; }
+    .appt-chip.status-cancelled   { background: #9ca3af; opacity: 0.65; }
+    .appt-chip.status-in_progress { background: #10b981; }
+    .btn-clock-chip { display: block; width: 100%; margin-top: 4px; padding: 2px 6px; font-size: 0.62rem; font-weight: 700; background: rgba(255,255,255,0.22); color: var(--white); border: 1px solid rgba(255,255,255,0.45); border-radius: 4px; cursor: pointer; text-align: center; transition: background 0.15s; letter-spacing: 0.03em; }
+    .btn-clock-chip:hover { background: rgba(255,255,255,0.4); }
+    .clock-in-btn  { background: var(--avail); color: var(--white); border: none; border-radius: 8px; padding: 0.45rem 1rem; font-size: 0.84rem; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+    .clock-in-btn:hover  { background: #2e8a50; }
+    .clock-out-btn { background: var(--ink); color: var(--white); border: none; border-radius: 8px; padding: 0.45rem 1rem; font-size: 0.84rem; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+    .clock-out-btn:hover { background: var(--terra); }
+    .today-shift { display: flex; align-items: center; gap: 1rem; padding: 0.9rem 1.1rem; border-radius: 10px; background: var(--cream-soft); margin-bottom: 0.65rem; }
+    .today-shift:last-child { margin-bottom: 0; }
+    .today-shift-info { flex: 1; }
+    .today-shift-client { font-weight: 600; font-size: 0.92rem; }
+    .today-shift-meta { font-size: 0.8rem; color: var(--ink-light); margin-top: 0.15rem; }
+    .today-shift-clocked { font-size: 0.78rem; color: var(--avail); margin-top: 0.15rem; font-weight: 500; }
     .chip-name { font-weight: 600; display: block; }
     .chip-dur { display: block; font-size: 0.65rem; opacity: 0.8; }
     .btn-confirm-chip { display: block; width: 100%; margin-top: 4px; padding: 2px 6px; font-size: 0.62rem; font-weight: 700; background: rgba(255,255,255,0.22); color: var(--white); border: 1px solid rgba(255,255,255,0.45); border-radius: 4px; cursor: pointer; text-align: center; transition: background 0.15s; letter-spacing: 0.03em; }
@@ -305,6 +318,11 @@
           <div class="stat-label">Pending Requests</div>
           <div class="stat-val highlight" id="s-requests">—</div>
         </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Today's Visits</div>
+        <div id="today-visits"><div class="empty-state">Loading…</div></div>
       </div>
 
       <div class="card">
@@ -641,6 +659,48 @@ function loadDashboard() {
   document.getElementById('s-month').textContent  = monthVisits.length;
   document.getElementById('s-clients').textContent = Object.keys(clientsMap).length;
 
+  // Today's visits (clock in / clock out)
+  const todayStart = new Date(now); todayStart.setHours(0,0,0,0);
+  const todayEnd   = new Date(now); todayEnd.setHours(23,59,59,999);
+  const todayVisits = allAppointments
+    .filter(a => a.scheduled_at >= todayStart && a.scheduled_at <= todayEnd)
+    .sort((a,b) => a.scheduled_at - b.scheduled_at);
+  const todayEl = document.getElementById('today-visits');
+  if (!todayVisits.length) {
+    todayEl.innerHTML = '<div class="empty-state">No visits scheduled for today.</div>';
+  } else {
+    todayEl.innerHTML = todayVisits.map(a => {
+      const c = clientsMap[a.client_id];
+      let actionBtn = '';
+      let clockedLine = '';
+      if (a.status === 'in_progress') {
+        const inTime = a.clocked_in_at?.toDate ? a.clocked_in_at.toDate() : null;
+        clockedLine = inTime ? `<div class="today-shift-clocked">Clocked in at ${fmt12(inTime)}</div>` : '<div class="today-shift-clocked">Visit in progress</div>';
+        actionBtn = `<button class="clock-out-btn" onclick="clockOut('${a.id}')">Clock Out</button>`;
+      } else if (a.status === 'confirmed' || a.status === 'scheduled') {
+        actionBtn = `<button class="clock-in-btn" onclick="clockIn('${a.id}')">Clock In</button>`;
+      } else if (a.status === 'completed') {
+        const inTime  = a.clocked_in_at?.toDate  ? a.clocked_in_at.toDate()  : null;
+        const outTime = a.clocked_out_at?.toDate ? a.clocked_out_at.toDate() : null;
+        const dur     = a.actual_duration_minutes;
+        clockedLine = `<div class="today-shift-clocked">
+          ${inTime ? 'In: ' + fmt12(inTime) : ''}
+          ${outTime ? ' · Out: ' + fmt12(outTime) : ''}
+          ${dur ? ' · ' + dur + ' min' : ''}
+        </div>`;
+        actionBtn = `<span style="font-size:0.8rem;color:var(--sage);font-weight:500">✓ Complete</span>`;
+      }
+      return `<div class="today-shift">
+        <div class="today-shift-info">
+          <div class="today-shift-client">${esc(c?.name || 'Client')}</div>
+          <div class="today-shift-meta">${fmt12(a.scheduled_at)} · ${a.duration_minutes/60}h${c?.address ? ' · ' + esc(c.address) : ''}</div>
+          ${clockedLine}
+        </div>
+        ${actionBtn}
+      </div>`;
+    }).join('');
+  }
+
   // Next visit
   const upcoming = allAppointments.filter(a => a.scheduled_at >= now)
     .sort((a,b) => a.scheduled_at - b.scheduled_at);
@@ -709,14 +769,18 @@ function renderScheduleCal() {
       ${days.map(d => {
         const chips = weekAppts.filter(a => sameDay(a.scheduled_at,d) && a.scheduled_at.getHours()===h);
         return `<div class="cal-cell-ro">${chips.map(a => {
-          const sc = a.status === 'confirmed' ? 'status-confirmed'
-                   : a.status === 'completed' ? 'status-completed'
-                   : a.status === 'cancelled' ? 'status-cancelled'
+          const sc = a.status === 'confirmed'   ? 'status-confirmed'
+                   : a.status === 'completed'   ? 'status-completed'
+                   : a.status === 'cancelled'   ? 'status-cancelled'
+                   : a.status === 'in_progress' ? 'status-in_progress'
                    : 'status-pending';
+          const isToday = sameDay(a.scheduled_at, new Date());
           return `<div class="appt-chip ${sc}">
             <span class="chip-name">${esc(clientsMap[a.client_id]?.name||'Client')}</span>
             <span class="chip-dur">${a.duration_minutes/60}h${a.recurring?' · rec':''}</span>
             ${a.status === 'scheduled' ? `<button class="btn-confirm-chip" onclick="event.stopPropagation();confirmAppointment('${a.id}')">✓ Confirm</button>` : ''}
+            ${isToday && (a.status === 'confirmed' || a.status === 'scheduled') ? `<button class="btn-clock-chip" onclick="event.stopPropagation();clockIn('${a.id}')">🕐 Clock In</button>` : ''}
+            ${a.status === 'in_progress' ? `<button class="btn-clock-chip" onclick="event.stopPropagation();clockOut('${a.id}')">✓ Clock Out</button>` : ''}
           </div>`;
         }).join('')}</div>`;
       }).join('')}
@@ -737,6 +801,30 @@ async function confirmAppointment(apptId) {
     renderScheduleCal();
     loadDashboard();
     toast('Appointment confirmed');
+  } catch(ex) { toast('Error: ' + ex.message, true); }
+}
+
+async function clockIn(apptId) {
+  try {
+    await db.collection('appointments').doc(apptId).update({
+      status: 'in_progress',
+      clocked_in_at: FSV.serverTimestamp()
+    });
+    toast('Clocked in — visit started');
+  } catch(ex) { toast('Error: ' + ex.message, true); }
+}
+
+async function clockOut(apptId) {
+  const appt = allAppointments.find(a => a.id === apptId);
+  if (!appt) { toast('Appointment not found', true); return; }
+  const now = new Date();
+  const inTime = appt.clocked_in_at?.toDate ? appt.clocked_in_at.toDate() : null;
+  const actualMinutes = inTime ? Math.round((now - inTime) / 60000) : null;
+  try {
+    const update = { status: 'completed', clocked_out_at: FSV.serverTimestamp() };
+    if (actualMinutes !== null) update.actual_duration_minutes = actualMinutes;
+    await db.collection('appointments').doc(apptId).update(update);
+    toast(actualMinutes !== null ? `Visit complete — ${actualMinutes} min on site` : 'Visit marked complete');
   } catch(ex) { toast('Error: ' + ex.message, true); }
 }
 

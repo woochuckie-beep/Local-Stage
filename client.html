@@ -89,8 +89,21 @@
     .visit-cg { font-weight: 600; font-size: 0.92rem; }
     .visit-meta { font-size: 0.8rem; color: var(--ink-light); margin-top: 0.2rem; }
     .visit-badge { padding: 0.22rem 0.6rem; border-radius: 100px; font-size: 0.72rem; font-weight: 600; background: #F59E0B; color: var(--white); flex-shrink: 0; }
-    .visit-badge.confirmed { background: #EF4444; }
-    .visit-badge.completed { background: var(--sage); }
+    .visit-badge.confirmed  { background: #EF4444; }
+    .visit-badge.completed  { background: var(--sage); }
+    .visit-badge.in-progress { background: #10b981; animation: pulse-badge 1.8s ease-in-out infinite; }
+    @keyframes pulse-badge { 0%,100% { opacity:1; } 50% { opacity:0.7; } }
+    .btn-report { background: none; border: none; color: var(--ink-light); font-size: 0.76rem; cursor: pointer; padding: 0.25rem 0; margin-top: 0.3rem; text-decoration: underline; display: block; }
+    .btn-report:hover { color: #c44; }
+    .issue-form { margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.4rem; }
+    .issue-area { width: 100%; padding: 0.5rem 0.75rem; border: 1.5px solid var(--cream-dark); border-radius: 8px; font-size: 0.84rem; font-family: inherit; resize: vertical; min-height: 64px; color: var(--ink); }
+    .issue-area:focus { outline: none; border-color: #c44; }
+    .btn-issue-submit { padding: 0.4rem 1rem; background: #c44; color: var(--white); border: none; border-radius: 7px; font-size: 0.82rem; font-weight: 600; cursor: pointer; align-self: flex-start; }
+    .btn-issue-submit:hover { background: #a33; }
+    .recent-visit-item { display: flex; align-items: flex-start; gap: 1rem; padding: 0.9rem 1.1rem; background: var(--cream-soft); border-radius: 10px; margin-bottom: 0.65rem; flex-direction: column; }
+    .recent-visit-item:last-child { margin-bottom: 0; }
+    .recent-visit-row { display: flex; align-items: flex-start; gap: 1rem; width: 100%; }
+    .recent-visit-detail { font-size: 0.78rem; color: var(--ink-light); margin-top: 0.15rem; }
 
     /* ── DASH PLAN BANNER ── */
     .dash-plan-banner { border-radius: 14px; padding: 1.25rem 1.5rem; background: linear-gradient(135deg, var(--ink) 0%, #5a3e2b 100%); color: var(--white); margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
@@ -217,6 +230,11 @@
       <div class="card">
         <div class="card-title">Upcoming Visits</div>
         <div id="upcoming-visits"><div class="empty-state">Loading…</div></div>
+      </div>
+
+      <div class="card" id="recent-visits-card" style="display:none">
+        <div class="card-title">Recent Visits</div>
+        <div id="recent-visits"></div>
       </div>
     </div>
 
@@ -518,8 +536,12 @@
       upEl.innerHTML = '<div class="empty-state">No upcoming visits.</div>';
     } else {
       upEl.innerHTML = list.map(a => {
-        const badgeCls = a.status === 'confirmed' ? 'confirmed' : a.status === 'completed' ? 'completed' : '';
-        const badgeTxt = a.status === 'confirmed' ? 'Confirmed' : a.status === 'completed' ? 'Completed' : 'Scheduled';
+        const badgeCls = a.status === 'confirmed'   ? 'confirmed'
+                       : a.status === 'completed'   ? 'completed'
+                       : a.status === 'in_progress' ? 'in-progress' : '';
+        const badgeTxt = a.status === 'confirmed'   ? 'Confirmed'
+                       : a.status === 'completed'   ? 'Completed'
+                       : a.status === 'in_progress' ? 'In Progress' : 'Scheduled';
         return `<div class="visit-item">
           <div class="visit-date">
             <div class="visit-day">${a.scheduled_at.getDate()}</div>
@@ -532,6 +554,47 @@
           <span class="visit-badge ${badgeCls}">${badgeTxt}</span>
         </div>`;
       }).join('');
+    }
+
+    // Recent completed visits (last 7 days) — show "Report Issue" option
+    const sevenDaysAgo = new Date(now); sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const recentCompleted = allAppointments
+      .filter(a => a.status === 'completed' && a.scheduled_at >= sevenDaysAgo && a.scheduled_at < now)
+      .sort((a, b) => b.scheduled_at - a.scheduled_at)
+      .slice(0, 5);
+    const recentCard = document.getElementById('recent-visits-card');
+    const recentEl   = document.getElementById('recent-visits');
+    if (recentCompleted.length && recentCard && recentEl) {
+      recentCard.style.display = 'block';
+      recentEl.innerHTML = recentCompleted.map(a => {
+        const inTime  = a.clocked_in_at?.toDate  ? a.clocked_in_at.toDate()  : null;
+        const outTime = a.clocked_out_at?.toDate ? a.clocked_out_at.toDate() : null;
+        const dur     = a.actual_duration_minutes;
+        const clockLine = (inTime && outTime)
+          ? `${fmt12(inTime)} – ${fmt12(outTime)}${dur ? ' (' + dur + ' min)' : ''}`
+          : '';
+        return `<div class="recent-visit-item" id="rvitem-${a.id}">
+          <div class="recent-visit-row">
+            <div class="visit-date">
+              <div class="visit-day">${a.scheduled_at.getDate()}</div>
+              <div class="visit-mon">${a.scheduled_at.toLocaleDateString('en',{month:'short'})}</div>
+            </div>
+            <div class="visit-info">
+              <div class="visit-cg">${esc(caregiverDoc?.name || 'Caregiver')}</div>
+              <div class="visit-meta">${a.scheduled_at.toLocaleDateString('en',{weekday:'long'})}</div>
+              ${clockLine ? `<div class="recent-visit-detail">${clockLine}</div>` : ''}
+              <button class="btn-report" onclick="toggleIssueForm('${a.id}')">Report an issue</button>
+              <div class="issue-form" id="issue-${a.id}" style="display:none">
+                <textarea class="issue-area" id="issue-txt-${a.id}" placeholder="Describe what happened…" maxlength="500"></textarea>
+                <button class="btn-issue-submit" onclick="submitIssue('${a.id}', '${a.scheduled_at.toISOString()}')">Submit</button>
+              </div>
+            </div>
+            <span class="visit-badge completed">Completed</span>
+          </div>
+        </div>`;
+      }).join('');
+    } else if (recentCard) {
+      recentCard.style.display = 'none';
     }
   }
 
@@ -741,6 +804,37 @@
   }
 
   function cap1(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
+
+  // ── ISSUE REPORTING ─────────────────────────────────────────────────────────
+  function toggleIssueForm(apptId) {
+    const form = document.getElementById('issue-' + apptId);
+    if (!form) return;
+    form.style.display = form.style.display === 'none' ? 'flex' : 'none';
+  }
+
+  async function submitIssue(apptId, scheduledAtIso) {
+    const textarea = document.getElementById('issue-txt-' + apptId);
+    const text = (textarea?.value || '').trim().slice(0, 500);
+    if (!text) { toast('Please describe the issue first.', true); return; }
+    try {
+      await db.collection('visit_issues').add({
+        client_id:     clientDoc.id,
+        client_name:   clientDoc.name || '',
+        appointment_id: apptId,
+        caregiver_id:  clientDoc.caregiver_id || null,
+        issue_text:    text,
+        status:        'open',
+        created_at:    firebase.firestore.FieldValue.serverTimestamp()
+      });
+      toast('Issue reported — your coordinator will follow up.');
+      const form = document.getElementById('issue-' + apptId);
+      if (form) form.style.display = 'none';
+      if (textarea) textarea.value = '';
+    } catch(ex) {
+      toast('Could not submit: ' + ex.message, true);
+      console.error(ex);
+    }
+  }
 
   async function submitChangeRequest() {
     const btn       = document.getElementById('btn-submit-change');

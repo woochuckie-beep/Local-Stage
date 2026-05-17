@@ -167,9 +167,17 @@
     .badge-premium    { background: #e8e0f5; color: #6a5acd; }
     .badge-active     { background: #d8f0e8; color: #2a7a50; }
     .badge-inactive   { background: #f0e8e8; color: #884; }
-    .badge-scheduled  { background: var(--terra-soft); color: var(--terra-deep); }
-    .badge-completed  { background: #d8f0e8; color: #2a7a50; }
-    .badge-cancelled  { background: #f0e8e8; color: #884; }
+    .badge-scheduled    { background: var(--terra-soft); color: var(--terra-deep); }
+    .badge-completed    { background: #d8f0e8; color: #2a7a50; }
+    .badge-cancelled    { background: #f0e8e8; color: #884; }
+    .badge-in_progress  { background: #d1fae5; color: #065f46; }
+    .issue-row { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; padding:0.85rem 0; border-bottom:1px solid var(--cream-dark); }
+    .issue-row:last-child { border-bottom:none; padding-bottom:0; }
+    .issue-client { font-weight:600; font-size:0.9rem; }
+    .issue-text { font-size:0.84rem; color:var(--ink-mid); margin-top:0.2rem; line-height:1.6; }
+    .issue-date { font-size:0.75rem; color:var(--ink-light); margin-top:0.15rem; }
+    .btn-resolve { background:var(--sage-soft); color:var(--sage); border:none; border-radius:7px; padding:0.3rem 0.8rem; font-size:0.78rem; font-weight:600; cursor:pointer; flex-shrink:0; }
+    .btn-resolve:hover { background:var(--sage); color:#fff; }
 
     /* ── UPCOMING LIST ── */
     .appt-list { display: flex; flex-direction: column; gap: 0.75rem; }
@@ -202,8 +210,9 @@
     .appt-chip.rec { background: var(--sage); }
     .appt-chip.status-pending   { background: #F59E0B; }
     .appt-chip.status-confirmed { background: #EF4444; }
-    .appt-chip.status-completed { background: var(--sage); opacity: 0.85; }
-    .appt-chip.status-cancelled { background: #9ca3af; opacity: 0.7; }
+    .appt-chip.status-completed   { background: var(--sage); opacity: 0.85; }
+    .appt-chip.status-cancelled   { background: #9ca3af; opacity: 0.7; }
+    .appt-chip.status-in_progress { background: #10b981; }
     .cal-legend { display: flex; gap: 1rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
     .cal-legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.76rem; color: var(--ink-mid); }
     .cal-legend-swatch { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
@@ -420,6 +429,14 @@
         <div class="card-title">Upcoming Appointments</div>
         <div id="upcoming" class="appt-list"><div class="loading-msg">Loading…</div></div>
       </div>
+
+      <div class="card" id="issues-card" style="display:none">
+        <div class="card-title" style="display:flex;align-items:center;gap:0.6rem">
+          Visit Issues
+          <span id="issues-count" style="background:#ef4444;color:#fff;font-size:0.72rem;font-weight:700;padding:0.12rem 0.5rem;border-radius:100px"></span>
+        </div>
+        <div id="issues-list"></div>
+      </div>
     </div>
 
     <!-- CLIENTS -->
@@ -624,6 +641,7 @@
       <div class="cal-legend">
         <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#F59E0B"></div>Scheduled — awaiting confirmation</div>
         <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#EF4444"></div>Confirmed</div>
+        <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#10b981"></div>In Progress</div>
         <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:var(--sage)"></div>Completed</div>
         <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#9ca3af"></div>Cancelled</div>
       </div>
@@ -861,6 +879,7 @@
           <select class="fc" name="status">
             <option value="scheduled">Scheduled (awaiting confirmation)</option>
             <option value="confirmed">Confirmed</option>
+            <option value="in_progress">In Progress</option>
             <option value="completed">Completed</option>
             <option value="cancelled">Cancelled</option>
           </select>
@@ -877,6 +896,7 @@
           <div style="font-size:0.78rem;color:var(--ink-light);margin-top:0.15rem">Caregiver must confirm before it becomes a scheduled appointment.</div>
         </div>
       </div>
+      <div id="appt-clock-info" style="display:none;background:var(--cream-soft);border-radius:10px;padding:0.85rem 1rem;margin-bottom:1rem;font-size:0.84rem;line-height:1.8;color:var(--ink-mid)"></div>
       <div class="modal-ft">
         <button type="button" class="btn btn-del btn-sm" id="appt-del-btn" style="display:none;margin-right:auto" onclick="deleteAppt()">Delete</button>
         <button type="button" class="btn btn-ghost" onclick="closeModal('appt-ov')">Cancel</button>
@@ -1077,6 +1097,37 @@ async function loadDashboard() {
     .map(d => ({ id: d.id, ...d.data(), scheduled_at: d.data().scheduled_at?.toDate() }))
     .filter(a => a.status !== 'cancelled');
   renderUpcoming(upcoming);
+
+  // Visit issues
+  try {
+    const issueSnap = await db.collection('visit_issues').where('status', '==', 'open').get();
+    const issues = issueSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0)).slice(0, 20);
+    const issuesCard  = document.getElementById('issues-card');
+    const issuesList  = document.getElementById('issues-list');
+    const issuesCount = document.getElementById('issues-count');
+    if (issuesCard && issuesList) {
+      if (issues.length) {
+        issuesCard.style.display = 'block';
+        issuesCount.textContent = issues.length;
+        issuesList.innerHTML = issues.map(iss => {
+          const dt = iss.created_at?.toDate?.();
+          const cgName = caregiversMap[iss.caregiver_id]?.name || null;
+          return `<div class="issue-row" id="iss-${iss.id}">
+            <div style="flex:1;min-width:0">
+              <div class="issue-client">${esc(iss.client_name || 'Client')}</div>
+              ${cgName ? `<div class="issue-date">Caregiver: ${esc(cgName)}</div>` : ''}
+              <div class="issue-text">${esc(iss.issue_text)}</div>
+              ${dt ? `<div class="issue-date">${dt.toLocaleDateString('en',{month:'long',day:'numeric',year:'numeric'})}</div>` : ''}
+            </div>
+            <button class="btn-resolve" onclick="resolveIssue('${iss.id}')">Resolve</button>
+          </div>`;
+        }).join('');
+      } else {
+        issuesCard.style.display = 'none';
+      }
+    }
+  } catch(e) { console.warn('Could not load visit issues:', e); }
 }
 
 function renderUpcoming(appts) {
@@ -1494,6 +1545,7 @@ function openApptModal(id, dateStr, hour) {
       `<option value="${cg.id}"${appt?.caregiver_id === cg.id ? ' selected' : ''}>${esc(cg.name)}</option>`
     ).join('');
 
+  const clockEl = document.getElementById('appt-clock-info');
   if (appt) {
     const dt = appt.scheduled_at;
     fill(form, {
@@ -1507,7 +1559,28 @@ function openApptModal(id, dateStr, hour) {
       status:       appt.status,
       notes:        appt.notes || ''
     });
+    // Show EVV clock data if available
+    if (clockEl) {
+      const inTime  = appt.clocked_in_at?.toDate  ? appt.clocked_in_at.toDate()  : null;
+      const outTime = appt.clocked_out_at?.toDate ? appt.clocked_out_at.toDate() : null;
+      const actual  = appt.actual_duration_minutes;
+      if (inTime || outTime) {
+        let lines = '<strong>EVV Record</strong><br>';
+        if (inTime)  lines += `Clock In: ${inTime.toLocaleTimeString('en',{hour:'numeric',minute:'2-digit'})}`;
+        if (outTime) lines += ` &nbsp;·&nbsp; Clock Out: ${outTime.toLocaleTimeString('en',{hour:'numeric',minute:'2-digit'})}`;
+        if (actual)  lines += ` &nbsp;·&nbsp; <strong>${actual} min on site</strong>`;
+        if (actual && appt.duration_minutes) {
+          const diff = actual - appt.duration_minutes;
+          if (Math.abs(diff) > 15) lines += ` <span style="color:${diff < 0 ? '#c44' : 'var(--sage)'}">(${diff > 0 ? '+' : ''}${diff} min vs scheduled)</span>`;
+        }
+        clockEl.innerHTML = lines;
+        clockEl.style.display = 'block';
+      } else {
+        clockEl.style.display = 'none';
+      }
+    }
   } else {
+    if (clockEl) clockEl.style.display = 'none';
     if (dateStr) document.getElementById('appt-date').value = dateStr;
     if (hour !== undefined) document.getElementById('appt-time').value = String(hour).padStart(2,'0') + ':00';
   }
@@ -1643,10 +1716,21 @@ function cap(str, max = 500) {
   return String(str).trim().slice(0, max) || null;
 }
 
+async function resolveIssue(issueId) {
+  try {
+    await db.collection('visit_issues').doc(issueId).update({ status: 'resolved', resolved_at: firebase.firestore.FieldValue.serverTimestamp() });
+    document.getElementById('iss-' + issueId)?.remove();
+    const remaining = document.querySelectorAll('[id^="iss-"]').length;
+    if (!remaining) document.getElementById('issues-card').style.display = 'none';
+    toast('Issue marked resolved');
+  } catch(ex) { toast(ex.message, true); }
+}
+
 function chipStatusClass(a) {
-  if (a.status === 'confirmed') return 'status-confirmed';
-  if (a.status === 'completed') return 'status-completed';
-  if (a.status === 'cancelled') return 'status-cancelled';
+  if (a.status === 'confirmed')   return 'status-confirmed';
+  if (a.status === 'completed')   return 'status-completed';
+  if (a.status === 'cancelled')   return 'status-cancelled';
+  if (a.status === 'in_progress') return 'status-in_progress';
   return 'status-pending';
 }
 
