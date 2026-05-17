@@ -68,6 +68,7 @@
     .sidebar-logo { font-size: 1.2rem; font-weight: 700; color: var(--white); }
     .sidebar-logo span { color: var(--terra); }
     .sidebar-tag { font-size: 0.72rem; color: rgba(255,255,255,0.35); margin-top: 0.15rem; }
+    .sidebar-clock { font-size: 0.75rem; color: rgba(255,255,255,0.55); margin-top: 0.55rem; line-height: 1.5; }
     .sidebar-nav { flex: 1; padding: 1rem 0.75rem; display: flex; flex-direction: column; gap: 0.2rem; }
     .nav-link {
       display: flex; align-items: center; gap: 0.7rem;
@@ -367,6 +368,7 @@
     <div class="sidebar-header">
       <div class="sidebar-logo">Hearth<span>Lane</span></div>
       <div class="sidebar-tag">Admin Portal</div>
+      <div class="sidebar-clock" id="admin-clock"></div>
     </div>
     <nav class="sidebar-nav">
       <button class="nav-link active" data-page="dashboard" onclick="go('dashboard')">
@@ -2347,6 +2349,20 @@ async function confirmResolve(status) {
     console.error(ex);
   }
 }
+
+// ── LIVE CLOCK ────────────────────────────────────────────────────────────────
+(function startClock() {
+  function tick() {
+    const now = new Date();
+    const day  = now.toLocaleDateString('en', { weekday: 'short' });
+    const date = now.toLocaleDateString('en', { month: 'short', day: 'numeric' });
+    const time = now.toLocaleTimeString('en', { hour: 'numeric', minute: '2-digit', second: '2-digit' });
+    const el = document.getElementById('admin-clock');
+    if (el) el.innerHTML = `${day}, ${date}<br>${time}`;
+  }
+  tick();
+  setInterval(tick, 1000);
+})();
 </script>
 </body>
 </html>

@@ -48,6 +48,7 @@
     .nav-logo { font-size: 1.15rem; font-weight: 700; color: var(--white); }
     .nav-logo span { color: var(--terra); }
     .nav-right { display: flex; align-items: center; gap: 0.85rem; }
+    .nav-clock { font-size: 0.78rem; color: rgba(255,255,255,0.55); letter-spacing: 0.01em; }
     .nav-name { color: rgba(255,255,255,0.75); font-size: 0.88rem; }
     .btn-signout { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.65); border: none; padding: 0.4rem 0.9rem; border-radius: 100px; font-size: 0.8rem; transition: all 0.15s; }
     .btn-signout:hover { background: rgba(255,255,255,0.18); color: var(--white); }
@@ -129,33 +130,36 @@
     .note-date { font-size: 0.75rem; color: var(--ink-light); margin-top: 0.1rem; }
     .note-body { font-size: 0.9rem; color: var(--ink); margin-top: 0.5rem; line-height: 1.7; }
 
-    /* ── SCHEDULE CALENDAR ── */
-    .cal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; }
-    .cal-month-label { font-size:1.05rem; font-weight:700; color:var(--ink); }
-    .cal-nav-btn { background:none; border:1.5px solid var(--cream-dark); border-radius:8px; width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:1rem; color:var(--ink-mid); transition:background 0.12s; }
-    .cal-nav-btn:hover { background:var(--cream-soft); }
-    .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
-    .cal-dh { text-align:center; font-size:0.7rem; font-weight:600; color:var(--ink-light); padding:0.35rem 0; }
-    .cal-cell { min-height:72px; padding:4px 3px; border-radius:8px; background:var(--cream-soft); cursor:pointer; transition:background 0.12s; }
-    .cal-cell:hover:not(.other-month) { background:var(--cream-dark); }
-    .cal-cell.other-month { opacity:0.3; pointer-events:none; }
-    .cal-cell.today { background:var(--terra-soft); }
-    .cal-cell.today .cal-num { color:var(--terra-deep); font-weight:700; }
-    .cal-cell.selected { box-shadow:inset 0 0 0 2px var(--terra); }
-    .cal-num { font-size:0.75rem; font-weight:600; color:var(--ink); line-height:1; margin-bottom:3px; }
-    /* Appointment chips — same scheme as caregiver schedule */
-    .cal-chip { border-radius:5px; padding:2px 5px; font-size:0.63rem; font-weight:600; color:#fff; margin-top:2px; line-height:1.4; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
-    .cal-chip.confirmed   { background:#3B82F6; }
-    .cal-chip.scheduled   { background:#F59E0B; }
-    .cal-chip.in_progress { background:#10b981; }
-    .cal-chip.completed   { background:var(--sage); }
-    .cal-chip.pending-req { background:#9ca3af; }
-    .cal-detail { border-radius:12px; padding:1rem 1.1rem; margin-top:1rem; border:1.5px solid var(--cream-dark); }
-    .cal-detail-date { font-size:0.84rem; font-weight:700; color:var(--ink); margin-bottom:0.75rem; }
-    .cal-appt-row { display:flex; align-items:center; gap:0.75rem; padding:0.55rem 0; border-bottom:1px solid var(--cream-dark); }
-    .cal-appt-row:last-child { border-bottom:none; }
-    .cal-appt-time { font-size:0.8rem; font-weight:600; color:var(--ink); min-width:60px; }
-    .cal-appt-info { flex:1; font-size:0.82rem; color:var(--ink-mid); line-height:1.5; }
+    /* ── SCHEDULE CALENDAR (weekly grid — same layout as caregiver) ── */
+    .week-controls { display:flex; align-items:center; gap:0.65rem; margin-bottom:1.1rem; flex-wrap:wrap; }
+    .week-label { font-size:0.9rem; font-weight:600; min-width:190px; text-align:center; color:var(--ink); }
+    .btn-week { padding:0.38rem 0.85rem; border-radius:8px; font-size:0.82rem; background:var(--white); color:var(--ink-mid); border:1.5px solid var(--cream-dark); transition:all 0.15s; cursor:pointer; }
+    .btn-week:hover { border-color:var(--terra); color:var(--terra); }
+    .cl-cal-wrap { background:var(--white); border-radius:14px; overflow:hidden; box-shadow:0 2px 8px rgba(58,46,34,0.06); }
+    .cl-cal-head { display:grid; grid-template-columns:52px repeat(7,1fr); border-bottom:1.5px solid var(--cream-dark); }
+    .cl-hcell { padding:0.6rem 0.4rem; text-align:center; }
+    .cl-hcell .dname { display:block; font-size:0.67rem; font-weight:600; color:var(--ink-light); text-transform:uppercase; letter-spacing:0.05em; }
+    .cl-hcell .dnum  { display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:50%; font-size:0.95rem; font-weight:600; color:var(--ink); margin-top:0.15rem; }
+    .cl-hcell.today .dnum { background:var(--terra); color:var(--white); }
+    .cl-cal-body { max-height:520px; overflow-y:auto; }
+    .cl-row { display:grid; grid-template-columns:52px repeat(7,1fr); border-bottom:1px solid #f0ebe0; }
+    .cl-row:last-child { border-bottom:none; }
+    .cl-time { padding:0.45rem 0.35rem 0 0; font-size:0.67rem; color:var(--ink-light); text-align:right; border-right:1px solid var(--cream-dark); }
+    .cl-cell { min-height:46px; border-right:1px solid #f0ebe0; padding:2px; }
+    .cl-cell:last-child { border-right:none; }
+    /* Chips — identical colour scheme to caregiver */
+    .appt-chip-cl { border-radius:5px; padding:0.22rem 0.4rem; font-size:0.68rem; margin-bottom:2px; color:#fff; line-height:1.4; }
+    .appt-chip-cl.confirmed   { background:#3B82F6; }
+    .appt-chip-cl.scheduled   { background:#F59E0B; }
+    .appt-chip-cl.in_progress { background:#10b981; }
+    .appt-chip-cl.completed   { background:var(--sage); opacity:0.85; }
+    .appt-chip-cl.pending-req { background:#9ca3af; }
+    .chip-cg-name { font-weight:600; display:block; }
+    .chip-cl-dur  { display:block; font-size:0.62rem; opacity:0.85; }
+    /* Legend */
+    .cl-legend { display:flex; gap:0.75rem; flex-wrap:wrap; margin-top:0.85rem; }
+    .cl-legend-item { display:flex; align-items:center; gap:0.35rem; font-size:0.75rem; color:var(--ink-mid); }
+    .cl-legend-dot { width:10px; height:10px; border-radius:3px; flex-shrink:0; }
 
     /* ── EMPTY ── */
     .empty-state { color: var(--ink-light); font-size: 0.9rem; padding: 1rem 0; }
@@ -227,6 +231,7 @@
   <nav class="topnav">
     <div class="nav-logo">Hearth<span>Lane</span></div>
     <div class="nav-right">
+      <span class="nav-clock" id="nav-clock"></span>
       <span class="nav-name" id="nav-name"></span>
       <button class="btn-signout" onclick="handleSignOut()">Sign Out</button>
     </div>
@@ -269,21 +274,24 @@
     <!-- SCHEDULE CALENDAR -->
     <div class="view" id="view-schedule">
       <div class="view-title">My Schedule</div>
-      <div class="view-sub">All your upcoming and past visits</div>
+      <div class="view-sub">Your visits for the week</div>
       <div class="card">
-        <div class="cal-header">
-          <button class="cal-nav-btn" onclick="shiftCalMonth(-1)">‹</button>
-          <div class="cal-month-label" id="cal-month-lbl">—</div>
-          <button class="cal-nav-btn" onclick="shiftCalMonth(1)">›</button>
+        <div class="week-controls">
+          <button class="btn-week" onclick="clientShiftWeek(-1)">‹ Prev</button>
+          <div class="week-label" id="cl-week-label">—</div>
+          <button class="btn-week" onclick="clientShiftWeek(1)">Next ›</button>
+          <button class="btn-week" onclick="clientGoToday()">Today</button>
         </div>
-        <div class="cal-grid" id="client-cal-grid"></div>
-        <div id="cal-day-detail" style="display:none"></div>
-        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:1rem;padding-top:0.75rem;border-top:1px solid var(--cream-dark)">
-          <span class="cal-chip confirmed" style="font-size:0.7rem">Confirmed</span>
-          <span class="cal-chip scheduled" style="font-size:0.7rem">Scheduled</span>
-          <span class="cal-chip in_progress" style="font-size:0.7rem">In Progress</span>
-          <span class="cal-chip completed" style="font-size:0.7rem">Completed</span>
-          <span class="cal-chip pending-req" style="font-size:0.7rem">Awaiting Confirmation</span>
+        <div class="cl-cal-wrap">
+          <div class="cl-cal-head" id="cl-cal-head"></div>
+          <div class="cl-cal-body" id="cl-cal-body"></div>
+        </div>
+        <div class="cl-legend">
+          <div class="cl-legend-item"><div class="cl-legend-dot" style="background:#3B82F6"></div>Confirmed</div>
+          <div class="cl-legend-item"><div class="cl-legend-dot" style="background:#F59E0B"></div>Scheduled</div>
+          <div class="cl-legend-item"><div class="cl-legend-dot" style="background:#10b981"></div>In Progress</div>
+          <div class="cl-legend-item"><div class="cl-legend-dot" style="background:var(--sage)"></div>Completed</div>
+          <div class="cl-legend-item"><div class="cl-legend-dot" style="background:#9ca3af"></div>Awaiting Confirmation</div>
         </div>
       </div>
     </div>
@@ -409,8 +417,8 @@
   let caregiverDoc    = null;
   let stripeLinks     = {};
   let allAppointments = [];
-  let pendingBookings = [];   // booking_requests not yet confirmed by caregiver
-  let calMonthDate    = new Date();
+  let pendingBookings   = [];   // booking_requests not yet confirmed by caregiver
+  let clSchedWeekStart  = null; // set after functions are defined
   let _unsubAppts     = null;
   let _unsubClient    = null;
   let _unsubPending   = null;
@@ -846,114 +854,65 @@
     if (badge) badge.style.display = remaining > 0 ? 'inline' : 'none';
   }
 
-  // ── SCHEDULE CALENDAR ────────────────────────────────────────────────────────
-  function shiftCalMonth(dir) {
-    calMonthDate = new Date(calMonthDate.getFullYear(), calMonthDate.getMonth() + dir, 1);
-    renderCalendar();
-  }
-
-  function _dayKey(d) {
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  }
+  // ── SCHEDULE CALENDAR (weekly time-grid, same layout as caregiver) ──────────
+  function mondayOf(d) { const x=new Date(d); x.setHours(0,0,0,0); x.setDate(x.getDate()-((x.getDay()+6)%7)); return x; }
+  function sameDay(a,b) { return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate(); }
+  function fmt12h(h) { return `${h%12||12}${h<12?'am':'pm'}`; }
+  clSchedWeekStart = mondayOf(new Date()); // safe to init here after mondayOf is defined
+  function clientShiftWeek(dir) { clSchedWeekStart.setDate(clSchedWeekStart.getDate()+dir*7); renderCalendar(); }
+  function clientGoToday()      { clSchedWeekStart = mondayOf(new Date()); renderCalendar(); }
 
   function renderCalendar() {
-    const yr = calMonthDate.getFullYear();
-    const mo = calMonthDate.getMonth();
-    const lbl = document.getElementById('cal-month-lbl');
-    if (lbl) lbl.textContent = new Date(yr, mo, 1).toLocaleDateString('en', {month:'long', year:'numeric'});
-
-    const firstWeekday = new Date(yr, mo, 1).getDay();
-    const daysInMonth  = new Date(yr, mo + 1, 0).getDate();
+    const wEnd  = new Date(clSchedWeekStart); wEnd.setDate(wEnd.getDate()+7);
     const today = new Date();
+    const days  = Array.from({length:7}, (_,i) => { const d=new Date(clSchedWeekStart); d.setDate(d.getDate()+i); return d; });
 
-    // Build event map: key → [{event}]
-    const allEvents = [
-      ...allAppointments,
-      ...pendingBookings
-    ];
-    const eventMap = {};
-    allEvents.forEach(a => {
-      if (!a.scheduled_at) return;
-      const k = _dayKey(a.scheduled_at);
-      (eventMap[k] = eventMap[k] || []).push(a);
-    });
+    // Week label
+    const wS = clSchedWeekStart.toLocaleDateString('en',{month:'short',day:'numeric'});
+    const wE = new Date(wEnd); wE.setDate(wE.getDate()-1);
+    const wEL = wE.toLocaleDateString('en',{month:'short',day:'numeric',year:'numeric'});
+    const lbl = document.getElementById('cl-week-label');
+    if (lbl) lbl.textContent = `${wS} – ${wEL}`;
 
-    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-    let html = dayNames.map(d => `<div class="cal-dh">${d}</div>`).join('');
+    // Collect all events (appointments + pending booking requests) for this week
+    const allEvents = [...allAppointments, ...pendingBookings];
+    const weekEvents = allEvents.filter(a => a.scheduled_at >= clSchedWeekStart && a.scheduled_at < wEnd);
 
-    // Empty leading cells
-    for (let i = 0; i < firstWeekday; i++) html += `<div class="cal-cell other-month"></div>`;
-
-    for (let d = 1; d <= daysInMonth; d++) {
-      const k = `${yr}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-      const isToday = today.getFullYear()===yr && today.getMonth()===mo && today.getDate()===d;
-      const events  = eventMap[k] || [];
-      // Show colored chips (same scheme as caregiver schedule) — max 2 visible
-      const chips = events.slice(0, 2).map(a => {
-        const cls = a._isPending            ? 'pending-req'
-          : a.status === 'confirmed'        ? 'confirmed'
-          : a.status === 'in_progress'      ? 'in_progress'
-          : a.status === 'completed'        ? 'completed'
-          : 'scheduled';
-        const timeStr = fmt12(a.scheduled_at);
-        return `<div class="cal-chip ${cls}">${timeStr}</div>`;
-      }).join('') + (events.length > 2 ? `<div class="cal-chip scheduled">+${events.length-2}</div>` : '');
-      html += `<div class="cal-cell${isToday ? ' today' : ''}" onclick="showCalDay('${k}')">
-        <div class="cal-num">${d}</div>
-        ${chips}
-      </div>`;
+    // Header
+    const head = document.getElementById('cl-cal-head');
+    if (head) {
+      head.innerHTML = '<div class="cl-hcell"></div>' + days.map(d => `
+        <div class="cl-hcell${sameDay(d,today)?' today':''}">
+          <span class="dname">${d.toLocaleDateString('en',{weekday:'short'})}</span>
+          <span class="dnum">${d.getDate()}</span>
+        </div>`).join('');
     }
 
-    const grid = document.getElementById('client-cal-grid');
-    if (grid) grid.innerHTML = html;
-    const det = document.getElementById('cal-day-detail');
-    if (det) det.style.display = 'none';
-  }
-
-  function showCalDay(dateKey) {
-    // Highlight selected cell — find by matching onclick content
-    document.querySelectorAll('#client-cal-grid .cal-cell').forEach(c => {
-      c.classList.toggle('selected', c.getAttribute('onclick') === `showCalDay('${dateKey}')`);
-    });
-
-    const allEvents = [...allAppointments, ...pendingBookings];
-    const dayEvents = allEvents
-      .filter(a => a.scheduled_at && _dayKey(a.scheduled_at) === dateKey)
-      .sort((a, b) => a.scheduled_at - b.scheduled_at);
-
-    const det = document.getElementById('cal-day-detail');
-    if (!det) return;
-    if (!dayEvents.length) { det.style.display = 'none'; return; }
-
-    const [yr, mo, dy] = dateKey.split('-').map(Number);
-    const dateLabel = new Date(yr, mo - 1, dy).toLocaleDateString('en', {weekday:'long', month:'long', day:'numeric', year:'numeric'});
-    const cgName = caregiverDoc?.name || 'Your Caregiver';
-
-    det.style.display = 'block';
-    det.innerHTML = `<div class="cal-detail">
-      <div class="cal-detail-date">${dateLabel}</div>
-      ${dayEvents.map(a => {
-        const isPending = a._isPending;
-        const statusTxt = isPending              ? 'Awaiting Confirmation'
-          : a.status === 'confirmed'             ? 'Confirmed'
-          : a.status === 'in_progress'           ? 'In Progress'
-          : a.status === 'completed'             ? 'Completed'
-          : 'Scheduled';
-        const statusColor = isPending            ? '#9ca3af'
-          : a.status === 'confirmed'             ? '#3B82F6'
-          : a.status === 'in_progress'           ? '#10b981'
-          : a.status === 'completed'             ? '#7a8b6f'
-          : '#F59E0B';
-        const dur = (a.duration_minutes || 60) / 60;
-        return `<div class="cal-appt-row">
-          <div class="cal-appt-time">${fmt12(a.scheduled_at)}</div>
-          <div class="cal-appt-info">
-            ${esc(cgName)} &nbsp;·&nbsp; ${dur}h
-            <br><span style="color:${statusColor};font-weight:600;font-size:0.77rem">${statusTxt}</span>
-          </div>
-        </div>`;
-      }).join('')}
-    </div>`;
+    // Body — 7am to 9pm
+    const hours = Array.from({length:15}, (_,i) => i+7);
+    const body  = document.getElementById('cl-cal-body');
+    const cgName = caregiverDoc?.name || 'Caregiver';
+    if (body) {
+      body.innerHTML = hours.map(h => `
+        <div class="cl-row">
+          <div class="cl-time">${fmt12h(h)}</div>
+          ${days.map(d => {
+            const chips = weekEvents.filter(a => sameDay(a.scheduled_at,d) && a.scheduled_at.getHours()===h);
+            return `<div class="cl-cell">${chips.map(a => {
+              const cls = a._isPending            ? 'pending-req'
+                : a.status === 'confirmed'        ? 'confirmed'
+                : a.status === 'in_progress'      ? 'in_progress'
+                : a.status === 'completed'        ? 'completed'
+                : 'scheduled';
+              const dur = (a.duration_minutes || 60) / 60;
+              return `<div class="appt-chip-cl ${cls}">
+                <span class="chip-cg-name">${esc(cgName)}</span>
+                <span class="chip-cl-dur">${dur}h${a._isPending ? ' · Pending' : ''}</span>
+              </div>`;
+            }).join('')}</div>`;
+          }).join('')}
+        </div>`).join('');
+    }
   }
 
   // ── UTILITIES ───────────────────────────────────────────────────────────────
@@ -1178,6 +1137,20 @@
       btn.disabled = false; btn.textContent = 'Send Issue Report';
     }
   }
+
+  // ── LIVE CLOCK ────────────────────────────────────────────────────────────────
+  (function startClock() {
+    function tick() {
+      const now  = new Date();
+      const day  = now.toLocaleDateString('en', { weekday: 'short' });
+      const date = now.toLocaleDateString('en', { month: 'short', day: 'numeric' });
+      const time = now.toLocaleTimeString('en', { hour: 'numeric', minute: '2-digit', second: '2-digit' });
+      const el = document.getElementById('nav-clock');
+      if (el) el.textContent = `${day}, ${date}  ${time}`;
+    }
+    tick();
+    setInterval(tick, 1000);
+  })();
 </script>
 </body>
 </html>

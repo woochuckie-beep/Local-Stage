@@ -60,6 +60,7 @@
     .nav-logo span { color: var(--terra); }
     .nav-right { display: flex; align-items: center; gap: 0.85rem; }
     .nav-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--terra); color: var(--white); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.82rem; }
+    .nav-clock { font-size: 0.78rem; color: rgba(255,255,255,0.55); letter-spacing: 0.01em; }
     .nav-name { color: rgba(255,255,255,0.75); font-size: 0.88rem; }
     .btn-signout { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.65); border: none; padding: 0.4rem 0.9rem; border-radius: 100px; font-size: 0.8rem; transition: all 0.15s; }
     .btn-signout:hover { background: rgba(255,255,255,0.18); color: var(--white); }
@@ -275,6 +276,7 @@
   <nav class="topnav">
     <div class="nav-logo">Hearth<span>Lane</span></div>
     <div class="nav-right">
+      <span class="nav-clock" id="nav-clock"></span>
       <span class="nav-name" id="nav-name"></span>
       <div class="nav-avatar" id="nav-avatar"></div>
       <button class="btn-signout" onclick="handleSignOut()">Sign Out</button>
@@ -1397,6 +1399,20 @@ async function sendCaregiverMessage() {
 // ── INIT ──────────────────────────────────────────────────────────────────────
 (async () => {
   if (await tryResumeSession()) await bootPortal();
+})();
+
+// ── LIVE CLOCK ────────────────────────────────────────────────────────────────
+(function startClock() {
+  function tick() {
+    const now  = new Date();
+    const day  = now.toLocaleDateString('en', { weekday: 'short' });
+    const date = now.toLocaleDateString('en', { month: 'short', day: 'numeric' });
+    const time = now.toLocaleTimeString('en', { hour: 'numeric', minute: '2-digit', second: '2-digit' });
+    const el = document.getElementById('nav-clock');
+    if (el) el.textContent = `${day}, ${date}  ${time}`;
+  }
+  tick();
+  setInterval(tick, 1000);
 })();
 </script>
 </body>
