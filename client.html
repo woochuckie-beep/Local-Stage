@@ -132,25 +132,26 @@
     /* ── SCHEDULE CALENDAR ── */
     .cal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; }
     .cal-month-label { font-size:1.05rem; font-weight:700; color:var(--ink); }
-    .cal-nav-btn { background:none; border:1.5px solid var(--cream-dark); border-radius:8px; width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:1rem; color:var(--ink-mid); transition: background 0.12s; }
+    .cal-nav-btn { background:none; border:1.5px solid var(--cream-dark); border-radius:8px; width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:1rem; color:var(--ink-mid); transition:background 0.12s; }
     .cal-nav-btn:hover { background:var(--cream-soft); }
     .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
     .cal-dh { text-align:center; font-size:0.7rem; font-weight:600; color:var(--ink-light); padding:0.35rem 0; }
-    .cal-cell { min-height:56px; padding:4px 3px; border-radius:8px; background:var(--cream-soft); cursor:pointer; transition:background 0.12s; }
+    .cal-cell { min-height:72px; padding:4px 3px; border-radius:8px; background:var(--cream-soft); cursor:pointer; transition:background 0.12s; }
     .cal-cell:hover:not(.other-month) { background:var(--cream-dark); }
     .cal-cell.other-month { opacity:0.3; pointer-events:none; }
     .cal-cell.today { background:var(--terra-soft); }
+    .cal-cell.today .cal-num { color:var(--terra-deep); font-weight:700; }
     .cal-cell.selected { box-shadow:inset 0 0 0 2px var(--terra); }
-    .cal-num { font-size:0.75rem; font-weight:600; color:var(--ink); }
-    .cal-dots { display:flex; flex-wrap:wrap; gap:2px; margin-top:3px; }
-    .cal-dot { width:100%; height:5px; border-radius:2px; }
-    .cal-dot.confirmed   { background:#3B82F6; }
-    .cal-dot.scheduled   { background:#F59E0B; }
-    .cal-dot.pending-req { background:#9ca3af; }
-    .cal-dot.in_progress { background:#10b981; }
-    .cal-dot.completed   { background:var(--sage); }
+    .cal-num { font-size:0.75rem; font-weight:600; color:var(--ink); line-height:1; margin-bottom:3px; }
+    /* Appointment chips — same scheme as caregiver schedule */
+    .cal-chip { border-radius:5px; padding:2px 5px; font-size:0.63rem; font-weight:600; color:#fff; margin-top:2px; line-height:1.4; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+    .cal-chip.confirmed   { background:#3B82F6; }
+    .cal-chip.scheduled   { background:#F59E0B; }
+    .cal-chip.in_progress { background:#10b981; }
+    .cal-chip.completed   { background:var(--sage); }
+    .cal-chip.pending-req { background:#9ca3af; }
     .cal-detail { border-radius:12px; padding:1rem 1.1rem; margin-top:1rem; border:1.5px solid var(--cream-dark); }
-    .cal-detail-date { font-size:0.82rem; font-weight:700; color:var(--ink); margin-bottom:0.75rem; }
+    .cal-detail-date { font-size:0.84rem; font-weight:700; color:var(--ink); margin-bottom:0.75rem; }
     .cal-appt-row { display:flex; align-items:center; gap:0.75rem; padding:0.55rem 0; border-bottom:1px solid var(--cream-dark); }
     .cal-appt-row:last-child { border-bottom:none; }
     .cal-appt-time { font-size:0.8rem; font-weight:600; color:var(--ink); min-width:60px; }
@@ -277,15 +278,12 @@
         </div>
         <div class="cal-grid" id="client-cal-grid"></div>
         <div id="cal-day-detail" style="display:none"></div>
-      </div>
-      <div class="card" style="margin-top:0">
-        <div class="card-title">Legend</div>
-        <div style="display:flex;flex-wrap:wrap;gap:0.75rem;font-size:0.8rem;color:var(--ink-mid)">
-          <span><span style="display:inline-block;width:12px;height:8px;border-radius:2px;background:#3B82F6;margin-right:4px;vertical-align:middle"></span>Confirmed</span>
-          <span><span style="display:inline-block;width:12px;height:8px;border-radius:2px;background:#F59E0B;margin-right:4px;vertical-align:middle"></span>Scheduled</span>
-          <span><span style="display:inline-block;width:12px;height:8px;border-radius:2px;background:#10b981;margin-right:4px;vertical-align:middle"></span>In Progress</span>
-          <span><span style="display:inline-block;width:12px;height:8px;border-radius:2px;background:var(--sage);margin-right:4px;vertical-align:middle"></span>Completed</span>
-          <span><span style="display:inline-block;width:12px;height:8px;border-radius:2px;background:#9ca3af;margin-right:4px;vertical-align:middle"></span>Awaiting Confirmation</span>
+        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:1rem;padding-top:0.75rem;border-top:1px solid var(--cream-dark)">
+          <span class="cal-chip confirmed" style="font-size:0.7rem">Confirmed</span>
+          <span class="cal-chip scheduled" style="font-size:0.7rem">Scheduled</span>
+          <span class="cal-chip in_progress" style="font-size:0.7rem">In Progress</span>
+          <span class="cal-chip completed" style="font-size:0.7rem">Completed</span>
+          <span class="cal-chip pending-req" style="font-size:0.7rem">Awaiting Confirmation</span>
         </div>
       </div>
     </div>
@@ -770,20 +768,26 @@
   }
 
   // ── NOTES FROM CAREGIVER ───────────────────────────────────────────────────
-  // Track last time the user opened the notes tab — simpler than tracking individual note IDs
-  function _notesTimeKey() { return 'hl_notes_ts_' + clientDoc.id; }
-  function _getNotesLastChecked() { try { return parseInt(localStorage.getItem(_notesTimeKey()) || '0'); } catch { return 0; } }
-  function _saveNotesChecked()    { try { localStorage.setItem(_notesTimeKey(), Date.now().toString()); } catch {} }
+  // Key by auth UID (stable across sign-out/reload on same browser, unlike clientDoc.id timing)
+  function _seenKey() { return 'hl_seen_' + (auth.currentUser?.uid || clientDoc.id); }
+  function _getSeenIds() {
+    try { return new Set(JSON.parse(localStorage.getItem(_seenKey()) || '[]')); }
+    catch { return new Set(); }
+  }
+  function _markIdsSeen(ids) {
+    try {
+      const s = _getSeenIds();
+      ids.forEach(id => s.add(id));
+      localStorage.setItem(_seenKey(), JSON.stringify([...s]));
+    } catch {}
+  }
 
   async function checkNotesOnLogin() {
     if (!clientDoc) return;
     try {
       const snap = await db.collection('visit_notes').where('client_id', '==', clientDoc.id).get();
-      const lastChecked = _getNotesLastChecked();
-      const hasNew = snap.docs.some(d => {
-        const ts = d.data().created_at?.seconds;
-        return ts && (ts * 1000) > lastChecked;
-      });
+      const seen = _getSeenIds();
+      const hasNew = snap.docs.some(d => !seen.has(d.id));
       const badge = document.getElementById('notes-badge');
       if (badge) badge.style.display = hasNew ? 'inline' : 'none';
     } catch {}
@@ -795,11 +799,11 @@
     try {
       const snap = await db.collection('visit_notes')
         .where('client_id', '==', clientDoc.id).get();
-      const lastChecked = _getNotesLastChecked();
-      const allNotes = snap.docs.map(d => ({
-        _id: d.id, ...d.data(),
-        _isNew: (d.data().created_at?.seconds || 0) * 1000 > lastChecked
-      })).sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0)).slice(0, 30);
+      const seen = _getSeenIds();
+      const allNotes = snap.docs
+        .map(d => ({ _id: d.id, _isNew: !seen.has(d.id), ...d.data() }))
+        .sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0))
+        .slice(0, 30);
 
       if (!allNotes.length) {
         el.innerHTML = `<div style="text-align:center;padding:2.5rem">
@@ -807,8 +811,6 @@
           <p style="font-weight:600;margin-bottom:0.4rem">No notes yet</p>
           <p class="plan-no">Your caregiver will leave visit updates here.</p>
         </div>`;
-        // Still mark as checked so badge doesn't re-appear for empty state
-        _saveNotesChecked();
         return;
       }
 
@@ -822,8 +824,8 @@
         </div>`;
       }).join('');
 
-      // Save current time — next login, only notes NEWER than now will show badge
-      _saveNotesChecked();
+      // Mark all currently visible notes as seen — future logins only badge for genuinely new ones
+      _markIdsSeen(allNotes.map(n => n._id).filter(Boolean));
       const badge = document.getElementById('notes-badge');
       if (badge) badge.style.display = 'none';
     } catch(ex) {
@@ -833,6 +835,7 @@
   }
 
   function markNoteSeen(noteId) {
+    _markIdsSeen([noteId]);
     const el = document.getElementById('note-' + noteId);
     if (el) {
       el.classList.remove('note-unseen');
@@ -885,17 +888,19 @@
       const k = `${yr}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
       const isToday = today.getFullYear()===yr && today.getMonth()===mo && today.getDate()===d;
       const events  = eventMap[k] || [];
-      const dots = events.slice(0, 3).map(a => {
-        const cls = a._isPending ? 'pending-req'
-          : a.status === 'confirmed'   ? 'confirmed'
-          : a.status === 'in_progress' ? 'in_progress'
-          : a.status === 'completed'   ? 'completed'
+      // Show colored chips (same scheme as caregiver schedule) — max 2 visible
+      const chips = events.slice(0, 2).map(a => {
+        const cls = a._isPending            ? 'pending-req'
+          : a.status === 'confirmed'        ? 'confirmed'
+          : a.status === 'in_progress'      ? 'in_progress'
+          : a.status === 'completed'        ? 'completed'
           : 'scheduled';
-        return `<div class="cal-dot ${cls}"></div>`;
-      }).join('');
+        const timeStr = fmt12(a.scheduled_at);
+        return `<div class="cal-chip ${cls}">${timeStr}</div>`;
+      }).join('') + (events.length > 2 ? `<div class="cal-chip scheduled">+${events.length-2}</div>` : '');
       html += `<div class="cal-cell${isToday ? ' today' : ''}" onclick="showCalDay('${k}')">
         <div class="cal-num">${d}</div>
-        ${dots ? `<div class="cal-dots">${dots}</div>` : ''}
+        ${chips}
       </div>`;
     }
 
