@@ -1828,7 +1828,7 @@
            signOut as fbSignOut, onAuthStateChanged,
            browserLocalPersistence, setPersistence }
     from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-  import { getFirestore, doc, getDoc, collection, getDocs, query, where, orderBy, addDoc, serverTimestamp, onSnapshot }
+  import { getFirestore, doc, getDoc, collection, getDocs, query, where, orderBy, addDoc, updateDoc, setDoc, increment, serverTimestamp, onSnapshot }
     from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
   const app      = initializeApp(FIREBASE_CONFIG);
@@ -1837,7 +1837,7 @@
 
   // Expose to regular (non-module) scripts
   window._db = db;
-  window._fs = { doc, getDoc, collection, getDocs, query, where, orderBy, addDoc, serverTimestamp };
+  window._fs = { doc, getDoc, collection, getDocs, query, where, orderBy, addDoc, updateDoc, setDoc, increment, serverTimestamp };
   window._fsListen = onSnapshot;
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
@@ -1875,16 +1875,32 @@
     return user;
   };
 
+  let _portalActive = false; // true once the portal is fully loaded
+
   onAuthStateChanged(auth, async user => {
     if (user) {
-      const ok = await isAuthorized(user.email);
+      // If portal is already loaded, this is just a token refresh — don't reload
+      if (_portalActive) return;
+
+      let ok = false;
+      try {
+        ok = await isAuthorized(user.email);
+      } catch(e) {
+        // Network hiccup during authorization check — don't sign out
+        console.warn('Auth check failed (network?), keeping session:', e.message);
+        ok = true; // assume still authorized so we don't boot the user
+      }
+
       if (!ok) {
         await fbSignOut(auth);
         return;
       }
+
+      _portalActive = true;
       if (typeof window.handleSignIn === 'function') window.handleSignIn(user);
       else window._pendingUser = user;
     } else {
+      _portalActive = false;
       if (typeof window.handleSignOut === 'function') window.handleSignOut();
     }
   });
@@ -3770,7 +3786,81 @@ let calYear = 2026, calMonth = 4, calSelected = null;
 // AUTH HANDLERS
 // ══════════════════════════
 window.handleSignIn  = user => showPortal(user);
-window.handleSignOut = () => { document.getElementById('portal').style.display='none'; document.getElementById('login-screen').style.display='flex'; closePortal && closePortal(); };
+window.handleSignOut = () => {
+  document.getElementById('portal').style.display      = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  closePortal && closePortal();
+  // Always reset the sign-in button so the user can try again without reloading
+  const btn = document.getElementById('google-signin-btn');
+  if (btn) { btn.disabled = false; btn.innerHTML = googleBtnHTML(); }
+  const err = document.getElementById('login-error');
+  if (err) err.style.display = 'none';
+  clearIdleTimer();
+};
+
+// ── 30-MINUTE IDLE SIGN-OUT ─────────────────────────────────────────────────
+// Only counts time when this tab is actually visible — switching tabs doesn't tick
+const IDLE_LIMIT = 30 * 60 * 1000; // 30 minutes
+let _idleTimer     = null;
+let _idleHiddenAt  = null; // when tab was hidden
+let _idleAccrued   = 0;    // ms of inactivity accumulated before tab was hidden
+
+function startIdleTimer() {
+  resetIdleTimer();
+  ['mousemove','mousedown','keydown','touchstart','scroll','click'].forEach(e =>
+    document.addEventListener(e, resetIdleTimer, { passive: true })
+  );
+  document.addEventListener('visibilitychange', onVisibilityChange);
+}
+
+function resetIdleTimer() {
+  _idleAccrued = 0;
+  clearTimeout(_idleTimer);
+  if (!document.hidden) {
+    _idleTimer = setTimeout(idleSignOut, IDLE_LIMIT);
+  }
+}
+
+function onVisibilityChange() {
+  if (document.hidden) {
+    // Tab going to background — pause the clock, note how long we've been idle
+    clearTimeout(_idleTimer);
+    _idleHiddenAt = Date.now();
+  } else {
+    // Tab coming back — calculate accrued idle time
+    if (_idleHiddenAt) {
+      _idleAccrued += Date.now() - _idleHiddenAt;
+      _idleHiddenAt = null;
+    }
+    if (_idleAccrued >= IDLE_LIMIT) {
+      idleSignOut();
+    } else {
+      _idleTimer = setTimeout(idleSignOut, IDLE_LIMIT - _idleAccrued);
+    }
+  }
+}
+
+function clearIdleTimer() {
+  clearTimeout(_idleTimer);
+  _idleAccrued  = 0;
+  _idleHiddenAt = null;
+  ['mousemove','mousedown','keydown','touchstart','scroll','click'].forEach(e =>
+    document.removeEventListener(e, resetIdleTimer)
+  );
+  document.removeEventListener('visibilitychange', onVisibilityChange);
+}
+
+async function idleSignOut() {
+  clearIdleTimer();
+  if (typeof window._fbSignOut === 'function') await window._fbSignOut();
+  window.handleSignOut();
+  // Show a friendly message
+  const err = document.getElementById('login-error');
+  if (err) {
+    err.textContent = 'You were signed out after 30 minutes of inactivity. Sign in again to continue.';
+    err.style.display = 'block';
+  }
+}
 
 document.getElementById('google-signin-btn').addEventListener('click', async () => {
   const btn = document.getElementById('google-signin-btn');
@@ -3837,6 +3927,8 @@ async function showPortal(user) {
   updatePlanDisplay();
   renderPortalNotes();
   startClientRequestsListener(user);
+  startClientChatNotifier();
+  startIdleTimer();
 }
 
 function updateDashboardStats() {
@@ -4061,30 +4153,9 @@ function loadMessages() {
     fsQuery(fsCol(getDb(), `chats/${_activeChatId}/msgs`), fsOrder('created_at', 'asc')),
     snap => {
       renderClientMessages(snap.docs.map(d => d.data()));
-      // Mark as read — reset unread_client
-      const { doc: fsDoc } = fs();
-      window._fs.addDoc; // noop — just ensure fs is alive
-      const chatDocRef = window._fs.doc(getDb(), 'chats', _activeChatId);
-      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js')
-        .then(({ updateDoc }) => updateDoc(chatDocRef, { unread_client: 0 }).catch(()=>{}))
-        .catch(()=>{});
-    }
-  );
-
-  // Listen for unread count on this chat doc for badge
-  window._fsListen(
-    window._fs.doc(getDb(), 'chats', _activeChatId),
-    snap => {
-      if (!snap.exists()) return;
-      const d = snap.data();
-      // Only badge if NOT on messages view
-      const onMsgs = document.getElementById('view-messages')?.classList.contains('active');
-      _msgUnread = d.unread_client || 0;
-      const badge = document.getElementById('msg-badge');
-      if (badge) {
-        if (_msgUnread > 0 && !onMsgs) { badge.textContent = _msgUnread; badge.style.display = 'inline'; }
-        else badge.style.display = 'none';
-      }
+      // Reset unread while actively viewing
+      const { doc: fsDoc, updateDoc } = fs();
+      updateDoc(fsDoc(getDb(), 'chats', _activeChatId), { unread_client: 0 }).catch(() => {});
     }
   );
 }
@@ -4110,35 +4181,63 @@ async function sendClientMessage() {
   const text  = (input?.value || '').trim();
   if (!text || !_activeChatId) return;
   input.value = '';
-  const { collection: fsCol, doc: fsDoc, addDoc, serverTimestamp } = fs();
+  const { collection: fsCol, doc: fsDoc, addDoc, setDoc, updateDoc, increment, serverTimestamp } = fs();
   const db = getDb();
   try {
     await addDoc(fsCol(db, `chats/${_activeChatId}/msgs`), {
-      sender: 'client',
+      sender:      'client',
       sender_name: portalClientData?.name || 'Client',
       text,
-      created_at: serverTimestamp()
+      created_at:  serverTimestamp()
     });
-    // Update chat metadata + increment caregiver unread
-    const { updateDoc, increment } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
-    await updateDoc(fsDoc(db, 'chats', _activeChatId), {
-      last_msg: text,
-      last_msg_at: serverTimestamp(),
+    const meta = {
+      last_msg:       text,
+      last_msg_at:    serverTimestamp(),
       unread_caregiver: increment(1),
-      client_id:   portalClientData?._clientId || null,
-      caregiver_id: portalClientData?.caregiver_id || null,
-      client_name:  portalClientData?.name || '',
+      unread_client:  0,
+      client_id:      portalClientData?._clientId || null,
+      caregiver_id:   portalClientData?.caregiver_id || null,
+      client_name:    portalClientData?.name || '',
       caregiver_name: portalClientData?._caregiverName || ''
-    }).catch(async () => {
-      // setDoc if doc doesn't exist yet
-      const { setDoc } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
-      await setDoc(fsDoc(db, 'chats', _activeChatId), {
-        last_msg: text, last_msg_at: serverTimestamp(), unread_caregiver: 1, unread_client: 0,
-        client_id: portalClientData?._clientId||null, caregiver_id: portalClientData?.caregiver_id||null,
-        client_name: portalClientData?.name||'', caregiver_name: portalClientData?._caregiverName||''
-      });
-    });
+    };
+    try {
+      await updateDoc(fsDoc(db, 'chats', _activeChatId), meta);
+    } catch {
+      await setDoc(fsDoc(db, 'chats', _activeChatId), { ...meta, unread_caregiver: 1 });
+    }
   } catch(e) { showPortalToast('Could not send message. Please try again.', 'error'); }
+}
+
+// ── CHAT NOTIFICATION (runs at login, not just when tab opens) ─────────────
+function startClientChatNotifier() {
+  const cgId = portalClientData?.caregiver_id;
+  const clId = portalClientData?._clientId;
+  if (!cgId || !clId) return;
+
+  const chatId = `${clId}_${cgId}`;
+  let prevUnread = null;
+
+  window._fsListen(
+    window._fs.doc(getDb(), 'chats', chatId),
+    snap => {
+      if (!snap.exists()) return;
+      const unread = snap.data().unread_client || 0;
+
+      // Badge: only show when NOT on Messages tab
+      const onMsgs = document.getElementById('view-messages')?.classList.contains('active');
+      const badge  = document.getElementById('msg-badge');
+      if (badge) {
+        if (unread > 0 && !onMsgs) { badge.textContent = unread; badge.style.display = 'inline'; }
+        else badge.style.display = 'none';
+      }
+
+      // Toast: only for NEW messages (not initial load), only when away from Messages tab
+      if (prevUnread !== null && unread > prevUnread && !onMsgs) {
+        showPortalToast('New message from ' + (portalClientData?._caregiverName || 'your caregiver'), 'success');
+      }
+      prevUnread = unread;
+    }
+  );
 }
 
 async function submitCaregiverChangeRequest() {
@@ -4361,7 +4460,11 @@ function switchView(id) {
     const b = document.getElementById('notes-badge');
     if (b) b.style.display = 'none';
   }
-  if (id === 'messages') loadMessages();
+  if (id === 'messages') {
+    loadMessages();
+    const badge = document.getElementById('msg-badge');
+    if (badge) badge.style.display = 'none';
+  }
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('click', () => switchView(btn.dataset.view)));

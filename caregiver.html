@@ -242,7 +242,7 @@
 <!-- ── LOGIN ── -->
 <div id="login-screen">
   <div class="login-card">
-    <div class="login-logo">Hearthl<span>ane</span></div>
+    <div class="login-logo">Hearth<span>l</span>ane</div>
     <div class="login-sub">Caregiver Portal</div>
     <form onsubmit="handleSignIn(event)">
       <div class="form-group">
@@ -262,7 +262,7 @@
 <!-- ── APP ── -->
 <div id="app">
   <nav class="topnav">
-    <div class="nav-logo">Hearthl<span>ane</span></div>
+    <div class="nav-logo">Hearth<span>l</span>ane</div>
     <div class="nav-right">
       <span class="nav-name" id="nav-name"></span>
       <div class="nav-avatar" id="nav-avatar"></div>
@@ -562,6 +562,43 @@ function startRealtimeListeners() {
       updateReqBadge();
       if (activeTabView() === 'requests') renderRequests();
     });
+
+  // ── Chat notifications (runs immediately at login) ──────────────────────
+  let _cgChatUnreads = null; // null = initial load, skip toasts
+
+  db.collection('chats').where('caregiver_id', '==', caregiverId)
+    .onSnapshot(snap => {
+      const initial = _cgChatUnreads === null;
+      if (initial) _cgChatUnreads = {};
+
+      let total = 0;
+      snap.docs.forEach(d => {
+        const data   = d.data();
+        const chatId = d.id;
+        const unread = data.unread_caregiver || 0;
+        total += unread;
+
+        // Update per-client unread badge + preview in Messages list
+        const badge   = document.getElementById('cg-unread-' + data.client_id);
+        const preview = document.getElementById('cg-preview-' + data.client_id);
+        if (badge)   { badge.textContent = unread || ''; badge.style.display = unread > 0 ? 'inline' : 'none'; }
+        if (preview && data.last_msg) preview.textContent = data.last_msg;
+
+        // Toast for new messages (not on first load)
+        if (!initial && unread > (_cgChatUnreads[chatId] || 0)) {
+          const onMessages    = activeTabView() === 'messages';
+          const isActiveConvo = _cgActiveChatId === chatId;
+          if (!onMessages || !isActiveConvo) {
+            toast('New message from ' + (data.client_name || 'a client'));
+          }
+        }
+        _cgChatUnreads[chatId] = unread;
+      });
+
+      // Global nav badge
+      const navBadge = document.getElementById('msg-badge-cg');
+      if (navBadge) { navBadge.textContent = total || ''; navBadge.style.display = total > 0 ? 'inline' : 'none'; }
+    }, () => {});
 }
 
 function activeTabView() {
@@ -1121,9 +1158,8 @@ function toast(msg,isErr=false) {
 }
 
 // ── MESSAGES (caregiver ↔ clients) ───────────────────────────────────────────
-let _cgChatListener  = null;
-let _cgActiveChatId  = null;
-let _cgChatListeners = {};  // chatId → unsubscribe fn for per-chat unread watchers
+let _cgChatListener = null;
+let _cgActiveChatId = null;
 
 function escM(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
@@ -1147,34 +1183,8 @@ function loadCaregiverMessages() {
     </div>`;
   }).join('');
 
-  // Watch unread counts for each client chat
-  clients.forEach(c => {
-    if (!caregiverId) return;
-    const chatId = `${c.id}_${caregiverId}`;
-    if (_cgChatListeners[chatId]) return;
-    _cgChatListeners[chatId] = db.collection('chats').doc(chatId)
-      .onSnapshot(snap => {
-        if (!snap.exists) return;
-        const d = snap.data();
-        const unread = d.unread_caregiver || 0;
-        const badge  = document.getElementById('cg-unread-' + c.id);
-        const prev   = document.getElementById('cg-preview-' + c.id);
-        if (badge) { badge.textContent = unread || ''; badge.style.display = unread > 0 ? 'inline' : 'none'; }
-        if (prev && d.last_msg)  prev.textContent = d.last_msg;
-        // Update global msg badge
-        updateCgMsgBadge();
-      }, () => {});
-  });
 }
 
-function updateCgMsgBadge() {
-  let total = 0;
-  document.querySelectorAll('[id^="cg-unread-"]').forEach(el => {
-    total += parseInt(el.textContent || '0', 10);
-  });
-  const badge = document.getElementById('msg-badge-cg');
-  if (badge) { badge.textContent = total || ''; badge.style.display = total > 0 ? 'inline' : 'none'; }
-}
 
 function openCaregiverChat(clientId, clientName) {
   if (!caregiverId) return;
