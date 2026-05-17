@@ -1808,6 +1808,123 @@
 }
 .fade-in { animation: fadeUp 0.4s ease forwards; }
 
+/* ════════════════════════════════════════════
+   SCROLL REVEAL
+════════════════════════════════════════════ */
+.reveal, .reveal-left, .reveal-right, .reveal-scale {
+  will-change: opacity, transform;
+}
+.reveal       { opacity: 0; transform: translateY(44px);    transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1); }
+.reveal-left  { opacity: 0; transform: translateX(-44px);   transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1); }
+.reveal-right { opacity: 0; transform: translateX(44px);    transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1); }
+.reveal-scale { opacity: 0; transform: scale(0.93) translateY(24px); transition: opacity 0.65s cubic-bezier(0.16,1,0.3,1), transform 0.65s cubic-bezier(0.16,1,0.3,1); }
+.reveal.visible, .reveal-left.visible, .reveal-right.visible, .reveal-scale.visible {
+  opacity: 1; transform: none;
+}
+
+/* ════════════════════════════════════════════
+   HERO ENTRANCE (staggered on page load)
+════════════════════════════════════════════ */
+@keyframes heroIn {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.hero-eyebrow  { animation: heroIn 0.65s cubic-bezier(0.16,1,0.3,1) 0.12s both; }
+.hero h1       { animation: heroIn 0.72s cubic-bezier(0.16,1,0.3,1) 0.26s both; }
+.hero-sub      { animation: heroIn 0.65s cubic-bezier(0.16,1,0.3,1) 0.42s both; }
+.hero-cta-row  { animation: heroIn 0.6s  cubic-bezier(0.16,1,0.3,1) 0.56s both; }
+.hero-meta-row { animation: heroIn 0.55s cubic-bezier(0.16,1,0.3,1) 0.66s both; }
+.hero-trust-row{ animation: heroIn 0.55s cubic-bezier(0.16,1,0.3,1) 0.76s both; }
+.hero-visual   { animation: heroIn 0.8s  cubic-bezier(0.16,1,0.3,1) 0.18s both; }
+
+/* ════════════════════════════════════════════
+   FLOATING HERO CARD
+════════════════════════════════════════════ */
+@keyframes floatCard {
+  0%, 100% { transform: translateY(0px)   rotate(-1.5deg); }
+  50%       { transform: translateY(-11px) rotate(-1.5deg); }
+}
+.hero-float-card { animation: floatCard 4.8s ease-in-out infinite; }
+
+/* ════════════════════════════════════════════
+   CARD HOVER LIFTS
+════════════════════════════════════════════ */
+.why-card {
+  transition: transform 0.28s cubic-bezier(0.16,1,0.3,1),
+              box-shadow 0.28s cubic-bezier(0.16,1,0.3,1);
+}
+.why-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 14px 40px rgba(58,46,34,0.14);
+}
+.plan-card {
+  transition: transform 0.3s cubic-bezier(0.16,1,0.3,1),
+              box-shadow 0.3s cubic-bezier(0.16,1,0.3,1);
+}
+.plan-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 52px rgba(58,46,34,0.17);
+}
+.testimonial {
+  transition: transform 0.26s cubic-bezier(0.16,1,0.3,1),
+              box-shadow 0.26s cubic-bezier(0.16,1,0.3,1);
+}
+.testimonial:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 36px rgba(58,46,34,0.12);
+}
+.trust-card {
+  transition: transform 0.26s cubic-bezier(0.16,1,0.3,1),
+              border-color 0.26s;
+  cursor: default;
+}
+.trust-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--terra);
+}
+.how-step-num {
+  transition: transform 0.3s cubic-bezier(0.16,1,0.3,1),
+              background 0.3s, color 0.3s;
+}
+.how-step:hover .how-step-num {
+  transform: scale(1.12) rotate(-4deg);
+  background: var(--terra);
+  color: var(--white);
+}
+.faq-item {
+  transition: background 0.2s, border-color 0.2s;
+}
+.faq-item:hover { background: var(--cream-soft); }
+
+/* ════════════════════════════════════════════
+   MOBILE PORTAL BOTTOM NAV
+════════════════════════════════════════════ */
+.portal-mobile-nav {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 160;
+  background: var(--white);
+  border-top: 1px solid var(--cream-dark);
+  padding: 0.4rem 0.5rem calc(0.4rem + env(safe-area-inset-bottom));
+  justify-content: space-around; align-items: stretch;
+  box-shadow: 0 -4px 20px rgba(58,46,34,0.08);
+}
+.pmn-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  background: none; border: none; cursor: pointer;
+  color: var(--ink-light);
+  font-size: 0.6rem; font-family: var(--sans); font-weight: 500;
+  padding: 0.4rem 0.5rem; border-radius: 10px;
+  min-width: 48px; flex: 1;
+  transition: color 0.15s, background 0.15s;
+}
+.pmn-btn svg { flex-shrink: 0; }
+.pmn-btn.active { color: var(--terra); background: rgba(192,133,104,0.1); }
+.pmn-btn:hover  { color: var(--terra); }
+@media (max-width: 900px) {
+  .portal-mobile-nav { display: flex; }
+  .p-main { padding-bottom: 5.5rem !important; }
+}
+
 </style>
 
 <!-- ── Firebase (Family Portal) ── -->
@@ -3632,6 +3749,30 @@
 
     </main>
   </div>
+
+  <!-- MOBILE BOTTOM NAV (shown at ≤900px when sidebar hides) -->
+  <nav class="portal-mobile-nav" id="portal-mobile-nav">
+    <button class="pmn-btn active" data-view="dashboard" onclick="switchView('dashboard')">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      Home
+    </button>
+    <button class="pmn-btn" data-view="calendar" onclick="switchView('calendar')">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      Calendar
+    </button>
+    <button class="pmn-btn" data-view="plan" onclick="switchView('plan')">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      My Plan
+    </button>
+    <button class="pmn-btn" data-view="messages" onclick="switchView('messages')">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+      Messages
+    </button>
+    <button class="pmn-btn" data-view="notes" onclick="switchView('notes')">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      Notes
+    </button>
+  </nav>
 </div>
 
 </div>
@@ -4456,6 +4597,9 @@ function switchView(id) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('view-' + id).classList.add('active');
   document.querySelector(`.nav-item[data-view="${id}"]`)?.classList.add('active');
+  // Sync mobile bottom nav
+  document.querySelectorAll('.pmn-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.pmn-btn[data-view="${id}"]`)?.classList.add('active');
   if (id === 'notes') {
     const b = document.getElementById('notes-badge');
     if (b) b.style.display = 'none';
@@ -4568,5 +4712,105 @@ renderCalendar(calYear, calMonth, null);
   border: 1px solid rgba(237,224,200,0.7);
   pointer-events: none; user-select: none; letter-spacing: 0.02em;
 ">Updated <span id="build-date">May 16, 2026 · 12:00 AM</span></div>
+<script>
+/* ════════════════════════════════════════════
+   SCROLL REVEAL + COUNTER ANIMATIONS
+   Pure vanilla — no libraries, no deps
+════════════════════════════════════════════ */
+(function () {
+  'use strict';
+
+  /* ── Intersection Observer for scroll reveals ── */
+  const obs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.09, rootMargin: '0px 0px -36px 0px' });
+
+  function tag(selector, cls, staggerStep) {
+    document.querySelectorAll(selector).forEach(function (el, i) {
+      el.classList.add(cls);
+      if (staggerStep) el.style.transitionDelay = (i * staggerStep) + 's';
+      obs.observe(el);
+    });
+  }
+
+  /* Section headings */
+  tag('.section-label',   'reveal', 0);
+  tag('.section-title',   'reveal', 0);
+  tag('.section-lede',    'reveal', 0);
+
+  /* Card grids — staggered */
+  tag('.why-card',        'reveal',       0.10);
+  tag('.plan-card',       'reveal-scale', 0.12);
+  tag('.testimonial',     'reveal',       0.09);
+  tag('.trust-card',      'reveal',       0.10);
+  tag('.pas-item',        'reveal',       0.10);
+
+  /* Step-by-step sections */
+  tag('.how-step',        'reveal',       0.15);
+  tag('.matching-step',   'reveal',       0.15);
+  tag('.step-card',       'reveal',       0.12);
+
+  /* FAQ slides in from left */
+  tag('.faq-item',        'reveal-left',  0.07);
+
+  /* Gallery */
+  tag('.gallery-item',    'reveal-scale', 0.07);
+  tag('[class*="gallery"] img', 'reveal-scale', 0.07);
+
+  /* CTA section */
+  tag('.cta-section, .cta-inner, #get-started .section-title', 'reveal', 0);
+
+  /* ── Animated number counters for the price anchor strip ── */
+  function animateCount(el) {
+    var raw = el.textContent.trim();
+    /* Extract leading non-digit prefix (e.g. "$", "up to ~") and trailing suffix */
+    var match = raw.match(/[\d,]+/);
+    if (!match) return;                     // no number — skip
+    var target = parseInt(match[0].replace(/,/g, ''), 10);
+    if (!target) return;
+    var before = raw.slice(0, raw.indexOf(match[0]));
+    var after  = raw.slice(raw.indexOf(match[0]) + match[0].length);
+    var dur    = 1500;
+    var t0     = performance.now();
+    function tick(now) {
+      var p     = Math.min((now - t0) / dur, 1);
+      var eased = 1 - Math.pow(1 - p, 3);   /* ease-out cubic */
+      el.textContent = before + Math.round(eased * target).toLocaleString() + after;
+      if (p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  var countObs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) {
+        animateCount(e.target);
+        countObs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.6 });
+
+  document.querySelectorAll('.pas-figure').forEach(function (el) {
+    countObs.observe(el);
+  });
+
+  /* ── Subtle parallax on hero background image ── */
+  var heroBg = document.querySelector('.hero-bg img, .hero-photo-wrap img');
+  if (heroBg && window.matchMedia('(prefers-reduced-motion: no-preference)').matches) {
+    window.addEventListener('scroll', function () {
+      var y = window.scrollY;
+      if (y < window.innerHeight * 1.5) {
+        heroBg.style.transform = 'translateY(' + (y * 0.18) + 'px)';
+      }
+    }, { passive: true });
+  }
+})();
+</script>
+
 </body>
 </html>
