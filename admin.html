@@ -167,10 +167,11 @@
     .badge-premium    { background: #e8e0f5; color: #6a5acd; }
     .badge-active     { background: #d8f0e8; color: #2a7a50; }
     .badge-inactive   { background: #f0e8e8; color: #884; }
-    .badge-scheduled    { background: var(--terra-soft); color: var(--terra-deep); }
+    .badge-scheduled    { background: #FEF3C7; color: #92400E; }
+    .badge-confirmed    { background: #DBEAFE; color: #1e40af; }
+    .badge-in_progress  { background: #D1FAE5; color: #065f46; }
     .badge-completed    { background: #d8f0e8; color: #2a7a50; }
     .badge-cancelled    { background: #f0e8e8; color: #884; }
-    .badge-in_progress  { background: #d1fae5; color: #065f46; }
     .issue-row { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; padding:0.85rem 0; border-bottom:1px solid var(--cream-dark); }
     .issue-row:last-child { border-bottom:none; padding-bottom:0; }
     .issue-client { font-weight:600; font-size:0.9rem; }
@@ -209,7 +210,7 @@
     .appt-chip:hover { opacity: 0.85; }
     .appt-chip.rec { background: var(--sage); }
     .appt-chip.status-pending   { background: #F59E0B; }
-    .appt-chip.status-confirmed { background: #EF4444; }
+    .appt-chip.status-confirmed { background: #3B82F6; }
     .appt-chip.status-completed   { background: var(--sage); opacity: 0.85; }
     .appt-chip.status-cancelled   { background: #9ca3af; opacity: 0.7; }
     .appt-chip.status-in_progress { background: #10b981; }
@@ -233,9 +234,9 @@
       box-shadow: 0 24px 80px rgba(40,30,20,0.2);
     }
     .modal-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
-    .modal-ttl { font-size: 1.15rem; font-weight: 600; }
-    .modal-x { background: var(--cream-soft); border: none; width: 30px; height: 30px; border-radius: 50%; font-size: 1rem; color: var(--ink-mid); display: flex; align-items: center; justify-content: center; }
-    .modal-x:hover { background: var(--cream-dark); }
+    .modal-ttl, .modal-title { font-size: 1.15rem; font-weight: 600; }
+    .modal-x, .modal-close { background: var(--cream-soft); border: none; width: 30px; height: 30px; border-radius: 50%; font-size: 1rem; color: var(--ink-mid); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .modal-x:hover, .modal-close:hover { background: var(--cream-dark); }
     .form-group { margin-bottom: 1rem; }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
     label { display: block; font-size: 0.8rem; font-weight: 500; color: var(--ink-mid); margin-bottom: 0.35rem; }
@@ -344,7 +345,7 @@
 <!-- ══════════ LOGIN ══════════ -->
 <div id="login-screen">
   <div class="login-card">
-    <div class="login-logo">Hearth<span>l</span>ane</div>
+    <div class="login-logo">Hearth<span>Lane</span></div>
     <div class="login-sub">Admin Portal</div>
     <form onsubmit="handleLogin(event)">
       <div class="form-group">
@@ -366,7 +367,7 @@
 
   <aside class="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-logo">Hearth<span>l</span>ane</div>
+      <div class="sidebar-logo">Hearth<span>Lane</span></div>
       <div class="sidebar-tag">Admin Portal</div>
     </div>
     <nav class="sidebar-nav">
@@ -391,6 +392,7 @@
       <button class="nav-link" data-page="requests" onclick="go('requests')">
         <span class="nav-icon">📬</span>Requests
         <span id="req-pending-badge" style="display:none;margin-left:auto;background:#ef4444;color:#fff;font-size:0.68rem;font-weight:700;padding:0.1rem 0.45rem;border-radius:100px"></span>
+        <span id="issues-nav-badge" style="display:none;margin-left:2px;background:#f97316;color:#fff;font-size:0.68rem;font-weight:700;padding:0.1rem 0.45rem;border-radius:100px"></span>
       </button>
       <button class="nav-link" data-page="settings" onclick="go('settings')">
         <span class="nav-icon">⚙️</span>Settings
@@ -430,12 +432,8 @@
         <div id="upcoming" class="appt-list"><div class="loading-msg">Loading…</div></div>
       </div>
 
-      <div class="card" id="issues-card" style="display:none">
-        <div class="card-title" style="display:flex;align-items:center;gap:0.6rem">
-          Visit Issues
-          <span id="issues-count" style="background:#ef4444;color:#fff;font-size:0.72rem;font-weight:700;padding:0.12rem 0.5rem;border-radius:100px"></span>
-        </div>
-        <div id="issues-list"></div>
+      <div id="dash-issues-hint" style="display:none;background:#FEF2F2;border-radius:12px;padding:0.9rem 1.25rem;margin-bottom:1.25rem;font-size:0.88rem;color:#991B1B;cursor:pointer" onclick="go('requests')">
+        <strong id="dash-issues-hint-text"></strong> — click to view in Requests &amp; Issues
       </div>
     </div>
 
@@ -601,23 +599,41 @@
     <div id="page-requests" class="page">
       <div class="page-header">
         <div>
-          <div class="page-title">Service Requests</div>
-          <div class="page-sub">Plan change and pause requests submitted by clients</div>
+          <div class="page-title">Requests &amp; Issues</div>
+          <div class="page-sub">Service requests from clients and visit issue reports</div>
         </div>
       </div>
 
-      <!-- Pending requests -->
+      <!-- Visit Issues -->
+      <div class="card" id="req-issues-card">
+        <div class="card-title" style="display:flex;align-items:center;gap:0.6rem">
+          <span style="color:#ef4444">⚠</span> Visit Issues
+          <span id="req-issues-count" style="background:#ef4444;color:#fff;font-size:0.72rem;font-weight:700;padding:0.12rem 0.5rem;border-radius:100px"></span>
+        </div>
+        <div id="req-issues-list"><div class="loading-msg">Loading…</div></div>
+      </div>
+
+      <!-- EVV Warnings (late clock-ins / short visits) -->
+      <div class="card" id="req-warnings-card" style="display:none">
+        <div class="card-title" style="display:flex;align-items:center;gap:0.6rem">
+          <span style="color:#f97316">⏱</span> Visit Warnings
+          <span id="req-warnings-count" style="background:#f97316;color:#fff;font-size:0.72rem;font-weight:700;padding:0.12rem 0.5rem;border-radius:100px"></span>
+        </div>
+        <div id="req-warnings-list"></div>
+      </div>
+
+      <!-- Pending service requests -->
       <div class="card" id="admin-req-pending-card">
         <div class="card-title" style="display:flex;align-items:center;gap:0.6rem">
-          Pending
+          Service Requests — Pending
           <span id="admin-pending-count" style="background:#ef4444;color:#fff;font-size:0.72rem;font-weight:700;padding:0.12rem 0.5rem;border-radius:100px"></span>
         </div>
         <div id="admin-req-pending"><div class="loading-msg">Loading…</div></div>
       </div>
 
-      <!-- All requests -->
+      <!-- All service requests -->
       <div class="card">
-        <div class="card-title">All Requests</div>
+        <div class="card-title">All Service Requests</div>
         <div id="admin-req-all"><div class="loading-msg">Loading…</div></div>
       </div>
 
@@ -670,6 +686,25 @@
       <button type="button" class="btn btn-ghost" onclick="closeModal('resolve-ov')">Cancel</button>
       <button type="button" class="btn" style="background:#6b5a48;color:#fff" onclick="confirmResolve('declined')">Decline</button>
       <button type="button" class="btn btn-add" onclick="confirmResolve('approved')">Approve & Apply</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ RESOLVE ISSUE MODAL ══════════ -->
+<div class="modal-ov" id="issue-resolve-ov">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-hd">
+      <div class="modal-title">Resolve Visit Issue</div>
+      <button class="modal-close" onclick="closeModal('issue-resolve-ov')">✕</button>
+    </div>
+    <div id="issue-resolve-summary" style="font-size:0.88rem;color:var(--ink-mid);margin-bottom:1rem;line-height:1.6;background:#FEF2F2;border-radius:8px;padding:0.75rem"></div>
+    <div class="form-group">
+      <label>Reply to client (optional — sent to their Notes feed)</label>
+      <textarea class="fc" id="issue-resolve-note" rows="3" placeholder="E.g. 'We've spoken with your caregiver about this — thank you for letting us know.'" style="resize:vertical"></textarea>
+    </div>
+    <div class="modal-ft">
+      <button type="button" class="btn btn-ghost" onclick="closeModal('issue-resolve-ov')">Cancel</button>
+      <button type="button" class="btn btn-add" onclick="confirmIssueResolve()">Mark Resolved</button>
     </div>
   </div>
 </div>
@@ -1007,15 +1042,19 @@ let weekStart      = mondayOf(new Date());
 // ── AUTH ─────────────────────────────────────────────────────────────────────
 auth.onAuthStateChanged(user => {
   if (user) {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app').style.display = 'flex';
+    // Don't show app until preload (including admin email check) passes
     preload()
-      .then(() => { go('dashboard'); startRequestsListener(); })
+      .then(() => {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
+        go('dashboard');
+        startRequestsListener();
+      })
       .catch(ex => {
         console.error('Preload failed:', ex);
         const errEl = document.getElementById('l-err');
         const btn   = document.getElementById('l-btn');
-        errEl.textContent   = 'Portal error: ' + ex.message + ' — try refreshing.';
+        errEl.textContent   = ex.message;
         btn.textContent     = 'Sign In';
         btn.disabled        = false;
         document.getElementById('login-screen').style.display = 'flex';
@@ -1048,6 +1087,15 @@ async function handleLogin(e) {
 
 // ── PRELOAD ──────────────────────────────────────────────────────────────────
 async function preload() {
+  // Verify logged-in user is an authorized admin
+  const user = auth.currentUser;
+  if (!user) throw new Error('Not authenticated.');
+  const adminSnap = await db.collection('adminUsers').doc(user.email?.toLowerCase()).get();
+  if (!adminSnap.exists) {
+    await auth.signOut();
+    throw new Error('Access denied. Your account is not authorized as an admin.');
+  }
+
   const [cgSnap, cSnap] = await Promise.all([
     db.collection('caregivers').orderBy('name').get(),
     db.collection('clients').orderBy('name').get()
@@ -1098,35 +1146,23 @@ async function loadDashboard() {
     .filter(a => a.status !== 'cancelled');
   renderUpcoming(upcoming);
 
-  // Visit issues
+  // Visit issues hint on dashboard
   try {
     const issueSnap = await db.collection('visit_issues').where('status', '==', 'open').get();
-    const issues = issueSnap.docs.map(d => ({ id: d.id, ...d.data() }))
-      .sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0)).slice(0, 20);
-    const issuesCard  = document.getElementById('issues-card');
-    const issuesList  = document.getElementById('issues-list');
-    const issuesCount = document.getElementById('issues-count');
-    if (issuesCard && issuesList) {
-      if (issues.length) {
-        issuesCard.style.display = 'block';
-        issuesCount.textContent = issues.length;
-        issuesList.innerHTML = issues.map(iss => {
-          const dt = iss.created_at?.toDate?.();
-          const cgName = caregiversMap[iss.caregiver_id]?.name || null;
-          return `<div class="issue-row" id="iss-${iss.id}">
-            <div style="flex:1;min-width:0">
-              <div class="issue-client">${esc(iss.client_name || 'Client')}</div>
-              ${cgName ? `<div class="issue-date">Caregiver: ${esc(cgName)}</div>` : ''}
-              <div class="issue-text">${esc(iss.issue_text)}</div>
-              ${dt ? `<div class="issue-date">${dt.toLocaleDateString('en',{month:'long',day:'numeric',year:'numeric'})}</div>` : ''}
-            </div>
-            <button class="btn-resolve" onclick="resolveIssue('${iss.id}')">Resolve</button>
-          </div>`;
-        }).join('');
+    const issueCount = issueSnap.size;
+    const hint = document.getElementById('dash-issues-hint');
+    const hintText = document.getElementById('dash-issues-hint-text');
+    if (hint) {
+      if (issueCount > 0) {
+        hint.style.display = 'block';
+        hintText.textContent = issueCount + ' open visit issue' + (issueCount > 1 ? 's' : '');
       } else {
-        issuesCard.style.display = 'none';
+        hint.style.display = 'none';
       }
     }
+    // Update sidebar badge
+    const navBadge = document.getElementById('issues-nav-badge');
+    if (navBadge) { navBadge.textContent = issueCount || ''; navBadge.style.display = issueCount > 0 ? 'inline' : 'none'; }
   } catch(e) { console.warn('Could not load visit issues:', e); }
 }
 
@@ -1548,14 +1584,15 @@ function openApptModal(id, dateStr, hour) {
   const clockEl = document.getElementById('appt-clock-info');
   if (appt) {
     const dt = appt.scheduled_at;
+    const localDate = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
     fill(form, {
       client_id:    appt.client_id,
       caregiver_id: appt.caregiver_id,
-      date:         dt.toISOString().split('T')[0],
+      date:         localDate,
       time:         dt.toTimeString().slice(0, 5),
       duration_h:   appt.duration_minutes / 60,
       recurring:    appt.recurring || '',
-      recurring_end:appt.recurring_end ? appt.recurring_end.toISOString().split('T')[0] : '',
+      recurring_end:appt.recurring_end ? (() => { const r=appt.recurring_end; return `${r.getFullYear()}-${String(r.getMonth()+1).padStart(2,'0')}-${String(r.getDate()).padStart(2,'0')}`; })() : '',
       status:       appt.status,
       notes:        appt.notes || ''
     });
@@ -1583,7 +1620,14 @@ function openApptModal(id, dateStr, hour) {
     if (clockEl) clockEl.style.display = 'none';
     if (dateStr) document.getElementById('appt-date').value = dateStr;
     if (hour !== undefined) document.getElementById('appt-time').value = String(hour).padStart(2,'0') + ':00';
+    // Default new bookings to send as request so caregiver must confirm
+    const reqChk = document.getElementById('appt-send-req');
+    if (reqChk) reqChk.checked = true;
   }
+
+  // Hide the send-as-request option when editing an existing appointment
+  const reqGrp = document.getElementById('appt-req-grp');
+  if (reqGrp) reqGrp.style.display = appt ? 'none' : 'flex';
 
   toggleRecEnd();
   document.getElementById('appt-ov').classList.add('open');
@@ -1608,7 +1652,7 @@ async function saveAppt(e) {
     scheduled_at:  TS.fromDate(dt),
     duration_minutes: parseInt(fd.get('duration_h')) * 60,
     recurring:     rec,
-    recurring_end: rec && recEnd ? TS.fromDate(new Date(recEnd)) : null,
+    recurring_end: rec && recEnd ? TS.fromDate(new Date(recEnd + 'T12:00:00')) : null,
     status:        fd.get('status'),
     notes:         fd.get('notes') || null,
     updated_at:    SV()
@@ -1716,13 +1760,47 @@ function cap(str, max = 500) {
   return String(str).trim().slice(0, max) || null;
 }
 
-async function resolveIssue(issueId) {
+let _resolveIssueId = null;
+
+function openIssueResolveModal(issueId) {
+  _resolveIssueId = issueId;
+  db.collection('visit_issues').doc(issueId).get().then(snap => {
+    if (!snap.exists) return;
+    const iss = snap.data();
+    const cgName = caregiversMap[iss.caregiver_id]?.name || 'Caregiver';
+    const dt = iss.created_at?.toDate?.();
+    const dateStr = dt ? dt.toLocaleDateString('en',{month:'long',day:'numeric',year:'numeric'}) : '';
+    document.getElementById('issue-resolve-summary').innerHTML =
+      `<strong>${esc(iss.client_name || 'Client')}</strong> reported on ${dateStr}:<br><em>"${esc(iss.issue_text)}"</em>${cgName ? `<br><small style="color:var(--ink-light)">Caregiver: ${esc(cgName)}</small>` : ''}`;
+    document.getElementById('issue-resolve-note').value = '';
+    document.getElementById('issue-resolve-ov').classList.add('open');
+  }).catch(ex => toast(ex.message, true));
+}
+
+async function confirmIssueResolve() {
+  if (!_resolveIssueId) return;
+  const note = document.getElementById('issue-resolve-note').value.trim().slice(0, 500);
   try {
-    await db.collection('visit_issues').doc(issueId).update({ status: 'resolved', resolved_at: firebase.firestore.FieldValue.serverTimestamp() });
-    document.getElementById('iss-' + issueId)?.remove();
-    const remaining = document.querySelectorAll('[id^="iss-"]').length;
-    if (!remaining) document.getElementById('issues-card').style.display = 'none';
-    toast('Issue marked resolved');
+    const snap = await db.collection('visit_issues').doc(_resolveIssueId).get();
+    const iss = snap.exists ? snap.data() : {};
+    await db.collection('visit_issues').doc(_resolveIssueId).update({
+      status: 'resolved', resolved_at: SV(), admin_reply: note || null
+    });
+    if (note && iss.client_id) {
+      await db.collection('visit_notes').add({
+        client_id:   iss.client_id,
+        caregiver_id: null,
+        from_admin:  true,
+        from_name:   'HearthLane Team',
+        text:        note,
+        created_at:  SV()
+      });
+    }
+    closeModal('issue-resolve-ov');
+    document.getElementById('iss-' + _resolveIssueId)?.remove();
+    _resolveIssueId = null;
+    toast('Issue resolved' + (note ? ' — reply sent to client' : ''));
+    loadAdminRequests();
   } catch(ex) { toast(ex.message, true); }
 }
 
@@ -2016,13 +2094,101 @@ async function loadAdminRequests() {
   pendingEl.innerHTML = '<div class="loading-msg">Loading…</div>';
   allEl.innerHTML     = '<div class="loading-msg">Loading…</div>';
 
+  // Load visit issues and EVV warnings in parallel with service requests
+  let reqSnap, issueSnap, recentApptSnap;
   try {
-    const snap = await db.collection('plan_requests').get();
-    const all  = snap.docs
+    [reqSnap, issueSnap, recentApptSnap] = await Promise.all([
+      db.collection('plan_requests').get(),
+      db.collection('visit_issues').where('status', '==', 'open').get(),
+      db.collection('appointments')
+        .where('scheduled_at', '>=', firebase.firestore.Timestamp.fromDate(new Date(Date.now() - 7 * 86400000)))
+        .get()
+    ]);
+  } catch(ex) {
+    pendingEl.innerHTML = '<div class="loading-msg">Error loading data. Please refresh.</div>';
+    allEl.innerHTML = '';
+    console.error('loadAdminRequests fetch error:', ex);
+    return;
+  }
+
+  // ── Visit Issues ──────────────────────────────────────────────────────────
+  const issues = issueSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0));
+  const issuesCard  = document.getElementById('req-issues-card');
+  const issuesList  = document.getElementById('req-issues-list');
+  const issuesCount = document.getElementById('req-issues-count');
+  const navBadge    = document.getElementById('issues-nav-badge');
+  if (issuesList) {
+    if (issues.length) {
+      issuesCard.style.display = 'block';
+      issuesCount.textContent  = issues.length;
+      issuesCount.style.display = 'inline';
+      if (navBadge) { navBadge.textContent = issues.length; navBadge.style.display = 'inline'; }
+      issuesList.innerHTML = issues.map(iss => {
+        const dt = iss.created_at?.toDate?.();
+        const cgName = caregiversMap[iss.caregiver_id]?.name || null;
+        return `<div class="issue-row" id="iss-${iss.id}" style="border-left:4px solid #ef4444">
+          <div style="flex:1;min-width:0">
+            <div class="issue-client">${esc(iss.client_name || 'Client')}</div>
+            ${cgName ? `<div class="issue-date">Caregiver: ${esc(cgName)}</div>` : ''}
+            <div class="issue-text">${esc(iss.issue_text)}</div>
+            ${dt ? `<div class="issue-date">${dt.toLocaleDateString('en',{month:'long',day:'numeric',year:'numeric'})}</div>` : ''}
+          </div>
+          <button class="btn-resolve" onclick="openIssueResolveModal('${iss.id}')">Resolve</button>
+        </div>`;
+      }).join('');
+    } else {
+      issuesList.innerHTML = '<div class="loading-msg" style="font-style:italic">No open visit issues.</div>';
+      issuesCount.style.display = 'none';
+      if (navBadge) navBadge.style.display = 'none';
+    }
+  }
+
+  // ── EVV Warnings (late arrivals / short visits) ───────────────────────────
+  const warningsCard = document.getElementById('req-warnings-card');
+  const warningsList = document.getElementById('req-warnings-list');
+  const warningsCount = document.getElementById('req-warnings-count');
+  if (warningsCard && warningsList) {
+    const warnings = [];
+    recentApptSnap.docs.forEach(d => {
+      const a = { id: d.id, ...d.data(), scheduled_at: d.data().scheduled_at?.toDate() };
+      if (a.status === 'cancelled') return;
+      const cgName = caregiversMap[a.caregiver_id]?.name || 'Caregiver';
+      const clientName = clientsMap[a.client_id]?.name || 'Client';
+      if (a.clocked_in_at) {
+        const inTime = a.clocked_in_at.toDate();
+        const lateMin = Math.round((inTime - a.scheduled_at) / 60000);
+        if (lateMin > 15) warnings.push({ type: 'late', apptId: a.id, cgName, clientName, scheduled: a.scheduled_at, lateMin });
+      }
+      if (a.actual_duration_minutes && a.duration_minutes) {
+        const shortMin = a.duration_minutes - a.actual_duration_minutes;
+        if (shortMin > 15) warnings.push({ type: 'short', apptId: a.id, cgName, clientName, scheduled: a.scheduled_at, shortMin });
+      }
+    });
+    if (warnings.length) {
+      warningsCard.style.display = 'block';
+      warningsCount.textContent = warnings.length;
+      warningsList.innerHTML = warnings.map(w => {
+        const dateStr = w.scheduled?.toLocaleDateString('en',{month:'short',day:'numeric'}) || '';
+        const desc = w.type === 'late'
+          ? `<strong>${esc(w.cgName)}</strong> arrived <strong>${w.lateMin} min late</strong> for ${esc(w.clientName)} on ${dateStr}`
+          : `<strong>${esc(w.cgName)}</strong> left <strong>${w.shortMin} min early</strong> for ${esc(w.clientName)} on ${dateStr}`;
+        return `<div style="display:flex;align-items:center;gap:1rem;padding:0.75rem 0;border-bottom:1px solid var(--cream-dark);border-left:4px solid #f97316;padding-left:0.75rem">
+          <div style="flex:1;font-size:0.88rem;color:var(--ink)">${desc}</div>
+        </div>`;
+      }).join('');
+    } else {
+      warningsCard.style.display = 'none';
+    }
+  }
+
+  // ── Service Requests ──────────────────────────────────────────────────────
+  try {
+    const all  = reqSnap.docs
       .map(d => ({ id: d.id, ...d.data() }))
       .sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0));
 
-    const pending  = all.filter(r => r.status === 'pending');
+    const pending = all.filter(r => r.status === 'pending');
 
     // Update sidebar badge
     const badge = document.getElementById('req-pending-badge');
@@ -2032,17 +2198,14 @@ async function loadAdminRequests() {
     }
 
     const countEl = document.getElementById('admin-pending-count');
-    countEl.textContent = pending.length || '';
-    countEl.style.display = pending.length ? 'inline' : 'none';
+    if (countEl) { countEl.textContent = pending.length || ''; countEl.style.display = pending.length ? 'inline' : 'none'; }
 
-    // Render pending
     if (!pending.length) {
       pendingEl.innerHTML = '<div class="loading-msg" style="font-style:italic">No pending requests.</div>';
     } else {
       pendingEl.innerHTML = pending.map(r => reqRowHtml(r, true)).join('');
     }
 
-    // Render all
     if (!all.length) {
       allEl.innerHTML = '<div class="loading-msg" style="font-style:italic">No requests yet.</div>';
     } else {
@@ -2136,13 +2299,13 @@ async function confirmResolve(status) {
       }
     }
 
-    // Send admin note to client's Notes feed as "From Hearthlane Team"
+    // Send admin note to client's Notes feed
     if (note && req.client_id) {
       await db.collection('visit_notes').add({
         client_id:   req.client_id,
         caregiver_id: null,
         from_admin:   true,
-        from_name:    'Hearthlane Team',
+        from_name:    'HearthLane Team',
         text:         note,
         created_at:   SV()
       });

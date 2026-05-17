@@ -138,7 +138,7 @@
     .appt-chip { border-radius: 6px; padding: 0.22rem 0.4rem; font-size: 0.7rem; margin-bottom: 2px; background: var(--terra); color: var(--white); line-height: 1.4; }
     .appt-chip.rec { background: var(--sage); }
     .appt-chip.status-pending   { background: #F59E0B; color: var(--white); }
-    .appt-chip.status-confirmed { background: #EF4444; color: var(--white); }
+    .appt-chip.status-confirmed { background: #3B82F6; color: var(--white); }
     .appt-chip.status-completed   { background: var(--sage); opacity: 0.85; }
     .appt-chip.status-cancelled   { background: #9ca3af; opacity: 0.65; }
     .appt-chip.status-in_progress { background: #10b981; }
@@ -255,7 +255,7 @@
 <!-- ── LOGIN ── -->
 <div id="login-screen">
   <div class="login-card">
-    <div class="login-logo">Hearth<span>l</span>ane</div>
+    <div class="login-logo">Hearth<span>Lane</span></div>
     <div class="login-sub">Caregiver Portal</div>
     <form onsubmit="handleSignIn(event)">
       <div class="form-group">
@@ -275,7 +275,7 @@
 <!-- ── APP ── -->
 <div id="app">
   <nav class="topnav">
-    <div class="nav-logo">Hearth<span>l</span>ane</div>
+    <div class="nav-logo">Hearth<span>Lane</span></div>
     <div class="nav-right">
       <span class="nav-name" id="nav-name"></span>
       <div class="nav-avatar" id="nav-avatar"></div>
@@ -483,6 +483,31 @@ let isDragging    = false;
 let dragMode      = 'add';
 
 // ── AUTH ──────────────────────────────────────────────────────────────────────
+const _RATE_KEY = 'hl_cg_attempts';
+const _RATE_MAX = 5;
+const _RATE_WIN = 15 * 60 * 1000; // 15 minutes
+
+function _getRateData() {
+  try { return JSON.parse(localStorage.getItem(_RATE_KEY) || '{"count":0,"since":0}'); } catch { return {count:0,since:0}; }
+}
+function _recordFailedAttempt() {
+  const d = _getRateData();
+  const now = Date.now();
+  if (now - d.since > _RATE_WIN) { d.count = 0; d.since = now; }
+  d.count++;
+  try { localStorage.setItem(_RATE_KEY, JSON.stringify(d)); } catch {}
+  return d.count;
+}
+function _clearRateLimit() {
+  try { localStorage.removeItem(_RATE_KEY); } catch {}
+}
+function _isRateLimited() {
+  const d = _getRateData();
+  const now = Date.now();
+  if (now - d.since > _RATE_WIN) return false;
+  return d.count >= _RATE_MAX;
+}
+
 async function handleSignIn(e) {
   e.preventDefault();
   const email = document.getElementById('si-email').value.toLowerCase().trim();
@@ -490,15 +515,30 @@ async function handleSignIn(e) {
   const btn   = document.getElementById('signin-btn');
   const err   = document.getElementById('login-error');
   btn.disabled = true; btn.textContent = 'Signing in…'; err.style.display = 'none';
+
+  if (_isRateLimited()) {
+    err.textContent = 'Too many failed attempts. Please wait 15 minutes before trying again.';
+    err.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Sign In';
+    return;
+  }
+
   try {
     await _authReady;
     const snap = await db.collection('caregivers')
       .where('portal_email', '==', email)
       .where('portal_pin',   '==', pin)
       .limit(1).get();
-    if (snap.empty) throw new Error('Invalid email or PIN. Contact your coordinator.');
+    if (snap.empty) {
+      const attempts = _recordFailedAttempt();
+      const remaining = _RATE_MAX - attempts;
+      throw new Error(remaining > 0
+        ? `Invalid email or PIN. ${remaining} attempt${remaining !== 1 ? 's' : ''} remaining.`
+        : 'Too many failed attempts. Please wait 15 minutes.');
+    }
     const doc = snap.docs[0];
     if (doc.data().portal_active === false) throw new Error('Your portal access is inactive. Contact your coordinator.');
+    _clearRateLimit();
     caregiverDoc = { id: doc.id, ...doc.data() };
     caregiverId  = doc.id;
     sessionStorage.setItem('cg_id', doc.id);
@@ -1072,7 +1112,7 @@ async function respondRequest(reqId, status) {
         client_id:       req.client_id,
         scheduled_at:    firebase.firestore.Timestamp.fromDate(dt),
         duration_minutes:req.duration_minutes || 60,
-        status:          'scheduled',
+        status:          'confirmed',
         notes:           req.notes || null,
         created_at:      FSV.serverTimestamp()
       });
@@ -1084,7 +1124,7 @@ async function respondRequest(reqId, status) {
     if (status === 'accepted') {
       // Add to local appointments list
       const dt = new Date(req.proposed_date + 'T' + req.proposed_time);
-      allAppointments.push({ id: reqId+'_acc', caregiver_id: caregiverId, client_id: req.client_id, scheduled_at: dt, duration_minutes: req.duration_minutes||60, status:'scheduled' });
+      allAppointments.push({ id: reqId+'_acc', caregiver_id: caregiverId, client_id: req.client_id, scheduled_at: dt, duration_minutes: req.duration_minutes||60, status:'confirmed' });
     }
     updateReqBadge();
     const item = document.getElementById('req-' + reqId);
@@ -1261,10 +1301,10 @@ function loadCaregiverMessages() {
   }
   listEl.innerHTML = clients.map(c => {
     const initials = (c.name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
-    return `<div class="msg-client-item" id="cgcli-${c.id}" onclick="openCaregiverChat('${c.id}','${escM(c.name)}')">
+    return `<div class="msg-client-item" id="cgcli-${c.id}" data-cid="${esc(c.id)}" data-cname="${esc(c.name)}" onclick="openCaregiverChatFromEl(this)">
       <div class="chat-av">${initials}</div>
       <div style="flex:1;min-width:0">
-        <div style="font-weight:600;font-size:0.9rem">${escM(c.name)}</div>
+        <div style="font-weight:600;font-size:0.9rem">${esc(c.name)}</div>
         <div id="cg-preview-${c.id}" style="font-size:0.78rem;color:var(--ink-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Tap to chat</div>
       </div>
       <span class="msg-unread" id="cg-unread-${c.id}" style="display:none"></span>
@@ -1273,6 +1313,10 @@ function loadCaregiverMessages() {
 
 }
 
+
+function openCaregiverChatFromEl(el) {
+  openCaregiverChat(el.dataset.cid, el.dataset.cname);
+}
 
 function openCaregiverChat(clientId, clientName) {
   if (!caregiverId) return;
