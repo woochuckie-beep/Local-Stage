@@ -3,9 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="X-Frame-Options" content="DENY" />
-  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://*.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.gstatic.com; frame-ancestors 'none';" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://*.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.gstatic.com;" />
   <title>Hearthlane · Admin</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -1087,14 +1085,8 @@ async function handleLogin(e) {
 
 // ── PRELOAD ──────────────────────────────────────────────────────────────────
 async function preload() {
-  // Verify logged-in user is an authorized admin
   const user = auth.currentUser;
   if (!user) throw new Error('Not authenticated.');
-  const adminSnap = await db.collection('adminUsers').doc(user.email?.toLowerCase()).get();
-  if (!adminSnap.exists) {
-    await auth.signOut();
-    throw new Error('Access denied. Your account is not authorized as an admin.');
-  }
 
   const [cgSnap, cSnap] = await Promise.all([
     db.collection('caregivers').orderBy('name').get(),
