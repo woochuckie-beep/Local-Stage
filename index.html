@@ -4146,7 +4146,7 @@ async function submitCaregiverChangeRequest() {
   const issues    = (document.getElementById('req-cg-issues').value||'').trim().slice(0,1000);
   const qualities = (document.getElementById('req-cg-qualities').value||'').trim().slice(0,1000);
   const statusEl  = document.getElementById('plan-req-status');
-  if (!issues && !qualities) { statusEl.style.color='#c44'; statusEl.textContent='Please describe your concerns or what you're looking for.'; return; }
+  if (!issues && !qualities) { statusEl.style.color='#c44'; statusEl.textContent='Please describe your concerns or what you are looking for.'; return; }
   statusEl.style.color='var(--ink-mid)'; statusEl.textContent='Submitting…';
   try {
     await addDoc(fsCol(getDb(), 'plan_requests'), {
