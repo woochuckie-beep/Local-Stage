@@ -130,36 +130,35 @@
     .note-date { font-size: 0.75rem; color: var(--ink-light); margin-top: 0.1rem; }
     .note-body { font-size: 0.9rem; color: var(--ink); margin-top: 0.5rem; line-height: 1.7; }
 
-    /* ── SCHEDULE CALENDAR (weekly grid — same layout as caregiver) ── */
-    .week-controls { display:flex; align-items:center; gap:0.65rem; margin-bottom:1.1rem; flex-wrap:wrap; }
-    .week-label { font-size:0.9rem; font-weight:600; min-width:190px; text-align:center; color:var(--ink); }
-    .btn-week { padding:0.38rem 0.85rem; border-radius:8px; font-size:0.82rem; background:var(--white); color:var(--ink-mid); border:1.5px solid var(--cream-dark); transition:all 0.15s; cursor:pointer; }
-    .btn-week:hover { border-color:var(--terra); color:var(--terra); }
-    .cl-cal-wrap { background:var(--white); border-radius:14px; overflow:hidden; box-shadow:0 2px 8px rgba(58,46,34,0.06); }
-    .cl-cal-head { display:grid; grid-template-columns:52px repeat(7,1fr); border-bottom:1.5px solid var(--cream-dark); }
-    .cl-hcell { padding:0.6rem 0.4rem; text-align:center; }
-    .cl-hcell .dname { display:block; font-size:0.67rem; font-weight:600; color:var(--ink-light); text-transform:uppercase; letter-spacing:0.05em; }
-    .cl-hcell .dnum  { display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:50%; font-size:0.95rem; font-weight:600; color:var(--ink); margin-top:0.15rem; }
-    .cl-hcell.today .dnum { background:var(--terra); color:var(--white); }
-    .cl-cal-body { max-height:520px; overflow-y:auto; }
-    .cl-row { display:grid; grid-template-columns:52px repeat(7,1fr); border-bottom:1px solid #f0ebe0; }
-    .cl-row:last-child { border-bottom:none; }
-    .cl-time { padding:0.45rem 0.35rem 0 0; font-size:0.67rem; color:var(--ink-light); text-align:right; border-right:1px solid var(--cream-dark); }
-    .cl-cell { min-height:46px; border-right:1px solid #f0ebe0; padding:2px; }
-    .cl-cell:last-child { border-right:none; }
-    /* Chips — identical colour scheme to caregiver */
-    .appt-chip-cl { border-radius:5px; padding:0.22rem 0.4rem; font-size:0.68rem; margin-bottom:2px; color:#fff; line-height:1.4; }
-    .appt-chip-cl.confirmed   { background:#3B82F6; }
-    .appt-chip-cl.scheduled   { background:#F59E0B; }
-    .appt-chip-cl.in_progress { background:#10b981; }
-    .appt-chip-cl.completed   { background:var(--sage); opacity:0.85; }
-    .appt-chip-cl.pending-req { background:#9ca3af; }
-    .chip-cg-name { font-weight:600; display:block; }
-    .chip-cl-dur  { display:block; font-size:0.62rem; opacity:0.85; }
-    /* Legend */
-    .cl-legend { display:flex; gap:0.75rem; flex-wrap:wrap; margin-top:0.85rem; }
-    .cl-legend-item { display:flex; align-items:center; gap:0.35rem; font-size:0.75rem; color:var(--ink-mid); }
-    .cl-legend-dot { width:10px; height:10px; border-radius:3px; flex-shrink:0; }
+    /* ── SCHEDULE CALENDAR — identical to caregiver schedule ── */
+    .week-controls { display: flex; align-items: center; gap: 0.65rem; margin-bottom: 1.25rem; }
+    .week-label { font-size: 0.92rem; font-weight: 600; min-width: 210px; text-align: center; color: var(--ink); }
+    .btn-week { padding: 0.38rem 0.85rem; border-radius: 8px; font-size: 0.82rem; background: var(--white); color: var(--ink-mid); border: 1.5px solid var(--cream-dark); transition: all 0.15s; cursor: pointer; }
+    .btn-week:hover { border-color: var(--terra); color: var(--terra); }
+    .cal-wrap { background: var(--white); border-radius: 14px; overflow: hidden; box-shadow: 0 2px 8px rgba(58,46,34,0.06); }
+    .cal-head { display: grid; grid-template-columns: 56px repeat(7,1fr); border-bottom: 1.5px solid var(--cream-dark); }
+    .cal-hcell { padding: 0.65rem 0.5rem; text-align: center; }
+    .cal-hcell .dname { display: block; font-size: 0.68rem; font-weight: 600; color: var(--ink-light); text-transform: uppercase; letter-spacing: 0.05em; }
+    .cal-hcell .dnum { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; font-size: 1rem; font-weight: 600; color: var(--ink); margin-top: 0.2rem; }
+    .cal-hcell.today .dnum { background: var(--terra); color: var(--white); }
+    .cal-body { max-height: 560px; overflow-y: auto; }
+    .cal-row { display: grid; grid-template-columns: 56px repeat(7,1fr); border-bottom: 1px solid #f0ebe0; }
+    .cal-row:last-child { border-bottom: none; }
+    .cal-time { padding: 0.5rem 0.4rem 0 0; font-size: 0.68rem; color: var(--ink-light); text-align: right; border-right: 1px solid var(--cream-dark); }
+    .cal-cell-ro { min-height: 48px; border-right: 1px solid #f0ebe0; padding: 3px; }
+    .cal-cell-ro:last-child { border-right: none; }
+    .appt-chip { border-radius: 6px; padding: 0.22rem 0.4rem; font-size: 0.7rem; margin-bottom: 2px; background: var(--terra); color: var(--white); line-height: 1.4; }
+    .appt-chip.status-pending   { background: #F59E0B; color: var(--white); }
+    .appt-chip.status-confirmed { background: #3B82F6; color: var(--white); }
+    .appt-chip.status-completed { background: var(--sage); opacity: 0.85; }
+    .appt-chip.status-cancelled { background: #9ca3af; opacity: 0.65; }
+    .appt-chip.status-in_progress { background: #10b981; }
+    .appt-chip.status-pending-req { background: #9ca3af; }
+    .chip-name { font-weight: 600; display: block; }
+    .chip-dur  { display: block; font-size: 0.65rem; opacity: 0.8; }
+    .sched-legend { display: flex; gap: 0.85rem; margin-bottom: 0.85rem; flex-wrap: wrap; }
+    .sched-legend-item { display: flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; color: var(--ink-mid); }
+    .sched-legend-swatch { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
 
     /* ── EMPTY ── */
     .empty-state { color: var(--ink-light); font-size: 0.9rem; padding: 1rem 0; }
@@ -274,25 +273,23 @@
     <!-- SCHEDULE CALENDAR -->
     <div class="view" id="view-schedule">
       <div class="view-title">My Schedule</div>
-      <div class="view-sub">Your visits for the week</div>
-      <div class="card">
-        <div class="week-controls">
-          <button class="btn-week" onclick="clientShiftWeek(-1)">‹ Prev</button>
-          <div class="week-label" id="cl-week-label">—</div>
-          <button class="btn-week" onclick="clientShiftWeek(1)">Next ›</button>
-          <button class="btn-week" onclick="clientGoToday()">Today</button>
-        </div>
-        <div class="cl-cal-wrap">
-          <div class="cl-cal-head" id="cl-cal-head"></div>
-          <div class="cl-cal-body" id="cl-cal-body"></div>
-        </div>
-        <div class="cl-legend">
-          <div class="cl-legend-item"><div class="cl-legend-dot" style="background:#3B82F6"></div>Confirmed</div>
-          <div class="cl-legend-item"><div class="cl-legend-dot" style="background:#F59E0B"></div>Scheduled</div>
-          <div class="cl-legend-item"><div class="cl-legend-dot" style="background:#10b981"></div>In Progress</div>
-          <div class="cl-legend-item"><div class="cl-legend-dot" style="background:var(--sage)"></div>Completed</div>
-          <div class="cl-legend-item"><div class="cl-legend-dot" style="background:#9ca3af"></div>Awaiting Confirmation</div>
-        </div>
+      <div class="view-sub">Your upcoming and past visits</div>
+      <div class="sched-legend">
+        <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#F59E0B"></div>Scheduled</div>
+        <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#3B82F6"></div>Confirmed</div>
+        <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#10b981"></div>In Progress</div>
+        <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:var(--sage)"></div>Completed</div>
+        <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#9ca3af"></div>Awaiting Confirmation</div>
+      </div>
+      <div class="week-controls">
+        <button class="btn-week" onclick="clientShiftWeek(-1)">← Prev</button>
+        <div class="week-label" id="cl-week-label">—</div>
+        <button class="btn-week" onclick="clientShiftWeek(1)">Next →</button>
+        <button class="btn-week" onclick="clientGoToday()">Today</button>
+      </div>
+      <div class="cal-wrap">
+        <div class="cal-head" id="cl-cal-head"></div>
+        <div class="cal-body" id="cl-cal-body"></div>
       </div>
     </div>
 
@@ -867,47 +864,46 @@
     const today = new Date();
     const days  = Array.from({length:7}, (_,i) => { const d=new Date(clSchedWeekStart); d.setDate(d.getDate()+i); return d; });
 
-    // Week label
-    const wS = clSchedWeekStart.toLocaleDateString('en',{month:'short',day:'numeric'});
-    const wE = new Date(wEnd); wE.setDate(wE.getDate()-1);
+    // Week label — identical format to caregiver
+    const wS  = clSchedWeekStart.toLocaleDateString('en',{month:'short',day:'numeric'});
+    const wE  = new Date(wEnd); wE.setDate(wE.getDate()-1);
     const wEL = wE.toLocaleDateString('en',{month:'short',day:'numeric',year:'numeric'});
     const lbl = document.getElementById('cl-week-label');
     if (lbl) lbl.textContent = `${wS} – ${wEL}`;
 
-    // Collect all events (appointments + pending booking requests) for this week
-    const allEvents = [...allAppointments, ...pendingBookings];
+    const allEvents  = [...allAppointments, ...pendingBookings];
     const weekEvents = allEvents.filter(a => a.scheduled_at >= clSchedWeekStart && a.scheduled_at < wEnd);
 
-    // Header
+    // Header — same classes as caregiver (.cal-head / .cal-hcell)
     const head = document.getElementById('cl-cal-head');
     if (head) {
-      head.innerHTML = '<div class="cl-hcell"></div>' + days.map(d => `
-        <div class="cl-hcell${sameDay(d,today)?' today':''}">
+      head.innerHTML = '<div class="cal-hcell"></div>' + days.map(d => `
+        <div class="cal-hcell${sameDay(d,today)?' today':''}">
           <span class="dname">${d.toLocaleDateString('en',{weekday:'short'})}</span>
           <span class="dnum">${d.getDate()}</span>
         </div>`).join('');
     }
 
-    // Body — 7am to 9pm
-    const hours = Array.from({length:15}, (_,i) => i+7);
-    const body  = document.getElementById('cl-cal-body');
-    const cgName = caregiverDoc?.name || 'Caregiver';
+    // Body — 7am to 9pm, same classes as caregiver (.cal-body / .cal-row / .cal-cell-ro)
+    const hours  = Array.from({length:14}, (_,i) => i+7);
+    const body   = document.getElementById('cl-cal-body');
+    const cgName = caregiverDoc?.name || 'Your Caregiver';
     if (body) {
       body.innerHTML = hours.map(h => `
-        <div class="cl-row">
-          <div class="cl-time">${fmt12h(h)}</div>
+        <div class="cal-row">
+          <div class="cal-time">${fmt12h(h)}</div>
           ${days.map(d => {
             const chips = weekEvents.filter(a => sameDay(a.scheduled_at,d) && a.scheduled_at.getHours()===h);
-            return `<div class="cl-cell">${chips.map(a => {
-              const cls = a._isPending            ? 'pending-req'
-                : a.status === 'confirmed'        ? 'confirmed'
-                : a.status === 'in_progress'      ? 'in_progress'
-                : a.status === 'completed'        ? 'completed'
-                : 'scheduled';
+            return `<div class="cal-cell-ro">${chips.map(a => {
+              const sc = a._isPending                ? 'status-pending-req'
+                : a.status === 'confirmed'           ? 'status-confirmed'
+                : a.status === 'in_progress'         ? 'status-in_progress'
+                : a.status === 'completed'           ? 'status-completed'
+                : 'status-pending';
               const dur = (a.duration_minutes || 60) / 60;
-              return `<div class="appt-chip-cl ${cls}">
-                <span class="chip-cg-name">${esc(cgName)}</span>
-                <span class="chip-cl-dur">${dur}h${a._isPending ? ' · Pending' : ''}</span>
+              return `<div class="appt-chip ${sc}">
+                <span class="chip-name">${esc(cgName)}</span>
+                <span class="chip-dur">${dur}h${a._isPending ? ' · Pending' : ''}</span>
               </div>`;
             }).join('')}</div>`;
           }).join('')}
