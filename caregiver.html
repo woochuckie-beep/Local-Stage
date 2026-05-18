@@ -1335,11 +1335,14 @@ async function loadClientSentNotes(id) {
     const snap = await db.collection('visit_notes')
       .where('caregiver_id', '==', caregiverId)
       .where('client_id', '==', id)
-      .orderBy('created_at', 'desc')
-      .limit(20)
       .get();
     if (!snap.docs.length) { el.innerHTML = hlState('empty','No notes sent','Notes you send to this client will appear here.'); return; }
-    el.innerHTML = snap.docs.map(d => {
+    const sortedDocs = snap.docs.sort((a, b) => {
+      const timeA = a.data().created_at?.toDate?.()?.getTime() || 0;
+      const timeB = b.data().created_at?.toDate?.()?.getTime() || 0;
+      return timeB - timeA;
+    }).slice(0, 20);
+    el.innerHTML = sortedDocs.map(d => {
       const n = d.data();
       const dt = n.created_at?.toDate?.();
       const dateStr = dt ? dt.toLocaleDateString('en',{month:'short',day:'numeric',year:'numeric'}) + ' · ' + dt.toLocaleTimeString('en',{hour:'numeric',minute:'2-digit'}) : '—';

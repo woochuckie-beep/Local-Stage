@@ -757,6 +757,26 @@
   </div>
 </div>
 
+<!-- ══════════ RESOLVE WARNING MODAL ══════════ -->
+<div class="modal-ov" id="warn-resolve-ov">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-hd">
+      <div class="modal-title">Resolve Visit Warning</div>
+      <button class="modal-close" onclick="closeModal('warn-resolve-ov')">✕</button>
+    </div>
+    <div id="warn-resolve-summary" style="font-size:0.88rem;color:var(--ink-mid);margin-bottom:0.75rem;line-height:1.6;background:#FFF7ED;border-radius:8px;padding:0.75rem"></div>
+    <div id="warn-resolve-contact" style="font-size:0.84rem;margin-bottom:1rem;display:flex;gap:1.5rem;flex-wrap:wrap"></div>
+    <div class="form-group">
+      <label>Note (optional — sent to client's Notes feed)</label>
+      <textarea class="fc" id="warn-resolve-note" rows="3" placeholder="E.g. 'We followed up with your caregiver about this visit.'" style="resize:vertical"></textarea>
+    </div>
+    <div class="modal-ft">
+      <button type="button" class="btn btn-ghost" onclick="closeModal('warn-resolve-ov')">Cancel</button>
+      <button type="button" class="btn btn-add" onclick="confirmWarnResolve()">Mark Resolved</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════ CLIENT MODAL ══════════ -->
 <div class="modal-ov" id="client-ov">
   <div class="modal">
@@ -914,7 +934,7 @@
       <div class="form-row">
         <div class="form-group">
           <label>Client *</label>
-          <select class="fc" name="client_id" id="appt-client-sel" required>
+          <select class="fc" name="client_id" id="appt-client-sel" required onchange="autoSetApptDuration()">
             <option value="">— Select Client —</option>
           </select>
         </div>
@@ -941,7 +961,7 @@
       <div class="form-row">
         <div class="form-group">
           <label>Duration</label>
-          <select class="fc" name="duration_h">
+          <select class="fc" name="duration_h" id="appt-dur">
             <option value="1">1 hour</option>
             <option value="2" selected>2 hours</option>
             <option value="3">3 hours</option>
@@ -1405,7 +1425,13 @@ function renderCaregivers() {
   if (cgFilters.days.length)    list = list.filter(cg => cgFilters.days.every(d => (cg.avail_days||[]).includes(d)));
   if (cgFilters.fromTime)       list = list.filter(cg => !cg.avail_earliest || cg.avail_earliest <= cgFilters.fromTime);
   if (cgFilters.toTime)         list = list.filter(cg => !cg.avail_latest   || cg.avail_latest   >= cgFilters.toTime);
-  if (cgFilters.language)       list = list.filter(cg => (cg.languages  ||'').toLowerCase().includes(cgFilters.language));
+  if (cgFilters.language) {
+    const filterLangs = cgFilters.language.split(',').map(l => l.trim()).filter(Boolean);
+    list = list.filter(cg => {
+      const cgLangs = (cg.languages || '').toLowerCase().split(',').map(l => l.trim());
+      return filterLangs.every(fl => cgLangs.some(cl => cl.includes(fl)));
+    });
+  }
   if (cgFilters.background)     list = list.filter(cg => (cg.background ||'').toLowerCase().includes(cgFilters.background));
 
   document.getElementById('cg-tbody').innerHTML = list.length ? list.map(cg => `
@@ -1639,6 +1665,14 @@ function shiftWeek(dir) { weekStart.setDate(weekStart.getDate() + dir * 7); proc
 function jumpToday()    { weekStart = mondayOf(new Date()); processScheduleForWeek(); }
 
 // ── APPOINTMENT MODAL ────────────────────────────────────────────────────────
+function autoSetApptDuration() {
+  const clientSel = document.getElementById('appt-client-sel');
+  const durSel    = document.getElementById('appt-dur');
+  const editingAppt = document.getElementById('appt-del-btn')?.style.display !== 'none';
+  if (!clientSel || !durSel || editingAppt) return;
+  if (clientSel.value) durSel.value = '4';
+}
+
 function openApptModal(id, dateStr, hour) {
   editingId = id || null;
   const appt = id ? appointments.find(a => a.id === id) : null;
@@ -1839,6 +1873,7 @@ function cap(str, max = 500) {
 }
 
 let _resolveIssueId = null;
+let _resolveWarnKey = null;
 
 function openIssueResolveModal(issueId) {
   _resolveIssueId = issueId;
@@ -1866,12 +1901,15 @@ async function confirmIssueResolve() {
       status: 'resolved', resolved_at: SV(), admin_reply: note || null
     });
     if (note && iss.client_id) {
+      const issueText = iss.issue_text || (Array.isArray(iss.issues) ? iss.issues.join(' / ') : '');
+      const issueExcerpt = issueText.length > 100 ? issueText.slice(0, 100) + '…' : issueText;
+      const fullNote = `Re: Visit Issue Report${issueExcerpt ? `\n\nIssue reported: "${issueExcerpt}"` : ''}\n\n${note}`;
       await db.collection('visit_notes').add({
         client_id:   iss.client_id,
         caregiver_id: null,
         from_admin:  true,
         from_name:   'HearthLane Team',
-        text:        note,
+        text:        fullNote,
         created_at:  SV()
       });
     }
@@ -1879,6 +1917,49 @@ async function confirmIssueResolve() {
     document.getElementById('iss-' + _resolveIssueId)?.remove();
     _resolveIssueId = null;
     toast('Issue resolved' + (note ? ' — reply sent to client' : ''));
+    loadAdminRequests();
+  } catch(ex) { toast(ex.message, true); }
+}
+
+function openWarnResolveModal(evvKey, clientId, warnDesc) {
+  _resolveWarnKey = evvKey;
+  const client = clientsMap[clientId] || {};
+  document.getElementById('warn-resolve-summary').textContent = warnDesc;
+  const contactEl = document.getElementById('warn-resolve-contact');
+  const emailPart = client.email ? `<span><strong>Email:</strong> ${esc(client.email)}</span>` : '';
+  const phonePart = client.phone ? `<span><strong>Phone:</strong> ${esc(client.phone)}</span>` : '';
+  contactEl.innerHTML = (emailPart || phonePart)
+    ? emailPart + phonePart
+    : '<span style="color:var(--ink-light)">No contact info on file</span>';
+  document.getElementById('warn-resolve-note').value = '';
+  document.getElementById('warn-resolve-ov').classList.add('open');
+}
+
+async function confirmWarnResolve() {
+  if (!_resolveWarnKey) return;
+  const note = document.getElementById('warn-resolve-note').value.trim().slice(0, 500);
+  try {
+    const existSnap = await db.collection('visit_issues').where('evv_key', '==', _resolveWarnKey).get();
+    if (!existSnap.empty) {
+      const batch = db.batch();
+      existSnap.docs.forEach(d => batch.update(d.ref, { status: 'resolved', resolved_at: SV(), admin_reply: note || null }));
+      await batch.commit();
+    }
+    if (note) {
+      const issSnap = await db.collection('visit_issues').where('evv_key', '==', _resolveWarnKey).get();
+      const clientId = issSnap.empty ? null : issSnap.docs[0].data().client_id;
+      if (clientId) {
+        await db.collection('visit_notes').add({
+          client_id: clientId, caregiver_id: null, from_admin: true,
+          from_name: 'HearthLane Team',
+          text: `Re: Visit Warning\n\n${note}`,
+          created_at: SV()
+        });
+      }
+    }
+    closeModal('warn-resolve-ov');
+    _resolveWarnKey = null;
+    toast('Warning resolved' + (note ? ' — note sent to client' : ''));
     loadAdminRequests();
   } catch(ex) { toast(ex.message, true); }
 }
@@ -2194,35 +2275,40 @@ async function loadAdminRequests() {
   const issuesCount = document.getElementById('req-issues-count');
   const navBadge    = document.getElementById('issues-nav-badge');
   if (issuesList) {
-    if (!issueSnap) {
-      issuesList.innerHTML = hlState('error','Could not load issues','Check console for details.');
-    } else {
-      const issues = issueSnap.docs.map(d => ({ id: d.id, ...d.data() }))
-        .sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0));
-      if (issues.length) {
-        issuesCard.style.display  = 'block';
-        issuesCount.textContent   = issues.length;
-        issuesCount.style.display = 'inline';
-        if (navBadge) { navBadge.textContent = issues.length; navBadge.style.display = 'inline'; }
-        issuesList.innerHTML = issues.map(iss => {
-          const dt        = iss.created_at?.toDate?.();
-          const cgName    = caregiversMap[iss.caregiver_id]?.name || null;
-          const issueText = iss.issue_text || (Array.isArray(iss.issues) ? iss.issues.join('\n') : '');
-          return `<div class="issue-row" id="iss-${iss.id}" style="border-left:4px solid #ef4444">
-            <div style="flex:1;min-width:0">
-              <div class="issue-client">${esc(iss.client_name || 'Client')}</div>
-              ${cgName ? `<div class="issue-date">Caregiver: ${esc(cgName)}</div>` : ''}
-              <div class="issue-text" style="white-space:pre-line">${esc(issueText)}</div>
-              ${dt ? `<div class="issue-date">${dt.toLocaleDateString('en',{month:'long',day:'numeric',year:'numeric'})}</div>` : ''}
-            </div>
-            <button class="btn-resolve" onclick="openIssueResolveModal('${iss.id}')">Resolve</button>
-          </div>`;
-        }).join('');
+    try {
+      if (!issueSnap) {
+        issuesList.innerHTML = hlState('error', 'Could not load issues', issueResult.reason?.message || 'Check console for details.');
       } else {
-        issuesList.innerHTML = hlState('empty','No open issues','All visits are running smoothly.');
-        issuesCount.style.display = 'none';
-        if (navBadge) navBadge.style.display = 'none';
+        const issues = issueSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+          .sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0));
+        if (issues.length) {
+          issuesCard.style.display  = 'block';
+          issuesCount.textContent   = issues.length;
+          issuesCount.style.display = 'inline';
+          if (navBadge) { navBadge.textContent = issues.length; navBadge.style.display = 'inline'; }
+          issuesList.innerHTML = issues.map(iss => {
+            const dt        = iss.created_at?.toDate?.();
+            const cgName    = caregiversMap[iss.caregiver_id]?.name || null;
+            const issueText = iss.issue_text || (Array.isArray(iss.issues) ? iss.issues.join('\n') : '');
+            return `<div class="issue-row" id="iss-${iss.id}" style="border-left:4px solid #ef4444">
+              <div style="flex:1;min-width:0">
+                <div class="issue-client">${esc(iss.client_name || 'Client')}</div>
+                ${cgName ? `<div class="issue-date">Caregiver: ${esc(cgName)}</div>` : ''}
+                <div class="issue-text" style="white-space:pre-line">${esc(issueText)}</div>
+                ${dt ? `<div class="issue-date">${dt.toLocaleDateString('en',{month:'long',day:'numeric',year:'numeric'})}</div>` : ''}
+              </div>
+              <button class="btn-resolve" onclick="openIssueResolveModal('${iss.id}')">Resolve</button>
+            </div>`;
+          }).join('');
+        } else {
+          issuesList.innerHTML = hlState('empty','No open issues','All visits are running smoothly.');
+          issuesCount.style.display = 'none';
+          if (navBadge) navBadge.style.display = 'none';
+        }
       }
+    } catch (ex) {
+      console.error('visit-issues render error:', ex);
+      issuesList.innerHTML = hlState('error', 'Could not load issues', ex.message || 'Check console for details.');
     }
   }
 
@@ -2315,8 +2401,10 @@ async function loadAdminRequests() {
           w.type === 'no_clockout' ? `<strong>${esc(w.cgName)}</strong> never clocked out for ${esc(w.clientName)} on ${dateStr}` :
           w.type === 'late'        ? `<strong>${esc(w.cgName)}</strong> arrived <strong>${w.lateMin} min late</strong> for ${esc(w.clientName)} on ${dateStr}` :
                                      `<strong>${esc(w.cgName)}</strong> completed only <strong>${w.actualMin} of ${w.durMin} min</strong> for ${esc(w.clientName)} on ${dateStr}`;
+        const evvKey = `${w.apptId}_${w.type}`;
         return `<div style="display:flex;align-items:center;gap:1rem;padding:0.75rem 0;border-bottom:1px solid var(--cream-dark);border-left:4px solid #f97316;padding-left:0.75rem">
           <div style="flex:1;font-size:0.88rem;color:var(--ink)">${desc}</div>
+          <button class="btn-resolve" onclick="openWarnResolveModal('${evvKey}','${w.clientId || ''}',${JSON.stringify(desc.replace(/<[^>]*>/g,''))})">Resolve</button>
         </div>`;
       }).join('');
     } else {
@@ -2439,12 +2527,17 @@ async function confirmResolve(status) {
 
     // Send admin note to client's Notes feed
     if (note && req.client_id) {
+      const typeLabel = req.type === 'change_plan' ? 'Plan Change Request'
+                      : req.type === 'pause'        ? 'Pause Request'
+                      :                              'Cancellation Request';
+      const clientMsg = req.message ? `\n\nYour message: "${req.message}"` : '';
+      const fullNote  = `Re: ${typeLabel}${clientMsg}\n\n${note}`;
       await db.collection('visit_notes').add({
         client_id:   req.client_id,
         caregiver_id: null,
         from_admin:   true,
         from_name:    'HearthLane Team',
-        text:         note,
+        text:         fullNote,
         created_at:   SV()
       });
     }
