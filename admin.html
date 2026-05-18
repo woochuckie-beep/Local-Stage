@@ -208,11 +208,11 @@
     .appt-chip { border-radius: 6px; padding: 0.25rem 0.45rem; font-size: 0.73rem; margin-bottom: 3px; cursor: pointer; line-height: 1.4; background: var(--terra); color: var(--white); }
     .appt-chip:hover { opacity: 0.85; }
     .appt-chip.rec { background: var(--sage); }
-    .appt-chip.status-pending   { background: #F59E0B; }
-    .appt-chip.status-confirmed { background: #3B82F6; }
-    .appt-chip.status-completed   { background: var(--sage); opacity: 0.85; }
-    .appt-chip.status-cancelled   { background: #9ca3af; opacity: 0.7; }
-    .appt-chip.status-in_progress { background: #10b981; }
+    .appt-chip.status-pending     { background: #F59E0B; color: #fff; }
+    .appt-chip.status-confirmed   { background: #3B82F6; color: #fff; }
+    .appt-chip.status-in_progress { background: #8B5CF6; color: #fff; }
+    .appt-chip.status-completed   { background: #10b981; color: #fff; }
+    .appt-chip.status-cancelled   { background: #6B7280; color: #fff; opacity: 0.8; }
     .cal-legend { display: flex; gap: 1rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
     .cal-legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.76rem; color: var(--ink-mid); }
     .cal-legend-swatch { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
@@ -470,10 +470,10 @@
         <table>
           <thead>
             <tr>
-              <th>Name</th><th>Contact</th><th>Plan</th><th>Assigned Caregiver</th><th>Actions</th>
+              <th>Name</th><th>Contact</th><th>Plan</th><th>Status</th><th>Assigned Caregiver</th><th>Actions</th>
             </tr>
           </thead>
-          <tbody id="clients-tbody"><tr class="empty-row"><td colspan="5">Loading…</td></tr></tbody>
+          <tbody id="clients-tbody"><tr class="empty-row"><td colspan="6">Loading…</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -585,27 +585,58 @@
           <div class="page-sub">Global configuration — set once, applies to all clients</div>
         </div>
       </div>
-      <div class="card" style="max-width:580px">
-        <div class="card-title">Stripe Payment Links</div>
+      <div class="card" style="max-width:640px">
+        <div class="card-title">Stripe Payment Links &amp; Plan Durations</div>
         <p style="font-size:0.84rem;color:var(--ink-mid);margin-bottom:1.25rem;line-height:1.6">
           Create one Payment Link per plan in your <strong>Stripe Dashboard</strong>, then paste them below.
-          Every client on that plan will automatically see the correct Pay Now button — no per-client setup needed.
+          Every client on that plan will see the correct Pay Now button. Duration sets how many days a client
+          is activated for when you click <strong>Activate</strong> on their row.
         </p>
         <form id="stripe-form" onsubmit="saveStripeSettings(event)">
-          <div class="form-group">
-            <label>Essential Plan Link</label>
-            <input class="fc" id="stripe-essential" type="url" placeholder="https://buy.stripe.com/…" />
+          <p style="font-size:0.8rem;font-weight:600;color:var(--ink-mid);margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.05em">Recurring Plans</p>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Essential — Payment Link</label>
+              <input class="fc" id="stripe-essential" type="url" placeholder="https://buy.stripe.com/…" />
+            </div>
+            <div class="form-group">
+              <label>Essential — Duration (days)</label>
+              <input class="fc" id="stripe-essential-days" type="number" min="1" max="365" placeholder="30" style="max-width:120px" />
+            </div>
           </div>
-          <div class="form-group">
-            <label>Companion Plan Link</label>
-            <input class="fc" id="stripe-companion" type="url" placeholder="https://buy.stripe.com/…" />
+          <div class="form-row">
+            <div class="form-group">
+              <label>Companion — Payment Link</label>
+              <input class="fc" id="stripe-companion" type="url" placeholder="https://buy.stripe.com/…" />
+            </div>
+            <div class="form-group">
+              <label>Companion — Duration (days)</label>
+              <input class="fc" id="stripe-companion-days" type="number" min="1" max="365" placeholder="30" style="max-width:120px" />
+            </div>
           </div>
-          <div class="form-group">
-            <label>Premium Plan Link</label>
-            <input class="fc" id="stripe-premium" type="url" placeholder="https://buy.stripe.com/…" />
+          <div class="form-row">
+            <div class="form-group">
+              <label>Premium — Payment Link</label>
+              <input class="fc" id="stripe-premium" type="url" placeholder="https://buy.stripe.com/…" />
+            </div>
+            <div class="form-group">
+              <label>Premium — Duration (days)</label>
+              <input class="fc" id="stripe-premium-days" type="number" min="1" max="365" placeholder="30" style="max-width:120px" />
+            </div>
           </div>
-          <div style="display:flex;align-items:center;gap:1rem;margin-top:0.5rem">
-            <button type="submit" class="btn btn-add">Save Links</button>
+          <p style="font-size:0.8rem;font-weight:600;color:var(--ink-mid);margin:1.25rem 0 0.75rem;text-transform:uppercase;letter-spacing:0.05em">Single Booking</p>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Single Booking — Payment Link</label>
+              <input class="fc" id="stripe-single-booking" type="url" placeholder="https://buy.stripe.com/…" />
+            </div>
+            <div class="form-group">
+              <label>Single Booking — Duration (days)</label>
+              <input class="fc" id="stripe-single-booking-days" type="number" min="1" max="365" placeholder="1" style="max-width:120px" />
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:1rem;margin-top:0.75rem">
+            <button type="submit" class="btn btn-add">Save Settings</button>
             <span id="stripe-saved" style="color:var(--sage);font-size:0.85rem;display:none">✓ Saved</span>
           </div>
         </form>
@@ -756,6 +787,7 @@
             <option value="essential">Essential</option>
             <option value="companion">Companion</option>
             <option value="premium">Premium</option>
+            <option value="single_booking">Single Booking</option>
           </select>
         </div>
       </div>
@@ -782,16 +814,22 @@
         <div class="form-group">
           <label>Subscription Status</label>
           <select class="fc" name="subscription_status">
+            <option value="inactive">Inactive</option>
             <option value="active">Active</option>
             <option value="paused">Paused</option>
             <option value="cancelled">Cancelled</option>
           </select>
         </div>
-        <div class="form-group" style="display:flex;align-items:center;padding-top:1.6rem">
-          <div class="toggle-row">
-            <input type="checkbox" name="auto_renew" id="client-auto-renew" checked />
-            <label for="client-auto-renew">Auto-renew subscription</label>
-          </div>
+        <div class="form-group">
+          <label>Active Until (optional)</label>
+          <input class="fc" name="subscription_expires_at" type="date" />
+          <small style="color:var(--ink-light);font-size:0.78rem;margin-top:0.3rem;display:block">Set expiry or use Activate button on client row.</small>
+        </div>
+      </div>
+      <div class="form-group" style="display:flex;align-items:center;padding-top:0.25rem">
+        <div class="toggle-row">
+          <input type="checkbox" name="auto_renew" id="client-auto-renew" />
+          <label for="client-auto-renew">Auto-renew subscription</label>
         </div>
       </div>
       <div class="modal-ft">
@@ -1222,18 +1260,33 @@ function renderClients() {
     : clientsList;
 
   document.getElementById('clients-tbody').innerHTML = list.length ? list.map(c => {
-    const cgName = c.caregiver_id ? (caregiversMap[c.caregiver_id]?.name || 'Unknown') : null;
+    const cgName  = c.caregiver_id ? (caregiversMap[c.caregiver_id]?.name || 'Unknown') : null;
+    const status  = c.subscription_status || 'inactive';
+    const expiry  = c.subscription_expires_at?.toDate ? c.subscription_expires_at.toDate() : null;
+    const expired = expiry && expiry < new Date();
+    const statusLabel = expired ? 'expired' : status;
+    const statusColor = statusLabel === 'active' ? '#D1FAE5;color:#065F46'
+                      : statusLabel === 'expired' ? '#FEE2E2;color:#991B1B'
+                      : statusLabel === 'paused'  ? '#FEF3C7;color:#92400E'
+                      : '#F3F4F6;color:#374151';
+    const expiryStr = expiry ? expiry.toLocaleDateString('en',{month:'short',day:'numeric',year:'numeric'}) : null;
+    const planLabel = c.plan ? c.plan.replace('_',' ') : null;
     return `<tr>
       <td><strong>${esc(c.name)}</strong>${c.address ? `<br><small style="color:var(--ink-light)">${esc(c.address)}</small>` : ''}</td>
       <td>${c.email ? `<a href="mailto:${esc(c.email)}" style="color:var(--terra)">${esc(c.email)}</a>` : '—'}${c.phone ? `<br><small>${esc(c.phone)}</small>` : ''}</td>
-      <td>${c.plan ? `<span class="badge badge-${c.plan}">${c.plan}</span>` : '—'}</td>
+      <td>${planLabel ? `<span class="badge badge-${c.plan}">${planLabel}</span>` : '—'}</td>
+      <td>
+        <span style="display:inline-block;padding:0.18rem 0.55rem;border-radius:100px;font-size:0.75rem;font-weight:600;background:${statusColor}">${statusLabel}</span>
+        ${expiryStr ? `<br><small style="color:var(--ink-light);font-size:0.72rem">until ${expiryStr}</small>` : ''}
+      </td>
       <td>${cgName ? esc(cgName) : '<em style="color:var(--ink-light)">Unassigned</em>'}</td>
       <td class="td-act">
+        ${status !== 'active' || expired ? `<button class="btn btn-sm" style="background:var(--sage);color:#fff" onclick="activateClient('${c.id}')">Activate</button>` : ''}
         <button class="btn btn-sm btn-edit" onclick="openClientModal('${c.id}')">Edit</button>
         <button class="btn btn-sm btn-del"  onclick="deleteClient('${c.id}')">Delete</button>
       </td>
     </tr>`;
-  }).join('') : '<tr class="empty-row"><td colspan="5">No clients found</td></tr>';
+  }).join('') : '<tr class="empty-row"><td colspan="6">No clients found</td></tr>';
 }
 
 function openClientModal(id) {
@@ -1250,10 +1303,13 @@ function openClientModal(id) {
     ).join('');
 
   if (c) {
-    fill(form, { name: c.name, email: c.email||'', phone: c.phone||'', address: c.address||'', plan: c.plan||'', caregiver_id: c.caregiver_id||'', notes: c.notes||'', stripe_link: c.stripe_link||'', subscription_status: c.subscription_status||'active' });
-    form.querySelector('[name="auto_renew"]').checked = c.auto_renew !== false;
+    const expDate = c.subscription_expires_at?.toDate ? c.subscription_expires_at.toDate() : null;
+    const expStr  = expDate ? expDate.toISOString().slice(0,10) : '';
+    fill(form, { name: c.name, email: c.email||'', phone: c.phone||'', address: c.address||'', plan: c.plan||'', caregiver_id: c.caregiver_id||'', notes: c.notes||'', stripe_link: c.stripe_link||'', subscription_status: c.subscription_status||'inactive', subscription_expires_at: expStr });
+    form.querySelector('[name="auto_renew"]').checked = c.auto_renew === true;
   } else {
-    form.querySelector('[name="auto_renew"]').checked = true;
+    fill(form, { subscription_status: 'inactive' });
+    form.querySelector('[name="auto_renew"]').checked = false;
   }
   document.getElementById('client-ov').classList.add('open');
 }
@@ -1270,7 +1326,7 @@ async function saveClient(e) {
     caregiver_id:        cap(fd.get('caregiver_id'), 128),
     notes:               cap(fd.get('notes'), 2000),
     stripe_link:         safeUrl(fd.get('stripe_link')) || null,
-    subscription_status: ['active','paused','cancelled'].includes(fd.get('subscription_status')) ? fd.get('subscription_status') : 'active',
+    subscription_status: ['active','inactive','paused','cancelled'].includes(fd.get('subscription_status')) ? fd.get('subscription_status') : 'inactive',
     auto_renew:          fd.get('auto_renew') === 'on',
     updated_at:          SV()
   };
@@ -1792,8 +1848,9 @@ function openIssueResolveModal(issueId) {
     const cgName = caregiversMap[iss.caregiver_id]?.name || 'Caregiver';
     const dt = iss.created_at?.toDate?.();
     const dateStr = dt ? dt.toLocaleDateString('en',{month:'long',day:'numeric',year:'numeric'}) : '';
+    const issueText = iss.issue_text || (Array.isArray(iss.issues) ? iss.issues.join('\n') : '');
     document.getElementById('issue-resolve-summary').innerHTML =
-      `<strong>${esc(iss.client_name || 'Client')}</strong> reported on ${dateStr}:<br><em>"${esc(iss.issue_text)}"</em>${cgName ? `<br><small style="color:var(--ink-light)">Caregiver: ${esc(cgName)}</small>` : ''}`;
+      `<strong>${esc(iss.client_name || 'Client')}</strong> — ${dateStr}:<br><pre style="white-space:pre-wrap;margin:0.4rem 0 0;font-size:0.85rem;font-family:inherit">${esc(issueText)}</pre>${cgName ? `<br><small style="color:var(--ink-light)">Caregiver: ${esc(cgName)}</small>` : ''}`;
     document.getElementById('issue-resolve-note').value = '';
     document.getElementById('issue-resolve-ov').classList.add('open');
   }).catch(ex => toast(ex.message, true));
@@ -2116,67 +2173,87 @@ async function loadAdminRequests() {
   pendingEl.innerHTML = '<div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div>';
   allEl.innerHTML     = '<div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div>';
 
-  // Load visit issues and EVV warnings in parallel with service requests
-  let reqSnap, issueSnap, recentApptSnap;
-  try {
-    [reqSnap, issueSnap, recentApptSnap] = await Promise.all([
-      db.collection('plan_requests').get(),
-      db.collection('visit_issues').where('status', '==', 'open').get(),
-      db.collection('appointments')
-        .where('scheduled_at', '>=', firebase.firestore.Timestamp.fromDate(new Date(Date.now() - 7 * 86400000)))
-        .get()
-    ]);
-  } catch(ex) {
-    pendingEl.innerHTML = hlState('error','Error loading data','Please refresh the page.');
-    allEl.innerHTML = '';
-    console.error('loadAdminRequests fetch error:', ex);
-    return;
-  }
+  // allSettled: a failure in one query never blocks the others
+  const [reqResult, issueResult, apptResult] = await Promise.allSettled([
+    db.collection('plan_requests').get(),
+    db.collection('visit_issues').where('status', '==', 'open').get(),
+    db.collection('appointments')
+      .where('scheduled_at', '>=', firebase.firestore.Timestamp.fromDate(new Date(Date.now() - 7 * 86400000)))
+      .get()
+  ]);
+  const reqSnap        = reqResult.status   === 'fulfilled' ? reqResult.value   : null;
+  const issueSnap      = issueResult.status === 'fulfilled' ? issueResult.value : null;
+  const recentApptSnap = apptResult.status  === 'fulfilled' ? apptResult.value  : null;
+  if (reqResult.status   === 'rejected') console.error('plan_requests failed:',  reqResult.reason);
+  if (issueResult.status === 'rejected') console.error('visit_issues failed:',   issueResult.reason);
+  if (apptResult.status  === 'rejected') console.error('appointments failed:',   apptResult.reason);
 
   // ── Visit Issues ──────────────────────────────────────────────────────────
-  const issues = issueSnap.docs.map(d => ({ id: d.id, ...d.data() }))
-    .sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0));
   const issuesCard  = document.getElementById('req-issues-card');
   const issuesList  = document.getElementById('req-issues-list');
   const issuesCount = document.getElementById('req-issues-count');
   const navBadge    = document.getElementById('issues-nav-badge');
   if (issuesList) {
-    if (issues.length) {
-      issuesCard.style.display = 'block';
-      issuesCount.textContent  = issues.length;
-      issuesCount.style.display = 'inline';
-      if (navBadge) { navBadge.textContent = issues.length; navBadge.style.display = 'inline'; }
-      issuesList.innerHTML = issues.map(iss => {
-        const dt = iss.created_at?.toDate?.();
-        const cgName = caregiversMap[iss.caregiver_id]?.name || null;
-        return `<div class="issue-row" id="iss-${iss.id}" style="border-left:4px solid #ef4444">
-          <div style="flex:1;min-width:0">
-            <div class="issue-client">${esc(iss.client_name || 'Client')}</div>
-            ${cgName ? `<div class="issue-date">Caregiver: ${esc(cgName)}</div>` : ''}
-            <div class="issue-text">${esc(iss.issue_text)}</div>
-            ${dt ? `<div class="issue-date">${dt.toLocaleDateString('en',{month:'long',day:'numeric',year:'numeric'})}</div>` : ''}
-          </div>
-          <button class="btn-resolve" onclick="openIssueResolveModal('${iss.id}')">Resolve</button>
-        </div>`;
-      }).join('');
+    if (!issueSnap) {
+      issuesList.innerHTML = hlState('error','Could not load issues','Check console for details.');
     } else {
-      issuesList.innerHTML = hlState('empty','No open issues','All visits are running smoothly.');
-      issuesCount.style.display = 'none';
-      if (navBadge) navBadge.style.display = 'none';
+      const issues = issueSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0));
+      if (issues.length) {
+        issuesCard.style.display  = 'block';
+        issuesCount.textContent   = issues.length;
+        issuesCount.style.display = 'inline';
+        if (navBadge) { navBadge.textContent = issues.length; navBadge.style.display = 'inline'; }
+        issuesList.innerHTML = issues.map(iss => {
+          const dt        = iss.created_at?.toDate?.();
+          const cgName    = caregiversMap[iss.caregiver_id]?.name || null;
+          const issueText = iss.issue_text || (Array.isArray(iss.issues) ? iss.issues.join('\n') : '');
+          return `<div class="issue-row" id="iss-${iss.id}" style="border-left:4px solid #ef4444">
+            <div style="flex:1;min-width:0">
+              <div class="issue-client">${esc(iss.client_name || 'Client')}</div>
+              ${cgName ? `<div class="issue-date">Caregiver: ${esc(cgName)}</div>` : ''}
+              <div class="issue-text" style="white-space:pre-line">${esc(issueText)}</div>
+              ${dt ? `<div class="issue-date">${dt.toLocaleDateString('en',{month:'long',day:'numeric',year:'numeric'})}</div>` : ''}
+            </div>
+            <button class="btn-resolve" onclick="openIssueResolveModal('${iss.id}')">Resolve</button>
+          </div>`;
+        }).join('');
+      } else {
+        issuesList.innerHTML = hlState('empty','No open issues','All visits are running smoothly.');
+        issuesCount.style.display = 'none';
+        if (navBadge) navBadge.style.display = 'none';
+      }
     }
   }
 
-  // ── EVV Warnings (late arrivals / short visits) — auto-create visit_issues ──
+  // ── EVV Warnings — auto-flag all suspicious visit activity ────────────────
   const warningsCard  = document.getElementById('req-warnings-card');
   const warningsList  = document.getElementById('req-warnings-list');
   const warningsCount = document.getElementById('req-warnings-count');
-  if (warningsCard && warningsList) {
+  if (warningsCard && warningsList && recentApptSnap) {
+    const now      = new Date();
     const warnings = [];
     recentApptSnap.docs.forEach(d => {
-      const a = { id: d.id, ...d.data(), scheduled_at: d.data().scheduled_at?.toDate() };
+      const a           = { id: d.id, ...d.data(), scheduled_at: d.data().scheduled_at?.toDate() };
       if (a.status === 'cancelled' || !a.scheduled_at) return;
-      const cgName     = caregiversMap[a.caregiver_id]?.name || 'Caregiver';
-      const clientName = clientsMap[a.client_id]?.name       || 'Client';
+      const cgName      = caregiversMap[a.caregiver_id]?.name || 'Caregiver';
+      const clientName  = clientsMap[a.client_id]?.name       || 'Client';
+      const durMin      = a.duration_minutes || 60;
+      const expectedEnd = new Date(a.scheduled_at.getTime() + (durMin + 30) * 60000);
+
+      // Never clocked in and visit window is over
+      if (!a.clocked_in_at && now > expectedEnd && ['scheduled','confirmed'].includes(a.status)) {
+        warnings.push({ type: 'no_clockin', apptId: a.id, cgId: a.caregiver_id, clientId: a.client_id,
+          cgName, clientName, scheduled: a.scheduled_at });
+      }
+
+      // Clocked in but never clocked out
+      if (a.clocked_in_at && !a.clocked_out_at && a.status === 'in_progress' && now > expectedEnd) {
+        warnings.push({ type: 'no_clockout', apptId: a.id, cgId: a.caregiver_id, clientId: a.client_id,
+          cgName, clientName, scheduled: a.scheduled_at });
+      }
+
+      // Late clock-in (>15 min)
       if (a.clocked_in_at) {
         const inTime  = a.clocked_in_at.toDate();
         const lateMin = Math.round((inTime - a.scheduled_at) / 60000);
@@ -2185,16 +2262,19 @@ async function loadAdminRequests() {
           cgName, clientName, scheduled: a.scheduled_at, lateMin
         });
       }
+
+      // Short visit (<75% of scheduled duration)
       if (a.actual_duration_minutes && a.duration_minutes) {
-        const shortMin = a.duration_minutes - a.actual_duration_minutes;
-        if (shortMin > 15) warnings.push({
+        const actualMin = a.actual_duration_minutes;
+        const shortMin  = a.duration_minutes - actualMin;
+        if (shortMin > Math.ceil(a.duration_minutes * 0.25)) warnings.push({
           type: 'short', apptId: a.id, cgId: a.caregiver_id, clientId: a.client_id,
-          cgName, clientName, scheduled: a.scheduled_at, shortMin
+          cgName, clientName, scheduled: a.scheduled_at, shortMin, durMin: a.duration_minutes, actualMin
         });
       }
     });
 
-    // Auto-create visit_issues for new EVV warnings not already recorded
+    // Auto-create visit_issues for new EVV warnings (deduped by evv_key)
     if (warnings.length) {
       try {
         const existSnap = await db.collection('visit_issues').where('auto_evv', '==', true).get();
@@ -2203,9 +2283,12 @@ async function loadAdminRequests() {
         warnings.forEach(w => {
           const key = `${w.apptId}_${w.type}`;
           if (!existing.has(key)) {
-            const text = w.type === 'late'
-              ? `EVV Alert: ${w.cgName} arrived ${w.lateMin} min late (scheduled ${w.scheduled?.toLocaleTimeString('en',{hour:'numeric',minute:'2-digit'})})`
-              : `EVV Alert: ${w.cgName} left ${w.shortMin} min early`;
+            const timeStr = w.scheduled?.toLocaleTimeString('en', { timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit' });
+            const text =
+              w.type === 'no_clockin'  ? `Missed visit: ${w.cgName} never clocked in for ${w.clientName} (scheduled ${timeStr} ET)` :
+              w.type === 'no_clockout' ? `Incomplete visit: ${w.cgName} clocked in for ${w.clientName} but never clocked out (scheduled ${timeStr} ET)` :
+              w.type === 'late'        ? `Late arrival: ${w.cgName} arrived ${w.lateMin} min late for ${w.clientName} (scheduled ${timeStr} ET)` :
+                                         `Short visit: ${w.cgName} completed only ${w.actualMin} of ${w.durMin} min for ${w.clientName}`;
             batch.set(db.collection('visit_issues').doc(), {
               client_id:    w.clientId || null,
               client_name:  w.clientName,
@@ -2220,14 +2303,18 @@ async function loadAdminRequests() {
         });
         await batch.commit();
       } catch(e) { console.warn('Could not auto-create EVV issues:', e); }
+    }
 
+    if (warnings.length) {
       warningsCard.style.display = 'block';
-      warningsCount.textContent = warnings.length;
+      warningsCount.textContent  = warnings.length;
       warningsList.innerHTML = warnings.map(w => {
-        const dateStr = w.scheduled?.toLocaleDateString('en',{month:'short',day:'numeric'}) || '';
-        const desc = w.type === 'late'
-          ? `<strong>${esc(w.cgName)}</strong> arrived <strong>${w.lateMin} min late</strong> for ${esc(w.clientName)} on ${dateStr}`
-          : `<strong>${esc(w.cgName)}</strong> left <strong>${w.shortMin} min early</strong> for ${esc(w.clientName)} on ${dateStr}`;
+        const dateStr = w.scheduled?.toLocaleDateString('en', { month: 'short', day: 'numeric' }) || '';
+        const desc =
+          w.type === 'no_clockin'  ? `<strong>${esc(w.cgName)}</strong> never clocked in for ${esc(w.clientName)} on ${dateStr}` :
+          w.type === 'no_clockout' ? `<strong>${esc(w.cgName)}</strong> never clocked out for ${esc(w.clientName)} on ${dateStr}` :
+          w.type === 'late'        ? `<strong>${esc(w.cgName)}</strong> arrived <strong>${w.lateMin} min late</strong> for ${esc(w.clientName)} on ${dateStr}` :
+                                     `<strong>${esc(w.cgName)}</strong> completed only <strong>${w.actualMin} of ${w.durMin} min</strong> for ${esc(w.clientName)} on ${dateStr}`;
         return `<div style="display:flex;align-items:center;gap:1rem;padding:0.75rem 0;border-bottom:1px solid var(--cream-dark);border-left:4px solid #f97316;padding-left:0.75rem">
           <div style="flex:1;font-size:0.88rem;color:var(--ink)">${desc}</div>
         </div>`;
@@ -2238,37 +2325,33 @@ async function loadAdminRequests() {
   }
 
   // ── Service Requests ──────────────────────────────────────────────────────
+  if (!reqSnap) {
+    pendingEl.innerHTML = hlState('error','Could not load service requests','Check console for details.');
+    allEl.innerHTML = '';
+    return;
+  }
   try {
-    const all  = reqSnap.docs
-      .map(d => ({ id: d.id, ...d.data() }))
+    const all     = reqSnap.docs.map(d => ({ id: d.id, ...d.data() }))
       .sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0));
-
     const pending = all.filter(r => r.status === 'pending');
 
-    // Update sidebar badge
     const badge = document.getElementById('req-pending-badge');
     if (badge) {
       if (pending.length) { badge.textContent = pending.length; badge.style.display = 'inline'; }
       else badge.style.display = 'none';
     }
-
     const countEl = document.getElementById('admin-pending-count');
     if (countEl) { countEl.textContent = pending.length || ''; countEl.style.display = pending.length ? 'inline' : 'none'; }
 
-    if (!pending.length) {
-      pendingEl.innerHTML = hlState('empty','No pending requests','Service requests from clients will appear here.');
-    } else {
-      pendingEl.innerHTML = pending.map(r => reqRowHtml(r, true)).join('');
-    }
-
-    if (!all.length) {
-      allEl.innerHTML = hlState('empty','No requests yet','All client requests will be shown here.');
-    } else {
-      allEl.innerHTML = all.map(r => reqRowHtml(r, false)).join('');
-    }
+    pendingEl.innerHTML = pending.length
+      ? pending.map(r => reqRowHtml(r, true)).join('')
+      : hlState('empty','No pending requests','Service requests from clients will appear here.');
+    allEl.innerHTML = all.length
+      ? all.map(r => reqRowHtml(r, false)).join('')
+      : hlState('empty','No requests yet','All client requests will be shown here.');
   } catch(ex) {
     pendingEl.innerHTML = hlState('error','Error loading requests','Please refresh the page.');
-    allEl.innerHTML     = hlState('error','Error loading requests','Please refresh the page.');
+    allEl.innerHTML = '';
     console.error('loadAdminRequests error:', ex);
   }
 }
@@ -2382,11 +2465,12 @@ async function confirmResolve(status) {
 (function startClock() {
   function tick() {
     const now = new Date();
-    const day  = now.toLocaleDateString('en', { weekday: 'short' });
-    const date = now.toLocaleDateString('en', { month: 'short', day: 'numeric' });
-    const time = now.toLocaleTimeString('en', { hour: 'numeric', minute: '2-digit', second: '2-digit' });
+    const tz  = 'America/New_York';
+    const day  = now.toLocaleDateString('en', { timeZone: tz, weekday: 'short' });
+    const date = now.toLocaleDateString('en', { timeZone: tz, month: 'short', day: 'numeric' });
+    const time = now.toLocaleTimeString('en', { timeZone: tz, hour: 'numeric', minute: '2-digit', second: '2-digit' });
     const el = document.getElementById('admin-clock');
-    if (el) el.innerHTML = `${day}, ${date}<br>${time}`;
+    if (el) el.innerHTML = `${day}, ${date}<br>${time} ET`;
   }
   tick();
   setInterval(tick, 1000);

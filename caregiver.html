@@ -134,11 +134,11 @@
     .cal-cell-ro:last-child { border-right: none; }
     .appt-chip { border-radius: 6px; padding: 0.22rem 0.4rem; font-size: 0.7rem; margin-bottom: 2px; background: var(--terra); color: var(--white); line-height: 1.4; }
     .appt-chip.rec { background: var(--sage); }
-    .appt-chip.status-pending   { background: #F59E0B; color: var(--white); }
-    .appt-chip.status-confirmed { background: #3B82F6; color: var(--white); }
-    .appt-chip.status-completed   { background: var(--sage); opacity: 0.85; }
-    .appt-chip.status-cancelled   { background: #9ca3af; opacity: 0.65; }
-    .appt-chip.status-in_progress { background: #10b981; }
+    .appt-chip.status-pending     { background: #F59E0B; color: #fff; }
+    .appt-chip.status-confirmed   { background: #3B82F6; color: #fff; }
+    .appt-chip.status-in_progress { background: #8B5CF6; color: #fff; }
+    .appt-chip.status-completed   { background: #10b981; color: #fff; }
+    .appt-chip.status-cancelled   { background: #6B7280; color: #fff; opacity: 0.8; }
     .btn-clock-chip { display: block; width: 100%; margin-top: 4px; padding: 2px 6px; font-size: 0.62rem; font-weight: 700; background: rgba(255,255,255,0.22); color: var(--white); border: 1px solid rgba(255,255,255,0.45); border-radius: 4px; cursor: pointer; text-align: center; transition: background 0.15s; letter-spacing: 0.03em; }
     .btn-clock-chip:hover { background: rgba(255,255,255,0.4); }
     .clock-in-btn  { background: var(--avail); color: var(--white); border: none; border-radius: 8px; padding: 0.45rem 1rem; font-size: 0.84rem; font-weight: 600; cursor: pointer; transition: background 0.15s; }
@@ -910,7 +910,7 @@ async function clockOut(apptId) {
         client_id:      appt.client_id,
         client_name:    clientsMap[appt.client_id]?.name || '',
         scheduled_at:   firebase.firestore.Timestamp.fromDate(appt.scheduled_at),
-        issues,
+        issue_text:     issues.join('\n'),
         status:         'open',
         created_at:     FSV.serverTimestamp()
       });
