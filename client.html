@@ -140,6 +140,7 @@
     .cal-hcell { padding: 0.65rem 0.5rem; text-align: center; }
     .cal-hcell .dname { display: block; font-size: 0.68rem; font-weight: 600; color: var(--ink-light); text-transform: uppercase; letter-spacing: 0.05em; }
     .cal-hcell .dnum { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; font-size: 1rem; font-weight: 600; color: var(--ink); margin-top: 0.2rem; }
+    .cal-hcell.has-booking .dnum { background: #10b981; color: var(--white); }
     .cal-hcell.today .dnum { background: var(--terra); color: var(--white); }
     .cal-body { max-height: 560px; overflow-y: auto; }
     .cal-row { display: grid; grid-template-columns: 56px repeat(7,1fr); border-bottom: 1px solid #f0ebe0; }
@@ -877,11 +878,13 @@
     // Header — same classes as caregiver (.cal-head / .cal-hcell)
     const head = document.getElementById('cl-cal-head');
     if (head) {
-      head.innerHTML = '<div class="cal-hcell"></div>' + days.map(d => `
-        <div class="cal-hcell${sameDay(d,today)?' today':''}">
+      head.innerHTML = '<div class="cal-hcell"></div>' + days.map(d => {
+        const hasBooking = weekEvents.some(a => sameDay(a.scheduled_at, d));
+        return `<div class="cal-hcell${sameDay(d,today)?' today':''}${hasBooking?' has-booking':''}">
           <span class="dname">${d.toLocaleDateString('en',{weekday:'short'})}</span>
           <span class="dnum">${d.getDate()}</span>
-        </div>`).join('');
+        </div>`;
+      }).join('');
     }
 
     // Body — 7am to 9pm, same classes as caregiver (.cal-body / .cal-row / .cal-cell-ro)
