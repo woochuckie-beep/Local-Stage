@@ -216,17 +216,32 @@
     .note-del { background: none; border: none; color: var(--ink-light); font-size: 0.75rem; cursor: pointer; margin-top: 0.4rem; padding: 0; }
     .note-del:hover { color: #c44; }
 
-    /* ── CLIENT CARD ── */
-    .client-card { background: var(--white); border-radius: 12px; padding: 1.1rem 1.25rem; margin-bottom: 0.85rem; box-shadow: 0 2px 6px rgba(58,46,34,0.05); }
-    .client-card:last-child { margin-bottom: 0; }
-    .client-card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
-    .client-card-name { font-weight: 600; font-size: 0.95rem; }
-    .client-card-meta { font-size: 0.8rem; color: var(--ink-light); margin-top: 0.15rem; }
-    .private-note-wrap textarea { width: 100%; min-height: 70px; resize: vertical; }
-    .btn-save-note { margin-top: 0.5rem; padding: 0.38rem 1rem; background: var(--ink); color: var(--white); border: none; border-radius: 7px; font-size: 0.8rem; font-weight: 500; cursor: pointer; font-family: inherit; transition: background 0.15s; }
-    .btn-save-note:hover { background: var(--terra); }
-    .private-note-label { font-size: 0.72rem; font-weight: 600; color: var(--ink-light); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.3rem; display: flex; align-items: center; gap: 0.35rem; }
-    .private-note-label span { background: var(--cream-dark); color: var(--ink-mid); padding: 0.1rem 0.45rem; border-radius: 100px; font-size: 0.67rem; }
+    /* ── CLIENT ACCORDION ── */
+    .client-acc { background: var(--white); border-radius: 12px; margin-bottom: 0.65rem; box-shadow: 0 2px 6px rgba(58,46,34,0.05); overflow: hidden; }
+    .client-acc-hd { display: flex; align-items: center; gap: 0.85rem; padding: 1rem 1.25rem; cursor: pointer; transition: background 0.13s; user-select: none; }
+    .client-acc-hd:hover { background: var(--cream-soft); }
+    .client-acc-av { width: 38px; height: 38px; border-radius: 50%; background: var(--terra); color: var(--white); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.82rem; flex-shrink: 0; }
+    .client-acc-info { flex: 1; min-width: 0; }
+    .client-acc-name { font-weight: 600; font-size: 0.93rem; color: var(--ink); }
+    .client-acc-meta { font-size: 0.78rem; color: var(--ink-light); margin-top: 0.1rem; }
+    .client-acc-chevron { color: var(--ink-light); transition: transform 0.2s; flex-shrink: 0; }
+    .client-acc.open .client-acc-chevron { transform: rotate(180deg); }
+    .client-acc-body { display: none; border-top: 1px solid var(--cream-dark); padding: 1.1rem 1.25rem; }
+    .client-acc.open .client-acc-body { display: block; }
+    .acc-section { margin-bottom: 1.1rem; }
+    .acc-section:last-child { margin-bottom: 0; }
+    .acc-label { font-size: 0.72rem; font-weight: 700; color: var(--ink-light); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.45rem; display: flex; align-items: center; gap: 0.4rem; }
+    .acc-label span { background: var(--cream-dark); color: var(--ink-mid); padding: 0.08rem 0.4rem; border-radius: 100px; font-size: 0.66rem; font-weight: 600; }
+    .acc-btn { margin-top: 0.45rem; padding: 0.38rem 1rem; background: var(--ink); color: var(--white); border: none; border-radius: 7px; font-size: 0.8rem; font-weight: 500; cursor: pointer; font-family: inherit; transition: background 0.15s; }
+    .acc-btn:hover { background: var(--terra); }
+    .acc-btn.send { background: var(--avail); }
+    .acc-btn.send:hover { background: #2e8a50; }
+    .acc-divider { height: 1px; background: var(--cream-dark); margin: 1rem 0; }
+    .acc-sent-note { background: var(--cream-soft); border-radius: 8px; padding: 0.65rem 0.85rem; margin-bottom: 0.5rem; }
+    .acc-sent-note-date { font-size: 0.72rem; color: var(--ink-light); margin-bottom: 0.25rem; }
+    .acc-sent-note-text { font-size: 0.85rem; color: var(--ink); line-height: 1.55; }
+    .acc-sent-note-del { margin-top: 0.35rem; font-size: 0.72rem; color: #c44; background: none; border: none; cursor: pointer; padding: 0; font-family: inherit; }
+    .acc-sent-note-del:hover { text-decoration: underline; }
 
     /* ── CHAT ── */
     .chat-shell { display:flex; flex-direction:column; border-radius:14px; overflow:hidden; border:1.5px solid var(--cream-dark); background:var(--white); height:480px; }
@@ -422,27 +437,7 @@
     <!-- MY CLIENTS & NOTES -->
     <div class="view" id="view-clients">
       <div class="view-title">Clients &amp; Notes</div>
-      <div class="view-sub">Send visit notes to clients, review past notes, and manage private reminders.</div>
-      <div class="card" style="margin-bottom:1.25rem">
-        <div class="card-title">Send Note to Client</div>
-        <div class="form-group">
-          <label>Client</label>
-          <select class="fc" id="note-client-sel">
-            <option value="">— Select client —</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Note</label>
-          <textarea class="fc" id="note-text" rows="4" placeholder="How did the visit go? Any updates for the client…" style="min-height:100px"></textarea>
-        </div>
-        <button class="btn-save-avail" style="padding:0.5rem 1.4rem;font-size:0.88rem" onclick="saveVisitNote()">Send Note to Client</button>
-      </div>
-      <div class="card" style="margin-bottom:1.25rem">
-        <div class="card-title">Previous Notes</div>
-        <div id="notes-list"><div class="empty-state">No notes yet.</div></div>
-      </div>
-      <div class="card-title" style="margin-bottom:0.75rem;font-size:0.95rem;font-weight:600">My Clients</div>
-      <div class="view-sub" style="margin-bottom:1rem">Private notes below are only visible to you.</div>
+      <div class="view-sub">Click a client to expand — send notes, manage private reminders, and view history.</div>
       <div id="clients-list"><div class="empty-state">Loading…</div></div>
     </div>
 
@@ -612,7 +607,7 @@ function startRealtimeListeners() {
       snap.docs.forEach(d => { clientsMap[d.id] = { id: d.id, ...d.data() }; });
       const v = activeTabView();
       if (v === 'dashboard') loadDashboard();
-      if (v === 'clients')   { renderMyClients(); renderNotesClientSel(); }
+      if (v === 'clients')   loadMyClients();
     });
 
   _unsubReqs = db.collection('booking_requests')
@@ -683,7 +678,7 @@ function switchTab(view) {
   if (view === 'schedule')     renderScheduleCal();
   if (view === 'availability') loadAvailability();
   if (view === 'requests')     renderRequests();
-  if (view === 'clients')      { loadMyClients(); loadVisitNotes(); }
+  if (view === 'clients')      loadMyClients();
   if (view === 'messages')     loadCaregiverMessages();
 }
 
@@ -867,6 +862,33 @@ async function clockOut(apptId) {
     const update = { status: 'completed', clocked_out_at: FSV.serverTimestamp() };
     if (actualMinutes !== null) update.actual_duration_minutes = actualMinutes;
     await db.collection('appointments').doc(apptId).update(update);
+
+    // Auto-flag visit issues for admin review
+    const issues = [];
+    if (!inTime) {
+      issues.push('No clock-in recorded — visit may not have been tracked');
+    } else {
+      const lateMin = Math.round((inTime - appt.scheduled_at) / 60000);
+      if (lateMin > 15)  issues.push(`Started ${lateMin} min late (scheduled ${fmt12(appt.scheduled_at)}, clocked in ${fmt12(inTime)})`);
+      if (lateMin < -10) issues.push(`Clocked in ${Math.abs(lateMin)} min before scheduled start`);
+    }
+    if (actualMinutes !== null && appt.duration_minutes && actualMinutes < appt.duration_minutes * 0.75) {
+      issues.push(`Visit was ${actualMinutes} min — expected ${appt.duration_minutes} min (under 75%)`);
+    }
+    if (issues.length) {
+      await db.collection('visit_issues').add({
+        appointment_id: apptId,
+        caregiver_id:   caregiverId,
+        caregiver_name: caregiverDoc?.name || '',
+        client_id:      appt.client_id,
+        client_name:    clientsMap[appt.client_id]?.name || '',
+        scheduled_at:   firebase.firestore.Timestamp.fromDate(appt.scheduled_at),
+        issues,
+        status:         'open',
+        created_at:     FSV.serverTimestamp()
+      });
+    }
+
     toast(actualMinutes !== null ? `Visit complete — ${actualMinutes} min on site` : 'Visit marked complete');
   } catch(ex) { toast('Error: ' + ex.message, true); }
 }
@@ -1233,28 +1255,101 @@ function renderMyClients(clientIds, privateNotes) {
     return;
   }
   const el = document.getElementById('clients-list');
+  const chevronSvg = `<svg class="client-acc-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>`;
   el.innerHTML = clientIds.map(id => {
     const c = clientsMap[id]; if (!c) return '';
     const note = privateNotes?.[id] || '';
     const visits = allAppointments.filter(a => a.client_id === id).length;
     const last   = allAppointments.filter(a => a.client_id === id)
       .sort((a,b) => b.scheduled_at - a.scheduled_at)[0];
-    return `<div class="client-card" id="cc-${id}">
-      <div class="client-card-hd">
-        <div>
-          <div class="client-card-name">${esc(c.name)}</div>
-          <div class="client-card-meta">${visits} visit${visits!==1?'s':''} total${last ? ' · Last: ' + last.scheduled_at.toLocaleDateString('en',{month:'short',day:'numeric',year:'numeric'}) : ''}</div>
-          ${c.address ? `<div class="client-card-meta">${esc(c.address)}</div>` : ''}
+    const initials = (c.name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    return `<div class="client-acc" id="cacc-${id}">
+      <div class="client-acc-hd" onclick="toggleClientAcc('${id}')">
+        <div class="client-acc-av">${initials}</div>
+        <div class="client-acc-info">
+          <div class="client-acc-name">${esc(c.name)}${c.plan ? `<span style="margin-left:0.5rem;background:var(--terra-soft);color:var(--terra-deep);padding:0.1rem 0.5rem;border-radius:100px;font-size:0.7rem;font-weight:600">${c.plan}</span>` : ''}</div>
+          <div class="client-acc-meta">${visits} visit${visits!==1?'s':''} total${last ? ' · Last: ' + last.scheduled_at.toLocaleDateString('en',{month:'short',day:'numeric',year:'numeric'}) : ''}${c.address ? ' · ' + esc(c.address) : ''}</div>
         </div>
-        ${c.plan ? `<span style="background:var(--terra-soft);color:var(--terra-deep);padding:0.2rem 0.65rem;border-radius:100px;font-size:0.75rem;font-weight:600">${c.plan}</span>` : ''}
+        ${chevronSvg}
       </div>
-      <div class="private-note-wrap">
-        <div class="private-note-label">Private Notes <span>Only you see this</span></div>
-        <textarea class="fc" id="pnote-${id}" placeholder="Personal reminders, preferences, things to remember for next visit…">${esc(note)}</textarea>
-        <button class="btn-save-note" onclick="savePrivateNote('${id}')">Save Note</button>
+      <div class="client-acc-body">
+        <div class="acc-section">
+          <div class="acc-label">Private Notes <span>Only you see this</span></div>
+          <textarea class="fc" id="pnote-${id}" rows="3" placeholder="Personal reminders, preferences, things to remember…" style="width:100%;min-height:70px;resize:vertical">${esc(note)}</textarea>
+          <button class="acc-btn" onclick="savePrivateNote('${id}')">Save Private Note</button>
+        </div>
+        <div class="acc-divider"></div>
+        <div class="acc-section">
+          <div class="acc-label">Send Note to Client</div>
+          <textarea class="fc" id="cnote-${id}" rows="3" placeholder="How did the visit go? Any updates for the client…" style="width:100%;min-height:70px;resize:vertical"></textarea>
+          <button class="acc-btn send" onclick="sendNoteToClient('${id}')">Send Note</button>
+        </div>
+        <div class="acc-divider"></div>
+        <div class="acc-section">
+          <div class="acc-label">Sent Notes</div>
+          <div id="snotes-${id}"><div class="empty-state" style="font-size:0.82rem;padding:0.5rem 0">Loading…</div></div>
+        </div>
       </div>
     </div>`;
   }).join('') || '<div class="empty-state">No clients found.</div>';
+}
+
+function toggleClientAcc(id) {
+  const acc = document.getElementById('cacc-' + id);
+  if (!acc) return;
+  const isOpen = acc.classList.toggle('open');
+  if (isOpen) loadClientSentNotes(id);
+}
+
+async function loadClientSentNotes(id) {
+  const el = document.getElementById('snotes-' + id);
+  if (!el) return;
+  try {
+    const snap = await db.collection('visit_notes')
+      .where('caregiver_id', '==', caregiverId)
+      .where('client_id', '==', id)
+      .orderBy('created_at', 'desc')
+      .limit(20)
+      .get();
+    if (!snap.docs.length) { el.innerHTML = '<div class="empty-state" style="font-size:0.82rem;padding:0.5rem 0">No notes sent yet.</div>'; return; }
+    el.innerHTML = snap.docs.map(d => {
+      const n = d.data();
+      const dt = n.created_at?.toDate?.();
+      const dateStr = dt ? dt.toLocaleDateString('en',{month:'short',day:'numeric',year:'numeric'}) + ' · ' + dt.toLocaleTimeString('en',{hour:'numeric',minute:'2-digit'}) : '—';
+      return `<div class="acc-sent-note" id="sn-${d.id}">
+        <div class="acc-sent-note-date">${dateStr}</div>
+        <div class="acc-sent-note-text">${esc(n.text||'')}</div>
+        <button class="acc-sent-note-del" onclick="deleteSentNote('${d.id}','${id}')">Delete</button>
+      </div>`;
+    }).join('');
+  } catch(ex) { el.innerHTML = `<div style="color:#c44;font-size:0.8rem">${esc(ex.message)}</div>`; }
+}
+
+async function sendNoteToClient(clientId) {
+  const ta = document.getElementById('cnote-' + clientId);
+  const text = (ta?.value || '').trim().slice(0, 5000);
+  if (!clientId || !/^[a-zA-Z0-9]+$/.test(clientId)) { toast('Invalid client', true); return; }
+  if (!text) { toast('Note cannot be empty', true); return; }
+  try {
+    await db.collection('visit_notes').add({
+      caregiver_id: caregiverId,
+      client_id:    clientId,
+      text,
+      created_at:   FSV.serverTimestamp()
+    });
+    if (ta) ta.value = '';
+    toast('Note sent to client');
+    loadClientSentNotes(clientId);
+  } catch(ex) { toast(ex.message, true); }
+}
+
+async function deleteSentNote(noteId, clientId) {
+  if (!confirm('Delete this note? The client will no longer see it.')) return;
+  try {
+    await db.collection('visit_notes').doc(noteId).delete();
+    document.getElementById('sn-' + noteId)?.remove();
+    toast('Note deleted');
+  } catch(ex) { toast(ex.message, true); }
 }
 
 async function savePrivateNote(clientId) {
@@ -1453,12 +1548,13 @@ async function sendCaregiverMessage() {
 // ── LIVE CLOCK ────────────────────────────────────────────────────────────────
 (function startClock() {
   function tick() {
-    const now  = new Date();
-    const day  = now.toLocaleDateString('en', { weekday: 'short' });
-    const date = now.toLocaleDateString('en', { month: 'short', day: 'numeric' });
-    const time = now.toLocaleTimeString('en', { hour: 'numeric', minute: '2-digit', second: '2-digit' });
+    const now = new Date();
+    const tz  = 'America/New_York';
+    const day  = now.toLocaleDateString('en', { timeZone: tz, weekday: 'short' });
+    const date = now.toLocaleDateString('en', { timeZone: tz, month: 'short', day: 'numeric' });
+    const time = now.toLocaleTimeString('en', { timeZone: tz, hour: 'numeric', minute: '2-digit', second: '2-digit' });
     const el = document.getElementById('nav-clock');
-    if (el) el.textContent = `${day}, ${date}  ${time}`;
+    if (el) el.textContent = `${day}, ${date}  ${time} ET`;
   }
   tick();
   setInterval(tick, 1000);

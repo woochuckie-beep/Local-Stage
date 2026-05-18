@@ -4471,7 +4471,9 @@ function renderPortalNotes() {
   const notes = portalClientData?._notes || [];
   const badge = document.getElementById('notes-badge');
   if (badge) {
-    if (notes.length > 0) { badge.textContent = notes.length; badge.style.display = 'inline'; }
+    const lastReadSecs = portalClientData?.notes_last_read_at?.seconds ?? 0;
+    const unread = notes.filter(n => (n.created_at?.seconds || 0) > lastReadSecs);
+    if (unread.length > 0) { badge.textContent = unread.length; badge.style.display = 'inline'; }
     else badge.style.display = 'none';
   }
   if (!notes.length) {
@@ -4502,6 +4504,18 @@ function renderPortalNotes() {
   }).join('');
 }
 
+async function markNotesRead() {
+  const clientId = portalClientData?._clientId;
+  if (!clientId) return;
+  const db = getDb();
+  const { doc: fsDoc, updateDoc, serverTimestamp } = fs();
+  try {
+    await updateDoc(fsDoc(db, 'clients', clientId), { notes_last_read_at: serverTimestamp() });
+    // Update local copy so the badge stays gone for the rest of this session
+    if (portalClientData) portalClientData.notes_last_read_at = { seconds: Math.floor(Date.now() / 1000) };
+  } catch(e) {}
+}
+
 let _clientReqListener = null;
 let _seenReqStatuses = {};
 function startClientRequestsListener(user) {
@@ -4530,7 +4544,8 @@ function startClientRequestsListener(user) {
           }
           _seenReqStatuses[d.id] = r.status;
         });
-      }
+      },
+      _err => { /* permission denied — client cannot read plan_requests; notifications unavailable */ }
     );
   }
 }
@@ -4660,6 +4675,7 @@ function switchView(id) {
   if (id === 'notes') {
     const b = document.getElementById('notes-badge');
     if (b) b.style.display = 'none';
+    markNotesRead();
   }
   if (id === 'messages') {
     loadMessages();
