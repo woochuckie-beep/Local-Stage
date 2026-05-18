@@ -1968,6 +1968,25 @@
   .p-main { padding-bottom: 5.5rem !important; }
 }
 
+/* ── STATE COMPONENTS ── */
+.hl-state { display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:2.25rem 1.5rem; }
+.hl-state-icon { width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:0.85rem; flex-shrink:0; }
+.hl-state-icon svg { width:22px; height:22px; }
+.hl-state-title { font-weight:600; font-size:0.92rem; color:var(--ink); margin-bottom:0.25rem; }
+.hl-state-sub { font-size:0.8rem; color:var(--ink-light); line-height:1.55; max-width:240px; }
+.hl-state-btn { margin-top:0.9rem; padding:0.4rem 1.1rem; background:var(--ink); color:var(--white); border:none; border-radius:8px; font-size:0.82rem; font-weight:500; cursor:pointer; font-family:inherit; transition:background 0.15s; }
+.hl-state-btn:hover { background:var(--terra); }
+.hl-spinner { width:34px; height:34px; border:3px solid var(--cream-dark); border-top-color:var(--terra); border-radius:50%; animation:hl-spin 0.75s linear infinite; margin-bottom:0.85rem; }
+@keyframes hl-spin { to { transform:rotate(360deg); } }
+.hl-empty  .hl-state-icon { background:var(--cream-dark); }
+.hl-empty  .hl-state-icon svg { color:var(--ink-light); }
+.hl-success .hl-state-icon { background:var(--avail-soft); }
+.hl-success .hl-state-icon svg { color:var(--avail); }
+.hl-success .hl-state-title { color:var(--avail); }
+.hl-error  .hl-state-icon { background:#fde8e8; }
+.hl-error  .hl-state-icon svg { color:#c44; }
+.hl-error  .hl-state-title { color:#c44; }
+
 </style>
 
 <!-- ── Firebase (Family Portal) ── -->
@@ -3791,7 +3810,7 @@
         <div class="section-title">Messages</div>
         <div class="section-sub">Chat directly with your caregiver.</div>
         <div id="messages-content">
-          <div class="chat-empty">Loading…</div>
+          <div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div>
         </div>
       </div>
 
@@ -3800,7 +3819,7 @@
         <div class="section-title">Notes from Your Caregiver</div>
         <div class="section-sub">Updates and messages left after your visits.</div>
         <div id="portal-notes-list">
-          <div class="card fade-in" style="text-align:center;padding:2.5rem 1.5rem;color:var(--ink-light)">Loading notes…</div>
+          <div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading notes…</div></div>
         </div>
       </div>
 
@@ -3858,6 +3877,16 @@ const _origHandleSignOut = window.handleSignOut;
 // db and Firestore helpers come from the module script via window._db / window._fs
 function getDb() { return window._db; }
 function fs()    { return window._fs || {}; }
+
+// ── UI STATE HELPER ──────────────────────────────────────────────────────────
+const _SVG_CLIPBOARD = `<svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>`;
+const _SVG_CHECK     = `<svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>`;
+const _SVG_WARN      = `<svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>`;
+function hlState(type, title, sub, actionLabel, actionFn) {
+  if (type === 'loading') return `<div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">${title||'Loading…'}</div>${sub?`<div class="hl-state-sub">${sub}</div>`:''}</div>`;
+  const icon = type==='success' ? _SVG_CHECK : type==='error' ? _SVG_WARN : _SVG_CLIPBOARD;
+  return `<div class="hl-state hl-${type}"><div class="hl-state-icon">${icon}</div><div class="hl-state-title">${title||''}</div>${sub?`<div class="hl-state-sub">${sub}</div>`:''}${actionLabel?`<button class="hl-state-btn" onclick="${actionFn}">${actionLabel}</button>`:''}</div>`;
+}
 
 let VISITS = {};
 let portalClientData = null;
@@ -4337,7 +4366,7 @@ function loadMessages() {
           <div class="chat-hsub">Your dedicated caregiver</div>
         </div>
       </div>
-      <div class="chat-msgs" id="client-msg-list"><div class="chat-empty">Loading messages…</div></div>
+      <div class="chat-msgs" id="client-msg-list">${hlState('loading','Loading messages…')}</div>
       <div class="chat-input-row">
         <input class="chat-inp" id="client-chat-inp" type="text" placeholder="Type a message…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendClientMessage()}" />
         <button class="chat-send" onclick="sendClientMessage()">Send</button>
@@ -4477,11 +4506,7 @@ function renderPortalNotes() {
     else badge.style.display = 'none';
   }
   if (!notes.length) {
-    el.innerHTML = `<div class="card fade-in" style="text-align:center;padding:2.5rem 1.5rem">
-      <div style="font-size:2.5rem;margin-bottom:0.75rem">💬</div>
-      <p style="font-weight:600;color:var(--ink);margin-bottom:0.3rem">No notes yet</p>
-      <p style="font-size:0.88rem;color:var(--ink-light)">Your caregiver will leave updates here after each visit.</p>
-    </div>`;
+    el.innerHTML = hlState('empty','No notes yet','Your caregiver will leave updates here after each visit.');
     return;
   }
   const cgCache = portalClientData?._cgNameCache || {};
@@ -4741,7 +4766,7 @@ function renderCalSideMonth(year, month) {
     const key = vKey(year, month, d);
     if (VISITS[key]) VISITS[key].forEach(v => monthVisits.push({ day: d, ...v }));
   }
-  if (!monthVisits.length) { content.innerHTML = `<div class="cal-empty-state">No visits scheduled this month.</div>`; return; }
+  if (!monthVisits.length) { content.innerHTML = hlState('empty','No visits this month','No visits are scheduled for this month.'); return; }
   content.innerHTML = monthVisits.map(v => `
     <div class="visit-detail-card">
       <div class="vd-time">${MONTHS[month].slice(0,3)} ${v.day} · ${v.time}</div>
@@ -4756,7 +4781,7 @@ function renderCalSideDay(year, month, day) {
   const visits = VISITS[key];
   document.getElementById('cal-side-heading').textContent = `${MONTHS[month]} ${day}, ${year}`;
   const content = document.getElementById('cal-side-content');
-  if (!visits || !visits.length) { content.innerHTML = `<div class="cal-empty-state">No visits on this day.</div>`; return; }
+  if (!visits || !visits.length) { content.innerHTML = hlState('empty','No visits','No visits scheduled for this day.'); return; }
   content.innerHTML = visits.map(v => `
     <div class="visit-detail-card">
       <div class="vd-time">${v.time} · ${v.duration}</div>

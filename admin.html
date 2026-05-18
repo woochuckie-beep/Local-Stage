@@ -260,8 +260,6 @@
     }
     #toast.show { opacity: 1; transform: translateY(0); }
     #toast.err { background: #c44; }
-    .loading-msg { color: var(--ink-light); padding: 2rem; text-align: center; }
-
     /* ── DAY TOGGLES ── */
     .day-toggles { display: flex; gap: 0.4rem; flex-wrap: wrap; }
     .day-toggle { display: flex; cursor: pointer; }
@@ -337,6 +335,25 @@
     .appt-cg-avail-btn { display: none; margin-top: 0.4rem; background: none; border: none; color: var(--terra-deep); font-size: 0.8rem; font-weight: 500; cursor: pointer; font-family: inherit; text-decoration: underline; text-underline-offset: 3px; padding: 0; }
     .appt-cg-avail-btn:hover { color: var(--terra); }
     .appt-cg-avail-btn.show { display: inline-flex; align-items: center; gap: 0.3rem; }
+
+    /* ── STATE COMPONENTS ── */
+    .hl-state { display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:2.25rem 1.5rem; }
+    .hl-state-icon { width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:0.85rem; flex-shrink:0; }
+    .hl-state-icon svg { width:22px; height:22px; }
+    .hl-state-title { font-weight:600; font-size:0.92rem; color:var(--ink); margin-bottom:0.25rem; }
+    .hl-state-sub { font-size:0.8rem; color:var(--ink-light); line-height:1.55; max-width:240px; }
+    .hl-state-btn { margin-top:0.9rem; padding:0.4rem 1.1rem; background:var(--ink); color:var(--white); border:none; border-radius:8px; font-size:0.82rem; font-weight:500; cursor:pointer; font-family:inherit; transition:background 0.15s; }
+    .hl-state-btn:hover { background:var(--terra); }
+    .hl-spinner { width:34px; height:34px; border:3px solid var(--cream-dark); border-top-color:var(--terra); border-radius:50%; animation:hl-spin 0.75s linear infinite; margin-bottom:0.85rem; }
+    @keyframes hl-spin { to { transform:rotate(360deg); } }
+    .hl-empty  .hl-state-icon { background:var(--cream-dark); }
+    .hl-empty  .hl-state-icon svg { color:var(--ink-light); }
+    .hl-success .hl-state-icon { background:var(--avail-soft); }
+    .hl-success .hl-state-icon svg { color:var(--avail); }
+    .hl-success .hl-state-title { color:var(--avail); }
+    .hl-error  .hl-state-icon { background:#fde8e8; }
+    .hl-error  .hl-state-icon svg { color:#c44; }
+    .hl-error  .hl-state-title { color:#c44; }
   </style>
 </head>
 <body>
@@ -429,7 +446,7 @@
       </div>
       <div class="card">
         <div class="card-title">Upcoming Appointments</div>
-        <div id="upcoming" class="appt-list"><div class="loading-msg">Loading…</div></div>
+        <div id="upcoming" class="appt-list"><div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div></div>
       </div>
 
       <div id="dash-issues-hint" style="display:none;background:#FEF2F2;border-radius:12px;padding:0.9rem 1.25rem;margin-bottom:1.25rem;font-size:0.88rem;color:#991B1B;cursor:pointer" onclick="go('requests')">
@@ -610,7 +627,7 @@
           <span style="color:#ef4444">⚠</span> Visit Issues
           <span id="req-issues-count" style="background:#ef4444;color:#fff;font-size:0.72rem;font-weight:700;padding:0.12rem 0.5rem;border-radius:100px"></span>
         </div>
-        <div id="req-issues-list"><div class="loading-msg">Loading…</div></div>
+        <div id="req-issues-list"><div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div></div>
       </div>
 
       <!-- EVV Warnings (late clock-ins / short visits) -->
@@ -628,13 +645,13 @@
           Service Requests — Pending
           <span id="admin-pending-count" style="background:#ef4444;color:#fff;font-size:0.72rem;font-weight:700;padding:0.12rem 0.5rem;border-radius:100px"></span>
         </div>
-        <div id="admin-req-pending"><div class="loading-msg">Loading…</div></div>
+        <div id="admin-req-pending"><div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div></div>
       </div>
 
       <!-- All service requests -->
       <div class="card">
         <div class="card-title">All Service Requests</div>
-        <div id="admin-req-all"><div class="loading-msg">Loading…</div></div>
+        <div id="admin-req-all"><div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div></div>
       </div>
 
     </div>
@@ -991,7 +1008,7 @@
     </div>
     <div style="background:var(--white);border-radius:12px;overflow:hidden;border:1px solid var(--cream-dark)">
       <div class="avail-modal-head" id="cg-avail-cal-head"></div>
-      <div class="avail-modal-body" id="cg-avail-cal-body"><div class="loading-msg">Loading…</div></div>
+      <div class="avail-modal-body" id="cg-avail-cal-body"><div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div></div>
     </div>
   </div>
 </div>
@@ -1029,6 +1046,16 @@ const auth = firebase.auth();
 const db   = firebase.firestore();
 const TS   = firebase.firestore.Timestamp;
 const SV   = firebase.firestore.FieldValue.serverTimestamp;
+
+// ── UI STATE HELPER ──────────────────────────────────────────────────────────
+const _SVG_CLIPBOARD = `<svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>`;
+const _SVG_CHECK     = `<svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>`;
+const _SVG_WARN      = `<svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>`;
+function hlState(type, title, sub, actionLabel, actionFn) {
+  if (type === 'loading') return `<div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">${title||'Loading…'}</div>${sub?`<div class="hl-state-sub">${sub}</div>`:''}</div>`;
+  const icon = type==='success' ? _SVG_CHECK : type==='error' ? _SVG_WARN : _SVG_CLIPBOARD;
+  return `<div class="hl-state hl-${type}"><div class="hl-state-icon">${icon}</div><div class="hl-state-title">${title||''}</div>${sub?`<div class="hl-state-sub">${sub}</div>`:''}${actionLabel?`<button class="hl-state-btn" onclick="${actionFn}">${actionLabel}</button>`:''}</div>`;
+}
 
 // ── STATE ────────────────────────────────────────────────────────────────────
 let clientsList    = [];  // {id, name, email, phone, plan, caregiver_id, ...}
@@ -1162,7 +1189,7 @@ async function loadDashboard() {
 
 function renderUpcoming(appts) {
   const el = document.getElementById('upcoming');
-  if (!appts.length) { el.innerHTML = '<div class="loading-msg">No upcoming appointments</div>'; return; }
+  if (!appts.length) { el.innerHTML = hlState('empty','No upcoming appointments','Scheduled visits will appear here.'); return; }
   el.innerHTML = appts.map(a => {
     const dt  = a.scheduled_at;
     const who = (clientsMap[a.client_id]?.name ?? '?') + ' · ' + (caregiversMap[a.caregiver_id]?.name ?? 'Unassigned');
@@ -1470,7 +1497,7 @@ let _schedListener = null;
 
 function loadSchedule() {
   if (!_schedListener) {
-    document.getElementById('cal-body').innerHTML = '<div class="loading-msg">Loading…</div>';
+    document.getElementById('cal-body').innerHTML = '<div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div>';
     _schedListener = db.collection('appointments').onSnapshot(snap => {
       _allRawAppts = snap.docs.map(d => {
         const x = d.data();
@@ -1870,7 +1897,7 @@ async function viewCgAvailability(cgId, selectMode = false) {
 }
 
 async function loadAndRenderCgAvail() {
-  document.getElementById('cg-avail-cal-body').innerHTML = '<div class="loading-msg">Loading…</div>';
+  document.getElementById('cg-avail-cal-body').innerHTML = '<div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div>';
   const days = cgWeekDays(cgAvailWeekStart);
 
   const [availSnaps, apptSnap] = await Promise.all([
@@ -2086,8 +2113,8 @@ let _resolveId = null;
 async function loadAdminRequests() {
   const pendingEl = document.getElementById('admin-req-pending');
   const allEl     = document.getElementById('admin-req-all');
-  pendingEl.innerHTML = '<div class="loading-msg">Loading…</div>';
-  allEl.innerHTML     = '<div class="loading-msg">Loading…</div>';
+  pendingEl.innerHTML = '<div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div>';
+  allEl.innerHTML     = '<div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div>';
 
   // Load visit issues and EVV warnings in parallel with service requests
   let reqSnap, issueSnap, recentApptSnap;
@@ -2100,7 +2127,7 @@ async function loadAdminRequests() {
         .get()
     ]);
   } catch(ex) {
-    pendingEl.innerHTML = '<div class="loading-msg">Error loading data. Please refresh.</div>';
+    pendingEl.innerHTML = hlState('error','Error loading data','Please refresh the page.');
     allEl.innerHTML = '';
     console.error('loadAdminRequests fetch error:', ex);
     return;
@@ -2133,7 +2160,7 @@ async function loadAdminRequests() {
         </div>`;
       }).join('');
     } else {
-      issuesList.innerHTML = '<div class="loading-msg" style="font-style:italic">No open visit issues.</div>';
+      issuesList.innerHTML = hlState('empty','No open issues','All visits are running smoothly.');
       issuesCount.style.display = 'none';
       if (navBadge) navBadge.style.display = 'none';
     }
@@ -2229,19 +2256,19 @@ async function loadAdminRequests() {
     if (countEl) { countEl.textContent = pending.length || ''; countEl.style.display = pending.length ? 'inline' : 'none'; }
 
     if (!pending.length) {
-      pendingEl.innerHTML = '<div class="loading-msg" style="font-style:italic">No pending requests.</div>';
+      pendingEl.innerHTML = hlState('empty','No pending requests','Service requests from clients will appear here.');
     } else {
       pendingEl.innerHTML = pending.map(r => reqRowHtml(r, true)).join('');
     }
 
     if (!all.length) {
-      allEl.innerHTML = '<div class="loading-msg" style="font-style:italic">No requests yet.</div>';
+      allEl.innerHTML = hlState('empty','No requests yet','All client requests will be shown here.');
     } else {
       allEl.innerHTML = all.map(r => reqRowHtml(r, false)).join('');
     }
   } catch(ex) {
-    pendingEl.innerHTML = '<div class="loading-msg">Error loading requests.</div>';
-    allEl.innerHTML     = '<div class="loading-msg">Error loading requests.</div>';
+    pendingEl.innerHTML = hlState('error','Error loading requests','Please refresh the page.');
+    allEl.innerHTML     = hlState('error','Error loading requests','Please refresh the page.');
     console.error('loadAdminRequests error:', ex);
   }
 }

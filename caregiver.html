@@ -110,8 +110,6 @@
     .nv-client { font-size: 1rem; font-weight: 600; color: var(--terra-soft); }
     .nv-address { font-size: 0.82rem; color: rgba(255,255,255,0.55); margin-top: 0.35rem; }
     .nv-notes { font-size: 0.82rem; color: rgba(255,255,255,0.5); margin-top: 0.5rem; font-style: italic; }
-    .empty-state { color: var(--ink-light); font-size: 0.9rem; padding: 1rem 0; }
-
     /* ── WEEK CONTROLS ── */
     .week-controls { display: flex; align-items: center; gap: 0.65rem; margin-bottom: 1.25rem; }
     .week-label { font-size: 0.92rem; font-weight: 600; min-width: 210px; text-align: center; color: var(--ink); }
@@ -268,6 +266,25 @@
     #toast { position: fixed; bottom: 1.75rem; right: 1.75rem; background: var(--ink); color: var(--white); padding: 0.75rem 1.25rem; border-radius: 10px; font-size: 0.86rem; z-index: 9999; opacity: 0; transform: translateY(8px); transition: all 0.25s; pointer-events: none; }
     #toast.show { opacity: 1; transform: translateY(0); }
     #toast.err { background: #c44; }
+
+    /* ── STATE COMPONENTS ── */
+    .hl-state { display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:2.25rem 1.5rem; }
+    .hl-state-icon { width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:0.85rem; flex-shrink:0; }
+    .hl-state-icon svg { width:22px; height:22px; }
+    .hl-state-title { font-weight:600; font-size:0.92rem; color:var(--ink); margin-bottom:0.25rem; }
+    .hl-state-sub { font-size:0.8rem; color:var(--ink-light); line-height:1.55; max-width:240px; }
+    .hl-state-btn { margin-top:0.9rem; padding:0.4rem 1.1rem; background:var(--ink); color:var(--white); border:none; border-radius:8px; font-size:0.82rem; font-weight:500; cursor:pointer; font-family:inherit; transition:background 0.15s; }
+    .hl-state-btn:hover { background:var(--terra); }
+    .hl-spinner { width:34px; height:34px; border:3px solid var(--cream-dark); border-top-color:var(--terra); border-radius:50%; animation:hl-spin 0.75s linear infinite; margin-bottom:0.85rem; }
+    @keyframes hl-spin { to { transform:rotate(360deg); } }
+    .hl-empty  .hl-state-icon { background:var(--cream-dark); }
+    .hl-empty  .hl-state-icon svg { color:var(--ink-light); }
+    .hl-success .hl-state-icon { background:var(--avail-soft); }
+    .hl-success .hl-state-icon svg { color:var(--avail); }
+    .hl-success .hl-state-title { color:var(--avail); }
+    .hl-error  .hl-state-icon { background:#fde8e8; }
+    .hl-error  .hl-state-icon svg { color:#c44; }
+    .hl-error  .hl-state-title { color:#c44; }
   </style>
 </head>
 <body>
@@ -342,17 +359,17 @@
 
       <div class="card">
         <div class="card-title">Today's Visits</div>
-        <div id="today-visits"><div class="empty-state">Loading…</div></div>
+        <div id="today-visits"><div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div></div>
       </div>
 
       <div class="card">
         <div class="card-title">Next Visit</div>
-        <div id="next-visit"><div class="empty-state">Loading…</div></div>
+        <div id="next-visit"><div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div></div>
       </div>
 
       <div class="card">
         <div class="card-title">This Week's Visits</div>
-        <div id="week-visits"><div class="empty-state">Loading…</div></div>
+        <div id="week-visits"><div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div></div>
       </div>
     </div>
 
@@ -420,7 +437,7 @@
     <div class="view" id="view-requests">
       <div class="view-title">Booking Requests</div>
       <div class="view-sub">Your coordinator is asking if you're available for these visits</div>
-      <div id="requests-list"><div class="empty-state">Loading…</div></div>
+      <div id="requests-list"><div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div></div>
     </div>
 
     <!-- MESSAGES -->
@@ -429,7 +446,7 @@
       <div class="view-sub">Chat with your clients</div>
       <div class="card" style="margin-bottom:1.25rem">
         <div class="card-title">Select a Client</div>
-        <div id="cg-client-list"><div class="empty-state">Loading…</div></div>
+        <div id="cg-client-list"><div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div></div>
       </div>
       <div id="cg-chat-area" style="display:none"></div>
     </div>
@@ -438,7 +455,7 @@
     <div class="view" id="view-clients">
       <div class="view-title">Clients &amp; Notes</div>
       <div class="view-sub">Click a client to expand — send notes, manage private reminders, and view history.</div>
-      <div id="clients-list"><div class="empty-state">Loading…</div></div>
+      <div id="clients-list"><div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div></div>
     </div>
 
   </div>
@@ -463,6 +480,16 @@ const FSV  = firebase.firestore.FieldValue;
 // Anonymous auth gives a valid Firebase token so Firestore rules pass.
 // Caregiver identity is still verified by the email + PIN lookup — not by Firebase Auth.
 const _authReady = firebase.auth().signInAnonymously().catch(e => console.warn('anon auth:', e));
+
+// ── UI STATE HELPER ──────────────────────────────────────────────────────────
+const _SVG_CLIPBOARD = `<svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>`;
+const _SVG_CHECK     = `<svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>`;
+const _SVG_WARN      = `<svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>`;
+function hlState(type, title, sub, actionLabel, actionFn) {
+  if (type === 'loading') return `<div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">${title||'Loading…'}</div>${sub?`<div class="hl-state-sub">${sub}</div>`:''}</div>`;
+  const icon = type==='success' ? _SVG_CHECK : type==='error' ? _SVG_WARN : _SVG_CLIPBOARD;
+  return `<div class="hl-state hl-${type}"><div class="hl-state-icon">${icon}</div><div class="hl-state-title">${title||''}</div>${sub?`<div class="hl-state-sub">${sub}</div>`:''}${actionLabel?`<button class="hl-state-btn" onclick="${actionFn}">${actionLabel}</button>`:''}</div>`;
+}
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
 let caregiverDoc  = null;
@@ -704,7 +731,7 @@ function loadDashboard() {
     .sort((a,b) => a.scheduled_at - b.scheduled_at);
   const todayEl = document.getElementById('today-visits');
   if (!todayVisits.length) {
-    todayEl.innerHTML = '<div class="empty-state">No visits scheduled for today.</div>';
+    todayEl.innerHTML = hlState('empty','No visits today','You have no visits scheduled for today.');
   } else {
     todayEl.innerHTML = todayVisits.map(a => {
       const c = clientsMap[a.client_id];
@@ -743,7 +770,7 @@ function loadDashboard() {
     .sort((a,b) => a.scheduled_at - b.scheduled_at);
   const nextEl = document.getElementById('next-visit');
   if (!upcoming.length) {
-    nextEl.innerHTML = '<div class="empty-state">No upcoming visits scheduled.</div>';
+    nextEl.innerHTML = hlState('empty','No upcoming visits','Your next visit will appear here when one is scheduled.');
   } else {
     const a = upcoming[0]; const c = clientsMap[a.client_id];
     nextEl.innerHTML = `
@@ -760,7 +787,7 @@ function loadDashboard() {
   const weekEl = document.getElementById('week-visits');
   const remainingWeekVisits = weekVisits.filter(a => a.scheduled_at >= todayStart);
   if (!remainingWeekVisits.length) {
-    weekEl.innerHTML = '<div class="empty-state">No more visits this week.</div>';
+    weekEl.innerHTML = hlState('empty','All done for the week','No more visits scheduled for the rest of this week.');
   } else {
     weekEl.innerHTML = remainingWeekVisits.sort((a,b) => a.scheduled_at - b.scheduled_at).map(a => {
       const c = clientsMap[a.client_id];
@@ -1097,7 +1124,7 @@ function availGoToday() { availWeekStart = mondayOf(new Date()); loadAvailabilit
 function renderRequests() {
   const el = document.getElementById('requests-list');
   if (!pendingReqs.length) {
-    el.innerHTML = '<div class="empty-state">No pending booking requests.</div>';
+    el.innerHTML = hlState('empty','No pending requests','Your coordinator will send requests here when new visits are available.');
     return;
   }
   el.innerHTML = pendingReqs.map(r => {
@@ -1160,7 +1187,7 @@ async function respondRequest(reqId, status) {
     updateReqBadge();
     const item = document.getElementById('req-' + reqId);
     if (item) item.remove();
-    if (!pendingReqs.length) document.getElementById('requests-list').innerHTML = '<div class="empty-state">No pending booking requests.</div>';
+    if (!pendingReqs.length) document.getElementById('requests-list').innerHTML = hlState('empty','No pending requests','Your coordinator will send requests here when new visits are available.');
     toast(status === 'accepted' ? 'Request accepted — visit added to your schedule' : 'Request declined');
   } catch(ex) { toast(ex.message, true); }
 }
@@ -1229,7 +1256,7 @@ async function loadMyClients() {
   Object.keys(clientsMap).forEach(id => { if (!clientIds.includes(id)) clientIds.push(id); });
 
   if (!clientIds.length) {
-    document.getElementById('clients-list').innerHTML = '<div class="empty-state">No clients yet.</div>';
+    document.getElementById('clients-list').innerHTML = hlState('empty','No clients yet','Clients from your visits will appear here.');
     return;
   }
 
@@ -1251,7 +1278,7 @@ async function loadMyClients() {
 
 function renderMyClients(clientIds, privateNotes) {
   if (!clientIds) {
-    document.getElementById('clients-list').innerHTML = '<div class="empty-state">Loading…</div>';
+    document.getElementById('clients-list').innerHTML = hlState('loading','Loading clients…');
     return;
   }
   const el = document.getElementById('clients-list');
@@ -1287,11 +1314,11 @@ function renderMyClients(clientIds, privateNotes) {
         <div class="acc-divider"></div>
         <div class="acc-section">
           <div class="acc-label">Sent Notes</div>
-          <div id="snotes-${id}"><div class="empty-state" style="font-size:0.82rem;padding:0.5rem 0">Loading…</div></div>
+          <div id="snotes-${id}">${hlState('loading','Loading notes…')}</div>
         </div>
       </div>
     </div>`;
-  }).join('') || '<div class="empty-state">No clients found.</div>';
+  }).join('') || hlState('empty','No clients yet','Clients from your visits will appear here.');
 }
 
 function toggleClientAcc(id) {
@@ -1311,7 +1338,7 @@ async function loadClientSentNotes(id) {
       .orderBy('created_at', 'desc')
       .limit(20)
       .get();
-    if (!snap.docs.length) { el.innerHTML = '<div class="empty-state" style="font-size:0.82rem;padding:0.5rem 0">No notes sent yet.</div>'; return; }
+    if (!snap.docs.length) { el.innerHTML = hlState('empty','No notes sent','Notes you send to this client will appear here.'); return; }
     el.innerHTML = snap.docs.map(d => {
       const n = d.data();
       const dt = n.created_at?.toDate?.();
@@ -1322,7 +1349,7 @@ async function loadClientSentNotes(id) {
         <button class="acc-sent-note-del" onclick="deleteSentNote('${d.id}','${id}')">Delete</button>
       </div>`;
     }).join('');
-  } catch(ex) { el.innerHTML = `<div style="color:#c44;font-size:0.8rem">${esc(ex.message)}</div>`; }
+  } catch(ex) { el.innerHTML = hlState('error','Could not load notes',esc(ex.message)); }
 }
 
 async function sendNoteToClient(clientId) {
@@ -1432,7 +1459,7 @@ function loadCaregiverMessages() {
   if (!listEl) return;
   const clients = Object.values(clientsMap);
   if (!clients.length) {
-    listEl.innerHTML = '<div class="empty-state">No clients to message yet.</div>';
+    listEl.innerHTML = hlState('empty','No clients yet','Clients will appear here once visits are scheduled.');
     return;
   }
   listEl.innerHTML = clients.map(c => {
