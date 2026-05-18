@@ -196,6 +196,12 @@
     .btn-decline { background: #fde8e8; color: #c44; border: none; border-radius: 8px; padding: 0.45rem 1.1rem; font-size: 0.85rem; font-weight: 500; transition: all 0.15s; }
     .btn-decline:hover { background: #c44; color: var(--white); }
     .badge-pending { background: var(--req-soft); color: var(--req); padding: 0.2rem 0.6rem; border-radius: 100px; font-size: 0.72rem; font-weight: 600; }
+    .req-recurring-banner {
+      background: var(--req); color: var(--white);
+      border-radius: 8px; padding: 0.55rem 1rem;
+      font-size: 1.05rem; font-weight: 700; letter-spacing: 0.03em;
+      margin-bottom: 0.75rem; text-align: center;
+    }
 
     /* ── FORM ── */
     .form-group { margin-bottom: 1rem; }
@@ -290,11 +296,10 @@
     <button class="tab-btn" data-view="requests" onclick="switchTab('requests')">
       Requests <span class="req-badge" id="req-badge"></span>
     </button>
-    <button class="tab-btn" data-view="notes" onclick="switchTab('notes')">Visit Notes</button>
     <button class="tab-btn" data-view="messages" onclick="switchTab('messages')">
       Messages <span class="req-badge" id="msg-badge-cg"></span>
     </button>
-    <button class="tab-btn" data-view="clients" onclick="switchTab('clients')">My Clients</button>
+    <button class="tab-btn" data-view="clients" onclick="switchTab('clients')">Clients &amp; Notes</button>
   </div>
 
   <div class="main">
@@ -403,12 +408,23 @@
       <div id="requests-list"><div class="empty-state">Loading…</div></div>
     </div>
 
-    <!-- VISIT NOTES -->
-    <div class="view" id="view-notes">
-      <div class="view-title">Visit Notes</div>
-      <div class="view-sub">Leave notes for your client after each visit. They will see these in their portal.</div>
+    <!-- MESSAGES -->
+    <div class="view" id="view-messages">
+      <div class="view-title">Messages</div>
+      <div class="view-sub">Chat with your clients</div>
       <div class="card" style="margin-bottom:1.25rem">
-        <div class="card-title">Add a Note</div>
+        <div class="card-title">Select a Client</div>
+        <div id="cg-client-list"><div class="empty-state">Loading…</div></div>
+      </div>
+      <div id="cg-chat-area" style="display:none"></div>
+    </div>
+
+    <!-- MY CLIENTS & NOTES -->
+    <div class="view" id="view-clients">
+      <div class="view-title">Clients &amp; Notes</div>
+      <div class="view-sub">Send visit notes to clients, review past notes, and manage private reminders.</div>
+      <div class="card" style="margin-bottom:1.25rem">
+        <div class="card-title">Send Note to Client</div>
         <div class="form-group">
           <label>Client</label>
           <select class="fc" id="note-client-sel">
@@ -421,27 +437,12 @@
         </div>
         <button class="btn-save-avail" style="padding:0.5rem 1.4rem;font-size:0.88rem" onclick="saveVisitNote()">Send Note to Client</button>
       </div>
-      <div class="card">
+      <div class="card" style="margin-bottom:1.25rem">
         <div class="card-title">Previous Notes</div>
         <div id="notes-list"><div class="empty-state">No notes yet.</div></div>
       </div>
-    </div>
-
-    <!-- MESSAGES -->
-    <div class="view" id="view-messages">
-      <div class="view-title">Messages</div>
-      <div class="view-sub">Chat with your clients</div>
-      <div class="card" style="margin-bottom:1.25rem">
-        <div class="card-title">Select a Client</div>
-        <div id="cg-client-list"><div class="empty-state">Loading…</div></div>
-      </div>
-      <div id="cg-chat-area" style="display:none"></div>
-    </div>
-
-    <!-- MY CLIENTS -->
-    <div class="view" id="view-clients">
-      <div class="view-title">My Clients</div>
-      <div class="view-sub">All clients you have or have had visits with. Add private notes only you can see.</div>
+      <div class="card-title" style="margin-bottom:0.75rem;font-size:0.95rem;font-weight:600">My Clients</div>
+      <div class="view-sub" style="margin-bottom:1rem">Private notes below are only visible to you.</div>
       <div id="clients-list"><div class="empty-state">Loading…</div></div>
     </div>
 
@@ -593,9 +594,12 @@ function startRealtimeListeners() {
   _unsubAppts = db.collection('appointments')
     .where('caregiver_id', '==', caregiverId)
     .onSnapshot(snap => {
-      allAppointments = snap.docs.map(d => ({
-        id: d.id, ...d.data(), scheduled_at: d.data().scheduled_at?.toDate()
+      const raw = snap.docs.map(d => ({
+        id: d.id, ...d.data(),
+        scheduled_at:  d.data().scheduled_at?.toDate?.() ?? null,
+        recurring_end: d.data().recurring_end?.toDate?.() ?? null
       })).filter(a => a.status !== 'cancelled' && a.scheduled_at);
+      allAppointments = expandRecurring(raw);
       const v = activeTabView();
       if (v === 'dashboard')    loadDashboard();
       if (v === 'schedule')     renderScheduleCal();
@@ -608,8 +612,7 @@ function startRealtimeListeners() {
       snap.docs.forEach(d => { clientsMap[d.id] = { id: d.id, ...d.data() }; });
       const v = activeTabView();
       if (v === 'dashboard') loadDashboard();
-      if (v === 'notes')     renderNotesClientSel();
-      if (v === 'clients')   renderMyClients();
+      if (v === 'clients')   { renderMyClients(); renderNotesClientSel(); }
     });
 
   _unsubReqs = db.collection('booking_requests')
@@ -680,8 +683,7 @@ function switchTab(view) {
   if (view === 'schedule')     renderScheduleCal();
   if (view === 'availability') loadAvailability();
   if (view === 'requests')     renderRequests();
-  if (view === 'notes')        loadVisitNotes();
-  if (view === 'clients')      loadMyClients();
+  if (view === 'clients')      { loadMyClients(); loadVisitNotes(); }
   if (view === 'messages')     loadCaregiverMessages();
 }
 
@@ -759,12 +761,13 @@ function loadDashboard() {
       </div>`;
   }
 
-  // This week's visits
+  // This week's visits — only show today onward (not already-passed days)
   const weekEl = document.getElementById('week-visits');
-  if (!weekVisits.length) {
-    weekEl.innerHTML = '<div class="empty-state">No visits this week.</div>';
+  const remainingWeekVisits = weekVisits.filter(a => a.scheduled_at >= todayStart);
+  if (!remainingWeekVisits.length) {
+    weekEl.innerHTML = '<div class="empty-state">No more visits this week.</div>';
   } else {
-    weekEl.innerHTML = weekVisits.sort((a,b) => a.scheduled_at - b.scheduled_at).map(a => {
+    weekEl.innerHTML = remainingWeekVisits.sort((a,b) => a.scheduled_at - b.scheduled_at).map(a => {
       const c = clientsMap[a.client_id];
       return `<div class="shift-item">
         <div class="shift-date">
@@ -1080,13 +1083,17 @@ function renderRequests() {
     const dt = r.proposed_date && r.proposed_time
       ? new Date(r.proposed_date + 'T' + r.proposed_time)
       : null;
+    const recurringLabel = r.recurring === 'weekly' ? '🔁 WEEKLY RECURRING — repeats every week'
+      : r.recurring === 'biweekly' ? '🔁 BI-WEEKLY RECURRING — repeats every 2 weeks'
+      : null;
     return `<div class="req-item" id="req-${r.id}">
+      ${recurringLabel ? `<div class="req-recurring-banner">${recurringLabel}</div>` : ''}
       <div class="req-header">
         <div>
           <div class="req-who">${esc(client?.name || 'Client')}</div>
           <div class="req-when">
             ${dt ? dt.toLocaleDateString('en',{weekday:'long',month:'long',day:'numeric'}) + ' · ' + fmt12(dt) : 'Date TBD'}
-            · ${(r.duration_minutes||60)/60}h visit
+            · ${(r.duration_minutes||60)/60}h visit${r.recurring ? ' · First occurrence' : ''}
           </div>
         </div>
         <span class="badge-pending">Pending</span>
@@ -1107,7 +1114,7 @@ async function respondRequest(reqId, status) {
   try {
     if (status === 'accepted') {
       const dt = new Date(req.proposed_date + 'T' + req.proposed_time);
-      await db.collection('appointments').add({
+      const apptData = {
         caregiver_id:    caregiverId,
         client_id:       req.client_id,
         scheduled_at:    firebase.firestore.Timestamp.fromDate(dt),
@@ -1115,7 +1122,9 @@ async function respondRequest(reqId, status) {
         status:          'confirmed',
         notes:           req.notes || null,
         created_at:      FSV.serverTimestamp()
-      });
+      };
+      if (req.recurring) apptData.recurring = req.recurring;
+      await db.collection('appointments').add(apptData);
     }
     await db.collection('booking_requests').doc(reqId).update({
       status, responded_at: FSV.serverTimestamp()
@@ -1259,6 +1268,31 @@ async function savePrivateNote(clientId) {
   } catch(ex) { toast(ex.message, true); }
 }
 
+// ── RECURRING EXPANSION ────────────────────────────────────────────────────────
+function expandRecurring(rawAppts) {
+  const now = new Date();
+  const rangeStart = new Date(now); rangeStart.setMonth(rangeStart.getMonth() - 3); rangeStart.setHours(0,0,0,0);
+  const rangeEnd   = new Date(now); rangeEnd.setMonth(rangeEnd.getMonth() + 12);
+  const result = [];
+  rawAppts.forEach(appt => {
+    if (!appt.recurring) { result.push(appt); return; }
+    const origin    = appt.scheduled_at;
+    const originDay = origin.getDay();
+    const stepDays  = appt.recurring === 'biweekly' ? 14 : 7;
+    for (let d = new Date(rangeStart); d <= rangeEnd; d.setDate(d.getDate() + 1)) {
+      if (d.getDay() !== originDay) continue;
+      if (d < origin) continue;
+      if (appt.recurring_end && d > appt.recurring_end) continue;
+      if (appt.recurring === 'biweekly') {
+        const diffDays = Math.round((d - origin) / 86400000);
+        if (Math.round(diffDays / 7) % 2 !== 0) continue;
+      }
+      result.push({ ...appt, scheduled_at: new Date(d.getFullYear(), d.getMonth(), d.getDate(), origin.getHours(), origin.getMinutes()) });
+    }
+  });
+  return result;
+}
+
 // ── UTILITIES ─────────────────────────────────────────────────────────────────
 function mondayOf(date) {
   const d = new Date(date); const day = d.getDay();
@@ -1322,6 +1356,13 @@ function loadCaregiverMessages() {
 
 
 function openCaregiverChatFromEl(el) {
+  if (el.classList.contains('active')) {
+    el.classList.remove('active');
+    _cgActiveChatId = null;
+    if (_cgChatListener) { _cgChatListener(); _cgChatListener = null; }
+    document.getElementById('cg-chat-area').style.display = 'none';
+    return;
+  }
   openCaregiverChat(el.dataset.cid, el.dataset.cname);
 }
 

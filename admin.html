@@ -1661,6 +1661,7 @@ async function saveAppt(e) {
         proposed_time:   fd.get('time'),
         duration_minutes:data.duration_minutes,
         notes:           data.notes,
+        recurring:       fd.get('recurring') || null,
         status:          'pending',
         created_at:      SV()
       });

@@ -1672,10 +1672,50 @@
 }
 .cal-day:hover:not(.empty) { background: var(--cream); }
 .cal-day.today  { background: var(--green-light); color: var(--ink); font-weight: 600; }
-.cal-day.has-visit .cal-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); }
+.cal-day.has-visit-future {
+  background: #e8ede4;
+  color: var(--ink);
+  font-weight: 700;
+  box-shadow: inset 0 0 0 2px #7a8b6f;
+}
+.cal-day.has-visit-past {
+  background: #f0ece7;
+  color: var(--ink-mid);
+  font-weight: 600;
+  box-shadow: inset 0 0 0 2px #c4b8ab;
+}
+.cal-day.today.has-visit-future {
+  background: var(--green-light);
+  box-shadow: inset 0 0 0 2px var(--green);
+  font-weight: 700;
+}
 .cal-day.selected { background: var(--green-light); outline: 2px solid var(--green); outline-offset: -2px; color: var(--ink); }
 .cal-day.other-month { color: var(--cream-dark); pointer-events: none; }
 .cal-day.empty { cursor: default; }
+
+.cal-legend {
+  display: flex; gap: 1.1rem; margin-top: 0.85rem;
+  flex-wrap: wrap;
+}
+.cal-legend-item {
+  display: flex; align-items: center; gap: 0.45rem;
+  font-size: 0.78rem; color: var(--ink-mid);
+}
+.cal-legend-swatch {
+  width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
+}
+.cal-legend-swatch.future {
+  background: #e8ede4;
+  box-shadow: inset 0 0 0 2px #7a8b6f;
+}
+.cal-legend-swatch.past {
+  background: #f0ece7;
+  box-shadow: inset 0 0 0 2px #c4b8ab;
+}
+.cal-legend-swatch.today-swatch {
+  background: var(--green-light);
+  box-shadow: inset 0 0 0 2px var(--green);
+}
 
 .cal-side-card {
   background: var(--white);
@@ -3610,6 +3650,20 @@
               </div>
             </div>
             <div class="cal-grid" id="cal-grid"></div>
+            <div class="cal-legend">
+              <div class="cal-legend-item">
+                <div class="cal-legend-swatch future"></div>
+                <span>Upcoming visit</span>
+              </div>
+              <div class="cal-legend-item">
+                <div class="cal-legend-swatch past"></div>
+                <span>Past visit</span>
+              </div>
+              <div class="cal-legend-item">
+                <div class="cal-legend-swatch today-swatch"></div>
+                <span>Today</span>
+              </div>
+            </div>
           </div>
           <div class="cal-side-card fade-in">
             <div class="cal-side-heading" id="cal-side-heading">May 2026</div>
@@ -4636,6 +4690,7 @@ function renderCalendar(year, month, selDay) {
   const firstDay    = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const today       = new Date();
+  const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
   for (let i = 0; i < firstDay; i++) {
     const el = document.createElement('div'); el.className = 'cal-day empty'; grid.appendChild(el);
@@ -4644,13 +4699,16 @@ function renderCalendar(year, month, selDay) {
   for (let d = 1; d <= daysInMonth; d++) {
     const el = document.createElement('div');
     el.className = 'cal-day';
-    if (year === today.getFullYear() && month === today.getMonth() && d === today.getDate()) el.classList.add('today');
-    if (VISITS[vKey(year, month, d)]) el.classList.add('has-visit');
+    const isToday = year === today.getFullYear() && month === today.getMonth() && d === today.getDate();
+    if (isToday) el.classList.add('today');
     if (selDay === d) el.classList.add('selected');
 
-    const num = document.createElement('span'); num.textContent = d; el.appendChild(num);
-    if (VISITS[vKey(year, month, d)]) { const dot = document.createElement('div'); dot.className = 'cal-dot'; el.appendChild(dot); }
+    if (VISITS[vKey(year, month, d)]) {
+      const cellDate = new Date(year, month, d);
+      el.classList.add(cellDate < todayMidnight ? 'has-visit-past' : 'has-visit-future');
+    }
 
+    const num = document.createElement('span'); num.textContent = d; el.appendChild(num);
     el.addEventListener('click', () => { calSelected = d; renderCalendar(year, month, d); renderCalSideDay(year, month, d); });
     grid.appendChild(el);
   }
