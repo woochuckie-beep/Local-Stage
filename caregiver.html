@@ -622,7 +622,7 @@ function startRealtimeListeners() {
     });
 
   // ── Chat notifications (runs immediately at login) ──────────────────────
-  let _cgChatUnreads = null; // null = initial load, skip toasts
+  _cgChatUnreads = null; // reset on login; null = initial load, skip toasts
 
   db.collection('chats').where('caregiver_id', '==', caregiverId)
     .onSnapshot(snap => {
@@ -1288,6 +1288,13 @@ function toast(msg,isErr=false) {
 // ── MESSAGES (caregiver ↔ clients) ───────────────────────────────────────────
 let _cgChatListener = null;
 let _cgActiveChatId = null;
+let _cgChatUnreads  = null;
+
+function updateCgMsgBadge() {
+  const total = _cgChatUnreads ? Object.values(_cgChatUnreads).reduce((s, n) => s + (n || 0), 0) : 0;
+  const navBadge = document.getElementById('msg-badge-cg');
+  if (navBadge) { navBadge.textContent = total || ''; navBadge.style.display = total > 0 ? 'inline' : 'none'; }
+}
 
 function escM(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
@@ -1348,6 +1355,7 @@ function openCaregiverChat(clientId, clientName) {
   db.collection('chats').doc(_cgActiveChatId).set({ unread_caregiver: 0 }, { merge: true }).catch(() => {});
   const badge = document.getElementById('cg-unread-' + clientId);
   if (badge) { badge.textContent = ''; badge.style.display = 'none'; }
+  if (_cgChatUnreads) _cgChatUnreads[_cgActiveChatId] = 0;
   updateCgMsgBadge();
 
   // Real-time messages
