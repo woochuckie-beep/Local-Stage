@@ -570,7 +570,7 @@
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelector(`[data-view="${view}"]`).classList.add('active');
     if (view === 'dashboard') renderDashboard();
-    if (view === 'schedule')  renderCalendar();
+    if (view === 'schedule')  { clientGoToday(); }
     if (view === 'plan')      renderPlan();
     if (view === 'notes')     loadNotes();
     if (view === 'requests')  loadRequests();
@@ -858,7 +858,14 @@
   function fmt12h(h) { return `${h%12||12}${h<12?'am':'pm'}`; }
   clSchedWeekStart = mondayOf(new Date()); // safe to init here after mondayOf is defined
   function clientShiftWeek(dir) { clSchedWeekStart.setDate(clSchedWeekStart.getDate()+dir*7); renderCalendar(); }
-  function clientGoToday()      { clSchedWeekStart = mondayOf(new Date()); renderCalendar(); }
+  function clientGoToday() {
+    const now  = new Date();
+    const next = [...allAppointments, ...pendingBookings]
+      .filter(a => a.scheduled_at >= now)
+      .sort((a, b) => a.scheduled_at - b.scheduled_at)[0];
+    clSchedWeekStart = mondayOf(next ? next.scheduled_at : now);
+    renderCalendar();
+  }
 
   function renderCalendar() {
     const wEnd  = new Date(clSchedWeekStart); wEnd.setDate(wEnd.getDate()+7);
