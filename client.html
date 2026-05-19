@@ -242,6 +242,7 @@
     <button class="tab-btn" data-view="plan" onclick="switchTab('plan')">My Plan</button>
     <button class="tab-btn" data-view="notes" onclick="switchTab('notes')">Notes <span id="notes-badge" style="display:none;background:#ef4444;color:#fff;border-radius:100px;font-size:0.7rem;font-weight:700;padding:0.1rem 0.4rem;margin-left:0.2rem;vertical-align:middle">●</span></button>
     <button class="tab-btn" data-view="requests" onclick="switchTab('requests')">Requests</button>
+    <button class="tab-btn" data-view="issues" onclick="switchTab('issues')">Issues <span id="issues-badge" style="display:none;background:#ef4444;color:#fff;border-radius:100px;font-size:0.7rem;font-weight:700;padding:0.1rem 0.4rem;margin-left:0.2rem;vertical-align:middle">●</span></button>
   </div>
 
   <div class="main">
@@ -370,12 +371,21 @@
         </div>
       </div>
 
-      <!-- Report a Visit Issue (red) -->
+      <div class="card">
+        <div class="card-title">Your Requests</div>
+        <div id="requests-list"><div class="empty-state">Loading…</div></div>
+      </div>
+    </div>
+
+    <!-- ISSUES -->
+    <div class="view" id="view-issues">
+      <div class="view-title">Report an Issue</div>
+      <div class="view-sub">Something went wrong during a visit? Let us know — your coordinator will follow up.</div>
+
       <div class="card" style="border-left:4px solid #ef4444">
         <div class="card-title" style="display:flex;align-items:center;gap:0.6rem">
           <span style="color:#ef4444">⚠</span> Report a Visit Issue
         </div>
-        <div style="font-size:0.84rem;color:var(--ink-light);margin-bottom:1rem">Something went wrong during a visit? Let us know — your coordinator will follow up.</div>
         <div class="req-form">
           <div class="form-row">
             <label class="form-lbl">Describe the issue</label>
@@ -386,8 +396,8 @@
       </div>
 
       <div class="card">
-        <div class="card-title">Your Requests</div>
-        <div id="requests-list"><div class="empty-state">Loading…</div></div>
+        <div class="card-title">Your Issue History</div>
+        <div id="issues-history-list"><div class="empty-state">Loading…</div></div>
       </div>
     </div>
 
@@ -574,6 +584,7 @@
     if (view === 'plan')      renderPlan();
     if (view === 'notes')     loadNotes();
     if (view === 'requests')  loadRequests();
+    if (view === 'issues')    loadIssues();
   }
 
   function activeTab() {
@@ -756,6 +767,16 @@
         `}
       </div>
 
+      <div class="card">
+        <div class="card-title">Auto-Renew</div>
+        ${clientDoc?.auto_renew !== false
+          ? `<p style="font-size:0.85rem;color:var(--ink-mid);margin-bottom:1rem;line-height:1.6">🔄 Auto-renew is <strong>on</strong> — your plan renews automatically each month.</p>
+             <button class="btn-req-submit" style="background:var(--ink-light);max-width:220px" onclick="toggleAutoRenew()">Turn off auto-renew</button>`
+          : `<p style="font-size:0.85rem;color:var(--ink-mid);margin-bottom:1rem;line-height:1.6">⚠️ Auto-renew is <strong>off</strong> — contact your coordinator or turn it back on below.</p>
+             <button class="btn-req-submit" style="max-width:220px" onclick="toggleAutoRenew()">Turn on auto-renew</button>`
+        }
+      </div>
+
       ${caregiverDoc ? `
       <div class="card">
         <div class="card-title">Your Caregiver</div>
@@ -771,6 +792,19 @@
         ${caregiverDoc.bio ? `<p style="font-size:0.85rem;color:var(--ink-mid);margin-top:1rem;line-height:1.7">${esc(caregiverDoc.bio)}</p>` : ''}
       </div>` : ''}
     `;
+  }
+
+  async function toggleAutoRenew() {
+    if (!clientDoc) return;
+    const newVal = clientDoc.auto_renew === false;
+    try {
+      await db.collection('clients').doc(clientDoc.id).update({ auto_renew: newVal });
+      clientDoc.auto_renew = newVal;
+      renderPlan();
+      toast(newVal ? 'Auto-renew turned on.' : 'Auto-renew turned off.');
+    } catch(ex) {
+      toast('Could not update: ' + ex.message, true);
+    }
   }
 
   // ── NOTES FROM CAREGIVER ───────────────────────────────────────────────────
@@ -966,6 +1000,41 @@
     document.getElementById('req-pause-panel').style.display  = tab === 'pause'  ? 'block' : 'none';
     document.getElementById('rtab-change').classList.toggle('active', tab === 'change');
     document.getElementById('rtab-pause').classList.toggle('active',  tab === 'pause');
+  }
+
+  async function loadIssues() {
+    const el = document.getElementById('issues-history-list');
+    if (!el) return;
+    el.innerHTML = '<div class="empty-state">Loading…</div>';
+    try {
+      const snap = await db.collection('visit_issues')
+        .where('client_id', '==', clientDoc.id)
+        .get();
+      const issues = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0));
+      if (!issues.length) {
+        el.innerHTML = '<div class="empty-state">No issues reported yet.</div>';
+        return;
+      }
+      el.innerHTML = issues.map(iss => {
+        const dt = iss.created_at?.toDate?.();
+        const dateStr = dt ? dt.toLocaleDateString('en', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+        const statusColor = iss.status === 'resolved' ? '#10b981' : '#ef4444';
+        const statusLabel = iss.status === 'resolved' ? 'Resolved' : 'Open';
+        const issueText = iss.issue_text || (Array.isArray(iss.issues) ? iss.issues.join(', ') : '');
+        return `<div style="padding:0.85rem 0;border-bottom:1px solid var(--cream-dark)">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.5rem">
+            <div style="font-size:0.88rem;color:var(--ink);flex:1">${esc(issueText)}</div>
+            <span style="font-size:0.75rem;font-weight:600;color:${statusColor};white-space:nowrap">${statusLabel}</span>
+          </div>
+          ${dateStr ? `<div style="font-size:0.78rem;color:var(--ink-light);margin-top:0.3rem">${dateStr}<\/div>` : ''}
+          ${iss.admin_reply ? `<div style="font-size:0.82rem;color:var(--sage);margin-top:0.4rem;font-style:italic">Admin reply: ${esc(iss.admin_reply)}<\/div>` : ''}
+        <\/div>`;
+      }).join('');
+    } catch(ex) {
+      el.innerHTML = '<div class="empty-state">Could not load issue history.</div>';
+      console.error('loadIssues error:', ex);
+    }
   }
 
   async function loadRequests() {

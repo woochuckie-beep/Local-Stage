@@ -452,6 +452,9 @@
       <div id="dash-issues-hint" style="display:none;background:#FEF2F2;border-radius:12px;padding:0.9rem 1.25rem;margin-bottom:1.25rem;font-size:0.88rem;color:#991B1B;cursor:pointer" onclick="go('requests')">
         <strong id="dash-issues-hint-text"></strong> — click to view in Requests &amp; Issues
       </div>
+      <div id="dash-renew-hint" style="display:none;background:#FFF7ED;border-radius:12px;padding:0.9rem 1.25rem;margin-bottom:1.25rem;font-size:0.88rem;color:#9A3412;cursor:pointer" onclick="go('clients')">
+        🔄 <strong>Auto-renew due:</strong> <span id="dash-renew-hint-text"></span> — click to open Clients
+      </div>
     </div>
 
     <!-- CLIENTS -->
@@ -1243,6 +1246,24 @@ async function loadDashboard() {
     const navBadge = document.getElementById('issues-nav-badge');
     if (navBadge) { navBadge.textContent = issueCount || ''; navBadge.style.display = issueCount > 0 ? 'inline' : 'none'; }
   } catch(e) { console.warn('Could not load visit issues:', e); }
+
+  // Auto-renew expiry alert
+  const renewHint     = document.getElementById('dash-renew-hint');
+  const renewHintText = document.getElementById('dash-renew-hint-text');
+  if (renewHint && renewHintText && clientsList.length) {
+    const soon = new Date(Date.now() + 3 * 86400000);
+    const expiring = clientsList.filter(c => {
+      if (!c.auto_renew) return false;
+      const exp = c.subscription_expires_at?.toDate ? c.subscription_expires_at.toDate() : null;
+      return exp && exp <= soon && exp >= new Date();
+    });
+    if (expiring.length) {
+      renewHintText.textContent = expiring.map(c => c.name).join(', ');
+      renewHint.style.display = 'block';
+    } else {
+      renewHint.style.display = 'none';
+    }
+  }
 }
 
 function renderUpcoming(appts) {
