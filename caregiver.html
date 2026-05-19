@@ -285,6 +285,88 @@
     .hl-error  .hl-state-icon { background:#fde8e8; }
     .hl-error  .hl-state-icon svg { color:#c44; }
     .hl-error  .hl-state-title { color:#c44; }
+
+    /* ── MOBILE RESPONSIVE ── */
+    @media (max-width: 640px) {
+      html, body { font-size: 14.5px; }
+      .topnav { padding: 0 0.85rem; height: 54px; }
+      .nav-logo { font-size: 1.02rem; }
+      .nav-clock { display: none; }
+      .nav-right { gap: 0.5rem; }
+      .nav-name { font-size: 0.78rem; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .btn-signout { padding: 0.35rem 0.7rem; font-size: 0.75rem; }
+      .nav-avatar { width: 30px; height: 30px; font-size: 0.78rem; }
+
+      .tabnav { padding: 0 0.4rem; }
+      .tab-btn { padding: 0.8rem 0.75rem; font-size: 0.82rem; }
+
+      .main { padding: 1rem 0.9rem; max-width: 100%; }
+      .view-title { font-size: 1.15rem; }
+      .view-sub { font-size: 0.82rem; margin-bottom: 1.1rem; }
+
+      .card { padding: 1.1rem; border-radius: 12px; margin-bottom: 1rem; }
+      .card-title { font-size: 0.92rem; margin-bottom: 0.85rem; }
+
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+      .stat-card { padding: 1rem; }
+      .stat-val { font-size: 1.4rem; }
+      .stat-lbl { font-size: 0.72rem; }
+
+      .next-visit-card { padding: 1.25rem; }
+      .nv-time { font-size: 1.3rem; }
+
+      .today-shift { padding: 0.75rem 0.85rem; gap: 0.7rem; }
+      .today-shift-client { font-size: 0.9rem; }
+      .today-shift-meta { font-size: 0.76rem; }
+      .shift-meta { font-size: 0.76rem; }
+
+      .week-controls { gap: 0.4rem; flex-wrap: wrap; justify-content: center; }
+      .week-label { font-size: 0.82rem; min-width: 0; flex: 1; }
+      .btn-week { padding: 0.32rem 0.65rem; font-size: 0.75rem; }
+      .sched-legend { gap: 0.5rem 0.85rem; flex-wrap: wrap; }
+      .sched-legend-item { font-size: 0.68rem; }
+
+      .cal-head, .avail-cal-head,
+      .cal-row, .avail-row { grid-template-columns: 34px repeat(7, 1fr); }
+      .cal-hcell, .avail-hcell { padding: 0.4rem 0.15rem; }
+      .cal-hcell .dname, .avail-hcell .dname { font-size: 0.56rem; }
+      .cal-hcell .dnum, .avail-hcell .dnum { width: 22px; height: 22px; font-size: 0.8rem; margin-top: 0.1rem; }
+      .cal-time, .avail-time { font-size: 0.58rem; padding: 0.35rem 0.25rem 0 0; }
+      .cal-cell, .cal-cell-ro, .avail-cell { min-height: 40px; padding: 2px; }
+      .appt-chip { font-size: 0.58rem; padding: 0.15rem 0.25rem; line-height: 1.25; border-radius: 4px; }
+      .chip-name { font-size: 0.6rem; }
+      .chip-dur { font-size: 0.54rem; }
+      .btn-confirm-chip, .btn-clock-chip { font-size: 0.55rem; padding: 0.12rem 0.3rem; }
+
+      input, select, textarea { font-size: 16px; }
+      .fc, .form-sel, .form-inp, .form-area { font-size: 16px; padding: 0.6rem 0.8rem; }
+
+      .chat-shell { height: calc(100vh - 220px); min-height: 420px; }
+      .chat-msgs { padding: 0.75rem; }
+      .msg-bubble { max-width: 82%; font-size: 0.85rem; padding: 0.5rem 0.8rem; }
+      .chat-inp { font-size: 16px; padding: 0.55rem 0.85rem; }
+      .chat-header { padding: 0.75rem 1rem; }
+      .chat-hname { font-size: 0.88rem; }
+      .chat-list { max-height: 200px; }
+      .chat-list-item { padding: 0.65rem 0.85rem; }
+
+      #toast { bottom: 1rem; right: 0.85rem; left: 0.85rem; text-align: center; font-size: 0.84rem; }
+      #last-updated { display: none; }
+
+      .login-card { padding: 2rem 1.5rem; max-width: 92%; }
+      .login-logo { font-size: 1.45rem; }
+
+      .modal { width: calc(100vw - 1rem); max-height: calc(100vh - 1rem); padding: 1.25rem; }
+      .modal-hd, .modal-ft { flex-wrap: wrap; gap: 0.5rem; }
+    }
+
+    @media (max-width: 380px) {
+      .nav-name { max-width: 70px; }
+      .tab-btn { padding: 0.7rem 0.55rem; font-size: 0.76rem; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .cal-head, .cal-row, .avail-cal-head, .avail-row { grid-template-columns: 28px repeat(7, 1fr); }
+      .cal-hcell .dnum, .avail-hcell .dnum { width: 20px; height: 20px; font-size: 0.72rem; }
+    }
   </style>
 </head>
 <body>
@@ -371,6 +453,19 @@
         <div class="card-title">This Week's Visits</div>
         <div id="week-visits"><div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div></div>
       </div>
+
+      <div class="card" id="cg-coordinator-card" style="display:none">
+        <div class="card-title">Contact Your Coordinator</div>
+        <div id="cg-coordinator-content"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
+          <span>Monthly Summary</span>
+          <select id="earnings-month-sel" style="font-size:0.82rem;padding:0.25rem 0.5rem;border:1.5px solid var(--cream-dark);border-radius:7px;font-family:inherit;background:var(--cream-soft);color:var(--ink);cursor:pointer" onchange="renderEarnings()"></select>
+        </div>
+        <div id="earnings-content"></div>
+      </div>
     </div>
 
     <!-- MY SCHEDULE -->
@@ -438,6 +533,33 @@
       <div class="view-title">Booking Requests</div>
       <div class="view-sub">Your coordinator is asking if you're available for these visits</div>
       <div id="requests-list"><div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div></div>
+
+      <div class="card" style="margin-top:1.25rem">
+        <div class="card-title">Request Time Off</div>
+        <p style="font-size:0.83rem;color:var(--ink-mid);margin-bottom:1.1rem;line-height:1.6">Need time off? Let your coordinator know the dates — they'll adjust scheduling accordingly.</p>
+        <div style="display:flex;flex-direction:column;gap:0.85rem">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.85rem">
+            <div>
+              <label style="font-size:0.78rem;font-weight:600;color:var(--ink-mid);display:block;margin-bottom:0.3rem">From</label>
+              <input class="fc" type="date" id="toff-start" />
+            </div>
+            <div>
+              <label style="font-size:0.78rem;font-weight:600;color:var(--ink-mid);display:block;margin-bottom:0.3rem">To</label>
+              <input class="fc" type="date" id="toff-end" />
+            </div>
+          </div>
+          <div>
+            <label style="font-size:0.78rem;font-weight:600;color:var(--ink-mid);display:block;margin-bottom:0.3rem">Reason <span style="font-weight:400">(optional)</span></label>
+            <textarea class="fc" id="toff-reason" rows="2" placeholder="e.g. medical appointment, family event…" style="resize:vertical"></textarea>
+          </div>
+          <button class="btn-save-avail" id="toff-btn" onclick="submitTimeOffRequest()" style="width:fit-content">Submit Request</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:1rem">
+        <div class="card-title">Time Off History</div>
+        <div id="toff-history"><div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div></div>
+      </div>
     </div>
 
     <!-- MESSAGES -->
@@ -504,6 +626,9 @@ let bookedSlots   = {};   // { "YYYY-MM-DD": Set([h,...]) }
 let reqSlots      = {};   // { "YYYY-MM-DD": Set([h,...]) }
 let isDragging    = false;
 let dragMode      = 'add';
+let _cgChatListener = null;
+let _cgActiveChatId = null;
+let _cgChatUnreads  = null;
 
 // ── AUTH ──────────────────────────────────────────────────────────────────────
 const _RATE_KEY = 'hl_cg_attempts';
@@ -704,7 +829,7 @@ function switchTab(view) {
   if (view === 'dashboard')    loadDashboard();
   if (view === 'schedule')     renderScheduleCal();
   if (view === 'availability') loadAvailability();
-  if (view === 'requests')     renderRequests();
+  if (view === 'requests')     { renderRequests(); loadTimeOffHistory(); }
   if (view === 'clients')      loadMyClients();
   if (view === 'messages')     loadCaregiverMessages();
 }
@@ -719,9 +844,12 @@ function loadDashboard() {
 
   const weekVisits  = allAppointments.filter(a => a.scheduled_at >= wStart && a.scheduled_at < wEnd);
   const monthVisits = allAppointments.filter(a => a.scheduled_at >= mStart && a.scheduled_at < mEnd);
-  document.getElementById('s-week').textContent   = weekVisits.length;
-  document.getElementById('s-month').textContent  = monthVisits.length;
+  document.getElementById('s-week').textContent    = weekVisits.length;
+  document.getElementById('s-month').textContent   = monthVisits.length;
   document.getElementById('s-clients').textContent = Object.keys(clientsMap).length;
+
+  initEarningsSelector();
+  renderEarnings();
 
   // Today's visits (clock in / clock out)
   const todayStart = new Date(now); todayStart.setHours(0,0,0,0);
@@ -757,7 +885,7 @@ function loadDashboard() {
       return `<div class="today-shift">
         <div class="today-shift-info">
           <div class="today-shift-client">${esc(c?.name || 'Client')}</div>
-          <div class="today-shift-meta">${fmt12(a.scheduled_at)} · ${a.duration_minutes/60}h${c?.address ? ' · ' + esc(c.address) : ''}</div>
+          <div class="today-shift-meta">${fmt12(a.scheduled_at)} · ${(a.duration_minutes || 60) / 60}h${c?.address ? ` · <a href="https://maps.google.com/?q=${encodeURIComponent(c.address)}" target="_blank" rel="noopener noreferrer" style="color:var(--ink-light);text-decoration:underline;text-underline-offset:2px">${esc(c.address)}</a>` : ''}</div>
           ${clockedLine}
         </div>
         ${actionBtn}
@@ -776,9 +904,9 @@ function loadDashboard() {
     nextEl.innerHTML = `
       <div class="next-visit-card">
         <div class="nv-date">${a.scheduled_at.toLocaleDateString('en',{weekday:'long',month:'long',day:'numeric',year:'numeric'})}</div>
-        <div class="nv-time">${fmt12(a.scheduled_at)} · ${a.duration_minutes/60} hr${a.duration_minutes > 60 ? 's' : ''}</div>
+        <div class="nv-time">${fmt12(a.scheduled_at)} · ${(a.duration_minutes || 60) / 60} hr${(a.duration_minutes || 60) > 60 ? 's' : ''}</div>
         <div class="nv-client">${esc(c?.name || 'Client')}</div>
-        ${c?.address ? `<div class="nv-address">${esc(c.address)}</div>` : ''}
+        ${c?.address ? `<div class="nv-address"><a href="https://maps.google.com/?q=${encodeURIComponent(c.address)}" target="_blank" rel="noopener noreferrer" style="color:rgba(255,255,255,0.65);text-decoration:underline;text-underline-offset:2px">${esc(c.address)}</a> 🗺</div>` : ''}
         ${c?.notes   ? `<div class="nv-notes">${esc(c.notes)}</div>` : ''}
       </div>`;
   }
@@ -799,13 +927,58 @@ function loadDashboard() {
         <div class="shift-info">
           <div class="shift-client">${esc(c?.name || 'Client')}</div>
           <div class="shift-meta">
-            ${a.scheduled_at.toLocaleDateString('en',{weekday:'long'})} · ${fmt12(a.scheduled_at)} · ${a.duration_minutes/60}h
+            ${a.scheduled_at.toLocaleDateString('en',{weekday:'long'})} · ${fmt12(a.scheduled_at)} · ${(a.duration_minutes || 60) / 60}h
             ${c?.address ? '<br>' + esc(c.address) : ''}
           </div>
         </div>
         ${a.recurring ? '<span class="shift-badge rec">Recurring</span>' : '<span class="shift-badge">Confirmed</span>'}
       </div>`;
     }).join('');
+  }
+
+  // Coordinator contact card (load once per session)
+  const coordCard = document.getElementById('cg-coordinator-card');
+  const coordContent = document.getElementById('cg-coordinator-content');
+  if (coordCard && coordContent && !coordCard.dataset.loaded) {
+    coordCard.dataset.loaded = '1';
+    db.collection('settings').doc('business').get().then(snap => {
+      const d = snap.exists ? snap.data() : {};
+      const phone    = d.phone    || null;
+      const email    = d.email    || null;
+      const hours    = d.hours    || null;
+      const calendly = d.calendly || null;
+      const bizName  = d.name     || 'your coordinator';
+      if (!phone && !email && !hours && !calendly) return;
+      coordContent.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:0.75rem">
+          ${phone ? `<div style="display:flex;align-items:center;gap:0.75rem">
+            <div style="width:34px;height:34px;border-radius:8px;background:var(--avail-soft);display:flex;align-items:center;justify-content:center;font-size:0.95rem;flex-shrink:0">📞</div>
+            <div>
+              <div style="font-size:0.7rem;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.05em">Phone</div>
+              <a href="tel:${esc(phone)}" style="font-size:0.92rem;font-weight:500;color:var(--ink);text-decoration:none">${esc(phone)}</a>
+            </div>
+          </div>` : ''}
+          ${email ? `<div style="display:flex;align-items:center;gap:0.75rem">
+            <div style="width:34px;height:34px;border-radius:8px;background:var(--avail-soft);display:flex;align-items:center;justify-content:center;font-size:0.95rem;flex-shrink:0">✉️</div>
+            <div>
+              <div style="font-size:0.7rem;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.05em">Email</div>
+              <a href="mailto:${esc(email)}" style="font-size:0.92rem;font-weight:500;color:var(--ink);text-decoration:none">${esc(email)}</a>
+            </div>
+          </div>` : ''}
+          ${hours ? `<div style="display:flex;align-items:center;gap:0.75rem">
+            <div style="width:34px;height:34px;border-radius:8px;background:var(--avail-soft);display:flex;align-items:center;justify-content:center;font-size:0.95rem;flex-shrink:0">🕐</div>
+            <div>
+              <div style="font-size:0.7rem;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.05em">Office Hours</div>
+              <div style="font-size:0.92rem;font-weight:500;color:var(--ink)">${esc(hours)}</div>
+            </div>
+          </div>` : ''}
+          ${calendly ? `<a href="${esc(calendly)}" target="_blank" rel="noopener noreferrer"
+            style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.6rem 1.2rem;background:var(--ink);color:#fff;border-radius:9px;font-size:0.88rem;font-weight:600;text-decoration:none;margin-top:0.1rem">
+            📅 Book a Call with ${esc(bizName)}
+          </a>` : ''}
+        </div>`;
+      coordCard.style.display = 'block';
+    }).catch(() => {});
   }
 }
 
@@ -842,7 +1015,7 @@ function renderScheduleCal() {
           const isToday = sameDay(a.scheduled_at, new Date());
           return `<div class="appt-chip ${sc}">
             <span class="chip-name">${esc(clientsMap[a.client_id]?.name||'Client')}</span>
-            <span class="chip-dur">${a.duration_minutes/60}h${a.recurring?' · rec':''}</span>
+            <span class="chip-dur">${(a.duration_minutes || 60) / 60}h${a.recurring?' · rec':''}</span>
             ${a.status === 'scheduled' ? `<button class="btn-confirm-chip" onclick="event.stopPropagation();confirmAppointment('${a.id}')">✓ Confirm</button>` : ''}
             ${isToday && (a.status === 'confirmed' || a.status === 'scheduled') ? `<button class="btn-clock-chip" onclick="event.stopPropagation();clockIn('${a.id}')">🕐 Clock In</button>` : ''}
             ${a.status === 'in_progress' ? `<button class="btn-clock-chip" onclick="event.stopPropagation();clockOut('${a.id}')">✓ Clock Out</button>` : ''}
@@ -925,14 +1098,16 @@ async function loadAvailability() {
   const days = weekDays(availWeekStart);
   updateAvailWeekLabel();
 
-  // Load saved availability from Firestore
-  const snaps = await Promise.all(
+  // Load saved availability from Firestore — use allSettled so one failed day doesn't break the week
+  const results = await Promise.allSettled(
     days.map(d => db.collection('caregivers').doc(caregiverId)
       .collection('availability').doc(toDateStr(d)).get())
   );
   availSlots = {};
-  snaps.forEach((snap, i) => {
-    if (snap.exists) availSlots[toDateStr(days[i])] = new Set(snap.data().slots || []);
+  results.forEach((res, i) => {
+    if (res.status === 'fulfilled' && res.value.exists) {
+      availSlots[toDateStr(days[i])] = new Set(res.value.data().slots || []);
+    }
   });
 
   // Map booked slots from appointments
@@ -941,7 +1116,7 @@ async function loadAvailability() {
   allAppointments.filter(a => a.scheduled_at >= availWeekStart && a.scheduled_at < wEnd).forEach(a => {
     const ds = toDateStr(a.scheduled_at);
     if (!bookedSlots[ds]) bookedSlots[ds] = new Set();
-    const dur = Math.ceil(a.duration_minutes / 60);
+    const dur = Math.ceil((a.duration_minutes || 60) / 60);
     for (let i = 0; i < dur; i++) bookedSlots[ds].add(a.scheduled_at.getHours() + i);
   });
 
@@ -1105,6 +1280,7 @@ async function saveAvailability() {
 }
 
 function clearWeek() {
+  if (!confirm('Clear all availability slots for this week?')) return;
   weekDays(availWeekStart).forEach(d => {
     const ds = toDateStr(d);
     delete availSlots[ds];
@@ -1119,6 +1295,73 @@ function availShiftWeek(dir) {
   loadAvailability();
 }
 function availGoToday() { availWeekStart = mondayOf(new Date()); loadAvailability(); }
+
+// ── EARNINGS / MONTHLY SUMMARY ────────────────────────────────────────────────
+function initEarningsSelector() {
+  const sel = document.getElementById('earnings-month-sel');
+  if (!sel || sel.options.length > 0) return;
+  const now = new Date();
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const val = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const lbl = d.toLocaleDateString('en', { month: 'long', year: 'numeric' });
+    const opt = document.createElement('option');
+    opt.value = val; opt.textContent = lbl;
+    sel.appendChild(opt);
+  }
+}
+
+function renderEarnings() {
+  const sel = document.getElementById('earnings-month-sel');
+  const el  = document.getElementById('earnings-content');
+  if (!sel || !el) return;
+  const [yr, mo] = sel.value.split('-').map(Number);
+  const mStart = new Date(yr, mo - 1, 1);
+  const mEnd   = new Date(yr, mo, 1);
+  const completed = allAppointments.filter(a =>
+    a.status === 'completed' && a.scheduled_at >= mStart && a.scheduled_at < mEnd);
+  const scheduledFuture = allAppointments.filter(a =>
+    a.status !== 'completed' && a.status !== 'cancelled' &&
+    a.scheduled_at >= mStart && a.scheduled_at < mEnd);
+  const totalMins = completed.reduce((s, a) => s + (a.actual_duration_minutes || a.duration_minutes || 0), 0);
+  const totalHrs  = (totalMins / 60).toFixed(1);
+  const schMins   = scheduledFuture.reduce((s, a) => s + (a.duration_minutes || 0), 0);
+  const schHrs    = (schMins / 60).toFixed(1);
+  if (!completed.length && !scheduledFuture.length) {
+    el.innerHTML = '<div style="font-size:0.88rem;color:var(--ink-light);padding:0.5rem 0">No visits recorded for this month.</div>';
+    return;
+  }
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.85rem;margin-bottom:1.1rem">
+      <div style="background:var(--cream-soft);border-radius:10px;padding:1rem;text-align:center">
+        <div style="font-size:0.7rem;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.3rem">Completed</div>
+        <div style="font-size:1.8rem;font-weight:700;color:var(--avail)">${completed.length}</div>
+        <div style="font-size:0.72rem;color:var(--ink-light)">visits</div>
+      </div>
+      <div style="background:var(--cream-soft);border-radius:10px;padding:1rem;text-align:center">
+        <div style="font-size:0.7rem;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.3rem">Hours Worked</div>
+        <div style="font-size:1.8rem;font-weight:700;color:var(--ink)">${totalHrs}</div>
+        <div style="font-size:0.72rem;color:var(--ink-light)">hrs</div>
+      </div>
+      <div style="background:var(--cream-soft);border-radius:10px;padding:1rem;text-align:center">
+        <div style="font-size:0.7rem;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.3rem">Scheduled</div>
+        <div style="font-size:1.8rem;font-weight:700;color:var(--terra)">${schHrs}</div>
+        <div style="font-size:0.72rem;color:var(--ink-light)">hrs left</div>
+      </div>
+    </div>
+    ${completed.length ? `<div style="font-size:0.78rem;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem">Completed Visits</div>
+    ${completed.sort((a,b) => b.scheduled_at - a.scheduled_at).map(a => {
+      const c = clientsMap[a.client_id];
+      const dur = a.actual_duration_minutes || a.duration_minutes || 0;
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:0.55rem 0;border-bottom:1px solid var(--cream-dark);font-size:0.85rem">
+        <div>
+          <span style="font-weight:500">${esc(c?.name||'Client')}</span>
+          <span style="color:var(--ink-light);margin-left:0.5rem">${a.scheduled_at.toLocaleDateString('en',{month:'short',day:'numeric'})}</span>
+        </div>
+        <span style="color:var(--avail);font-weight:600">${(dur/60).toFixed(1)}h</span>
+      </div>`;
+    }).join('')}` : ''}`;
+}
 
 // ── REQUESTS ──────────────────────────────────────────────────────────────────
 function renderRequests() {
@@ -1173,6 +1416,11 @@ async function respondRequest(reqId, status) {
         created_at:      FSV.serverTimestamp()
       };
       if (req.recurring) apptData.recurring = req.recurring;
+      if (req.recurring_end) {
+        apptData.recurring_end = req.recurring_end.toDate
+          ? req.recurring_end
+          : firebase.firestore.Timestamp.fromDate(new Date(req.recurring_end));
+      }
       await db.collection('appointments').add(apptData);
     }
     await db.collection('booking_requests').doc(reqId).update({
@@ -1444,11 +1692,67 @@ function toast(msg,isErr=false) {
   _tt=setTimeout(()=>el.className='',3500);
 }
 
-// ── MESSAGES (caregiver ↔ clients) ───────────────────────────────────────────
-let _cgChatListener = null;
-let _cgActiveChatId = null;
-let _cgChatUnreads  = null;
+// ── TIME OFF ──────────────────────────────────────────────────────────────────
+async function submitTimeOffRequest() {
+  const btn    = document.getElementById('toff-btn');
+  const start  = document.getElementById('toff-start').value;
+  const end    = document.getElementById('toff-end').value;
+  const reason = document.getElementById('toff-reason').value.trim().slice(0, 300);
+  if (!start) { toast('Please select a start date.', true); return; }
+  if (!end)   { toast('Please select an end date.', true); return; }
+  if (end < start) { toast('End date must be on or after start date.', true); return; }
+  btn.disabled = true; btn.textContent = 'Submitting…';
+  try {
+    await db.collection('time_off_requests').add({
+      caregiver_id:   caregiverId,
+      caregiver_name: caregiverDoc.name || '',
+      start_date:     start,
+      end_date:       end,
+      reason:         reason || null,
+      status:         'pending',
+      created_at:     FSV.serverTimestamp()
+    });
+    toast('Time off request sent to your coordinator.');
+    document.getElementById('toff-start').value  = '';
+    document.getElementById('toff-end').value    = '';
+    document.getElementById('toff-reason').value = '';
+    loadTimeOffHistory();
+  } catch(ex) {
+    toast('Could not submit: ' + ex.message, true);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Submit Request';
+  }
+}
 
+async function loadTimeOffHistory() {
+  const el = document.getElementById('toff-history');
+  if (!el) return;
+  try {
+    const snap = await db.collection('time_off_requests')
+      .where('caregiver_id', '==', caregiverId)
+      .get();
+    const reqs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0));
+    if (!reqs.length) {
+      el.innerHTML = '<div style="font-size:0.88rem;color:var(--ink-light);padding:0.5rem 0">No time off requests yet.</div>';
+      return;
+    }
+    const statusColor = s => s === 'approved' ? '#10b981' : s === 'declined' ? '#ef4444' : '#F59E0B';
+    const statusLabel = s => s === 'approved' ? 'Approved' : s === 'declined' ? 'Declined' : 'Pending';
+    el.innerHTML = reqs.map(r => `
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;padding:0.75rem 0;border-bottom:1px solid var(--cream-dark)">
+        <div>
+          <div style="font-weight:500;font-size:0.9rem">${esc(r.start_date)} → ${esc(r.end_date)}</div>
+          ${r.reason ? `<div style="font-size:0.8rem;color:var(--ink-mid);margin-top:0.15rem;font-style:italic">${esc(r.reason)}</div>` : ''}
+        </div>
+        <span style="font-size:0.75rem;font-weight:600;padding:0.2rem 0.6rem;border-radius:100px;background:${statusColor(r.status)}20;color:${statusColor(r.status)};flex-shrink:0">${statusLabel(r.status)}</span>
+      </div>`).join('');
+  } catch(ex) {
+    el.innerHTML = '<div style="font-size:0.88rem;color:#c44">Could not load history.</div>';
+  }
+}
+
+// ── MESSAGES (caregiver ↔ clients) ───────────────────────────────────────────
 function updateCgMsgBadge() {
   const total = _cgChatUnreads ? Object.values(_cgChatUnreads).reduce((s, n) => s + (n || 0), 0) : 0;
   const navBadge = document.getElementById('msg-badge-cg');
