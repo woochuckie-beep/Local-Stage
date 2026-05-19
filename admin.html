@@ -532,6 +532,9 @@
         <span id="req-pending-badge" style="display:none;margin-left:auto;background:#ef4444;color:#fff;font-size:0.68rem;font-weight:700;padding:0.1rem 0.45rem;border-radius:100px"></span>
         <span id="issues-nav-badge" style="display:none;margin-left:2px;background:#f97316;color:#fff;font-size:0.68rem;font-weight:700;padding:0.1rem 0.45rem;border-radius:100px"></span>
       </button>
+      <button class="nav-link" data-page="payroll" onclick="go('payroll')">
+        <span class="nav-icon">💰</span>Payroll
+      </button>
       <button class="nav-link" data-page="settings" onclick="go('settings')">
         <span class="nav-icon">⚙️</span>Settings
       </button>
@@ -901,6 +904,41 @@
       <div class="cal-wrap">
         <div class="cal-head" id="cal-head"></div>
         <div class="cal-body" id="cal-body"></div>
+      </div>
+    </div>
+
+    <!-- PAYROLL -->
+    <div id="page-payroll" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Payroll</div>
+          <div class="page-sub">$20/hr · calculate earnings from completed visits and track payments</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Pay Period</div>
+        <div style="display:flex;gap:0.85rem;align-items:flex-end;flex-wrap:wrap">
+          <div>
+            <label style="display:block;font-size:0.8rem;font-weight:600;color:var(--ink-light);margin-bottom:0.25rem">From</label>
+            <input type="date" id="pay-from" class="fc" />
+          </div>
+          <div>
+            <label style="display:block;font-size:0.8rem;font-weight:600;color:var(--ink-light);margin-bottom:0.25rem">To</label>
+            <input type="date" id="pay-to" class="fc" />
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="setPayPeriod(-14)">Last 2 Weeks</button>
+          <button class="btn btn-ghost btn-sm" onclick="setPayPeriod(-7)">Last Week</button>
+          <button class="btn btn-ghost btn-sm" onclick="setPayPeriodMonth()">This Month</button>
+          <button class="btn btn-add" onclick="loadPayroll()">Calculate</button>
+        </div>
+      </div>
+
+      <div id="payroll-summary"></div>
+
+      <div class="card">
+        <div class="card-title">Payment History</div>
+        <div id="payroll-history"><div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div></div>
       </div>
     </div>
 
@@ -1371,6 +1409,7 @@ function go(page) {
   if (page === 'cg-access')  loadCgAccess();
   if (page === 'settings')   { loadStripeSettings(); loadBusinessSettings(); }
   if (page === 'requests')   { loadAdminRequests(); loadAdminTimeOff(); }
+  if (page === 'payroll')    { setPayPeriod(-14); loadPayrollHistory(); }
 }
 
 // ── DASHBOARD ────────────────────────────────────────────────────────────────
@@ -2961,6 +3000,148 @@ async function confirmResolve(status) {
   } catch(ex) {
     toast('Could not update: ' + ex.message, true);
     console.error(ex);
+  }
+}
+
+// ── PAYROLL ───────────────────────────────────────────────────────────────────
+const HOURLY_RATE = 20;
+
+function setPayPeriod(daysBack) {
+  const to   = new Date();
+  const from = new Date(); from.setDate(from.getDate() + daysBack);
+  document.getElementById('pay-from').value = from.toISOString().slice(0, 10);
+  document.getElementById('pay-to').value   = to.toISOString().slice(0, 10);
+}
+
+function setPayPeriodMonth() {
+  const now  = new Date();
+  const from = new Date(now.getFullYear(), now.getMonth(), 1);
+  document.getElementById('pay-from').value = from.toISOString().slice(0, 10);
+  document.getElementById('pay-to').value   = now.toISOString().slice(0, 10);
+}
+
+async function loadPayroll() {
+  const fromVal = document.getElementById('pay-from').value;
+  const toVal   = document.getElementById('pay-to').value;
+  const el      = document.getElementById('payroll-summary');
+  if (!fromVal || !toVal) {
+    el.innerHTML = '<div class="card"><div class="hl-state"><div class="hl-state-title">Please select a date range.</div></div></div>';
+    return;
+  }
+  const from = new Date(fromVal + 'T00:00:00');
+  const to   = new Date(toVal   + 'T23:59:59');
+  el.innerHTML = '<div class="card"><div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Calculating…</div></div></div>';
+  try {
+    const snap = await db.collection('appointments')
+      .where('status', '==', 'completed')
+      .where('scheduled_at', '>=', TS.fromDate(from))
+      .where('scheduled_at', '<=', TS.fromDate(to))
+      .get();
+    const appts = snap.docs.map(d => ({ id: d.id, ...d.data(), scheduled_at: d.data().scheduled_at?.toDate() }));
+    const byCg = {};
+    appts.forEach(a => {
+      if (!a.caregiver_id) return;
+      if (!byCg[a.caregiver_id]) byCg[a.caregiver_id] = { appts: [], mins: 0 };
+      byCg[a.caregiver_id].mins += a.actual_duration_minutes || a.duration_minutes || 60;
+      byCg[a.caregiver_id].appts.push(a);
+    });
+    if (!Object.keys(byCg).length) {
+      el.innerHTML = '<div class="card"><div class="hl-state"><div class="hl-state-title">No completed visits in this period.</div></div></div>';
+      return;
+    }
+    el.innerHTML = Object.entries(byCg).map(([cgId, data]) => {
+      const cg     = caregiversMap[cgId] || { name: 'Unknown Caregiver' };
+      const hrs    = (data.mins / 60).toFixed(2);
+      const amt    = (data.mins / 60 * HOURLY_RATE).toFixed(2);
+      const visits = data.appts.sort((a, b) => a.scheduled_at - b.scheduled_at);
+      return `<div class="card" style="margin-bottom:1.25rem">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1rem">
+          <div>
+            <div style="font-size:1.05rem;font-weight:700;color:var(--ink)">${esc(cg.name)}</div>
+            <div style="font-size:0.82rem;color:var(--ink-light);margin-top:0.15rem">${visits.length} visit${visits.length!==1?'s':''} · ${hrs} hrs · $${HOURLY_RATE}/hr</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:1.6rem;font-weight:700;color:var(--terra)">$${amt}</div>
+            <button class="btn btn-add" style="margin-top:0.5rem;font-size:0.82rem;padding:0.4rem 1rem"
+              onclick="markPaid('${cgId}','${esc(cg.name).replace(/'/g,"\\'")}',${data.mins},'${fromVal}','${toVal}')">
+              Mark as Paid
+            </button>
+          </div>
+        </div>
+        <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Client</th><th>Hours</th><th>Earned</th></tr></thead>
+          <tbody>${visits.map(a => {
+            const mins   = a.actual_duration_minutes || a.duration_minutes || 60;
+            const client = clientsMap[a.client_id]?.name || 'Unknown';
+            return `<tr>
+              <td>${a.scheduled_at.toLocaleDateString('en',{weekday:'short',month:'short',day:'numeric'})}</td>
+              <td>${esc(client)}</td>
+              <td>${(mins/60).toFixed(2)} hrs</td>
+              <td>$${(mins/60*HOURLY_RATE).toFixed(2)}</td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(ex) {
+    el.innerHTML = `<div class="card"><div class="hl-state"><div class="hl-state-title">Error: ${esc(ex.message)}</div></div></div>`;
+    console.error('loadPayroll:', ex);
+  }
+}
+
+async function markPaid(cgId, cgName, totalMins, periodStart, periodEnd) {
+  const amt = (totalMins / 60 * HOURLY_RATE).toFixed(2);
+  if (!confirm(`Record $${amt} payment to ${cgName} for ${periodStart} – ${periodEnd}?`)) return;
+  try {
+    await db.collection('caregiver_payroll').add({
+      caregiver_id:   cgId,
+      caregiver_name: cgName,
+      period_start:   periodStart,
+      period_end:     periodEnd,
+      hours_worked:   totalMins / 60,
+      rate_per_hour:  HOURLY_RATE,
+      total_amount:   totalMins / 60 * HOURLY_RATE,
+      status:         'paid',
+      paid_at:        firebase.firestore.FieldValue.serverTimestamp()
+    });
+    toast(`Payment to ${cgName} recorded — $${amt}`);
+    loadPayrollHistory();
+  } catch(ex) {
+    toast('Could not save: ' + ex.message, true);
+  }
+}
+
+async function loadPayrollHistory() {
+  const el = document.getElementById('payroll-history');
+  if (!el) return;
+  try {
+    const snap = await db.collection('caregiver_payroll')
+      .orderBy('paid_at', 'desc').limit(100).get();
+    if (!snap.size) {
+      el.innerHTML = '<div class="hl-state"><div class="hl-state-title">No payments recorded yet.</div></div>';
+      return;
+    }
+    el.innerHTML = `<div class="table-wrap"><table>
+      <thead><tr><th>Caregiver</th><th>Period</th><th>Hours</th><th>Amount</th><th>Paid On</th></tr></thead>
+      <tbody>${snap.docs.map(d => {
+        const p = d.data();
+        const paidAt = p.paid_at?.toDate
+          ? p.paid_at.toDate().toLocaleDateString('en',{month:'short',day:'numeric',year:'numeric'})
+          : '—';
+        return `<tr>
+          <td><strong>${esc(p.caregiver_name)}</strong></td>
+          <td style="font-size:0.83rem">${esc(p.period_start)} – ${esc(p.period_end)}</td>
+          <td>${Number(p.hours_worked).toFixed(2)} hrs</td>
+          <td style="font-weight:600;color:var(--terra)">$${Number(p.total_amount).toFixed(2)}</td>
+          <td style="font-size:0.83rem">${paidAt}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>`;
+  } catch(ex) {
+    el.innerHTML = '<div class="hl-state"><div class="hl-state-title">Could not load history.</div></div>';
+    console.error('loadPayrollHistory:', ex);
   }
 }
 

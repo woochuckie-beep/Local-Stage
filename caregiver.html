@@ -414,6 +414,7 @@
       Messages <span class="req-badge" id="msg-badge-cg"></span>
     </button>
     <button class="tab-btn" data-view="clients" onclick="switchTab('clients')">Clients &amp; Notes</button>
+    <button class="tab-btn" data-view="earnings" onclick="switchTab('earnings')">Earnings</button>
   </div>
 
   <div class="main">
@@ -578,6 +579,22 @@
       <div class="view-title">Clients &amp; Notes</div>
       <div class="view-sub">Click a client to expand — send notes, manage private reminders, and view history.</div>
       <div id="clients-list"><div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div></div>
+    </div>
+
+    <!-- EARNINGS -->
+    <div class="view" id="view-earnings">
+      <div class="view-title">My Earnings</div>
+      <div class="view-sub">$20/hr · based on completed visits</div>
+
+      <div class="card">
+        <div class="card-title">Current Period — Last 14 Days</div>
+        <div id="earnings-current"><div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Payment History</div>
+        <div id="earnings-history"><div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div></div>
+      </div>
     </div>
 
   </div>
@@ -832,6 +849,7 @@ function switchTab(view) {
   if (view === 'requests')     { renderRequests(); loadTimeOffHistory(); }
   if (view === 'clients')      loadMyClients();
   if (view === 'messages')     loadCaregiverMessages();
+  if (view === 'earnings')     loadEarnings();
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────
@@ -1878,6 +1896,102 @@ async function sendCaregiverMessage() {
 (async () => {
   if (await tryResumeSession()) await bootPortal();
 })();
+
+// ── EARNINGS ─────────────────────────────────────────────────────────────────
+const CG_HOURLY_RATE = 20;
+
+async function loadEarnings() {
+  const curEl  = document.getElementById('earnings-current');
+  const histEl = document.getElementById('earnings-history');
+  if (!caregiverId) return;
+
+  // Current period: last 14 days of completed visits
+  const now  = new Date();
+  const from = new Date(); from.setDate(from.getDate() - 14);
+
+  curEl.innerHTML  = '<div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div>';
+  histEl.innerHTML = '<div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div>';
+
+  try {
+    const snap = await db.collection('appointments')
+      .where('caregiver_id', '==', caregiverId)
+      .where('status', '==', 'completed')
+      .where('scheduled_at', '>=', firebase.firestore.Timestamp.fromDate(from))
+      .where('scheduled_at', '<=', firebase.firestore.Timestamp.fromDate(now))
+      .get();
+
+    const appts = snap.docs
+      .map(d => ({ ...d.data(), scheduled_at: d.data().scheduled_at?.toDate() }))
+      .sort((a, b) => b.scheduled_at - a.scheduled_at);
+
+    const totalMins = appts.reduce((s, a) => s + (a.actual_duration_minutes || a.duration_minutes || 60), 0);
+    const totalAmt  = (totalMins / 60 * CG_HOURLY_RATE).toFixed(2);
+
+    if (!appts.length) {
+      curEl.innerHTML = '<div class="hl-state"><div class="hl-state-title">No completed visits in the last 14 days.</div></div>';
+    } else {
+      curEl.innerHTML = `
+        <div style="display:flex;align-items:center;gap:1.5rem;margin-bottom:1.25rem;flex-wrap:wrap">
+          <div>
+            <div style="font-size:0.75rem;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.06em">Total Earned</div>
+            <div style="font-size:2rem;font-weight:700;color:var(--terra)">$${totalAmt}</div>
+          </div>
+          <div>
+            <div style="font-size:0.75rem;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.06em">Hours Worked</div>
+            <div style="font-size:1.5rem;font-weight:600;color:var(--ink)">${(totalMins/60).toFixed(2)} hrs</div>
+          </div>
+          <div>
+            <div style="font-size:0.75rem;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.06em">Visits</div>
+            <div style="font-size:1.5rem;font-weight:600;color:var(--ink)">${appts.length}</div>
+          </div>
+        </div>
+        <div style="border-top:1px solid var(--cream-dark);padding-top:1rem">
+          ${appts.map(a => {
+            const mins   = a.actual_duration_minutes || a.duration_minutes || 60;
+            const earned = (mins / 60 * CG_HOURLY_RATE).toFixed(2);
+            const client = clientsMap[a.client_id]?.name || 'Client';
+            return `<div style="display:flex;align-items:center;justify-content:space-between;padding:0.55rem 0;border-bottom:1px solid #f0ebe0;font-size:0.88rem">
+              <div>
+                <div style="font-weight:600">${esc(client)}</div>
+                <div style="font-size:0.78rem;color:var(--ink-light);margin-top:0.1rem">${a.scheduled_at.toLocaleDateString('en',{weekday:'short',month:'short',day:'numeric'})} · ${(mins/60).toFixed(2)} hrs</div>
+              </div>
+              <div style="font-weight:600;color:var(--terra)">$${earned}</div>
+            </div>`;
+          }).join('')}
+        </div>`;
+    }
+  } catch(ex) {
+    curEl.innerHTML = '<div class="hl-state"><div class="hl-state-title">Could not load earnings.</div></div>';
+    console.error('loadEarnings:', ex);
+  }
+
+  // Payment history from caregiver_payroll
+  try {
+    const hSnap = await db.collection('caregiver_payroll')
+      .where('caregiver_id', '==', caregiverId)
+      .orderBy('paid_at', 'desc').limit(50).get();
+
+    if (!hSnap.size) {
+      histEl.innerHTML = '<div class="hl-state"><div class="hl-state-title">No payments recorded yet.</div></div>';
+      return;
+    }
+    histEl.innerHTML = hSnap.docs.map(d => {
+      const p      = d.data();
+      const paidAt = p.paid_at?.toDate
+        ? p.paid_at.toDate().toLocaleDateString('en',{month:'long',day:'numeric',year:'numeric'})
+        : '—';
+      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem 0;border-bottom:1px solid var(--cream-dark);font-size:0.88rem">
+        <div>
+          <div style="font-weight:600">${esc(p.period_start)} – ${esc(p.period_end)}</div>
+          <div style="font-size:0.78rem;color:var(--ink-light);margin-top:0.1rem">Paid ${paidAt} · ${Number(p.hours_worked).toFixed(2)} hrs</div>
+        </div>
+        <div style="font-weight:700;color:var(--terra);font-size:1rem">$${Number(p.total_amount).toFixed(2)}</div>
+      </div>`;
+    }).join('');
+  } catch(ex) {
+    histEl.innerHTML = '<div class="hl-state"><div class="hl-state-title">Could not load payment history.</div></div>';
+  }
+}
 
 // ── LIVE CLOCK ────────────────────────────────────────────────────────────────
 (function startClock() {

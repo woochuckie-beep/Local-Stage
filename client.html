@@ -1450,7 +1450,10 @@
         status:         'pending',
         created_at:     firebase.firestore.FieldValue.serverTimestamp()
       });
-      toast('Pause request submitted! Your coordinator will confirm shortly.');
+      // Automatically stop auto-renew when a pause is requested
+      await db.collection('clients').doc(clientDoc.id).update({ auto_renew: false });
+      clientDoc.auto_renew = false;
+      toast('Pause request submitted. Auto-renew has been turned off — your coordinator will confirm shortly.');
       document.getElementById('req-pause-start').value    = '';
       document.getElementById('req-pause-duration').value = '';
       document.getElementById('req-pause-msg').value      = '';
