@@ -916,29 +916,12 @@
       <div class="page-header">
         <div>
           <div class="page-title">Payroll</div>
-          <div class="page-sub">$20/hr · calculate earnings from completed visits and track payments</div>
+          <div class="page-sub">$20/hr · unpaid completed visits grouped by caregiver — pay to reset their balance</div>
         </div>
+        <button class="btn btn-add" onclick="loadPayroll()">↻ Refresh</button>
       </div>
 
-      <div class="card">
-        <div class="card-title">Pay Period</div>
-        <div style="display:flex;gap:0.85rem;align-items:flex-end;flex-wrap:wrap">
-          <div>
-            <label style="display:block;font-size:0.8rem;font-weight:600;color:var(--ink-light);margin-bottom:0.25rem">From</label>
-            <input type="date" id="pay-from" class="fc" />
-          </div>
-          <div>
-            <label style="display:block;font-size:0.8rem;font-weight:600;color:var(--ink-light);margin-bottom:0.25rem">To</label>
-            <input type="date" id="pay-to" class="fc" />
-          </div>
-          <button class="btn btn-ghost btn-sm" onclick="setPayPeriod(-14)">Last 2 Weeks</button>
-          <button class="btn btn-ghost btn-sm" onclick="setPayPeriod(-7)">Last Week</button>
-          <button class="btn btn-ghost btn-sm" onclick="setPayPeriodMonth()">This Month</button>
-          <button class="btn btn-add" onclick="loadPayroll()">Calculate</button>
-        </div>
-      </div>
-
-      <div id="payroll-summary"></div>
+      <div id="payroll-summary"><div class="card"><div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading payroll…</div></div></div></div>
 
       <div class="card">
         <div class="card-title">Payment History</div>
@@ -1448,7 +1431,7 @@ function go(page) {
   if (page === 'cg-access')  loadCgAccess();
   if (page === 'settings')   { loadStripeSettings(); loadBusinessSettings(); }
   if (page === 'requests')   { loadAdminRequests(); loadAdminTimeOff(); }
-  if (page === 'payroll')    { setPayPeriod(-14); loadPayrollHistory(); }
+  if (page === 'payroll')    { loadPayroll(); loadPayrollHistory(); }
 }
 
 // ── DASHBOARD ────────────────────────────────────────────────────────────────
@@ -3095,55 +3078,31 @@ async function confirmResolve(status) {
 // ── PAYROLL ───────────────────────────────────────────────────────────────────
 const HOURLY_RATE = 20;
 
-function setPayPeriod(daysBack) {
-  const to   = new Date();
-  const from = new Date(); from.setDate(from.getDate() + daysBack);
-  document.getElementById('pay-from').value = from.toISOString().slice(0, 10);
-  document.getElementById('pay-to').value   = to.toISOString().slice(0, 10);
-}
-
-function setPayPeriodMonth() {
-  const now  = new Date();
-  const from = new Date(now.getFullYear(), now.getMonth(), 1);
-  document.getElementById('pay-from').value = from.toISOString().slice(0, 10);
-  document.getElementById('pay-to').value   = now.toISOString().slice(0, 10);
-}
-
 async function loadPayroll() {
-  const fromVal = document.getElementById('pay-from').value;
-  const toVal   = document.getElementById('pay-to').value;
-  const el      = document.getElementById('payroll-summary');
-  if (!fromVal || !toVal) {
-    el.innerHTML = '<div class="card"><div class="hl-state hl-empty"><div class="hl-state-icon" style="background:var(--cream-dark)"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" width="22" height="22"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div><div class="hl-state-title">Select a date range</div><div class="hl-state-sub">Choose a pay period above, then click Calculate.</div></div></div>';
-    return;
-  }
-  const from = new Date(fromVal + 'T00:00:00');
-  const to   = new Date(toVal   + 'T23:59:59');
-  el.innerHTML = '<div class="card"><div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Calculating…</div></div></div>';
+  const el = document.getElementById('payroll-summary');
+  el.innerHTML = '<div class="card"><div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading unpaid hours…</div></div></div>';
 
   try {
-    const [apptSnap, paySnap] = await Promise.all([
-      db.collection('appointments')
-        .where('status', '==', 'completed')
-        .where('scheduled_at', '>=', TS.fromDate(from))
-        .where('scheduled_at', '<=', TS.fromDate(to))
-        .get(),
-      db.collection('caregiver_payroll')
-        .where('period_start', '>=', fromVal)
-        .get()
-    ]);
+    // Fetch ALL completed visits that haven't been paid yet
+    const apptSnap = await db.collection('appointments')
+      .where('status', '==', 'completed')
+      .where('payroll_paid', '==', false)
+      .get();
 
-    const appts = apptSnap.docs.map(d => ({ id: d.id, ...d.data(), scheduled_at: d.data().scheduled_at?.toDate() }));
+    // Also fetch visits that don't have the payroll_paid field at all (legacy/new)
+    const apptSnap2 = await db.collection('appointments')
+      .where('status', '==', 'completed')
+      .get();
 
-    // Build a set of cgId → most-recent payment for this period
-    const paidMap = {};
-    paySnap.docs.forEach(d => {
-      const p = d.data();
-      if (p.period_start === fromVal && p.period_end === toVal) {
-        if (!paidMap[p.caregiver_id] || (p.paid_at?.seconds || 0) > (paidMap[p.caregiver_id].paid_at?.seconds || 0)) {
-          paidMap[p.caregiver_id] = { ...p, _docId: d.id };
-        }
-      }
+    // Merge: include visits where payroll_paid is false OR not set
+    const seen = new Set();
+    const appts = [];
+    apptSnap2.docs.forEach(d => {
+      const data = d.data();
+      if (data.payroll_paid === true) return; // already paid, skip
+      if (seen.has(d.id)) return;
+      seen.add(d.id);
+      appts.push({ id: d.id, ...data, scheduled_at: data.scheduled_at?.toDate() });
     });
 
     const byCg = {};
@@ -3155,70 +3114,54 @@ async function loadPayroll() {
     });
 
     if (!Object.keys(byCg).length) {
-      el.innerHTML = '<div class="card"><div class="hl-state hl-empty"><div class="hl-state-title">No completed visits in this period.</div></div></div>';
+      el.innerHTML = '<div class="card"><div class="hl-state hl-empty"><div class="hl-state-icon" style="background:#d1fae5"><svg fill="none" stroke="#065f46" stroke-width="2.5" viewBox="0 0 24 24" width="22" height="22"><path d="M5 13l4 4L19 7"/></svg></div><div class="hl-state-title" style="color:#065f46">All caught up!</div><div class="hl-state-sub">No unpaid hours — all caregivers have been paid.</div></div></div>';
       return;
     }
 
-    // Summary bar
     const entries = Object.entries(byCg);
-    const totalHrs   = entries.reduce((s, [, d]) => s + d.mins, 0) / 60;
-    const totalOwed  = entries.filter(([id]) => !paidMap[id]).reduce((s, [, d]) => s + d.mins / 60 * HOURLY_RATE, 0);
-    const totalPaid  = entries.filter(([id]) =>  paidMap[id]).reduce((s, [, d]) => s + d.mins / 60 * HOURLY_RATE, 0);
-    const unpaidCount = entries.filter(([id]) => !paidMap[id]).length;
+    const totalHrs  = entries.reduce((s, [, d]) => s + d.mins, 0) / 60;
+    const totalOwed = entries.reduce((s, [, d]) => s + d.mins / 60 * HOURLY_RATE, 0);
 
     el.innerHTML = `
       <div class="card" style="background:var(--ink);color:#fff;margin-bottom:1.25rem">
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;text-align:center">
           <div>
-            <div style="font-size:0.7rem;font-weight:600;opacity:0.55;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem">Total Hours</div>
+            <div style="font-size:0.7rem;font-weight:600;opacity:0.55;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem">Caregivers Owed</div>
+            <div style="font-size:1.6rem;font-weight:700">${entries.length}</div>
+          </div>
+          <div>
+            <div style="font-size:0.7rem;font-weight:600;opacity:0.55;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem">Total Unpaid Hours</div>
             <div style="font-size:1.6rem;font-weight:700">${totalHrs.toFixed(1)}</div>
           </div>
           <div>
-            <div style="font-size:0.7rem;font-weight:600;opacity:0.55;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem">Unpaid (${unpaidCount})</div>
+            <div style="font-size:0.7rem;font-weight:600;opacity:0.55;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem">Total Owed</div>
             <div style="font-size:1.6rem;font-weight:700;color:#f87171">$${totalOwed.toFixed(2)}</div>
-          </div>
-          <div>
-            <div style="font-size:0.7rem;font-weight:600;opacity:0.55;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem">Paid</div>
-            <div style="font-size:1.6rem;font-weight:700;color:#6ee7b7">$${totalPaid.toFixed(2)}</div>
           </div>
         </div>
       </div>` +
       entries
-        .sort(([, a], [, b]) => {
-          const aPaid = !!paidMap[a.caregiver_id], bPaid = !!paidMap[b.caregiver_id];
-          return aPaid - bPaid || b.mins - a.mins;
-        })
+        .sort(([, a], [, b]) => b.mins - a.mins)
         .map(([cgId, data]) => {
-          const cg      = caregiversMap[cgId] || { name: 'Unknown Caregiver' };
-          const hrs     = (data.mins / 60).toFixed(2);
-          const amt     = (data.mins / 60 * HOURLY_RATE).toFixed(2);
-          const visits  = data.appts.sort((a, b) => a.scheduled_at - b.scheduled_at);
-          const payment = paidMap[cgId];
+          const cg     = caregiversMap[cgId] || { name: 'Unknown Caregiver' };
+          const hrs    = (data.mins / 60).toFixed(2);
+          const amt    = (data.mins / 60 * HOURLY_RATE).toFixed(2);
+          const visits = data.appts.sort((a, b) => (a.scheduled_at||0) - (b.scheduled_at||0));
+          const apptIds = visits.map(v => v.id);
 
-          const paymentMethodLabel = {
-            etransfer: 'E-Transfer', direct_deposit: 'Direct Deposit',
-            cash: 'Cash', cheque: 'Cheque', other: 'Other'
-          };
+          // Show bank/payment info if caregiver has it stored
+          const payInfo = cg.payment_info || {};
+          let payInfoHtml = '';
+          if (payInfo.etransfer_email) {
+            payInfoHtml += `<div style="font-size:0.78rem;color:var(--ink-light);margin-top:0.1rem">💳 E-Transfer: ${esc(payInfo.etransfer_email)}</div>`;
+          }
+          if (payInfo.bank_name || payInfo.account_number) {
+            payInfoHtml += `<div style="font-size:0.78rem;color:var(--ink-light);margin-top:0.1rem">🏦 ${esc(payInfo.bank_name||'')} ${payInfo.account_number ? `· Acct: ${esc(payInfo.account_number)}` : ''} ${payInfo.transit_number ? `· Transit: ${esc(payInfo.transit_number)}` : ''} ${payInfo.institution_number ? `· Inst: ${esc(payInfo.institution_number)}` : ''}</div>`;
+          }
+          if (!payInfoHtml) {
+            payInfoHtml = `<div style="font-size:0.78rem;color:#f59e0b;margin-top:0.1rem">⚠ No payment info set by caregiver</div>`;
+          }
 
-          const statusBlock = payment
-            ? `<div style="text-align:right">
-                <div style="display:inline-flex;align-items:center;gap:0.4rem;background:#d1fae5;color:#065f46;padding:0.3rem 0.75rem;border-radius:100px;font-size:0.8rem;font-weight:600">
-                  ✓ Paid
-                </div>
-                <div style="font-size:0.75rem;color:var(--ink-light);margin-top:0.35rem">
-                  ${paymentMethodLabel[payment.method] || 'Recorded'} · ${payment.paid_at?.toDate?.().toLocaleDateString('en',{month:'short',day:'numeric'}) || ''}
-                  ${payment.reference ? `<br><em>${esc(payment.reference)}</em>` : ''}
-                </div>
-              </div>`
-            : `<div style="text-align:right">
-                <div style="font-size:1.6rem;font-weight:700;color:var(--terra)">$${amt}</div>
-                <button class="btn btn-add" style="margin-top:0.5rem;font-size:0.82rem;padding:0.4rem 1rem"
-                  onclick="openPayModal('${cgId}',${data.mins},'${fromVal}','${toVal}')">
-                  Pay / Record
-                </button>
-              </div>`;
-
-          return `<div class="card" style="margin-bottom:1rem;${payment ? 'border:1.5px solid #d1fae5' : 'border:1.5px solid transparent'}">
+          return `<div class="card" style="margin-bottom:1rem;border:1.5px solid var(--terra-soft)">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1rem">
               <div>
                 <div style="font-size:1.05rem;font-weight:700;color:var(--ink)">${esc(cg.name)}</div>
@@ -3227,8 +3170,15 @@ async function loadPayroll() {
                 </div>
                 ${cg.email ? `<div style="font-size:0.78rem;color:var(--ink-light);margin-top:0.1rem">✉ ${esc(cg.email)}</div>` : ''}
                 ${cg.phone ? `<div style="font-size:0.78rem;color:var(--ink-light)">📞 ${esc(cg.phone)}</div>` : ''}
+                ${payInfoHtml}
               </div>
-              ${statusBlock}
+              <div style="text-align:right">
+                <div style="font-size:1.6rem;font-weight:700;color:var(--terra)">$${amt}</div>
+                <button class="btn btn-add" style="margin-top:0.5rem;font-size:0.82rem;padding:0.4rem 1rem"
+                  onclick="openPayModal('${cgId}',${data.mins},${JSON.stringify(apptIds).replace(/"/g,'&quot;')})">
+                  Pay / Record
+                </button>
+              </div>
             </div>
             <div class="table-wrap">
               <table>
@@ -3236,8 +3186,9 @@ async function loadPayroll() {
                 <tbody>${visits.map(a => {
                   const mins   = a.actual_duration_minutes || a.duration_minutes || 60;
                   const client = clientsMap[a.client_id]?.name || 'Unknown';
+                  const dateStr = a.scheduled_at ? a.scheduled_at.toLocaleDateString('en',{weekday:'short',month:'short',day:'numeric'}) : '—';
                   return `<tr>
-                    <td>${a.scheduled_at.toLocaleDateString('en',{weekday:'short',month:'short',day:'numeric'})}</td>
+                    <td>${dateStr}</td>
                     <td>${esc(client)}</td>
                     <td>${(mins/60).toFixed(2)} hrs</td>
                     <td>$${(mins/60*HOURLY_RATE).toFixed(2)}</td>
@@ -3257,25 +3208,32 @@ async function loadPayroll() {
 // ── PAY MODAL ────────────────────────────────────────────────────────────────
 let _payState = null;
 
-function openPayModal(cgId, totalMins, periodStart, periodEnd) {
+function openPayModal(cgId, totalMins, apptIdsEncoded) {
   const cg  = caregiversMap[cgId] || { name: 'Unknown Caregiver' };
   const amt = (totalMins / 60 * HOURLY_RATE).toFixed(2);
   const hrs = (totalMins / 60).toFixed(2);
-  _payState = { cgId, cgName: cg.name, totalMins, periodStart, periodEnd, amt };
+  // apptIdsEncoded is a JSON array passed via HTML attribute (already decoded by browser)
+  let apptIds = [];
+  try { apptIds = typeof apptIdsEncoded === 'string' ? JSON.parse(apptIdsEncoded) : apptIdsEncoded; } catch {}
+  _payState = { cgId, cgName: cg.name, totalMins, amt, apptIds };
 
   document.getElementById('pay-cg-summary').innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem">
       <div>
         <div style="font-weight:700;font-size:1rem">${esc(cg.name)}</div>
-        <div style="font-size:0.82rem;color:var(--ink-light);margin-top:0.2rem">${periodStart} – ${periodEnd} · ${hrs} hrs</div>
+        <div style="font-size:0.82rem;color:var(--ink-light);margin-top:0.2rem">${apptIds.length} visit${apptIds.length!==1?'s':''} · ${hrs} hrs</div>
       </div>
       <div style="font-size:1.5rem;font-weight:700;color:var(--terra)">$${amt}</div>
     </div>`;
 
+  // Show payment info from caregiver's saved bank details
+  const payInfo = cg.payment_info || {};
   const contactEl = document.getElementById('pay-contact-row');
   const parts = [];
   if (cg.email) parts.push(`<span>✉ ${esc(cg.email)}</span>`);
   if (cg.phone) parts.push(`<span>📞 ${esc(cg.phone)}</span>`);
+  if (payInfo.etransfer_email) parts.push(`<span style="color:var(--terra)">💳 E-Transfer: <strong>${esc(payInfo.etransfer_email)}</strong></span>`);
+  if (payInfo.bank_name) parts.push(`<span style="color:var(--terra)">🏦 ${esc(payInfo.bank_name)}${payInfo.account_number ? ` · Acct: ${esc(payInfo.account_number)}` : ''}${payInfo.transit_number ? ` · Transit: ${esc(payInfo.transit_number)}` : ''}${payInfo.institution_number ? ` · Inst: ${esc(payInfo.institution_number)}` : ''}</span>`);
   if (parts.length) { contactEl.innerHTML = parts.join(''); contactEl.style.display = 'flex'; }
   else contactEl.style.display = 'none';
 
@@ -3291,12 +3249,14 @@ function updatePayEtransferLink() {
   const method = document.getElementById('pay-method').value;
   if (!_payState) return;
   const cg = caregiversMap[_payState.cgId] || {};
-  if (method === 'etransfer' && cg.email) {
+  const payInfo = cg.payment_info || {};
+  const emailTarget = payInfo.etransfer_email || cg.email;
+  if (method === 'etransfer' && emailTarget) {
     const subject = encodeURIComponent(`Hearthlane Payment — $${_payState.amt}`);
     const body    = encodeURIComponent(
-      `Hi ${_payState.cgName},\n\nPlease find your payment of $${_payState.amt} for the period ${_payState.periodStart} to ${_payState.periodEnd} (${(_payState.totalMins/60).toFixed(2)} hrs @ $${HOURLY_RATE}/hr).\n\nThank you!\nHearthlane`
+      `Hi ${_payState.cgName},\n\nPlease find your payment of $${_payState.amt} for ${_payState.apptIds.length} completed visit(s) (${(_payState.totalMins/60).toFixed(2)} hrs @ $${HOURLY_RATE}/hr).\n\nThank you!\nHearthlane`
     );
-    link.href = `mailto:${cg.email}?subject=${subject}&body=${body}`;
+    link.href = `mailto:${emailTarget}?subject=${subject}&body=${body}`;
     hint.style.display = 'block';
   } else {
     hint.style.display = 'none';
@@ -3312,21 +3272,36 @@ async function submitPayment() {
   const btn    = document.getElementById('pay-confirm-btn');
   btn.disabled = true; btn.textContent = 'Saving…';
   try {
+    const now = new Date();
+    const periodEnd   = now.toISOString().slice(0, 10);
+    // period_start = date of the earliest appointment in this batch
+    const periodStart = periodEnd; // simplified; could derive from visits if needed
+
+    // 1. Record the payroll entry
     await db.collection('caregiver_payroll').add({
       caregiver_id:   _payState.cgId,
       caregiver_name: _payState.cgName,
-      period_start:   _payState.periodStart,
-      period_end:     _payState.periodEnd,
+      period_start:   periodStart,
+      period_end:     periodEnd,
       hours_worked:   _payState.totalMins / 60,
       rate_per_hour:  HOURLY_RATE,
       total_amount:   _payState.totalMins / 60 * HOURLY_RATE,
+      visit_ids:      _payState.apptIds,
       method,
       reference:      ref || null,
       status:         'paid',
       paid_at:        SV()
     });
+
+    // 2. Mark all included appointments as paid so they vanish from the unpaid list
+    const batch = db.batch();
+    _payState.apptIds.forEach(id => {
+      batch.update(db.collection('appointments').doc(id), { payroll_paid: true });
+    });
+    await batch.commit();
+
     closeModal('pay-ov');
-    toast(`Payment recorded — $${_payState.amt} to ${_payState.cgName}`);
+    toast(`✓ Payment recorded — $${_payState.amt} to ${_payState.cgName}`);
     _payState = null;
     loadPayroll();
     loadPayrollHistory();
@@ -3360,7 +3335,7 @@ async function loadPayrollHistory() {
           : '—';
         return `<tr>
           <td><strong>${esc(p.caregiver_name)}</strong></td>
-          <td style="font-size:0.83rem">${esc(p.period_start)} – ${esc(p.period_end)}</td>
+          <td style="font-size:0.83rem">${esc(p.period_start)} – ${esc(p.period_end)}${p.visit_ids ? `<br><small style="color:var(--ink-light)">${p.visit_ids.length} visit${p.visit_ids.length!==1?'s':''}</small>` : ''}</td>
           <td>${Number(p.hours_worked).toFixed(2)} hrs</td>
           <td style="font-weight:600;color:var(--terra)">$${Number(p.total_amount).toFixed(2)}</td>
           <td style="font-size:0.83rem">${methodLabel[p.method] || '—'}${p.reference ? `<br><small style="color:var(--ink-light)">${esc(p.reference)}</small>` : ''}</td>
