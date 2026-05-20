@@ -1671,41 +1671,25 @@
   gap: 2px; min-height: 42px;
 }
 .cal-day:hover:not(.empty) { background: var(--cream); }
-/* Today — warm terra ring */
-.cal-day.today {
-  background: #fff4ee;
+.cal-day.today  { background: var(--green-light); color: var(--ink); font-weight: 600; }
+.cal-day.has-visit-future {
+  background: #e8ede4;
   color: var(--ink);
   font-weight: 700;
-  box-shadow: inset 0 0 0 2.5px var(--terra);
+  box-shadow: inset 0 0 0 2px #7a8b6f;
 }
-/* Upcoming visit — vivid blue */
-.cal-day.has-visit-future {
-  background: #dbeafe;
-  color: #1e3a8a;
-  font-weight: 700;
-  box-shadow: inset 0 0 0 2.5px #2563eb;
-}
-/* Past visit — soft purple */
 .cal-day.has-visit-past {
-  background: #ede9fe;
-  color: #4c1d95;
+  background: #f0ece7;
+  color: var(--ink-mid);
   font-weight: 600;
-  box-shadow: inset 0 0 0 2px #7c3aed;
-  opacity: 0.75;
+  box-shadow: inset 0 0 0 2px #c4b8ab;
 }
-/* Today + upcoming visit — terra bg, blue ring */
 .cal-day.today.has-visit-future {
-  background: #dbeafe;
-  box-shadow: inset 0 0 0 2.5px #2563eb, inset 0 0 0 5px var(--terra);
-  color: #1e3a8a;
+  background: var(--green-light);
+  box-shadow: inset 0 0 0 2px var(--green);
   font-weight: 700;
 }
-.cal-day.selected {
-  background: #dbeafe;
-  outline: 2.5px solid #2563eb;
-  outline-offset: -2px;
-  color: #1e3a8a;
-}
+.cal-day.selected { background: var(--green-light); outline: 2px solid var(--green); outline-offset: -2px; color: var(--ink); }
 .cal-day.other-month { color: var(--cream-dark); pointer-events: none; }
 .cal-day.empty { cursor: default; }
 
@@ -1720,21 +1704,17 @@
 .cal-legend-swatch {
   width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
 }
-/* Upcoming — blue */
 .cal-legend-swatch.future {
-  background: #dbeafe;
-  box-shadow: inset 0 0 0 2.5px #2563eb;
+  background: #e8ede4;
+  box-shadow: inset 0 0 0 2px #7a8b6f;
 }
-/* Past — purple */
 .cal-legend-swatch.past {
-  background: #ede9fe;
-  box-shadow: inset 0 0 0 2px #7c3aed;
-  opacity: 0.8;
+  background: #f0ece7;
+  box-shadow: inset 0 0 0 2px #c4b8ab;
 }
-/* Today — terra */
 .cal-legend-swatch.today-swatch {
-  background: #fff4ee;
-  box-shadow: inset 0 0 0 2.5px var(--terra);
+  background: var(--green-light);
+  box-shadow: inset 0 0 0 2px var(--green);
 }
 
 .cal-side-card {
@@ -3615,6 +3595,10 @@
         Messages
         <span id="msg-badge" style="display:none;margin-left:auto;background:#ef4444;color:#fff;font-size:0.65rem;font-weight:700;padding:0.1rem 0.4rem;border-radius:100px"></span>
       </button>
+      <button class="nav-item" data-view="contact">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 5a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2H7l-4 4V5z"/></svg>
+        Contact Us
+      </button>
     </aside>
 
     <!-- MAIN -->
@@ -3843,6 +3827,49 @@
         </div>
       </div>
 
+      <!-- CONTACT VIEW -->
+      <div class="p-view" id="view-contact">
+        <div class="section-title">Contact Us</div>
+        <div class="section-sub">We're here to help — reach out any time.</div>
+
+        <!-- Hero -->
+        <div class="card fade-in" style="background:linear-gradient(135deg,var(--ink) 0%,#5a3e2b 100%);border:none;margin-bottom:1.25rem">
+          <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(255,255,255,0.45);margin-bottom:0.3rem">HearthLane Care Team</div>
+          <div style="font-size:1.2rem;font-weight:700;color:#fff;margin-bottom:0.3rem">How can we help?</div>
+          <div style="font-size:0.85rem;color:rgba(255,255,255,0.6);line-height:1.65">Questions about your plan, visits, or caregiver?<br>Reach us by phone, email, or book a call below.</div>
+        </div>
+
+        <!-- Contact methods -->
+        <div class="card fade-in" style="margin-bottom:1.25rem">
+          <div class="card-label" style="margin-bottom:0.85rem">Get in Touch</div>
+          <div id="portal-contact-info">
+            <div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div>
+          </div>
+        </div>
+
+        <!-- Schedule a call CTA -->
+        <div class="card fade-in" id="portal-contact-cta" style="display:none;background:linear-gradient(135deg,#f0d8c8 0%,#faf3ea 100%);border:1.5px solid var(--terra-soft);margin-bottom:1.25rem">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+            <div>
+              <div style="font-size:1rem;font-weight:700;color:var(--ink);margin-bottom:0.3rem">📅 Schedule a Call</div>
+              <div style="font-size:0.84rem;color:var(--ink-mid);line-height:1.6;max-width:380px">Prefer to talk? Book a time with your care coordinator — we'll walk you through anything.</div>
+            </div>
+            <a id="portal-calendly-btn" href="#" target="_blank" rel="noopener noreferrer"
+               style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.7rem 1.4rem;background:var(--terra);color:#fff;border-radius:10px;font-size:0.88rem;font-weight:600;text-decoration:none;transition:background 0.2s;flex-shrink:0;white-space:nowrap"
+               onmouseover="this.style.background='#a87050'" onmouseout="this.style.background='var(--terra)'">
+              Book a Time →
+            </a>
+          </div>
+        </div>
+
+        <!-- Calendly inline embed -->
+        <div class="card fade-in" id="portal-calendly-card" style="display:none">
+          <div class="card-label" style="margin-bottom:0.75rem">Pick a Time</div>
+          <p style="font-size:0.84rem;color:var(--ink-mid);margin-bottom:1rem;line-height:1.6">Choose a slot that works for you — your coordinator will join the call.</p>
+          <div id="portal-calendly-area"></div>
+        </div>
+      </div>
+
     </main>
   </div>
 
@@ -3867,6 +3894,10 @@
     <button class="pmn-btn" data-view="notes" onclick="switchView('notes')">
       <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
       Notes
+    </button>
+    <button class="pmn-btn" data-view="contact" onclick="switchView('contact')">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 5a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2H7l-4 4V5z"/></svg>
+      Contact
     </button>
   </nav>
 </div>
@@ -4727,6 +4758,7 @@ function switchView(id) {
     const badge = document.getElementById('msg-badge');
     if (badge) badge.style.display = 'none';
   }
+  if (id === 'contact') loadContactView();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('click', () => switchView(btn.dataset.view)));
@@ -4821,19 +4853,83 @@ document.getElementById('cal-next').addEventListener('click', () => {
 });
 
 renderCalendar(calYear, calMonth, null);
+
+// ── CONTACT VIEW ─────────────────────────────────────────────────────────────
+let _contactLoaded = false;
+async function loadContactView() {
+  if (_contactLoaded) return;
+  _contactLoaded = true;
+  const infoEl = document.getElementById('portal-contact-info');
+  if (!infoEl) return;
+  try {
+    const snap = await db.collection('settings').doc('business').get();
+    const d = snap.exists ? snap.data() : {};
+    const phone    = d.phone    || null;
+    const email    = d.email    || null;
+    const hours    = d.hours    || null;
+    const calendly = d.calendly || null;
+
+    if (!phone && !email && !hours && !calendly) {
+      infoEl.innerHTML = '<div style="color:var(--ink-light);font-size:0.9rem;padding:0.5rem 0">Contact details not set up yet — check back soon.</div>';
+      return;
+    }
+
+    const rows = [];
+    if (phone) rows.push(`
+      <div style="display:flex;align-items:center;gap:0.9rem;padding:0.75rem 0;border-bottom:1px solid var(--cream-dark)">
+        <div style="width:40px;height:40px;border-radius:10px;background:var(--terra-soft);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">📞</div>
+        <div style="flex:1">
+          <div style="font-size:0.7rem;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.1rem">Phone</div>
+          <a href="tel:${phone}" style="font-size:0.95rem;font-weight:600;color:var(--ink);text-decoration:none">${phone}</a>
+        </div>
+        <a href="tel:${phone}" style="padding:0.4rem 0.9rem;background:var(--ink);color:#fff;border-radius:8px;font-size:0.8rem;font-weight:500;text-decoration:none">Call</a>
+      </div>`);
+    if (email) rows.push(`
+      <div style="display:flex;align-items:center;gap:0.9rem;padding:0.75rem 0;border-bottom:1px solid var(--cream-dark)">
+        <div style="width:40px;height:40px;border-radius:10px;background:var(--terra-soft);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">✉️</div>
+        <div style="flex:1">
+          <div style="font-size:0.7rem;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.1rem">Email</div>
+          <a href="mailto:${email}" style="font-size:0.95rem;font-weight:600;color:var(--ink);text-decoration:none">${email}</a>
+        </div>
+        <a href="mailto:${email}" style="padding:0.4rem 0.9rem;background:var(--ink);color:#fff;border-radius:8px;font-size:0.8rem;font-weight:500;text-decoration:none">Email</a>
+      </div>`);
+    if (hours) rows.push(`
+      <div style="display:flex;align-items:center;gap:0.9rem;padding:0.75rem 0">
+        <div style="width:40px;height:40px;border-radius:10px;background:var(--terra-soft);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">🕐</div>
+        <div>
+          <div style="font-size:0.7rem;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.1rem">Office Hours</div>
+          <div style="font-size:0.95rem;font-weight:600;color:var(--ink)">${hours}</div>
+        </div>
+      </div>`);
+
+    infoEl.innerHTML = `<div style="display:flex;flex-direction:column">${rows.join('')}</div>`;
+
+    if (calendly) {
+      const ctaCard = document.getElementById('portal-contact-cta');
+      const calBtn  = document.getElementById('portal-calendly-btn');
+      if (ctaCard) ctaCard.style.display = 'block';
+      if (calBtn)  calBtn.href = calendly;
+
+      const calCard = document.getElementById('portal-calendly-card');
+      const calArea = document.getElementById('portal-calendly-area');
+      if (calCard && calArea && !calArea.querySelector('iframe')) {
+        const iframe = document.createElement('iframe');
+        iframe.src = calendly;
+        iframe.style.cssText = 'width:100%;height:660px;border:none;border-radius:10px';
+        iframe.title = 'Schedule a call';
+        calArea.appendChild(iframe);
+        calCard.style.display = 'block';
+      }
+    }
+  } catch(ex) {
+    const infoEl = document.getElementById('portal-contact-info');
+    if (infoEl) infoEl.innerHTML = '<div style="color:var(--ink-light);font-size:0.9rem">Could not load contact info.</div>';
+    console.warn('loadContactView:', ex);
+  }
+}
 </script>
 
-<!-- ⚠️ UPDATE id="build-date" text below on every edit (format: Mon DD, YYYY · H:MM AM/PM) -->
-<!-- ⚠️ UPDATE id="build-date" text below on every edit (format: Mon DD, YYYY · H:MM AM/PM) -->
-<div id="build-stamp" style="
-  position: fixed; bottom: 1rem; right: 1.1rem; z-index: 9000;
-  font-family: 'DM Sans', system-ui, sans-serif;
-  font-size: 0.68rem; color: rgba(107,90,72,0.55);
-  background: rgba(247,239,226,0.82); backdrop-filter: blur(6px);
-  padding: 0.28rem 0.65rem; border-radius: 100px;
-  border: 1px solid rgba(237,224,200,0.7);
-  pointer-events: none; user-select: none; letter-spacing: 0.02em;
-">Updated <span id="build-date">May 16, 2026 · 12:00 AM</span></div>
+
 <script>
 /* ════════════════════════════════════════════
    SCROLL REVEAL + COUNTER ANIMATIONS
