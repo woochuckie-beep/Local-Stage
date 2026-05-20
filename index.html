@@ -4862,8 +4862,9 @@ async function loadContactView() {
   const infoEl = document.getElementById('portal-contact-info');
   if (!infoEl) return;
   try {
-    const snap = await db.collection('settings').doc('business').get();
-    const d = snap.exists ? snap.data() : {};
+    const { doc: fsDoc, getDoc } = fs();
+    const snap = await getDoc(fsDoc(getDb(), 'settings', 'business'));
+    const d = snap.exists() ? snap.data() : {};
     const phone    = d.phone    || null;
     const email    = d.email    || null;
     const hours    = d.hours    || null;
@@ -4922,7 +4923,6 @@ async function loadContactView() {
       }
     }
   } catch(ex) {
-    const infoEl = document.getElementById('portal-contact-info');
     if (infoEl) infoEl.innerHTML = '<div style="color:var(--ink-light);font-size:0.9rem">Could not load contact info.</div>';
     console.warn('loadContactView:', ex);
   }
