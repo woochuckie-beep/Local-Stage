@@ -206,14 +206,14 @@
     .cal-cell { min-height: 56px; border-right: 1px solid #f0ebe0; padding: 3px; cursor: pointer; transition: background 0.1s; }
     .cal-cell:last-child { border-right: none; }
     .cal-cell:hover { background: var(--cream-soft); }
-    .appt-chip { border-radius: 6px; padding: 0.25rem 0.45rem; font-size: 0.73rem; margin-bottom: 3px; cursor: pointer; line-height: 1.4; background: var(--terra); color: var(--white); }
+    .appt-chip { border-radius: 6px; padding: 0.25rem 0.45rem; font-size: 0.73rem; margin-bottom: 3px; cursor: pointer; line-height: 1.4; background: #D97706; color: var(--white); font-weight: 600; }
     .appt-chip:hover { opacity: 0.85; }
     .appt-chip.rec { background: var(--sage); }
-    .appt-chip.status-pending     { background: #F59E0B; color: #fff; }
-    .appt-chip.status-confirmed   { background: #2563EB; color: #fff; }
-    .appt-chip.status-in_progress { background: #EC4899; color: #fff; }
-    .appt-chip.status-completed   { background: #0D9488; color: #fff; }
-    .appt-chip.status-cancelled   { background: #94A3B8; color: #fff; opacity: 0.8; }
+    .appt-chip.status-pending     { background: #D97706; color: #fff; }  /* Deep amber — Scheduled */
+    .appt-chip.status-confirmed   { background: #1D4ED8; color: #fff; }  /* Bold blue — Confirmed */
+    .appt-chip.status-in_progress { background: #0E7490; color: #fff; }  /* Teal — In Progress */
+    .appt-chip.status-completed   { background: #166534; color: #fff; }  /* Dark green — Completed */
+    .appt-chip.status-cancelled   { background: #B91C1C; color: #fff; opacity: 1; } /* Bold red — Cancelled */
     .cal-legend { display: flex; gap: 1rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
     .cal-legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.76rem; color: var(--ink-mid); }
     .cal-legend-swatch { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
@@ -895,11 +895,11 @@
         <button class="btn btn-ghost btn-sm" onclick="jumpToday()">Today</button>
       </div>
       <div class="cal-legend">
-        <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#F59E0B"></div>Scheduled</div>
-        <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#2563EB"></div>Confirmed</div>
-        <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#EC4899"></div>In Progress</div>
-        <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#0D9488"></div>Completed</div>
-        <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#94A3B8"></div>Cancelled</div>
+        <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#D97706"></div>Scheduled</div>
+        <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#1D4ED8"></div>Confirmed</div>
+        <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#0E7490"></div>In Progress</div>
+        <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#166534"></div>Completed</div>
+        <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#B91C1C"></div>Cancelled</div>
       </div>
       <div class="cal-wrap">
         <div class="cal-head" id="cal-head"></div>

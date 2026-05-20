@@ -87,10 +87,10 @@
     .visit-info { flex: 1; }
     .visit-cg { font-weight: 600; font-size: 0.92rem; }
     .visit-meta { font-size: 0.8rem; color: var(--ink-light); margin-top: 0.2rem; }
-    .visit-badge { padding: 0.22rem 0.6rem; border-radius: 100px; font-size: 0.72rem; font-weight: 600; background: #F59E0B; color: var(--white); flex-shrink: 0; }
-    .visit-badge.confirmed  { background: #3B82F6; }
-    .visit-badge.completed  { background: #8b5cf6; }
-    .visit-badge.in-progress { background: #10b981; animation: pulse-badge 1.8s ease-in-out infinite; }
+    .visit-badge { padding: 0.22rem 0.6rem; border-radius: 100px; font-size: 0.72rem; font-weight: 600; background: #D97706; color: var(--white); flex-shrink: 0; }
+    .visit-badge.confirmed  { background: #1D4ED8; }
+    .visit-badge.completed  { background: #166534; }
+    .visit-badge.in-progress { background: #0E7490; animation: pulse-badge 1.8s ease-in-out infinite; }
     @keyframes pulse-badge { 0%,100% { opacity:1; } 50% { opacity:0.7; } }
     .btn-report { background: none; border: none; color: var(--ink-light); font-size: 0.76rem; cursor: pointer; padding: 0.25rem 0; margin-top: 0.3rem; text-decoration: underline; display: block; }
     .btn-report:hover { color: #c44; }
@@ -147,13 +147,13 @@
     .cal-time { padding: 0.5rem 0.4rem 0 0; font-size: 0.68rem; color: var(--ink-light); text-align: right; border-right: 1px solid var(--cream-dark); }
     .cal-cell-ro { min-height: 48px; border-right: 1px solid #f0ebe0; padding: 3px; }
     .cal-cell-ro:last-child { border-right: none; }
-    .appt-chip { border-radius: 6px; padding: 0.22rem 0.4rem; font-size: 0.7rem; margin-bottom: 2px; background: var(--terra); color: var(--white); line-height: 1.4; }
-    .appt-chip.status-pending   { background: #F59E0B; color: var(--white); }
-    .appt-chip.status-confirmed { background: #3B82F6; color: var(--white); }
-    .appt-chip.status-completed { background: #8b5cf6; opacity: 0.85; }
-    .appt-chip.status-cancelled { background: #9ca3af; opacity: 0.65; }
-    .appt-chip.status-in_progress { background: #10b981; }
-    .appt-chip.status-pending-req { background: #9ca3af; }
+    .appt-chip { border-radius: 6px; padding: 0.22rem 0.4rem; font-size: 0.7rem; margin-bottom: 2px; background: #D97706; color: var(--white); line-height: 1.4; font-weight: 600; }
+    .appt-chip.status-pending   { background: #D97706; color: #ffffff; }   /* Deep amber — Scheduled */
+    .appt-chip.status-confirmed { background: #1D4ED8; color: #ffffff; }   /* Bold blue — Confirmed */
+    .appt-chip.status-completed { background: #166534; color: #ffffff; }   /* Dark green — Completed */
+    .appt-chip.status-cancelled { background: #B91C1C; color: #ffffff; opacity: 1; } /* Bold red — Cancelled */
+    .appt-chip.status-in_progress { background: #0E7490; color: #ffffff; } /* Teal — In Progress */
+    .appt-chip.status-pending-req { background: #6B21A8; color: #ffffff; } /* Purple — Awaiting Confirmation */
     .chip-name { font-weight: 600; display: block; }
     .chip-dur  { display: block; font-size: 0.65rem; opacity: 0.8; }
     .sched-legend { display: flex; gap: 0.85rem; margin-bottom: 0.85rem; flex-wrap: wrap; }
@@ -382,11 +382,12 @@
       <div class="view-title">My Schedule</div>
       <div class="view-sub">Your upcoming and past visits</div>
       <div class="sched-legend">
-        <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#F59E0B"></div>Scheduled</div>
-        <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#3B82F6"></div>Confirmed</div>
-        <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#10b981"></div>In Progress</div>
-        <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#8b5cf6"></div>Completed</div>
-        <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#9ca3af"></div>Awaiting Confirmation</div>
+        <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#D97706"></div>Scheduled</div>
+        <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#1D4ED8"></div>Confirmed</div>
+        <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#0E7490"></div>In Progress</div>
+        <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#166534"></div>Completed</div>
+        <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#6B21A8"></div>Awaiting Confirmation</div>
+        <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#B91C1C"></div>Cancelled</div>
       </div>
       <div class="week-controls">
         <button class="btn-week" onclick="clientShiftWeek(-1)">← Prev</button>
@@ -828,7 +829,7 @@
             <div class="visit-cg">${esc(caregiverDoc?.name || 'Caregiver')}</div>
             <div class="visit-meta">${a.scheduled_at.toLocaleDateString('en',{weekday:'long'})} · ${fmt12(a.scheduled_at)} · ${duration}h</div>
           </div>
-          <span class="visit-badge ${badgeCls}" style="${isPending ? 'background:#9ca3af' : ''}">${badgeTxt}</span>
+          <span class="visit-badge ${badgeCls}" style="${isPending ? 'background:#6B21A8' : ''}">${badgeTxt}</span>
         </div>`;
       }).join('');
     }
@@ -1034,7 +1035,7 @@
     const date    = document.getElementById('mtg-date').value;
     const time    = document.getElementById('mtg-time').value;
     const message = document.getElementById('mtg-message').value.trim().slice(0, 500);
-    if (!topic) { toast('Please enter what you'd like to discuss.', true); return; }
+    if (!topic) { toast("Please enter what you'd like to discuss.", true); return; }
     btn.disabled = true; btn.textContent = 'Sending…';
     try {
       await db.collection('meeting_requests').add({
@@ -1190,8 +1191,8 @@
         // Inline style wins over any CSS cascade — guarantees colour always renders
         let dnumStyle = '';
         if (isToday)       dnumStyle = 'background:var(--terra);color:#fff;';
-        else if (hasFuture) dnumStyle = 'background:#3B82F6;color:#fff;';
-        else if (hasPast)   dnumStyle = 'background:#8b5cf6;color:#fff;';
+        else if (hasFuture) dnumStyle = 'background:#1D4ED8;color:#fff;';
+        else if (hasPast)   dnumStyle = 'background:#166534;color:#fff;';
         return `<div class="cal-hcell${isToday ? ' today' : ''}">
           <span class="dname">${d.toLocaleDateString('en',{weekday:'short'})}</span>
           <span class="dnum" style="${dnumStyle}">${d.getDate()}</span>

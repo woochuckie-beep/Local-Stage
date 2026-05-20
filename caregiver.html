@@ -132,13 +132,13 @@
     .cal-time, .avail-time { padding: 0.5rem 0.4rem 0 0; font-size: 0.68rem; color: var(--ink-light); text-align: right; border-right: 1px solid var(--cream-dark); }
     .cal-cell-ro { min-height: 48px; border-right: 1px solid #f0ebe0; padding: 3px; }
     .cal-cell-ro:last-child { border-right: none; }
-    .appt-chip { border-radius: 6px; padding: 0.22rem 0.4rem; font-size: 0.7rem; margin-bottom: 2px; background: var(--terra); color: var(--white); line-height: 1.4; }
+    .appt-chip { border-radius: 6px; padding: 0.22rem 0.4rem; font-size: 0.7rem; margin-bottom: 2px; background: #D97706; color: var(--white); line-height: 1.4; font-weight: 600; }
     .appt-chip.rec { background: var(--sage); }
-    .appt-chip.status-pending     { background: #F59E0B; color: #fff; }
-    .appt-chip.status-confirmed   { background: #3B82F6; color: #fff; }
-    .appt-chip.status-in_progress { background: #8B5CF6; color: #fff; }
-    .appt-chip.status-completed   { background: #10b981; color: #fff; }
-    .appt-chip.status-cancelled   { background: #6B7280; color: #fff; opacity: 0.8; }
+    .appt-chip.status-pending     { background: #D97706; color: #fff; }  /* Deep amber — Scheduled */
+    .appt-chip.status-confirmed   { background: #1D4ED8; color: #fff; }  /* Bold blue — Confirmed */
+    .appt-chip.status-in_progress { background: #0E7490; color: #fff; }  /* Teal — In Progress */
+    .appt-chip.status-completed   { background: #166534; color: #fff; }  /* Dark green — Completed */
+    .appt-chip.status-cancelled   { background: #B91C1C; color: #fff; opacity: 1; } /* Bold red — Cancelled */
     .btn-clock-chip { display: block; width: 100%; margin-top: 4px; padding: 2px 6px; font-size: 0.62rem; font-weight: 700; background: rgba(255,255,255,0.22); color: var(--white); border: 1px solid rgba(255,255,255,0.45); border-radius: 4px; cursor: pointer; text-align: center; transition: background 0.15s; letter-spacing: 0.03em; }
     .btn-clock-chip:hover { background: rgba(255,255,255,0.4); }
     .clock-in-btn  { background: var(--avail); color: var(--white); border: none; border-radius: 8px; padding: 0.45rem 1rem; font-size: 0.84rem; font-weight: 600; cursor: pointer; transition: background 0.15s; }
@@ -474,9 +474,11 @@
       <div class="view-title">My Schedule</div>
       <div class="view-sub">Your scheduled and confirmed appointments</div>
       <div class="sched-legend">
-        <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#F59E0B"></div>Scheduled — tap Confirm to accept</div>
-        <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#EF4444"></div>Confirmed</div>
-        <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:var(--sage)"></div>Completed</div>
+        <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#D97706"></div>Scheduled — tap Confirm to accept</div>
+        <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#1D4ED8"></div>Confirmed</div>
+        <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#0E7490"></div>In Progress</div>
+        <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#166534"></div>Completed</div>
+        <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#B91C1C"></div>Cancelled</div>
       </div>
       <div class="week-controls">
         <button class="btn-week" onclick="schedShiftWeek(-1)">← Prev</button>
