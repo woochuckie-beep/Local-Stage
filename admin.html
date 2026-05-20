@@ -223,6 +223,19 @@
     .chip-dur  { display: block; font-size: 0.65rem; opacity: 0.7; }
 
     /* ── MODAL ── */
+    /* ── ADMIN CHAT MODAL ── */
+    .admin-chat-modal { max-width: 480px; padding: 0; overflow: hidden; display: flex; flex-direction: column; height: 580px; max-height: 90vh; }
+    .admin-chat-hd { padding: 1.25rem 1.5rem; border-bottom: 1.5px solid var(--cream-dark); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; background: var(--cream-soft); }
+    .admin-chat-title { font-size: 1rem; font-weight: 600; }
+    .admin-chat-sub { font-size: 0.76rem; color: var(--ink-light); margin-top: 0.1rem; }
+    .admin-chat-msgs { flex: 1; overflow-y: auto; padding: 1rem; background: var(--cream-soft); display: flex; flex-direction: column; gap: 0.6rem; }
+    .admin-chat-input-row { display: flex; gap: 0.5rem; padding: 0.85rem 1rem; border-top: 1.5px solid var(--cream-dark); flex-shrink: 0; background: var(--white); }
+    .admin-chat-inp { flex: 1; padding: 0.55rem 0.9rem; border: 1.5px solid var(--cream-dark); border-radius: 100px; font-size: 0.87rem; font-family: inherit; outline: none; }
+    .admin-chat-inp:focus { border-color: var(--terra); }
+    .admin-chat-send { padding: 0.55rem 1.1rem; background: var(--terra); color: #fff; border: none; border-radius: 100px; font-size: 0.84rem; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+    .admin-chat-send:hover { background: #a87050; }
+    .admin-chat-send:disabled { background: var(--ink-light); cursor: not-allowed; }
+
     .modal-ov {
       display: none; position: fixed; inset: 0;
       background: rgba(40,30,20,0.55); z-index: 1000;
@@ -1582,6 +1595,7 @@ function renderClients() {
       <td class="td-act">
         ${!isActive(c) ? `<button class="btn btn-sm" style="background:var(--sage);color:#fff" onclick="activateClient('${c.id}')">Activate</button>` : ''}
         <button class="btn btn-sm" style="background:#2563EB;color:#fff" onclick="openApptModal(null,null,null,'${c.id}')">Schedule</button>
+        <button class="btn btn-sm" style="background:var(--terra);color:#fff" onclick="openAdminChat('${c.id}','${esc(c.name)}')">Message</button>
         <button class="btn btn-sm btn-edit" onclick="openClientModal('${c.id}')">Edit</button>
         <button class="btn btn-sm btn-del"  onclick="deleteClient('${c.id}')">Delete</button>
       </td>
@@ -3363,6 +3377,115 @@ async function loadPayrollHistory() {
   tick();
   setInterval(tick, 1000);
 })();
+</script>
+
+<!-- ── ADMIN → CLIENT CHAT MODAL ── -->
+<div class="modal-ov" id="admin-chat-ov">
+  <div class="modal admin-chat-modal">
+    <div class="admin-chat-hd">
+      <div>
+        <div class="admin-chat-title" id="admin-chat-client-name">Client</div>
+        <div class="admin-chat-sub">From: HearthLane Team</div>
+      </div>
+      <button class="modal-x" onclick="closeAdminChat()">&#x2715;</button>
+    </div>
+    <div class="admin-chat-msgs" id="admin-chat-msgs">
+      <div style="text-align:center;padding:2rem;color:var(--ink-light);font-size:0.85rem">Loading...</div>
+    </div>
+    <div class="admin-chat-input-row">
+      <input class="admin-chat-inp" id="admin-chat-inp" type="text" placeholder="Type a message..."
+        onkeydown="if(event.key==='Enter'&amp;&amp;!event.shiftKey){event.preventDefault();sendAdminMessage()}" />
+      <button class="admin-chat-send" id="admin-chat-send-btn" onclick="sendAdminMessage()">Send</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  var _adminChatClientId = null;
+  var _adminChatListener = null;
+
+  function esc2(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function openAdminChat(clientId, clientName) {
+    _adminChatClientId = clientId;
+    document.getElementById('admin-chat-client-name').textContent = clientName || 'Client';
+    document.getElementById('admin-chat-ov').classList.add('open');
+    document.getElementById('admin-chat-inp').value = '';
+
+    var msgsEl = document.getElementById('admin-chat-msgs');
+    msgsEl.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--ink-light);font-size:0.85rem">Loading...</div>';
+
+    db.collection('admin_chats').doc(clientId).set({ unread_admin: 0 }, { merge: true }).catch(function(){});
+
+    if (_adminChatListener) { _adminChatListener(); _adminChatListener = null; }
+    _adminChatListener = db.collection('admin_chats').doc(clientId)
+      .collection('msgs').orderBy('created_at', 'asc')
+      .onSnapshot(function(snap) { renderAdminChat(snap.docs.map(function(d){ return d.data(); })); });
+
+    setTimeout(function(){ var i = document.getElementById('admin-chat-inp'); if(i) i.focus(); }, 100);
+  }
+
+  function closeAdminChat() {
+    document.getElementById('admin-chat-ov').classList.remove('open');
+    if (_adminChatListener) { _adminChatListener(); _adminChatListener = null; }
+    _adminChatClientId = null;
+  }
+
+  function renderAdminChat(msgs) {
+    var el = document.getElementById('admin-chat-msgs');
+    if (!el) return;
+    if (!msgs.length) {
+      el.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--ink-light);font-size:0.85rem">No messages yet — send the first one!</div>';
+      return;
+    }
+    el.innerHTML = msgs.map(function(m) {
+      var isMine = m.sender === 'admin';
+      var dt = m.created_at && m.created_at.toDate ? m.created_at.toDate() : null;
+      var timeStr = dt ? dt.toLocaleTimeString('en', { hour: 'numeric', minute: '2-digit' }) : '';
+      return '<div style="display:flex;gap:0.4rem;align-items:flex-end;' + (isMine ? 'flex-direction:row-reverse' : '') + '">'
+        + '<div style="max-width:72%;padding:0.55rem 0.9rem;border-radius:14px;font-size:0.87rem;line-height:1.5;word-break:break-word;'
+        + (isMine ? 'background:var(--terra);color:#fff;border-bottom-right-radius:4px;' : 'background:var(--white);color:var(--ink);border-bottom-left-radius:4px;box-shadow:0 1px 4px rgba(58,46,34,0.08);')
+        + '">' + esc2(m.text) + '</div>'
+        + '<div style="font-size:0.66rem;color:var(--ink-light);flex-shrink:0;padding-bottom:1px">' + timeStr + '</div>'
+        + '</div>';
+    }).join('');
+    el.scrollTop = el.scrollHeight;
+  }
+
+  async function sendAdminMessage() {
+    var input = document.getElementById('admin-chat-inp');
+    var btn   = document.getElementById('admin-chat-send-btn');
+    var text  = (input ? input.value : '').trim();
+    if (!text || !_adminChatClientId) return;
+    input.value = '';
+    btn.disabled = true;
+    try {
+      await db.collection('admin_chats').doc(_adminChatClientId)
+        .collection('msgs').add({
+          sender:      'admin',
+          sender_name: 'HearthLane Team',
+          text:        text,
+          created_at:  firebase.firestore.FieldValue.serverTimestamp()
+        });
+      await db.collection('admin_chats').doc(_adminChatClientId).set({
+        last_msg:      text,
+        last_msg_at:   firebase.firestore.FieldValue.serverTimestamp(),
+        unread_client: firebase.firestore.FieldValue.increment(1),
+        unread_admin:  0,
+        client_id:     _adminChatClientId
+      }, { merge: true });
+    } catch(e) {
+      toast('Could not send: ' + e.message, true);
+      input.value = text;
+    } finally {
+      btn.disabled = false;
+      if (input) input.focus();
+    }
+  }
+
+  document.getElementById('admin-chat-ov').addEventListener('click', function(e) {
+    if (e.target === this) closeAdminChat();
+  });
 </script>
 </body>
 </html>

@@ -510,7 +510,31 @@
     <!-- MESSAGES -->
     <div class="view" id="view-messages">
       <div class="view-title">Messages</div>
-      <div class="view-sub">Chat with your caregiver</div>
+      <div class="view-sub">Chat with your caregiver or HearthLane Team</div>
+
+      <!-- HearthLane Team chat -->
+      <div class="card" style="margin-bottom:1.25rem">
+        <div class="card-title" style="display:flex;align-items:center;gap:0.6rem">
+          <div style="width:32px;height:32px;border-radius:50%;background:var(--terra);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.78rem;flex-shrink:0">HL</div>
+          <div>
+            <div style="font-size:0.95rem;font-weight:600">HearthLane Team</div>
+            <div style="font-size:0.74rem;color:var(--ink-light);font-weight:400">Messages from your care coordinator</div>
+          </div>
+          <span id="cl-admin-badge" style="display:none;background:#ef4444;color:#fff;border-radius:100px;font-size:0.7rem;font-weight:700;padding:0.1rem 0.45rem;margin-left:auto"></span>
+        </div>
+        <div class="chat-shell" style="border:none;border-radius:10px;height:360px;margin-top:0.75rem">
+          <div class="chat-msgs" id="cl-admin-msg-list">
+            <div style="text-align:center;padding:2rem;color:var(--ink-light);font-size:0.85rem">Loading…</div>
+          </div>
+          <div class="chat-input-row">
+            <input class="chat-inp" id="cl-admin-chat-inp" type="text" placeholder="Reply to HearthLane Team…"
+              onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendClientAdminMessage()}" />
+            <button class="chat-send" onclick="sendClientAdminMessage()">Send</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Caregiver chat -->
       <div id="cl-no-caregiver-msg" style="display:none">
         <div class="empty-state">You don't have an assigned caregiver yet — messages will appear once one is assigned.</div>
       </div>
@@ -726,6 +750,17 @@
         }, () => {});
       }
 
+      // 10. Real-time admin chat unread badge
+      db.collection('admin_chats').doc(clientDoc.id).onSnapshot(snap => {
+        const unread = snap.exists ? (snap.data().unread_client || 0) : 0;
+        const badge = document.getElementById('cl-admin-badge');
+        const tabBadge = document.getElementById('cl-msg-badge');
+        if (badge) { badge.textContent = unread > 0 ? unread : ''; badge.style.display = unread > 0 ? 'inline' : 'none'; }
+        if (unread > 0 && activeTab() === 'messages') {
+          db.collection('admin_chats').doc(clientDoc.id).set({ unread_client: 0 }, { merge: true }).catch(() => {});
+        }
+      }, () => {});
+
       switchTab('dashboard');
       checkNotesOnLogin();
       checkIssuesOnLogin();
@@ -749,7 +784,7 @@
     if (view === 'notes')     loadNotes();
     if (view === 'requests')  loadRequests();
     if (view === 'issues')    loadIssues();
-    if (view === 'messages')  loadClientMessages();
+    if (view === 'messages')  { loadClientMessages(); loadClientAdminMessages(); }
     if (view === 'contact')   loadContactView();
   }
 
@@ -1685,6 +1720,64 @@
         client_name:      clientDoc.name || '',
         caregiver_id:     caregiverDoc.id,
         caregiver_name:   caregiverDoc.name || ''
+      }, { merge: true });
+    } catch(e) { toast('Could not send: ' + e.message, true); }
+  }
+
+  // ── ADMIN CHAT (HearthLane Team) ─────────────────────────────────────────────
+  let _clAdminChatListener = null;
+
+  function loadClientAdminMessages() {
+    if (!clientDoc?.id) return;
+    const el = document.getElementById('cl-admin-msg-list');
+    if (!el) return;
+
+    // Mark as read by client
+    db.collection('admin_chats').doc(clientDoc.id).set({ unread_client: 0 }, { merge: true }).catch(() => {});
+    const badge = document.getElementById('cl-admin-badge');
+    if (badge) { badge.textContent = ''; badge.style.display = 'none'; }
+
+    if (_clAdminChatListener) { _clAdminChatListener(); _clAdminChatListener = null; }
+    _clAdminChatListener = db.collection('admin_chats').doc(clientDoc.id)
+      .collection('msgs').orderBy('created_at', 'asc')
+      .onSnapshot(snap => {
+        const msgs = snap.docs.map(d => d.data());
+        if (!msgs.length) {
+          el.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--ink-light);font-size:0.85rem">No messages from HearthLane Team yet.</div>';
+          return;
+        }
+        el.innerHTML = msgs.map(m => {
+          const isMine = m.sender === 'client';
+          const dt = m.created_at?.toDate?.();
+          const timeStr = dt ? dt.toLocaleTimeString('en', { hour: 'numeric', minute: '2-digit' }) : '';
+          return `<div class="msg-row ${isMine ? 'sent' : ''}">
+            <div class="msg-bubble ${isMine ? 'sent' : 'recv'}">${escM(m.text)}</div>
+            <div class="msg-time-lbl">${timeStr}</div>
+          </div>`;
+        }).join('');
+        el.scrollTop = el.scrollHeight;
+      });
+  }
+
+  async function sendClientAdminMessage() {
+    const input = document.getElementById('cl-admin-chat-inp');
+    const text  = (input?.value || '').trim();
+    if (!text || !clientDoc?.id) return;
+    input.value = '';
+    try {
+      await db.collection('admin_chats').doc(clientDoc.id).collection('msgs').add({
+        sender:      'client',
+        sender_name: clientDoc.name || 'Client',
+        text,
+        created_at:  firebase.firestore.FieldValue.serverTimestamp()
+      });
+      await db.collection('admin_chats').doc(clientDoc.id).set({
+        last_msg:      text,
+        last_msg_at:   firebase.firestore.FieldValue.serverTimestamp(),
+        unread_admin:  firebase.firestore.FieldValue.increment(1),
+        unread_client: 0,
+        client_id:     clientDoc.id,
+        client_name:   clientDoc.name || ''
       }, { merge: true });
     } catch(e) { toast('Could not send: ' + e.message, true); }
   }
