@@ -82,6 +82,7 @@
     /* ── STATS ── */
     .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
     @media (max-width: 700px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 800px) { .earnings-grid { grid-template-columns: 1fr !important; } }
     .stat-card { background: var(--white); border-radius: 14px; padding: 1.25rem 1.5rem; box-shadow: 0 2px 8px rgba(58,46,34,0.06); }
     .stat-label { font-size: 0.73rem; font-weight: 600; color: var(--ink-light); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem; }
     .stat-val { font-size: 2.2rem; font-weight: 700; color: var(--ink); line-height: 1; }
@@ -428,7 +429,7 @@
     </button>
     <button class="tab-btn" data-view="clients" onclick="switchTab('clients')">Clients &amp; Notes</button>
     <button class="tab-btn" data-view="earnings" onclick="switchTab('earnings')">Earnings</button>
-    <button class="tab-btn" data-view="payment-info" onclick="switchTab('payment-info')">Payment Info</button>
+    <button class="tab-btn" data-view="contact" onclick="switchTab('contact')">Contact</button>
   </div>
 
   <div class="main">
@@ -512,7 +513,6 @@
 
       <div class="avail-hint">
         <strong>How it works:</strong> Click a time slot to mark yourself available, or click &amp; drag to select a range.
-        Each availability block must be <strong>at least 2 hours</strong>.
         Slots shown in orange are already booked — those can't be changed here.
       </div>
 
@@ -527,7 +527,6 @@
         <div class="legend-item"><div class="legend-swatch" style="background:var(--avail-soft);border:1.5px solid var(--avail-mid)"></div>Available</div>
         <div class="legend-item"><div class="legend-swatch" style="background:var(--terra-soft);border:1.5px solid var(--terra)"></div>Booked</div>
         <div class="legend-item"><div class="legend-swatch" style="background:var(--req-soft);border:1.5px solid var(--req)"></div>Pending Request</div>
-        <div class="legend-item"><div class="legend-swatch" style="background:#fde8e8;border:1.5px solid #c44"></div>Block too short (&lt;2h)</div>
       </div>
 
       <div class="avail-errors" id="avail-errors"></div>
@@ -596,67 +595,81 @@
       <div id="clients-list"><div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div></div>
     </div>
 
-    <!-- EARNINGS -->
+    <!-- EARNINGS + PAYMENT INFO -->
     <div class="view" id="view-earnings">
-      <div class="view-title">My Earnings</div>
-      <div class="view-sub">$20/hr · based on completed visits</div>
+      <div class="view-title">Earnings &amp; Payment Info</div>
+      <div class="view-sub">$20/hr · based on completed visits · keep your payment details up to date</div>
 
-      <div class="card">
-        <div class="card-title">Current Period — Last 14 Days</div>
-        <div id="earnings-current"><div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div></div>
-      </div>
+      <div class="earnings-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:start">
 
-      <div class="card">
-        <div class="card-title">Payment History</div>
-        <div id="earnings-history"><div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div></div>
+        <!-- LEFT: Earnings -->
+        <div>
+          <div class="card">
+            <div class="card-title">Current Period — Last 14 Days</div>
+            <div id="earnings-current"><div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Payment History</div>
+            <div id="earnings-history"><div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div></div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Payment Info -->
+        <div>
+          <div class="card">
+            <div class="card-title">💳 E-Transfer (Interac)</div>
+            <p style="font-size:0.83rem;color:var(--ink-mid);margin-bottom:1.1rem;line-height:1.6">Your coordinator will send e-transfers to this email.</p>
+            <div class="form-group">
+              <label>E-Transfer Email</label>
+              <input class="fc" type="email" id="pi-etransfer-email" placeholder="you@email.com" />
+            </div>
+            <div style="display:flex;align-items:center;gap:0.75rem">
+              <button class="btn-save-avail" id="pi-etransfer-btn" onclick="savePaymentInfo('etransfer')" style="width:fit-content">Save</button>
+              <span id="pi-etransfer-saved" style="display:none;color:var(--avail);font-size:0.85rem">✓ Saved</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">🏦 Direct Deposit</div>
+            <p style="font-size:0.83rem;color:var(--ink-mid);margin-bottom:1.1rem;line-height:1.6">Provide your bank details for direct deposit payments.</p>
+            <div class="form-group">
+              <label>Bank Name</label>
+              <input class="fc" type="text" id="pi-bank-name" placeholder="e.g. TD Bank, RBC…" />
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
+              <div class="form-group">
+                <label>Account Number</label>
+                <input class="fc" type="text" id="pi-account-number" placeholder="7–12 digits" />
+              </div>
+              <div class="form-group">
+                <label>Transit Number</label>
+                <input class="fc" type="text" id="pi-transit-number" placeholder="5 digits" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Institution Number</label>
+              <input class="fc" type="text" id="pi-institution-number" placeholder="3 digits" />
+            </div>
+            <div style="display:flex;align-items:center;gap:0.75rem">
+              <button class="btn-save-avail" id="pi-bank-btn" onclick="savePaymentInfo('bank')" style="width:fit-content">Save</button>
+              <span id="pi-bank-saved" style="display:none;color:var(--avail);font-size:0.85rem">✓ Saved</span>
+            </div>
+          </div>
+
+          <div class="card" style="background:var(--cream-soft);border:1.5px solid var(--cream-dark)">
+            <div style="font-size:0.82rem;color:var(--ink-mid);line-height:1.7">🔒 <strong>Only your coordinator can see this.</strong> Used solely to process your pay.</div>
+          </div>
+        </div>
+
       </div>
     </div>
 
-    <!-- PAYMENT INFO -->
-    <div class="view" id="view-payment-info">
-      <div class="view-title">Payment Info</div>
-      <div class="view-sub">Your coordinator uses this to send you money. Keep it up to date.</div>
-
-      <div class="card" style="max-width:540px">
-        <div class="card-title">💳 E-Transfer (Interac)</div>
-        <p style="font-size:0.83rem;color:var(--ink-mid);margin-bottom:1.1rem;line-height:1.6">Your coordinator will send e-transfers to this email address.</p>
-        <div class="form-group">
-          <label>E-Transfer Email</label>
-          <input class="fc" type="email" id="pi-etransfer-email" placeholder="you@email.com" />
-        </div>
-        <button class="btn-save-avail" id="pi-etransfer-btn" onclick="savePaymentInfo('etransfer')" style="width:fit-content">Save E-Transfer Email</button>
-        <span id="pi-etransfer-saved" style="display:none;color:var(--avail);font-size:0.85rem;margin-left:0.75rem">✓ Saved</span>
-      </div>
-
-      <div class="card" style="max-width:540px">
-        <div class="card-title">🏦 Direct Deposit / Bank Transfer</div>
-        <p style="font-size:0.83rem;color:var(--ink-mid);margin-bottom:1.1rem;line-height:1.6">Provide your bank details if you prefer direct deposit payments.</p>
-        <div class="form-group">
-          <label>Bank Name</label>
-          <input class="fc" type="text" id="pi-bank-name" placeholder="e.g. TD Bank, RBC, Scotiabank…" />
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
-          <div class="form-group">
-            <label>Account Number</label>
-            <input class="fc" type="text" id="pi-account-number" placeholder="7–12 digits" />
-          </div>
-          <div class="form-group">
-            <label>Transit Number</label>
-            <input class="fc" type="text" id="pi-transit-number" placeholder="5 digits" />
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Institution Number</label>
-          <input class="fc" type="text" id="pi-institution-number" placeholder="3 digits" />
-        </div>
-        <button class="btn-save-avail" id="pi-bank-btn" onclick="savePaymentInfo('bank')" style="width:fit-content">Save Bank Info</button>
-        <span id="pi-bank-saved" style="display:none;color:var(--avail);font-size:0.85rem;margin-left:0.75rem">✓ Saved</span>
-      </div>
-
-      <div class="card" style="max-width:540px;background:var(--cream-soft);border:1.5px solid var(--cream-dark)">
-        <div style="font-size:0.82rem;color:var(--ink-mid);line-height:1.7">
-          🔒 <strong>Your info is only visible to your Hearthlane coordinator.</strong> It is stored securely and used only to process your pay.
-        </div>
+    <!-- CONTACT -->
+    <div class="view" id="view-contact">
+      <div class="view-title">Contact Your Coordinator</div>
+      <div class="view-sub">Reach out any time — we're here to help.</div>
+      <div id="contact-content">
+        <div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div>
       </div>
     </div>
 
@@ -914,7 +927,7 @@ function switchTab(view) {
   if (view === 'clients')      loadMyClients();
   if (view === 'messages')     loadCaregiverMessages();
   if (view === 'earnings')     loadEarnings();
-  if (view === 'payment-info') loadPaymentInfo();
+  if (view === 'contact')      loadContact();
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────
@@ -1326,36 +1339,8 @@ function applyCell(date, hour) {
 
 function validateAvail(strict = true) {
   document.querySelectorAll('.avail-cell.error').forEach(c => c.classList.remove('error'));
-  const errors = [];
-  for (const [date, slotsSet] of Object.entries(availSlots)) {
-    const hrs = [...slotsSet].sort((a,b)=>a-b);
-    const groups = [];
-    let group = [];
-    hrs.forEach((h,i) => {
-      if (i === 0 || h !== hrs[i-1]+1) { if (group.length) groups.push(group); group = [h]; }
-      else group.push(h);
-    });
-    if (group.length) groups.push(group);
-    groups.forEach(g => {
-      if (g.length < 2) {
-        errors.push({ date, hours: g });
-        g.forEach(h => {
-          const cell = document.querySelector(`[data-date="${date}"][data-hour="${h}"]`);
-          if (cell) cell.classList.add('error');
-        });
-      }
-    });
-  }
-  const errEl  = document.getElementById('avail-errors');
-  const saveBtn = document.getElementById('save-avail-btn');
-  if (errors.length) {
-    errEl.style.display = 'block';
-    errEl.textContent   = `${errors.length} block${errors.length>1?'s are':' is'} less than 2 hours (highlighted in red). Extend each block to at least 2 continuous hours before saving.`;
-    if (strict) saveBtn.disabled = true;
-    return false;
-  }
-  errEl.style.display = 'none';
-  saveBtn.disabled = false;
+  document.getElementById('avail-errors').style.display = 'none';
+  document.getElementById('save-avail-btn').disabled = false;
   return true;
 }
 
@@ -2093,14 +2078,16 @@ async function loadEarnings() {
   try {
     const hSnap = await db.collection('caregiver_payroll')
       .where('caregiver_id', '==', caregiverId)
-      .orderBy('paid_at', 'desc').limit(50).get();
+      .limit(50).get();
 
     if (!hSnap.size) {
       histEl.innerHTML = '<div class="hl-state"><div class="hl-state-title">No payments recorded yet.</div></div>';
       return;
     }
-    histEl.innerHTML = hSnap.docs.map(d => {
-      const p      = d.data();
+    const payments = hSnap.docs
+      .map(d => d.data())
+      .sort((a, b) => (b.paid_at?.seconds || 0) - (a.paid_at?.seconds || 0));
+    histEl.innerHTML = payments.map(p => {
       const paidAt = p.paid_at?.toDate
         ? p.paid_at.toDate().toLocaleDateString('en',{month:'long',day:'numeric',year:'numeric'})
         : '—';
@@ -2115,18 +2102,17 @@ async function loadEarnings() {
   } catch(ex) {
     histEl.innerHTML = '<div class="hl-state"><div class="hl-state-title">Could not load payment history.</div></div>';
   }
+  populatePaymentInfoFields();
 }
-
-// ── PAYMENT INFO ─────────────────────────────────────────────────────────────
-async function loadPaymentInfo() {
-  if (!caregiverId || !caregiverDoc) return;
+function populatePaymentInfoFields() {
+  if (!caregiverDoc) return;
   const info = caregiverDoc.payment_info || {};
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
-  set('pi-etransfer-email',   info.etransfer_email);
-  set('pi-bank-name',         info.bank_name);
-  set('pi-account-number',    info.account_number);
-  set('pi-transit-number',    info.transit_number);
-  set('pi-institution-number',info.institution_number);
+  set('pi-etransfer-email',    info.etransfer_email);
+  set('pi-bank-name',          info.bank_name);
+  set('pi-account-number',     info.account_number);
+  set('pi-transit-number',     info.transit_number);
+  set('pi-institution-number', info.institution_number);
 }
 
 async function savePaymentInfo(section) {
@@ -2135,12 +2121,10 @@ async function savePaymentInfo(section) {
   const savedId = section === 'etransfer' ? 'pi-etransfer-saved' : 'pi-bank-saved';
   const btn = document.getElementById(btnId);
   btn.disabled = true; btn.textContent = 'Saving…';
-
   try {
     let update = {};
     if (section === 'etransfer') {
-      const email = document.getElementById('pi-etransfer-email').value.trim();
-      update = { 'payment_info.etransfer_email': email || null };
+      update = { 'payment_info.etransfer_email': document.getElementById('pi-etransfer-email').value.trim() || null };
     } else {
       update = {
         'payment_info.bank_name':          document.getElementById('pi-bank-name').value.trim() || null,
@@ -2150,10 +2134,8 @@ async function savePaymentInfo(section) {
       };
     }
     await db.collection('caregivers').doc(caregiverId).update(update);
-    // Refresh local caregiverDoc
     const snap = await db.collection('caregivers').doc(caregiverId).get();
     caregiverDoc = { id: snap.id, ...snap.data() };
-
     const savedEl = document.getElementById(savedId);
     if (savedEl) { savedEl.style.display = 'inline'; setTimeout(() => savedEl.style.display = 'none', 2500); }
     toast('Payment info saved');
@@ -2161,7 +2143,52 @@ async function savePaymentInfo(section) {
     toast('Could not save: ' + ex.message, true);
   } finally {
     btn.disabled = false;
-    btn.textContent = section === 'etransfer' ? 'Save E-Transfer Email' : 'Save Bank Info';
+    btn.textContent = 'Save';
+  }
+}
+
+// ── CONTACT ───────────────────────────────────────────────────────────────────
+async function loadContact() {
+  const el = document.getElementById('contact-content');
+  if (!el) return;
+  try {
+    const snap = await db.collection('settings').doc('business').get();
+    const d = snap.exists ? snap.data() : {};
+    const phone    = d.phone    || null;
+    const email    = d.email    || null;
+    const hours    = d.hours    || null;
+    const calendly = d.calendly || null;
+    const bizName  = d.name     || 'Hearthlane';
+
+    if (!phone && !email && !hours && !calendly) {
+      el.innerHTML = `<div class="card" style="max-width:480px">
+        <div style="font-size:0.9rem;color:var(--ink-mid);line-height:1.7">No contact info has been set up yet. Check back soon.</div>
+      </div>`;
+      return;
+    }
+
+    const row = (icon, label, content) => `
+      <div style="display:flex;align-items:center;gap:1rem;padding:0.9rem 0;border-bottom:1px solid var(--cream-dark)">
+        <div style="width:40px;height:40px;border-radius:10px;background:var(--avail-soft);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">${icon}</div>
+        <div>
+          <div style="font-size:0.72rem;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.05em">${label}</div>
+          <div style="font-size:0.95rem;font-weight:500;color:var(--ink);margin-top:0.1rem">${content}</div>
+        </div>
+      </div>`;
+
+    el.innerHTML = `<div class="card" style="max-width:480px">
+      <div style="margin-bottom:0.25rem">
+        ${phone ? row('📞', 'Phone', `<a href="tel:${esc(phone)}" style="color:var(--ink);text-decoration:none">${esc(phone)}</a>`) : ''}
+        ${email ? row('✉️', 'Email', `<a href="mailto:${esc(email)}" style="color:var(--ink);text-decoration:none">${esc(email)}</a>`) : ''}
+        ${hours ? row('🕐', 'Office Hours', esc(hours)) : ''}
+      </div>
+      ${calendly ? `<a href="${esc(calendly)}" target="_blank" rel="noopener noreferrer"
+        style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.7rem 1.3rem;background:var(--ink);color:#fff;border-radius:10px;font-size:0.9rem;font-weight:600;text-decoration:none;margin-top:0.5rem">
+        📅 Book a Call with ${esc(bizName)}
+      </a>` : ''}
+    </div>`;
+  } catch(ex) {
+    el.innerHTML = `<div class="card"><div style="font-size:0.88rem;color:var(--ink-mid)">Could not load contact info.</div></div>`;
   }
 }
 
