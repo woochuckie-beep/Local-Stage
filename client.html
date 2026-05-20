@@ -1179,7 +1179,7 @@
     if (lbl) lbl.textContent = `${wS} – ${wEL}`;
 
     const allEvents  = [...allAppointments, ...pendingBookings];
-    const weekEvents = allEvents.filter(a => a.scheduled_at >= clSchedWeekStart && a.scheduled_at < wEnd);
+    const weekEvents = allEvents.filter(a => a.scheduled_at >= clSchedWeekStart && a.scheduled_at < wEnd && a.status !== 'completed');
 
     // Header — same classes as caregiver (.cal-head / .cal-hcell)
     const head = document.getElementById('cl-cal-head');

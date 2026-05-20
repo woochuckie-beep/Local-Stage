@@ -1671,25 +1671,41 @@
   gap: 2px; min-height: 42px;
 }
 .cal-day:hover:not(.empty) { background: var(--cream); }
-.cal-day.today  { background: var(--green-light); color: var(--ink); font-weight: 600; }
-.cal-day.has-visit-future {
-  background: #e8ede4;
+/* Today — warm terra ring */
+.cal-day.today {
+  background: #fff4ee;
   color: var(--ink);
   font-weight: 700;
-  box-shadow: inset 0 0 0 2px #7a8b6f;
+  box-shadow: inset 0 0 0 2.5px var(--terra);
 }
+/* Upcoming visit — vivid blue */
+.cal-day.has-visit-future {
+  background: #dbeafe;
+  color: #1e3a8a;
+  font-weight: 700;
+  box-shadow: inset 0 0 0 2.5px #2563eb;
+}
+/* Past visit — soft purple */
 .cal-day.has-visit-past {
-  background: #f0ece7;
-  color: var(--ink-mid);
+  background: #ede9fe;
+  color: #4c1d95;
   font-weight: 600;
-  box-shadow: inset 0 0 0 2px #c4b8ab;
+  box-shadow: inset 0 0 0 2px #7c3aed;
+  opacity: 0.75;
 }
+/* Today + upcoming visit — terra bg, blue ring */
 .cal-day.today.has-visit-future {
-  background: var(--green-light);
-  box-shadow: inset 0 0 0 2px var(--green);
+  background: #dbeafe;
+  box-shadow: inset 0 0 0 2.5px #2563eb, inset 0 0 0 5px var(--terra);
+  color: #1e3a8a;
   font-weight: 700;
 }
-.cal-day.selected { background: var(--green-light); outline: 2px solid var(--green); outline-offset: -2px; color: var(--ink); }
+.cal-day.selected {
+  background: #dbeafe;
+  outline: 2.5px solid #2563eb;
+  outline-offset: -2px;
+  color: #1e3a8a;
+}
 .cal-day.other-month { color: var(--cream-dark); pointer-events: none; }
 .cal-day.empty { cursor: default; }
 
@@ -1704,17 +1720,21 @@
 .cal-legend-swatch {
   width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
 }
+/* Upcoming — blue */
 .cal-legend-swatch.future {
-  background: #e8ede4;
-  box-shadow: inset 0 0 0 2px #7a8b6f;
+  background: #dbeafe;
+  box-shadow: inset 0 0 0 2.5px #2563eb;
 }
+/* Past — purple */
 .cal-legend-swatch.past {
-  background: #f0ece7;
-  box-shadow: inset 0 0 0 2px #c4b8ab;
+  background: #ede9fe;
+  box-shadow: inset 0 0 0 2px #7c3aed;
+  opacity: 0.8;
 }
+/* Today — terra */
 .cal-legend-swatch.today-swatch {
-  background: var(--green-light);
-  box-shadow: inset 0 0 0 2px var(--green);
+  background: #fff4ee;
+  box-shadow: inset 0 0 0 2.5px var(--terra);
 }
 
 .cal-side-card {
