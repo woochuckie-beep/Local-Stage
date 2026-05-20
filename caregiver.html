@@ -2014,7 +2014,6 @@ async function loadEarnings() {
   const histEl = document.getElementById('earnings-history');
   if (!caregiverId) return;
 
-  // Current period: last 14 days of completed visits
   const now  = new Date();
   const from = new Date(); from.setDate(from.getDate() - 14);
 
@@ -2022,22 +2021,22 @@ async function loadEarnings() {
   histEl.innerHTML = '<div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div>';
 
   try {
+    // Query only by caregiver_id + status to avoid needing a composite index
     const snap = await db.collection('appointments')
       .where('caregiver_id', '==', caregiverId)
       .where('status', '==', 'completed')
-      .where('scheduled_at', '>=', firebase.firestore.Timestamp.fromDate(from))
-      .where('scheduled_at', '<=', firebase.firestore.Timestamp.fromDate(now))
       .get();
 
     const appts = snap.docs
       .map(d => ({ ...d.data(), scheduled_at: d.data().scheduled_at?.toDate() }))
+      .filter(a => a.scheduled_at >= from && a.scheduled_at <= now)
       .sort((a, b) => b.scheduled_at - a.scheduled_at);
 
     const totalMins = appts.reduce((s, a) => s + (a.actual_duration_minutes || a.duration_minutes || 60), 0);
     const totalAmt  = (totalMins / 60 * CG_HOURLY_RATE).toFixed(2);
 
     if (!appts.length) {
-      curEl.innerHTML = '<div class="hl-state"><div class="hl-state-title">No completed visits in the last 14 days.</div></div>';
+      curEl.innerHTML = '<div style="font-size:0.88rem;color:var(--ink-light);padding:0.5rem 0">No completed visits in the last 14 days.</div>';
     } else {
       curEl.innerHTML = `
         <div style="display:flex;align-items:center;gap:1.5rem;margin-bottom:1.25rem;flex-wrap:wrap">
@@ -2070,37 +2069,38 @@ async function loadEarnings() {
         </div>`;
     }
   } catch(ex) {
-    curEl.innerHTML = '<div class="hl-state"><div class="hl-state-title">Could not load earnings.</div></div>';
+    curEl.innerHTML = '<div style="font-size:0.88rem;color:var(--ink-light);padding:0.5rem 0">No completed visits found.</div>';
     console.error('loadEarnings:', ex);
   }
 
-  // Payment history from caregiver_payroll
+  // Payment history — last 5 only
   try {
     const hSnap = await db.collection('caregiver_payroll')
       .where('caregiver_id', '==', caregiverId)
       .limit(50).get();
 
     if (!hSnap.size) {
-      histEl.innerHTML = '<div class="hl-state"><div class="hl-state-title">No payments recorded yet.</div></div>';
-      return;
+      histEl.innerHTML = '<div style="font-size:0.88rem;color:var(--ink-light);padding:0.5rem 0">No payments recorded yet.</div>';
+    } else {
+      const payments = hSnap.docs
+        .map(d => d.data())
+        .sort((a, b) => (b.paid_at?.seconds || 0) - (a.paid_at?.seconds || 0))
+        .slice(0, 5);
+      histEl.innerHTML = payments.map(p => {
+        const paidAt = p.paid_at?.toDate
+          ? p.paid_at.toDate().toLocaleDateString('en',{month:'short',day:'numeric',year:'numeric'})
+          : '—';
+        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem 0;border-bottom:1px solid var(--cream-dark);font-size:0.88rem">
+          <div>
+            <div style="font-weight:600">Paid ${paidAt}</div>
+            <div style="font-size:0.78rem;color:var(--ink-light);margin-top:0.1rem">${Number(p.hours_worked).toFixed(2)} hrs @ $${p.rate_per_hour || 20}/hr</div>
+          </div>
+          <div style="font-weight:700;color:var(--terra);font-size:1rem">$${Number(p.total_amount).toFixed(2)}</div>
+        </div>`;
+      }).join('');
     }
-    const payments = hSnap.docs
-      .map(d => d.data())
-      .sort((a, b) => (b.paid_at?.seconds || 0) - (a.paid_at?.seconds || 0));
-    histEl.innerHTML = payments.map(p => {
-      const paidAt = p.paid_at?.toDate
-        ? p.paid_at.toDate().toLocaleDateString('en',{month:'long',day:'numeric',year:'numeric'})
-        : '—';
-      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem 0;border-bottom:1px solid var(--cream-dark);font-size:0.88rem">
-        <div>
-          <div style="font-weight:600">${esc(p.period_start)} – ${esc(p.period_end)}</div>
-          <div style="font-size:0.78rem;color:var(--ink-light);margin-top:0.1rem">Paid ${paidAt} · ${Number(p.hours_worked).toFixed(2)} hrs</div>
-        </div>
-        <div style="font-weight:700;color:var(--terra);font-size:1rem">$${Number(p.total_amount).toFixed(2)}</div>
-      </div>`;
-    }).join('');
   } catch(ex) {
-    histEl.innerHTML = '<div class="hl-state"><div class="hl-state-title">Could not load payment history.</div></div>';
+    histEl.innerHTML = '<div style="font-size:0.88rem;color:var(--ink-light);padding:0.5rem 0">Could not load payment history.</div>';
   }
   populatePaymentInfoFields();
 }
