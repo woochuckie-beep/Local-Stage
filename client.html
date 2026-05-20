@@ -82,12 +82,12 @@
     .visit-item { display: flex; align-items: flex-start; gap: 1rem; padding: 0.9rem 1.1rem; background: var(--cream-soft); border-radius: 10px; margin-bottom: 0.65rem; }
     .visit-item:last-child { margin-bottom: 0; }
     .visit-date { text-align: center; min-width: 44px; }
-    .visit-day { font-size: 1.4rem; font-weight: 700; color: #1D4ED8; line-height: 1; }
+    .visit-day { font-size: 1.4rem; font-weight: 700; color: #3B82F6; line-height: 1; }
     .visit-mon { font-size: 0.68rem; text-transform: uppercase; color: var(--ink-light); margin-top: 0.1rem; }
     .visit-info { flex: 1; }
     .visit-cg { font-weight: 600; font-size: 0.92rem; }
     .visit-meta { font-size: 0.8rem; color: var(--ink-light); margin-top: 0.2rem; }
-    .visit-badge { padding: 0.22rem 0.6rem; border-radius: 100px; font-size: 0.72rem; font-weight: 600; background: #1D4ED8; color: var(--white); flex-shrink: 0; }
+    .visit-badge { padding: 0.22rem 0.6rem; border-radius: 100px; font-size: 0.72rem; font-weight: 600; background: #D97706; color: var(--white); flex-shrink: 0; }
     .visit-badge.confirmed  { background: #1D4ED8; }
     .visit-badge.completed  { background: #166534; }
     .visit-badge.in-progress { background: #0E7490; animation: pulse-badge 1.8s ease-in-out infinite; }
@@ -147,8 +147,8 @@
     .cal-time { padding: 0.5rem 0.4rem 0 0; font-size: 0.68rem; color: var(--ink-light); text-align: right; border-right: 1px solid var(--cream-dark); }
     .cal-cell-ro { min-height: 48px; border-right: 1px solid #f0ebe0; padding: 3px; }
     .cal-cell-ro:last-child { border-right: none; }
-    .appt-chip { border-radius: 6px; padding: 0.22rem 0.4rem; font-size: 0.7rem; margin-bottom: 2px; background: #1D4ED8; color: var(--white); line-height: 1.4; font-weight: 600; }
-    .appt-chip.status-pending   { background: #1D4ED8; color: #ffffff; }   /* Bold blue — Scheduled */
+    .appt-chip { border-radius: 6px; padding: 0.22rem 0.4rem; font-size: 0.7rem; margin-bottom: 2px; background: #D97706; color: var(--white); line-height: 1.4; font-weight: 600; }
+    .appt-chip.status-pending   { background: #D97706; color: #ffffff; }   /* Deep amber — Scheduled */
     .appt-chip.status-confirmed { background: #1D4ED8; color: #ffffff; }   /* Bold blue — Confirmed */
     .appt-chip.status-completed { background: #166534; color: #ffffff; }   /* Dark green — Completed */
     .appt-chip.status-cancelled { background: #B91C1C; color: #ffffff; opacity: 1; } /* Bold red — Cancelled */
@@ -382,7 +382,7 @@
       <div class="view-title">My Schedule</div>
       <div class="view-sub">Your upcoming and past visits</div>
       <div class="sched-legend">
-        <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#1D4ED8"></div>Scheduled</div>
+        <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#D97706"></div>Scheduled</div>
         <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#1D4ED8"></div>Confirmed</div>
         <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#0E7490"></div>In Progress</div>
         <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#166534"></div>Completed</div>
@@ -510,31 +510,7 @@
     <!-- MESSAGES -->
     <div class="view" id="view-messages">
       <div class="view-title">Messages</div>
-      <div class="view-sub">Chat with your caregiver or HearthLane Team</div>
-
-      <!-- HearthLane Team chat -->
-      <div class="card" style="margin-bottom:1.25rem">
-        <div class="card-title" style="display:flex;align-items:center;gap:0.6rem">
-          <div style="width:32px;height:32px;border-radius:50%;background:var(--terra);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.78rem;flex-shrink:0">HL</div>
-          <div>
-            <div style="font-size:0.95rem;font-weight:600">HearthLane Team</div>
-            <div style="font-size:0.74rem;color:var(--ink-light);font-weight:400">Messages from your care coordinator</div>
-          </div>
-          <span id="cl-admin-badge" style="display:none;background:#ef4444;color:#fff;border-radius:100px;font-size:0.7rem;font-weight:700;padding:0.1rem 0.45rem;margin-left:auto"></span>
-        </div>
-        <div class="chat-shell" style="border:none;border-radius:10px;height:360px;margin-top:0.75rem">
-          <div class="chat-msgs" id="cl-admin-msg-list">
-            <div style="text-align:center;padding:2rem;color:var(--ink-light);font-size:0.85rem">Loading…</div>
-          </div>
-          <div class="chat-input-row">
-            <input class="chat-inp" id="cl-admin-chat-inp" type="text" placeholder="Reply to HearthLane Team…"
-              onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendClientAdminMessage()}" />
-            <button class="chat-send" onclick="sendClientAdminMessage()">Send</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Caregiver chat -->
+      <div class="view-sub">Chat with your caregiver</div>
       <div id="cl-no-caregiver-msg" style="display:none">
         <div class="empty-state">You don't have an assigned caregiver yet — messages will appear once one is assigned.</div>
       </div>
@@ -750,17 +726,6 @@
         }, () => {});
       }
 
-      // 10. Real-time admin chat unread badge
-      db.collection('admin_chats').doc(clientDoc.id).onSnapshot(snap => {
-        const unread = snap.exists ? (snap.data().unread_client || 0) : 0;
-        const badge = document.getElementById('cl-admin-badge');
-        const tabBadge = document.getElementById('cl-msg-badge');
-        if (badge) { badge.textContent = unread > 0 ? unread : ''; badge.style.display = unread > 0 ? 'inline' : 'none'; }
-        if (unread > 0 && activeTab() === 'messages') {
-          db.collection('admin_chats').doc(clientDoc.id).set({ unread_client: 0 }, { merge: true }).catch(() => {});
-        }
-      }, () => {});
-
       switchTab('dashboard');
       checkNotesOnLogin();
       checkIssuesOnLogin();
@@ -784,7 +749,7 @@
     if (view === 'notes')     loadNotes();
     if (view === 'requests')  loadRequests();
     if (view === 'issues')    loadIssues();
-    if (view === 'messages')  { loadClientMessages(); loadClientAdminMessages(); }
+    if (view === 'messages')  loadClientMessages();
     if (view === 'contact')   loadContactView();
   }
 
@@ -805,13 +770,19 @@
     const bannerEl = document.getElementById('dash-plan-banner');
     if (bannerEl) {
       const plan = clientDoc?.plan;
+      const status = clientDoc?.subscription_status || 'inactive';
       const link = (plan && stripeLinks[plan]) || clientDoc?.stripe_link || null;
       const safeLink = safeUrl(link);
+      const statusPill = status === 'paused'
+        ? `<span style="background:#FEF3C7;color:#92400E;font-size:0.72rem;font-weight:700;padding:0.15rem 0.5rem;border-radius:100px;margin-left:0.4rem">⏸ Paused</span>`
+        : status === 'cancelled'
+        ? `<span style="background:#FEE2E2;color:#991B1B;font-size:0.72rem;font-weight:700;padding:0.15rem 0.5rem;border-radius:100px;margin-left:0.4rem">✕ Cancelled</span>`
+        : '';
       if (plan || safeLink) {
         const planLabel = plan ? plan.charAt(0).toUpperCase() + plan.slice(1) : '';
         bannerEl.innerHTML = `<div class="dash-plan-banner">
           <div class="dash-plan-left">
-            ${plan ? `<div class="dash-plan-tag">Current Plan</div><div class="dash-plan-name">${planLabel}</div>` : ''}
+            ${plan ? `<div class="dash-plan-tag">Current Plan</div><div class="dash-plan-name">${planLabel}${statusPill}</div>` : ''}
             <div class="dash-plan-hint">${safeLink ? 'Manage billing or view invoices via Stripe' : 'Payment link not set up yet'}</div>
           </div>
           ${safeLink ? `<a class="btn-pay" href="${esc(safeLink)}" target="_blank" rel="noopener noreferrer">💳 Manage Billing</a>` : ''}
@@ -944,11 +915,27 @@
   function renderPlan() {
     const el   = document.getElementById('plan-content');
     const plan = clientDoc?.plan;
+    const status = clientDoc?.subscription_status || 'inactive';
 
     console.log('[Plan Debug] plan:', plan, '| stripeLinks:', stripeLinks, '| stripe_link:', clientDoc?.stripe_link);
 
+    // Show paused/cancelled banner prominently
+    const statusBanner = status === 'paused'
+      ? `<div style="background:#FEF3C7;border:1.5px solid #D97706;border-radius:12px;padding:1.1rem 1.35rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:0.75rem">
+           <span style="font-size:1.3rem">⏸️</span>
+           <div><div style="font-weight:700;color:#92400E;font-size:0.95rem">Plan Paused</div>
+           <div style="font-size:0.83rem;color:#92400E;margin-top:0.15rem">Your care plan is currently paused. Contact us to resume your services.</div></div>
+         </div>`
+      : status === 'cancelled'
+      ? `<div style="background:#FEE2E2;border:1.5px solid #DC2626;border-radius:12px;padding:1.1rem 1.35rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:0.75rem">
+           <span style="font-size:1.3rem">❌</span>
+           <div><div style="font-weight:700;color:#991B1B;font-size:0.95rem">Plan Cancelled</div>
+           <div style="font-size:0.83rem;color:#991B1B;margin-top:0.15rem">Your care plan has been cancelled. Contact us if you'd like to restart your services.</div></div>
+         </div>`
+      : '';
+
     if (!plan) {
-      el.innerHTML = `<div class="card" style="text-align:center;padding:2.5rem">
+      el.innerHTML = statusBanner + `<div class="card" style="text-align:center;padding:2.5rem">
         <div style="font-size:2.5rem;margin-bottom:0.75rem">📋</div>
         <p style="font-weight:600;margin-bottom:0.4rem">No plan assigned yet</p>
         <p class="plan-no">Your coordinator will assign your care plan shortly.</p>
@@ -963,7 +950,7 @@
 
     console.log('[Plan Debug] payUrl:', payUrl, '| safePayUrl:', safePayUrl);
 
-    el.innerHTML = `
+    el.innerHTML = statusBanner + `
       <div class="plan-card">
         <div class="plan-label">Your Current Plan</div>
         <div class="plan-name">${planLabel}</div>
@@ -1113,9 +1100,13 @@
   async function checkNotesOnLogin() {
     if (!clientDoc) return;
     try {
-      const snap = await db.collection('visit_notes').where('client_id', '==', clientDoc.id).get();
+      const [visitSnap, adminSnap] = await Promise.all([
+        db.collection('visit_notes').where('client_id', '==', clientDoc.id).get(),
+        db.collection('admin_notes').where('client_id', '==', clientDoc.id).get()
+      ]);
       const seen = _getSeenIds();
-      const hasNew = snap.docs.some(d => !seen.has(d.id));
+      const hasNew = visitSnap.docs.some(d => !seen.has(d.id))
+                  || adminSnap.docs.some(d => !seen.has('adm_' + d.id));
       const badge = document.getElementById('notes-badge');
       if (badge) badge.style.display = hasNew ? 'inline' : 'none';
     } catch {}
@@ -1137,11 +1128,15 @@
     const el = document.getElementById('notes-list');
     el.innerHTML = '<div class="empty-state">Loading…</div>';
     try {
-      const snap = await db.collection('visit_notes')
-        .where('client_id', '==', clientDoc.id).get();
+      const [visitSnap, adminSnap] = await Promise.all([
+        db.collection('visit_notes').where('client_id', '==', clientDoc.id).get(),
+        db.collection('admin_notes').where('client_id', '==', clientDoc.id).get()
+      ]);
       const seen = _getSeenIds();
-      const allNotes = snap.docs
-        .map(d => ({ _id: d.id, _isNew: !seen.has(d.id), ...d.data() }))
+      const allNotes = [
+        ...visitSnap.docs.map(d => ({ _id: d.id, _isNew: !seen.has(d.id), ...d.data() })),
+        ...adminSnap.docs.map(d => ({ _id: 'adm_' + d.id, _isNew: !seen.has('adm_' + d.id), ...d.data() }))
+      ]
         .sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0))
         .slice(0, 30);
 
@@ -1720,64 +1715,6 @@
         client_name:      clientDoc.name || '',
         caregiver_id:     caregiverDoc.id,
         caregiver_name:   caregiverDoc.name || ''
-      }, { merge: true });
-    } catch(e) { toast('Could not send: ' + e.message, true); }
-  }
-
-  // ── ADMIN CHAT (HearthLane Team) ─────────────────────────────────────────────
-  let _clAdminChatListener = null;
-
-  function loadClientAdminMessages() {
-    if (!clientDoc?.id) return;
-    const el = document.getElementById('cl-admin-msg-list');
-    if (!el) return;
-
-    // Mark as read by client
-    db.collection('admin_chats').doc(clientDoc.id).set({ unread_client: 0 }, { merge: true }).catch(() => {});
-    const badge = document.getElementById('cl-admin-badge');
-    if (badge) { badge.textContent = ''; badge.style.display = 'none'; }
-
-    if (_clAdminChatListener) { _clAdminChatListener(); _clAdminChatListener = null; }
-    _clAdminChatListener = db.collection('admin_chats').doc(clientDoc.id)
-      .collection('msgs').orderBy('created_at', 'asc')
-      .onSnapshot(snap => {
-        const msgs = snap.docs.map(d => d.data());
-        if (!msgs.length) {
-          el.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--ink-light);font-size:0.85rem">No messages from HearthLane Team yet.</div>';
-          return;
-        }
-        el.innerHTML = msgs.map(m => {
-          const isMine = m.sender === 'client';
-          const dt = m.created_at?.toDate?.();
-          const timeStr = dt ? dt.toLocaleTimeString('en', { hour: 'numeric', minute: '2-digit' }) : '';
-          return `<div class="msg-row ${isMine ? 'sent' : ''}">
-            <div class="msg-bubble ${isMine ? 'sent' : 'recv'}">${escM(m.text)}</div>
-            <div class="msg-time-lbl">${timeStr}</div>
-          </div>`;
-        }).join('');
-        el.scrollTop = el.scrollHeight;
-      });
-  }
-
-  async function sendClientAdminMessage() {
-    const input = document.getElementById('cl-admin-chat-inp');
-    const text  = (input?.value || '').trim();
-    if (!text || !clientDoc?.id) return;
-    input.value = '';
-    try {
-      await db.collection('admin_chats').doc(clientDoc.id).collection('msgs').add({
-        sender:      'client',
-        sender_name: clientDoc.name || 'Client',
-        text,
-        created_at:  firebase.firestore.FieldValue.serverTimestamp()
-      });
-      await db.collection('admin_chats').doc(clientDoc.id).set({
-        last_msg:      text,
-        last_msg_at:   firebase.firestore.FieldValue.serverTimestamp(),
-        unread_admin:  firebase.firestore.FieldValue.increment(1),
-        unread_client: 0,
-        client_id:     clientDoc.id,
-        client_name:   clientDoc.name || ''
       }, { merge: true });
     } catch(e) { toast('Could not send: ' + e.message, true); }
   }

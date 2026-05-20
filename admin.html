@@ -631,15 +631,39 @@
         </table>
       </div>
 
+      <!-- Paused clients -->
+      <div class="card" id="paused-clients-card">
+        <div class="card-title" style="display:flex;align-items:center;gap:0.6rem">
+          <span style="color:#D97706">●</span> Paused Clients
+          <span id="paused-clients-count" style="background:#D97706;color:#fff;font-size:0.72rem;font-weight:700;padding:0.12rem 0.5rem;border-radius:100px;display:none"></span>
+        </div>
+        <table>
+          <thead><tr><th>Name</th><th>Contact</th><th>Plan</th><th>Status</th><th>Caregiver</th><th>Actions</th></tr></thead>
+          <tbody id="paused-clients-tbody"><tr class="empty-row"><td colspan="6">No paused clients</td></tr></tbody>
+        </table>
+      </div>
+
+      <!-- Cancelled clients -->
+      <div class="card" id="cancelled-clients-card">
+        <div class="card-title" style="display:flex;align-items:center;gap:0.6rem">
+          <span style="color:#DC2626">●</span> Cancelled Clients
+          <span id="cancelled-clients-count" style="background:#DC2626;color:#fff;font-size:0.72rem;font-weight:700;padding:0.12rem 0.5rem;border-radius:100px;display:none"></span>
+        </div>
+        <table>
+          <thead><tr><th>Name</th><th>Contact</th><th>Plan</th><th>Status</th><th>Caregiver</th><th>Actions</th></tr></thead>
+          <tbody id="cancelled-clients-tbody"><tr class="empty-row"><td colspan="6">No cancelled clients</td></tr></tbody>
+        </table>
+      </div>
+
       <!-- Inactive clients -->
       <div class="card" id="inactive-clients-card">
         <div class="card-title" style="display:flex;align-items:center;gap:0.6rem">
           <span style="color:#94A3B8">●</span> Inactive Clients
-          <span id="inactive-clients-count" style="background:#94A3B8;color:#fff;font-size:0.72rem;font-weight:700;padding:0.12rem 0.5rem;border-radius:100px"></span>
+          <span id="inactive-clients-count" style="background:#94A3B8;color:#fff;font-size:0.72rem;font-weight:700;padding:0.12rem 0.5rem;border-radius:100px;display:none"></span>
         </div>
         <table>
           <thead><tr><th>Name</th><th>Contact</th><th>Plan</th><th>Status</th><th>Caregiver</th><th>Actions</th></tr></thead>
-          <tbody id="inactive-clients-tbody"><tr class="empty-row"><td colspan="6">Loading…</td></tr></tbody>
+          <tbody id="inactive-clients-tbody"><tr class="empty-row"><td colspan="6">No inactive clients</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -1568,8 +1592,10 @@ function renderClients() {
     return !exp || exp >= now;
   };
 
-  const active   = list.filter(c =>  isActive(c));
-  const inactive = list.filter(c => !isActive(c));
+  const active    = list.filter(c => isActive(c));
+  const paused    = list.filter(c => c.subscription_status === 'paused');
+  const cancelled = list.filter(c => c.subscription_status === 'cancelled');
+  const inactive  = list.filter(c => !isActive(c) && c.subscription_status !== 'paused' && c.subscription_status !== 'cancelled');
 
   function clientRow(c, showStatus) {
     const cgName    = c.caregiver_id ? (caregiversMap[c.caregiver_id]?.name || 'Unknown') : null;
@@ -1579,9 +1605,10 @@ function renderClients() {
     const planLabel = c.plan ? c.plan.replace('_', ' ') : null;
     const expiryStr = expiry ? expiry.toLocaleDateString('en',{month:'short',day:'numeric',year:'numeric'}) : null;
     const statusLabel = expired ? 'expired' : status;
-    const statusColor = statusLabel === 'active'   ? '#D1FAE5;color:#065F46'
-                      : statusLabel === 'expired'  ? '#FEE2E2;color:#991B1B'
-                      : statusLabel === 'paused'   ? '#FEF3C7;color:#92400E'
+    const statusColor = statusLabel === 'active'    ? '#D1FAE5;color:#065F46'
+                      : statusLabel === 'paused'    ? '#FEF3C7;color:#92400E'
+                      : statusLabel === 'cancelled' ? '#FEE2E2;color:#991B1B'
+                      : statusLabel === 'expired'   ? '#FEE2E2;color:#991B1B'
                       : '#F3F4F6;color:#374151';
     return `<tr>
       <td><strong>${esc(c.name)}</strong>${c.address ? `<br><small style="color:var(--ink-light)">${esc(c.address)}</small>` : ''}</td>
@@ -1602,16 +1629,21 @@ function renderClients() {
     </tr>`;
   }
 
-  const activeEl   = document.getElementById('active-clients-tbody');
-  const inactiveEl = document.getElementById('inactive-clients-tbody');
-  const activeCount   = document.getElementById('active-clients-count');
-  const inactiveCount = document.getElementById('inactive-clients-count');
+  const activeEl    = document.getElementById('active-clients-tbody');
+  const pausedEl    = document.getElementById('paused-clients-tbody');
+  const cancelledEl = document.getElementById('cancelled-clients-tbody');
+  const inactiveEl  = document.getElementById('inactive-clients-tbody');
 
-  activeEl.innerHTML   = active.length   ? active.map(c => clientRow(c, false)).join('') : '<tr class="empty-row"><td colspan="6">No active clients</td></tr>';
-  inactiveEl.innerHTML = inactive.length ? inactive.map(c => clientRow(c, true)).join('')  : '<tr class="empty-row"><td colspan="6">No inactive clients</td></tr>';
+  activeEl.innerHTML    = active.length    ? active.map(c    => clientRow(c, false)).join('') : '<tr class="empty-row"><td colspan="6">No active clients</td></tr>';
+  pausedEl.innerHTML    = paused.length    ? paused.map(c    => clientRow(c, true)).join('')  : '<tr class="empty-row"><td colspan="6">No paused clients</td></tr>';
+  cancelledEl.innerHTML = cancelled.length ? cancelled.map(c => clientRow(c, true)).join('')  : '<tr class="empty-row"><td colspan="6">No cancelled clients</td></tr>';
+  inactiveEl.innerHTML  = inactive.length  ? inactive.map(c  => clientRow(c, true)).join('')  : '<tr class="empty-row"><td colspan="6">No inactive clients</td></tr>';
 
-  if (activeCount)   { activeCount.textContent   = active.length;   activeCount.style.display   = active.length   ? 'inline' : 'none'; }
-  if (inactiveCount) { inactiveCount.textContent = inactive.length; inactiveCount.style.display = inactive.length ? 'inline' : 'none'; }
+  const setCount = (id, n) => { const el = document.getElementById(id); if (el) { el.textContent = n; el.style.display = n > 0 ? 'inline' : 'none'; } };
+  setCount('active-clients-count',    active.length);
+  setCount('paused-clients-count',    paused.length);
+  setCount('cancelled-clients-count', cancelled.length);
+  setCount('inactive-clients-count',  inactive.length);
 }
 
 function openClientModal(id) {
@@ -1682,6 +1714,23 @@ async function deleteClient(id) {
     toast('Client deleted');
     loadClients();
   } catch(ex) { toast(ex.message, true); }
+}
+
+async function activateClient(id) {
+  const c = clientsList.find(x => x.id === id);
+  if (!c) return;
+  const name = c.name || 'this client';
+  if (!confirm(`Activate ${name}? This will set their subscription to active for 30 days.`)) return;
+  const expires = new Date();
+  expires.setDate(expires.getDate() + 30);
+  try {
+    await db.collection('clients').doc(id).update({
+      subscription_status:     'active',
+      subscription_expires_at: firebase.firestore.Timestamp.fromDate(expires)
+    });
+    toast(`${name} activated — expires ${expires.toLocaleDateString('en',{month:'short',day:'numeric',year:'numeric'})}`);
+    loadClients();
+  } catch(ex) { toast('Could not activate: ' + ex.message, true); }
 }
 
 // ── CAREGIVERS ───────────────────────────────────────────────────────────────
@@ -2294,7 +2343,7 @@ async function confirmIssueResolve() {
       const excerpt     = issueText.length > 100 ? issueText.slice(0, 100) + '…' : issueText;
       const prefix      = isEvv ? 'Re: EVV Alert' : 'Re: Visit Issue Report';
       const fullNote    = `${prefix}${excerpt ? `\n\nReported: "${excerpt}"` : ''}\n\n${note}`;
-      await db.collection('visit_notes').add({
+      await db.collection('admin_notes').add({
         client_id: iss.client_id, caregiver_id: null,
         from_admin: true, from_name: 'HearthLane Team',
         text: fullNote, created_at: SV()
@@ -3067,7 +3116,7 @@ async function confirmResolve(status) {
                       :                              'Cancellation Request';
       const clientMsg = req.message ? `\n\nYour message: "${req.message}"` : '';
       const fullNote  = `Re: ${typeLabel}${clientMsg}\n\n${note}`;
-      await db.collection('visit_notes').add({
+      await db.collection('admin_notes').add({
         client_id:   req.client_id,
         caregiver_id: null,
         from_admin:   true,
