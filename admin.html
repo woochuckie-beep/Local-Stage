@@ -209,11 +209,11 @@
     .appt-chip { border-radius: 6px; padding: 0.25rem 0.45rem; font-size: 0.73rem; margin-bottom: 3px; cursor: pointer; line-height: 1.4; background: #D97706; color: var(--white); font-weight: 600; }
     .appt-chip:hover { opacity: 0.85; }
     .appt-chip.rec { background: var(--sage); }
-    .appt-chip.status-pending     { background: #D97706; color: #fff; }  /* Deep amber — Scheduled */
-    .appt-chip.status-confirmed   { background: #1D4ED8; color: #fff; }  /* Bold blue — Confirmed */
-    .appt-chip.status-in_progress { background: #0E7490; color: #fff; }  /* Teal — In Progress */
-    .appt-chip.status-completed   { background: #166534; color: #fff; }  /* Dark green — Completed */
-    .appt-chip.status-cancelled   { background: #B91C1C; color: #fff; opacity: 1; } /* Bold red — Cancelled */
+    .appt-chip.status-pending     { background: #D97706; color: #fff; }
+    .appt-chip.status-confirmed   { background: #1D4ED8; color: #fff; }
+    .appt-chip.status-in_progress { background: #0E7490; color: #fff; }
+    .appt-chip.status-completed   { background: #166534; color: #fff; }
+    .appt-chip.status-cancelled   { background: #B91C1C; color: #fff; opacity: 1; }
     .cal-legend { display: flex; gap: 1rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
     .cal-legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.76rem; color: var(--ink-mid); }
     .cal-legend-swatch { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
@@ -1975,6 +1975,7 @@ function openApptModal(id, dateStr, hour, prefillClientId) {
   if (appt) {
     const dt = appt.scheduled_at;
     const localDate = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+    document.getElementById('appt-date').min = ''; // allow past dates when editing
     fill(form, {
       client_id:    appt.client_id,
       caregiver_id: appt.caregiver_id,
@@ -2008,6 +2009,9 @@ function openApptModal(id, dateStr, hour, prefillClientId) {
     }
   } else {
     if (clockEl) clockEl.style.display = 'none';
+    // Prevent selecting past dates in the date picker
+    const todayStr = new Date().toISOString().slice(0, 10);
+    document.getElementById('appt-date').min = todayStr;
     if (dateStr) document.getElementById('appt-date').value = dateStr;
     if (hour !== undefined) document.getElementById('appt-time').value = String(hour).padStart(2,'0') + ':00';
     // Default new bookings to send as request so caregiver must confirm
@@ -2037,6 +2041,12 @@ async function saveAppt(e) {
   const recEnd = fd.get('recurring_end');
   const sendAsRequest = fd.get('send_as_request') === 'on';
   const cgId = fd.get('caregiver_id');
+
+  // Block booking in the past (new appointments only)
+  if (!editingId && dt < new Date()) {
+    toast('Cannot book in the past — please select a future date and time.', true);
+    return;
+  }
 
   // Enforce caregiver availability before saving
   if (cgId && fd.get('date') && fd.get('time')) {

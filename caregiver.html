@@ -134,11 +134,12 @@
     .cal-cell-ro:last-child { border-right: none; }
     .appt-chip { border-radius: 6px; padding: 0.22rem 0.4rem; font-size: 0.7rem; margin-bottom: 2px; background: #D97706; color: var(--white); line-height: 1.4; font-weight: 600; }
     .appt-chip.rec { background: var(--sage); }
-    .appt-chip.status-pending     { background: #D97706; color: #fff; }  /* Deep amber — Scheduled */
-    .appt-chip.status-confirmed   { background: #1D4ED8; color: #fff; }  /* Bold blue — Confirmed */
-    .appt-chip.status-in_progress { background: #0E7490; color: #fff; }  /* Teal — In Progress */
-    .appt-chip.status-completed   { background: #166534; color: #fff; }  /* Dark green — Completed */
-    .appt-chip.status-cancelled   { background: #B91C1C; color: #fff; opacity: 1; } /* Bold red — Cancelled */
+    .appt-chip.status-pending     { background: #D97706; color: #fff; }
+    .appt-chip.status-pending-req { background: #6B21A8; color: #fff; }
+    .appt-chip.status-confirmed   { background: #1D4ED8; color: #fff; }
+    .appt-chip.status-in_progress { background: #0E7490; color: #fff; }
+    .appt-chip.status-completed   { background: #166534; color: #fff; }
+    .appt-chip.status-cancelled   { background: #B91C1C; color: #fff; opacity: 1; }
     .btn-clock-chip { display: block; width: 100%; margin-top: 4px; padding: 2px 6px; font-size: 0.62rem; font-weight: 700; background: rgba(255,255,255,0.22); color: var(--white); border: 1px solid rgba(255,255,255,0.45); border-radius: 4px; cursor: pointer; text-align: center; transition: background 0.15s; letter-spacing: 0.03em; }
     .btn-clock-chip:hover { background: rgba(255,255,255,0.4); }
     .clock-in-btn  { background: var(--avail); color: var(--white); border: none; border-radius: 8px; padding: 0.45rem 1rem; font-size: 0.84rem; font-weight: 600; cursor: pointer; transition: background 0.15s; }
@@ -474,7 +475,8 @@
       <div class="view-title">My Schedule</div>
       <div class="view-sub">Your scheduled and confirmed appointments</div>
       <div class="sched-legend">
-        <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#D97706"></div>Scheduled — tap Confirm to accept</div>
+        <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#6B21A8"></div>Awaiting Confirmation</div>
+        <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#D97706"></div>Scheduled</div>
         <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#1D4ED8"></div>Confirmed</div>
         <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#0E7490"></div>In Progress</div>
         <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#166534"></div>Completed</div>
@@ -788,6 +790,7 @@ function startRealtimeListeners() {
       pendingReqs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       updateReqBadge();
       if (activeTabView() === 'requests') renderRequests();
+      if (activeTabView() === 'schedule') renderScheduleCal();
     });
 
   // ── Chat notifications (runs immediately at login) ──────────────────────
@@ -1019,15 +1022,30 @@ function renderScheduleCal() {
       <span class="dnum">${d.getDate()}</span>
     </div>`).join('');
 
+  // Build pending-request chips from booking_requests (not yet appointments)
+  const pendingChips = pendingReqs.map(r => {
+    if (!r.proposed_date || !r.proposed_time) return null;
+    const dt = new Date(r.proposed_date + 'T' + r.proposed_time);
+    if (isNaN(dt)) return null;
+    return { _reqId: r.id, scheduled_at: dt, duration_minutes: r.duration_minutes || 60,
+             client_id: r.client_id, _isPendingReq: true };
+  }).filter(Boolean);
+
   const weekAppts = allAppointments.filter(a => a.scheduled_at >= schedWeekStart && a.scheduled_at < wEnd);
+  const weekPending = pendingChips.filter(a => a.scheduled_at >= schedWeekStart && a.scheduled_at < wEnd);
+
   const hours = Array.from({length:14},(_,i) => i+7);
   document.getElementById('sched-cal-body').innerHTML = hours.map(h => `
     <div class="cal-row">
       <div class="cal-time">${fmt12h(h)}</div>
       ${days.map(d => {
-        const chips = weekAppts.filter(a => sameDay(a.scheduled_at,d) && a.scheduled_at.getHours()===h);
+        const chips = [
+          ...weekPending.filter(a => sameDay(a.scheduled_at,d) && a.scheduled_at.getHours()===h),
+          ...weekAppts.filter(a => sameDay(a.scheduled_at,d) && a.scheduled_at.getHours()===h)
+        ];
         return `<div class="cal-cell-ro">${chips.map(a => {
-          const sc = a.status === 'confirmed'   ? 'status-confirmed'
+          const sc = a._isPendingReq         ? 'status-pending-req'
+                   : a.status === 'confirmed'   ? 'status-confirmed'
                    : a.status === 'completed'   ? 'status-completed'
                    : a.status === 'cancelled'   ? 'status-cancelled'
                    : a.status === 'in_progress' ? 'status-in_progress'
@@ -1036,9 +1054,9 @@ function renderScheduleCal() {
           return `<div class="appt-chip ${sc}">
             <span class="chip-name">${esc(clientsMap[a.client_id]?.name||'Client')}</span>
             <span class="chip-dur">${(a.duration_minutes || 60) / 60}h${a.recurring?' · rec':''}</span>
-            ${a.status === 'scheduled' ? `<button class="btn-confirm-chip" onclick="event.stopPropagation();confirmAppointment('${a.id}')">✓ Confirm</button>` : ''}
-            ${isToday && (a.status === 'confirmed' || a.status === 'scheduled') ? `<button class="btn-clock-chip" onclick="event.stopPropagation();clockIn('${a.id}')">🕐 Clock In</button>` : ''}
-            ${a.status === 'in_progress' ? `<button class="btn-clock-chip" onclick="event.stopPropagation();clockOut('${a.id}')">✓ Clock Out</button>` : ''}
+            ${!a._isPendingReq && a.status === 'scheduled' ? `<button class="btn-confirm-chip" onclick="event.stopPropagation();confirmAppointment('${a.id}')">✓ Confirm</button>` : ''}
+            ${!a._isPendingReq && isToday && (a.status === 'confirmed' || a.status === 'scheduled') ? `<button class="btn-clock-chip" onclick="event.stopPropagation();clockIn('${a.id}')">🕐 Clock In</button>` : ''}
+            ${!a._isPendingReq && a.status === 'in_progress' ? `<button class="btn-clock-chip" onclick="event.stopPropagation();clockOut('${a.id}')">✓ Clock Out</button>` : ''}
           </div>`;
         }).join('')}</div>`;
       }).join('')}
