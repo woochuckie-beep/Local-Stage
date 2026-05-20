@@ -917,9 +917,9 @@ function loadDashboard() {
       if (a.status === 'completed') {
         statusBadge = `<span style="font-size:0.8rem;color:var(--sage);font-weight:500">✓ Complete</span>`;
       } else if (a.status === 'confirmed') {
-        statusBadge = `<button class="clock-in-btn" onclick="clockIn('${a.id}')">Clock In</button>`;
+        statusBadge = `<button class="clock-in-btn" onclick="stageClockIn('${a.id}',this)">Clock In</button>`;
       } else if (a.status === 'in_progress') {
-        statusBadge = `<button class="clock-out-btn" onclick="clockOut('${a.id}')">Clock Out</button>`;
+        statusBadge = `<button class="clock-out-btn" onclick="stageClockOut('${a.id}',this)">Clock Out</button>`;
       } else {
         statusBadge = `<span style="font-size:0.78rem;font-weight:600;padding:0.2rem 0.6rem;border-radius:100px;background:#1D4ED820;color:#1D4ED8">${a.status}</span>`;
       }
@@ -1090,6 +1090,24 @@ async function confirmAppointment(apptId) {
     loadDashboard();
     toast('Appointment confirmed');
   } catch(ex) { toast('Error: ' + ex.message, true); }
+}
+
+function stageClockIn(apptId, btn) {
+  const wrap = btn.parentElement;
+  wrap.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.35rem">
+      <button class="clock-in-btn" onclick="clockIn('${apptId}')">Confirm Clock In</button>
+      <button onclick="loadDashboard()" style="background:none;border:none;font-size:0.75rem;color:var(--ink-light);cursor:pointer;padding:0">Cancel</button>
+    </div>`;
+}
+
+function stageClockOut(apptId, btn) {
+  const wrap = btn.parentElement;
+  wrap.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.35rem">
+      <button class="clock-out-btn" onclick="clockOut('${apptId}')">Confirm Clock Out</button>
+      <button onclick="loadDashboard()" style="background:none;border:none;font-size:0.75rem;color:var(--ink-light);cursor:pointer;padding:0">Cancel</button>
+    </div>`;
 }
 
 async function clockIn(apptId) {
