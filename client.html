@@ -82,12 +82,12 @@
     .visit-item { display: flex; align-items: flex-start; gap: 1rem; padding: 0.9rem 1.1rem; background: var(--cream-soft); border-radius: 10px; margin-bottom: 0.65rem; }
     .visit-item:last-child { margin-bottom: 0; }
     .visit-date { text-align: center; min-width: 44px; }
-    .visit-day { font-size: 1.4rem; font-weight: 700; color: #3B82F6; line-height: 1; }
+    .visit-day { font-size: 1.4rem; font-weight: 700; color: #1D4ED8; line-height: 1; }
     .visit-mon { font-size: 0.68rem; text-transform: uppercase; color: var(--ink-light); margin-top: 0.1rem; }
     .visit-info { flex: 1; }
     .visit-cg { font-weight: 600; font-size: 0.92rem; }
     .visit-meta { font-size: 0.8rem; color: var(--ink-light); margin-top: 0.2rem; }
-    .visit-badge { padding: 0.22rem 0.6rem; border-radius: 100px; font-size: 0.72rem; font-weight: 600; background: #D97706; color: var(--white); flex-shrink: 0; }
+    .visit-badge { padding: 0.22rem 0.6rem; border-radius: 100px; font-size: 0.72rem; font-weight: 600; background: #1D4ED8; color: var(--white); flex-shrink: 0; }
     .visit-badge.confirmed  { background: #1D4ED8; }
     .visit-badge.completed  { background: #166534; }
     .visit-badge.in-progress { background: #0E7490; animation: pulse-badge 1.8s ease-in-out infinite; }
@@ -147,8 +147,8 @@
     .cal-time { padding: 0.5rem 0.4rem 0 0; font-size: 0.68rem; color: var(--ink-light); text-align: right; border-right: 1px solid var(--cream-dark); }
     .cal-cell-ro { min-height: 48px; border-right: 1px solid #f0ebe0; padding: 3px; }
     .cal-cell-ro:last-child { border-right: none; }
-    .appt-chip { border-radius: 6px; padding: 0.22rem 0.4rem; font-size: 0.7rem; margin-bottom: 2px; background: #D97706; color: var(--white); line-height: 1.4; font-weight: 600; }
-    .appt-chip.status-pending   { background: #D97706; color: #ffffff; }   /* Deep amber — Scheduled */
+    .appt-chip { border-radius: 6px; padding: 0.22rem 0.4rem; font-size: 0.7rem; margin-bottom: 2px; background: #1D4ED8; color: var(--white); line-height: 1.4; font-weight: 600; }
+    .appt-chip.status-pending   { background: #1D4ED8; color: #ffffff; }   /* Bold blue — Scheduled */
     .appt-chip.status-confirmed { background: #1D4ED8; color: #ffffff; }   /* Bold blue — Confirmed */
     .appt-chip.status-completed { background: #166534; color: #ffffff; }   /* Dark green — Completed */
     .appt-chip.status-cancelled { background: #B91C1C; color: #ffffff; opacity: 1; } /* Bold red — Cancelled */
@@ -382,7 +382,7 @@
       <div class="view-title">My Schedule</div>
       <div class="view-sub">Your upcoming and past visits</div>
       <div class="sched-legend">
-        <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#D97706"></div>Scheduled</div>
+        <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#1D4ED8"></div>Scheduled</div>
         <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#1D4ED8"></div>Confirmed</div>
         <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#0E7490"></div>In Progress</div>
         <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#166534"></div>Completed</div>
