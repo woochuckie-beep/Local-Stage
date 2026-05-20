@@ -1318,7 +1318,21 @@
         .where('client_id', '==', clientDoc.id)
         .get();
 
+      const TWO_WEEKS_AGO = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+
+      // Silently delete requests older than 2 weeks
+      const oldDocs = snap.docs.filter(d => {
+        const c = d.data().created_at?.toDate?.();
+        return c && c < TWO_WEEKS_AGO;
+      });
+      if (oldDocs.length) {
+        const batch = db.batch();
+        oldDocs.forEach(d => batch.delete(d.ref));
+        batch.commit().catch(e => console.warn('Auto-delete old requests:', e));
+      }
+
       const requests = snap.docs
+        .filter(d => { const c = d.data().created_at?.toDate?.(); return !c || c >= TWO_WEEKS_AGO; })
         .map(d => ({ id: d.id, ...d.data() }))
         .sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0))
         .slice(0, 20);

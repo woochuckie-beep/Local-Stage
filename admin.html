@@ -105,6 +105,9 @@
     /* ── CARD ── */
     .card { background: var(--white); border-radius: 14px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(58,46,34,0.06); margin-bottom: 1.5rem; }
     .card-title { font-size: 1rem; font-weight: 600; margin-bottom: 1.25rem; }
+    .card-title-toggle { cursor: pointer; user-select: none; }
+    .card-title-toggle:hover .section-arrow { color: var(--terra); }
+    .section-arrow { margin-left: auto; font-size: 1.1rem; line-height: 1; transition: transform 0.2s; display: inline-block; color: var(--ink-light); flex-shrink: 0; }
 
     /* ── TABLE ── */
     .toolbar { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
@@ -843,34 +846,39 @@
 
       <!-- Visit Issues & Warnings -->
       <div class="card" id="req-issues-card">
-        <div class="card-title" style="display:flex;align-items:center;gap:0.6rem">
+        <div class="card-title card-title-toggle" onclick="toggleSection('req-issues-list','arrow-issues')" style="display:flex;align-items:center;gap:0.6rem">
           <span style="color:#ef4444">⚠</span> Visit Issues &amp; Warnings
           <span id="req-issues-count" style="background:#ef4444;color:#fff;font-size:0.72rem;font-weight:700;padding:0.12rem 0.5rem;border-radius:100px"></span>
+          <span class="section-arrow" id="arrow-issues">▾</span>
         </div>
         <div id="req-issues-list"><div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div></div>
       </div>
 
-
       <!-- Pending service requests -->
       <div class="card" id="admin-req-pending-card">
-        <div class="card-title" style="display:flex;align-items:center;gap:0.6rem">
+        <div class="card-title card-title-toggle" onclick="toggleSection('admin-req-pending','arrow-pending')" style="display:flex;align-items:center;gap:0.6rem">
           Service Requests — Pending
           <span id="admin-pending-count" style="background:#ef4444;color:#fff;font-size:0.72rem;font-weight:700;padding:0.12rem 0.5rem;border-radius:100px"></span>
+          <span class="section-arrow" id="arrow-pending">▾</span>
         </div>
         <div id="admin-req-pending"><div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div></div>
       </div>
 
       <!-- All service requests -->
-      <div class="card">
-        <div class="card-title">All Service Requests</div>
+      <div class="card" id="admin-req-all-card">
+        <div class="card-title card-title-toggle" onclick="toggleSection('admin-req-all','arrow-all')" style="display:flex;align-items:center;gap:0.6rem">
+          All Service Requests
+          <span class="section-arrow" id="arrow-all">▾</span>
+        </div>
         <div id="admin-req-all"><div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div></div>
       </div>
 
       <!-- Time Off Requests -->
-      <div class="card">
-        <div class="card-title" style="display:flex;align-items:center;gap:0.6rem">
+      <div class="card" id="admin-toff-card">
+        <div class="card-title card-title-toggle" onclick="toggleSection('admin-toff-list','arrow-toff')" style="display:flex;align-items:center;gap:0.6rem">
           Caregiver Time Off Requests
           <span id="toff-pending-count" style="display:none;background:#F59E0B;color:#fff;font-size:0.72rem;font-weight:700;padding:0.12rem 0.5rem;border-radius:100px"></span>
+          <span class="section-arrow" id="arrow-toff">▾</span>
         </div>
         <div id="admin-toff-list"><div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div></div>
       </div>
@@ -2713,10 +2721,36 @@ function startRequestsListener() {
     }, () => {});
 }
 
+// ── COLLAPSIBLE SECTIONS ─────────────────────────────────────────────────────
+function toggleSection(bodyId, arrowId) {
+  const body  = document.getElementById(bodyId);
+  const arrow = document.getElementById(arrowId);
+  if (!body) return;
+  const collapsed = body.style.display === 'none';
+  body.style.display  = collapsed ? '' : 'none';
+  if (arrow) arrow.style.transform = collapsed ? '' : 'rotate(-90deg)';
+  const key = 'hl_sec_' + bodyId;
+  collapsed ? localStorage.removeItem(key) : localStorage.setItem(key, '1');
+}
+
+function restoreSectionState(bodyId, arrowId) {
+  if (localStorage.getItem('hl_sec_' + bodyId)) {
+    const body  = document.getElementById(bodyId);
+    const arrow = document.getElementById(arrowId);
+    if (body)  body.style.display = 'none';
+    if (arrow) arrow.style.transform = 'rotate(-90deg)';
+  }
+}
+
 // ── SERVICE REQUESTS ─────────────────────────────────────────────────────────
 let _resolveId = null;
 
 async function loadAdminRequests() {
+  restoreSectionState('req-issues-list',  'arrow-issues');
+  restoreSectionState('admin-req-pending','arrow-pending');
+  restoreSectionState('admin-req-all',    'arrow-all');
+  restoreSectionState('admin-toff-list',  'arrow-toff');
+
   const pendingEl = document.getElementById('admin-req-pending');
   const allEl     = document.getElementById('admin-req-all');
   if (pendingEl) pendingEl.innerHTML = '<div class="hl-state"><div class="hl-spinner"></div><div class="hl-state-title">Loading…</div></div>';
@@ -2870,7 +2904,22 @@ async function loadAdminRequests() {
     return;
   }
   try {
-    const all     = reqSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+    const TWO_WEEKS_AGO = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+
+    // Silently delete requests older than 2 weeks
+    const oldReqDocs = reqSnap.docs.filter(d => {
+      const c = d.data().created_at?.toDate?.();
+      return c && c < TWO_WEEKS_AGO;
+    });
+    if (oldReqDocs.length) {
+      const batch = db.batch();
+      oldReqDocs.forEach(d => batch.delete(d.ref));
+      batch.commit().catch(e => console.warn('Auto-delete old requests:', e));
+    }
+
+    const all     = reqSnap.docs
+      .filter(d => { const c = d.data().created_at?.toDate?.(); return !c || c >= TWO_WEEKS_AGO; })
+      .map(d => ({ id: d.id, ...d.data() }))
       .sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0));
     const pending = all.filter(r => r.status === 'pending');
 

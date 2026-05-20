@@ -906,10 +906,23 @@ function loadDashboard() {
           ${outTime ? ' · Out: ' + fmt12(outTime) : ''}
           ${dur ? ' · ' + dur + ' min' : ''}
         </div>`;
+      } else if (a.status === 'in_progress') {
+        const inTime = a.clocked_in_at?.toDate ? a.clocked_in_at.toDate() : null;
+        if (inTime) {
+          const elapsed = Math.round((new Date() - inTime) / 60000);
+          statusLine = `<div class="today-shift-clocked">Clocked in at ${fmt12(inTime)} · ${elapsed} min elapsed</div>`;
+        }
       }
-      const statusBadge = a.status === 'completed'
-        ? `<span style="font-size:0.8rem;color:var(--sage);font-weight:500">✓ Complete</span>`
-        : `<span style="font-size:0.78rem;font-weight:600;padding:0.2rem 0.6rem;border-radius:100px;background:#1D4ED820;color:#1D4ED8">${a.status === 'confirmed' ? 'Confirmed' : a.status}</span>`;
+      let statusBadge;
+      if (a.status === 'completed') {
+        statusBadge = `<span style="font-size:0.8rem;color:var(--sage);font-weight:500">✓ Complete</span>`;
+      } else if (a.status === 'confirmed') {
+        statusBadge = `<button class="clock-in-btn" onclick="clockIn('${a.id}')">Clock In</button>`;
+      } else if (a.status === 'in_progress') {
+        statusBadge = `<button class="clock-out-btn" onclick="clockOut('${a.id}')">Clock Out</button>`;
+      } else {
+        statusBadge = `<span style="font-size:0.78rem;font-weight:600;padding:0.2rem 0.6rem;border-radius:100px;background:#1D4ED820;color:#1D4ED8">${a.status}</span>`;
+      }
       return `<div class="today-shift">
         <div class="today-shift-info">
           <div class="today-shift-client">${esc(c?.name || 'Client')}</div>
