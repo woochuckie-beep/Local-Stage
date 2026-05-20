@@ -195,10 +195,23 @@
     .btn-decline:hover { background: #c44; color: var(--white); }
     .badge-pending { background: var(--req-soft); color: var(--req); padding: 0.2rem 0.6rem; border-radius: 100px; font-size: 0.72rem; font-weight: 600; }
     .req-recurring-banner {
-      background: var(--req); color: var(--white);
-      border-radius: 8px; padding: 0.55rem 1rem;
-      font-size: 1.05rem; font-weight: 700; letter-spacing: 0.03em;
-      margin-bottom: 0.75rem; text-align: center;
+      background: #92400E;
+      color: var(--white);
+      border-radius: 10px;
+      padding: 0.75rem 1.1rem;
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      margin-bottom: 0.75rem;
+      border: 2px solid #F59E0B;
+      line-height: 1.5;
+    }
+    .req-recurring-banner .rec-sub {
+      font-size: 0.8rem;
+      font-weight: 400;
+      opacity: 0.9;
+      margin-top: 0.3rem;
+      line-height: 1.5;
     }
 
     /* ── FORM ── */
@@ -1399,11 +1412,14 @@ function renderRequests() {
     const dt = r.proposed_date && r.proposed_time
       ? new Date(r.proposed_date + 'T' + r.proposed_time)
       : null;
-    const recurringLabel = r.recurring === 'weekly' ? '🔁 WEEKLY RECURRING — repeats every week'
-      : r.recurring === 'biweekly' ? '🔁 BI-WEEKLY RECURRING — repeats every 2 weeks'
+    const recurringLabel = r.recurring === 'weekly'
+      ? `<div class="req-recurring-banner">
+           🔁 WEEKLY RECURRING COMMITMENT
+           <div class="rec-sub">By accepting, you are committing to this visit <strong>every week</strong> on the same day and time. This is an ongoing schedule — not a one-time visit. It will continue until the client's subscription is paused or cancelled by your coordinator.</div>
+         </div>`
       : null;
     return `<div class="req-item" id="req-${r.id}">
-      ${recurringLabel ? `<div class="req-recurring-banner">${recurringLabel}</div>` : ''}
+      ${recurringLabel || ''}
       <div class="req-header">
         <div>
           <div class="req-who">${esc(client?.name || 'Client')}</div>
@@ -1430,37 +1446,63 @@ async function respondRequest(reqId, status) {
   try {
     if (status === 'accepted') {
       const dt = new Date(req.proposed_date + 'T' + req.proposed_time);
-      const apptData = {
-        caregiver_id:    caregiverId,
-        client_id:       req.client_id,
-        scheduled_at:    firebase.firestore.Timestamp.fromDate(dt),
-        duration_minutes:req.duration_minutes || 60,
-        status:          'confirmed',
-        notes:           req.notes || null,
-        created_at:      FSV.serverTimestamp()
-      };
-      if (req.recurring) apptData.recurring = req.recurring;
-      if (req.recurring_end) {
-        apptData.recurring_end = req.recurring_end.toDate
-          ? req.recurring_end
-          : firebase.firestore.Timestamp.fromDate(new Date(req.recurring_end));
+      const batch = db.batch();
+
+      if (req.recurring === 'weekly') {
+        // Generate 2 years of weekly appointments (will be extended or stopped by admin)
+        const TWO_YEARS_MS = 2 * 365 * 24 * 3600 * 1000;
+        const cutoff = new Date(dt.getTime() + TWO_YEARS_MS);
+        let cursor = new Date(dt);
+        while (cursor <= cutoff) {
+          const ref = db.collection('appointments').doc();
+          batch.set(ref, {
+            caregiver_id:        caregiverId,
+            client_id:           req.client_id,
+            scheduled_at:        firebase.firestore.Timestamp.fromDate(new Date(cursor)),
+            duration_minutes:    req.duration_minutes || 60,
+            status:              'confirmed',
+            notes:               req.notes || null,
+            recurring:           'weekly',
+            recurring_indefinite:true,
+            recurring_end:       null,
+            booking_request_id:  reqId,
+            created_at:          FSV.serverTimestamp()
+          });
+          cursor.setDate(cursor.getDate() + 7);
+        }
+        await batch.commit();
+      } else {
+        // Single visit
+        await db.collection('appointments').add({
+          caregiver_id:    caregiverId,
+          client_id:       req.client_id,
+          scheduled_at:    firebase.firestore.Timestamp.fromDate(dt),
+          duration_minutes:req.duration_minutes || 60,
+          status:          'confirmed',
+          notes:           req.notes || null,
+          recurring:       null,
+          booking_request_id: reqId,
+          created_at:      FSV.serverTimestamp()
+        });
       }
-      await db.collection('appointments').add(apptData);
     }
     await db.collection('booking_requests').doc(reqId).update({
       status, responded_at: FSV.serverTimestamp()
     });
     pendingReqs = pendingReqs.filter(r => r.id !== reqId);
     if (status === 'accepted') {
-      // Add to local appointments list
       const dt = new Date(req.proposed_date + 'T' + req.proposed_time);
-      allAppointments.push({ id: reqId+'_acc', caregiver_id: caregiverId, client_id: req.client_id, scheduled_at: dt, duration_minutes: req.duration_minutes||60, status:'confirmed' });
+      allAppointments.push({ id: reqId+'_acc', caregiver_id: caregiverId, client_id: req.client_id, scheduled_at: dt, duration_minutes: req.duration_minutes||60, status:'confirmed', recurring: req.recurring || null });
     }
     updateReqBadge();
     const item = document.getElementById('req-' + reqId);
     if (item) item.remove();
     if (!pendingReqs.length) document.getElementById('requests-list').innerHTML = hlState('empty','No pending requests','Your coordinator will send requests here when new visits are available.');
-    toast(status === 'accepted' ? 'Request accepted — visit added to your schedule' : 'Request declined');
+    toast(status === 'accepted'
+      ? req.recurring === 'weekly'
+        ? 'Weekly schedule confirmed — visits populated for 2 years'
+        : 'Request accepted — visit added to your schedule'
+      : 'Request declined');
   } catch(ex) { toast(ex.message, true); }
 }
 
@@ -1675,15 +1717,10 @@ function expandRecurring(rawAppts) {
     if (!appt.recurring) { result.push(appt); return; }
     const origin    = appt.scheduled_at;
     const originDay = origin.getDay();
-    const stepDays  = appt.recurring === 'biweekly' ? 14 : 7;
     for (let d = new Date(rangeStart); d <= rangeEnd; d.setDate(d.getDate() + 1)) {
       if (d.getDay() !== originDay) continue;
       if (d < origin) continue;
       if (appt.recurring_end && d > appt.recurring_end) continue;
-      if (appt.recurring === 'biweekly') {
-        const diffDays = Math.round((d - origin) / 86400000);
-        if (Math.round(diffDays / 7) % 2 !== 0) continue;
-      }
       result.push({ ...appt, scheduled_at: new Date(d.getFullYear(), d.getMonth(), d.getDate(), origin.getHours(), origin.getMinutes()) });
     }
   });

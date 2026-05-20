@@ -1179,15 +1179,14 @@
         <div class="form-group">
           <label>Recurring</label>
           <select class="fc" name="recurring" id="appt-recurring" onchange="toggleRecEnd()">
-            <option value="">One-time</option>
+            <option value="">Single Visit</option>
             <option value="weekly">Weekly</option>
-            <option value="biweekly">Bi-weekly</option>
           </select>
         </div>
       </div>
-      <div class="form-group" id="rec-end-grp" style="display:none">
-        <label>Repeat Until (optional)</label>
-        <input class="fc" name="recurring_end" type="date" />
+      <div id="rec-weekly-banner" style="display:none;background:#FEF3C7;border:1.5px solid #F59E0B;border-radius:10px;padding:0.85rem 1rem;margin-bottom:0.25rem">
+        <div style="font-size:0.9rem;font-weight:700;color:#92400E;margin-bottom:0.25rem">🔁 Weekly recurring visit</div>
+        <div style="font-size:0.82rem;color:#92400E;line-height:1.6">This will book the same visit <strong>every week</strong> on the same day and time. It continues indefinitely until the client's subscription is paused or cancelled. The caregiver will be clearly notified this is a weekly commitment.</div>
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -1977,7 +1976,6 @@ function openApptModal(id, dateStr, hour, prefillClientId) {
       time:         dt.toTimeString().slice(0, 5),
       duration_h:   appt.duration_minutes / 60,
       recurring:    appt.recurring || '',
-      recurring_end:appt.recurring_end ? (() => { const r=appt.recurring_end; return `${r.getFullYear()}-${String(r.getMonth()+1).padStart(2,'0')}-${String(r.getDate()).padStart(2,'0')}`; })() : '',
       status:       appt.status,
       notes:        appt.notes || ''
     });
@@ -2023,7 +2021,7 @@ function openApptModal(id, dateStr, hour, prefillClientId) {
 
 function toggleRecEnd() {
   const v = document.getElementById('appt-recurring')?.value;
-  document.getElementById('rec-end-grp').style.display = v ? 'block' : 'none';
+  document.getElementById('rec-weekly-banner').style.display = v === 'weekly' ? 'block' : 'none';
 }
 
 async function saveAppt(e) {
@@ -2079,30 +2077,32 @@ async function saveAppt(e) {
   }
 
   const data = {
-    client_id:        fd.get('client_id'),
-    caregiver_id:     cgId || null,
-    scheduled_at:     TS.fromDate(dt),
-    duration_minutes: durH * 60,
-    recurring:        rec,
-    recurring_end:    rec && recEnd ? TS.fromDate(new Date(recEnd + 'T12:00:00')) : null,
-    status:           fd.get('status'),
-    notes:            fd.get('notes') || null,
-    updated_at:       SV()
+    client_id:          fd.get('client_id'),
+    caregiver_id:       cgId || null,
+    scheduled_at:       TS.fromDate(dt),
+    duration_minutes:   durH * 60,
+    recurring:          rec,
+    recurring_end:      null,
+    recurring_indefinite: rec === 'weekly' ? true : null,
+    status:             fd.get('status'),
+    notes:              fd.get('notes') || null,
+    updated_at:         SV()
   };
 
   try {
     if (sendAsRequest && !editingId) {
       await db.collection('booking_requests').add({
-        caregiver_id:    data.caregiver_id,
-        client_id:       data.client_id,
-        proposed_date:   fd.get('date'),
-        proposed_time:   fd.get('time'),
-        duration_minutes:data.duration_minutes,
-        notes:           data.notes,
-        recurring:       fd.get('recurring') || null,
-        recurring_end:   data.recurring_end || null,
-        status:          'pending',
-        created_at:      SV()
+        caregiver_id:        data.caregiver_id,
+        client_id:           data.client_id,
+        proposed_date:       fd.get('date'),
+        proposed_time:       fd.get('time'),
+        duration_minutes:    data.duration_minutes,
+        notes:               data.notes,
+        recurring:           fd.get('recurring') || null,
+        recurring_end:       null,
+        recurring_indefinite:rec === 'weekly' ? true : null,
+        status:              'pending',
+        created_at:          SV()
       });
       closeModal('appt-ov');
       toast('Booking request sent to caregiver');
