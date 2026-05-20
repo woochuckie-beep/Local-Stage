@@ -132,9 +132,8 @@
     .cal-time, .avail-time { padding: 0.5rem 0.4rem 0 0; font-size: 0.68rem; color: var(--ink-light); text-align: right; border-right: 1px solid var(--cream-dark); }
     .cal-cell-ro { min-height: 48px; border-right: 1px solid #f0ebe0; padding: 3px; }
     .cal-cell-ro:last-child { border-right: none; }
-    .appt-chip { border-radius: 6px; padding: 0.22rem 0.4rem; font-size: 0.7rem; margin-bottom: 2px; background: #D97706; color: var(--white); line-height: 1.4; font-weight: 600; }
+    .appt-chip { border-radius: 6px; padding: 0.22rem 0.4rem; font-size: 0.7rem; margin-bottom: 2px; background: #1D4ED8; color: var(--white); line-height: 1.4; font-weight: 600; }
     .appt-chip.rec { background: var(--sage); }
-    .appt-chip.status-pending     { background: #D97706; color: #fff; }
     .appt-chip.status-pending-req { background: #6B21A8; color: #fff; }
     .appt-chip.status-confirmed   { background: #1D4ED8; color: #fff; }
     .appt-chip.status-in_progress { background: #0E7490; color: #fff; }
@@ -476,9 +475,7 @@
       <div class="view-sub">Your scheduled and confirmed appointments</div>
       <div class="sched-legend">
         <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#6B21A8"></div>Awaiting Confirmation</div>
-        <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#D97706"></div>Scheduled</div>
         <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#1D4ED8"></div>Confirmed</div>
-        <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#0E7490"></div>In Progress</div>
         <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#166534"></div>Completed</div>
         <div class="sched-legend-item"><div class="sched-legend-swatch" style="background:#B91C1C"></div>Cancelled</div>
       </div>
@@ -886,32 +883,27 @@ function loadDashboard() {
   } else {
     todayEl.innerHTML = todayVisits.map(a => {
       const c = clientsMap[a.client_id];
-      let actionBtn = '';
-      let clockedLine = '';
-      if (a.status === 'in_progress') {
-        const inTime = a.clocked_in_at?.toDate ? a.clocked_in_at.toDate() : null;
-        clockedLine = inTime ? `<div class="today-shift-clocked">Clocked in at ${fmt12(inTime)}</div>` : '<div class="today-shift-clocked">Visit in progress</div>';
-        actionBtn = `<button class="clock-out-btn" onclick="clockOut('${a.id}')">Clock Out</button>`;
-      } else if (a.status === 'confirmed' || a.status === 'scheduled') {
-        actionBtn = `<button class="clock-in-btn" onclick="clockIn('${a.id}')">Clock In</button>`;
-      } else if (a.status === 'completed') {
+      let statusLine = '';
+      if (a.status === 'completed') {
         const inTime  = a.clocked_in_at?.toDate  ? a.clocked_in_at.toDate()  : null;
         const outTime = a.clocked_out_at?.toDate ? a.clocked_out_at.toDate() : null;
         const dur     = a.actual_duration_minutes;
-        clockedLine = `<div class="today-shift-clocked">
+        statusLine = `<div class="today-shift-clocked">
           ${inTime ? 'In: ' + fmt12(inTime) : ''}
           ${outTime ? ' · Out: ' + fmt12(outTime) : ''}
           ${dur ? ' · ' + dur + ' min' : ''}
         </div>`;
-        actionBtn = `<span style="font-size:0.8rem;color:var(--sage);font-weight:500">✓ Complete</span>`;
       }
+      const statusBadge = a.status === 'completed'
+        ? `<span style="font-size:0.8rem;color:var(--sage);font-weight:500">✓ Complete</span>`
+        : `<span style="font-size:0.78rem;font-weight:600;padding:0.2rem 0.6rem;border-radius:100px;background:#1D4ED820;color:#1D4ED8">${a.status === 'confirmed' ? 'Confirmed' : a.status}</span>`;
       return `<div class="today-shift">
         <div class="today-shift-info">
           <div class="today-shift-client">${esc(c?.name || 'Client')}</div>
           <div class="today-shift-meta">${fmt12(a.scheduled_at)} · ${(a.duration_minutes || 60) / 60}h${c?.address ? ` · <a href="https://maps.google.com/?q=${encodeURIComponent(c.address)}" target="_blank" rel="noopener noreferrer" style="color:var(--ink-light);text-decoration:underline;text-underline-offset:2px">${esc(c.address)}</a>` : ''}</div>
-          ${clockedLine}
+          ${statusLine}
         </div>
-        ${actionBtn}
+        ${statusBadge}
       </div>`;
     }).join('');
   }
@@ -1045,18 +1037,12 @@ function renderScheduleCal() {
         ];
         return `<div class="cal-cell-ro">${chips.map(a => {
           const sc = a._isPendingReq         ? 'status-pending-req'
-                   : a.status === 'confirmed'   ? 'status-confirmed'
                    : a.status === 'completed'   ? 'status-completed'
                    : a.status === 'cancelled'   ? 'status-cancelled'
-                   : a.status === 'in_progress' ? 'status-in_progress'
-                   : 'status-pending';
-          const isToday = sameDay(a.scheduled_at, new Date());
+                   : 'status-confirmed';
           return `<div class="appt-chip ${sc}">
             <span class="chip-name">${esc(clientsMap[a.client_id]?.name||'Client')}</span>
             <span class="chip-dur">${(a.duration_minutes || 60) / 60}h${a.recurring?' · rec':''}</span>
-            ${!a._isPendingReq && a.status === 'scheduled' ? `<button class="btn-confirm-chip" onclick="event.stopPropagation();confirmAppointment('${a.id}')">✓ Confirm</button>` : ''}
-            ${!a._isPendingReq && isToday && (a.status === 'confirmed' || a.status === 'scheduled') ? `<button class="btn-clock-chip" onclick="event.stopPropagation();clockIn('${a.id}')">🕐 Clock In</button>` : ''}
-            ${!a._isPendingReq && a.status === 'in_progress' ? `<button class="btn-clock-chip" onclick="event.stopPropagation();clockOut('${a.id}')">✓ Clock Out</button>` : ''}
           </div>`;
         }).join('')}</div>`;
       }).join('')}
